@@ -59,6 +59,9 @@
 !/**/*.R
 !/**/*.Rmd
 
+# HTML files
+!/**/*.html
+
 # LaTeX
 !/**/*.tex
 
