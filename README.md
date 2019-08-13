@@ -4,6 +4,14 @@ Global Education Policy Dashboard
 This repository is for the Global Education Policy Dashboard team.  
 
 ## Organization of Repo
+
+1)	Master_Code: will contain a generic version of the code used to do sampling, data quality checks, cleaning, and analysis.  The plan is update this code frequently, and then when new countries are added some template code is already available to get started.
+2)	Country Specific Code:  Each country will also have a code directory containing the code that has been tailored for that country.  For example, Peru will have a directory containing the sampling code and any future cleaning code.
+
+The github repo is private and only accessible to users in the World Bank EduAnalytics team. 
+
+All Stata datasets or csv files are set to .gitignore, meaning they will not be uploaded onto github when things are pushed, so that no data is accidentally pushed .  
+
 Country specific and generic code used to do sampling, clean data, do quality checks, and analysis are available in this repo.
 
 Folders are organized by Country -> Year -> Code
