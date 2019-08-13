@@ -9,8 +9,7 @@ source("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solut
 
 #user credentials
 user<-"bstacy_api"
-password<-"GEPD_bstacy6"
-
+password <- rstudioapi::askForPassword()
 
 #path and folder where the .zip file will be stored
 download_folder <- file.path("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solutions/Peru/Data")
@@ -26,7 +25,7 @@ str(content(q))
 
 
 user<-"bstacy_api"
-password<-"GEPD_bstacy6"
+password <- rstudioapi::askForPassword()
 
 #Get list of questionnaires available
 q<-GET("https://gepd.mysurvey.solutions/api/v1/questionnaires",
