@@ -1,7 +1,10 @@
 # GEPD
 Global Education Policy Dashboard
 
-This repository is for the Global Education Policy Dashboard team.
+This repository is for the Global Education Policy Dashboard team.  Country specific and generic code used to do sampling, clean data, do quality checks, and analysis are available in this repo.
+
+Folders are organized by Country -> Year -> Code
+
 
 ## Background
 Policymakers in low- and middle-income countries who are working to improve student learning often find themselves flying blind. They see the budget that goes into education and (sometimes) the learning that students come out with, but they lack information on the crucial factors in between— the practices, policies, and politics—that drive those learning outcomes. The new Global Education Policy Dashboard initiative will fill that gap.
