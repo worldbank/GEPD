@@ -2,12 +2,12 @@
 |---|---|---|---|---|---|
 |SE.PRM.LERN | Learning | This outcome indicator measures whether students are learning, by reporting data from well-designed student assessments.  | Outcome | Learning | 0-100 |
 |SE.PRM.PART |Participation|This indicator will summarize school participation by reporting the enrollment rate among primary-age children.|Outcome | Participation| 0-100 |
-|SE.PRM.EFFT |Teacher Effort|---|Teaching|Teacher Effort|1-5 |
-|SE.PRM.CONT |Teacher Content Knowledge|---|Teaching|Teachers' Skills|1-5 |
+|SE.PRM.EFFT |Teacher Effort|---|Teaching|Teacher Effort|0-100  |
+|SE.PRM.CONT |Teacher Content Knowledge|---|Teaching|Teachers' Skills|0-100  |
 |SE.PRM.PEDG |Teacher Pedagogical Skills|---|Teaching|Teachers' Skills|1-5 | 
 |SE.PRM.INPT |Basic Inputs|---|Inputs & Infrastructure|Inputs & Infrastructure|1-5 | 
 |SE.PRM.INFR |Basic Infrastructure|---|Inputs & Infrastructure|Inputs & Infrastructure|1-5 | 
-|SE.PRM.LCAP |Capacity for Learning|---|Prepared Learners|Prepared Learners|1-5 |
+|SE.PRM.LCAP |Capacity for Learning|---|Prepared Learners|Prepared Learners|0-100 |
 |SE.PRM.OPMN |Operational Management|---|School Management|Core School Functions|1-5 | 
 |SE.PRM.ILDR |Instructional Leadership|---|School Management|Core School Functions|1-5 | 
 |SE.PRM.PKNW |Principal School Knowledge|---|School Management|Managerial Skills|1-5 | 
