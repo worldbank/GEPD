@@ -447,8 +447,8 @@ load(file=sample_frame_name)
 
   #create some values
   user<-"bstacy_api"
-  password<-"GEPD_bstacy6"  
-  url_base<-"https://gepdsen.mysurvey.solutions"
+password <- rstudioapi::askForPassword()
+url_base<-"https://gepdsen.mysurvey.solutions"
   QUID<-"06756cace6d24cc996ffccbfc26a2264"
   version<-"1"
 
