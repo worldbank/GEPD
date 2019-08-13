@@ -49,35 +49,35 @@
 # located unless you explicitly ignore that folder
 
 # Stata
-!/**/*.do
-!/**/*.ado
-!/**/*.sthlp
-!/**/*_adoprogram/*.toc
-!/**/*_adoprogram/*.pkg
+!/**/**/*.do
+!/**/**/*.ado
+!/**/**/*.sthlp
+!/**/**/*_adoprogram/*.toc
+!/**/**/*_adoprogram/*.pkg
 
 # R-scrips and Rmarkdown-scripts
-!/**/*.R
-!/**/*.Rmd
+!/**/**/*.R
+!/**/**/*.Rmd
 
 # HTML files
-!/**/*.html
+!/**/**/*.html
 
 # LaTeX
-!/**/*.tex
+!/**/**/*.tex
 
 # Python
-!/**/*.py
-!/**/*.ipynb
+!/**/**/*.py
+!/**/**/*.ipynb
 
 # Matlab
-!/**/*.m
+!/**/**/*.m
 
 # Markdown
-!/**/*.md
+!/**/**/*.md
 
 # csv files
 #csv files in all outputs folders
-!/**/*_outputs/*.csv
+!/**/**/*_outputs/*.csv
 
 
 #######################
