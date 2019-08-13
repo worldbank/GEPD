@@ -76,8 +76,6 @@
 !/**/**/*.md
 
 # csv files
-#csv files in all outputs folders
-!/**/**/*_outputs/*.csv
 
 
 #######################
