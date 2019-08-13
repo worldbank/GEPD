@@ -9,8 +9,7 @@ library(tidyr)
 
 #user credentials
 user<-"bstacy_api"
-password<-"GEPD_bstacy6"
-
+password <- rstudioapi::askForPassword()
 
 
 
