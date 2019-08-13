@@ -1,12 +1,16 @@
 # GEPD
 Global Education Policy Dashboard
 
-This repository is for the Global Education Policy Dashboard team.  Country specific and generic code used to do sampling, clean data, do quality checks, and analysis are available in this repo.
+This repository is for the Global Education Policy Dashboard team.  
+
+## Organization of Repo
+Country specific and generic code used to do sampling, clean data, do quality checks, and analysis are available in this repo.
 
 Folders are organized by Country -> Year -> Code
 
+Data is currently housed on our Dashboard team sharepoint folder, but will be migrated to a network drive when that is set up. 
 
-## Background
+## Background on Project for Newbies
 Policymakers in low- and middle-income countries who are working to improve student learning often find themselves flying blind. They see the budget that goes into education and (sometimes) the learning that students come out with, but they lack information on the crucial factors in between— the practices, policies, and politics—that drive those learning outcomes. The new Global Education Policy Dashboard initiative will fill that gap.
 ### THE CHALLENGE:  UNDERSTANDING WHAT DRIVES THE LEARNING CRISIS
 Many countries, despite having significantly increased access to education for their children and youth, now realize that they are facing a learning crisis. For instance, when grade 3 students in Nicaragua were tested in 2011, only half correctly solved 5 + 6. And in Kenya, Tanzania, and Uganda, when grade 3 students were asked recently to read a sentence such as  “The  name  of  the  dog  is  Puppy,”  three-quarters could  not  answer  what  the  dog’s  name  was.  Examples like these from around the world underline that schooling is not the same as learning—even though education policy often assumes that it is.
