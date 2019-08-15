@@ -60,7 +60,7 @@
 !/**/**/*.Rmd
 
 # HTML files
-!/**/**/*.html
+
 
 # LaTeX
 !/**/**/*.tex
