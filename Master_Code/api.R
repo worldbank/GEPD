@@ -5,7 +5,10 @@ library(httr)
 library(haven)
 library(dplyr)
 library(tidyr)
-source("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solutions/API/SuSoAPI-master/dl_one.R")
+
+######################################
+# User Inputs for API #
+######################################
 
 #user credentials
 user<-"bstacy_api"
@@ -16,6 +19,10 @@ download_folder <- file.path("C:/Users/WB469649/OneDrive - WBG/Education Policy 
 tounzip <- "mydata.zip" 
 
 
+######################################
+# Interactions with API
+######################################
+
 #Get list of questionnaires available
 q<-GET("https://gepd.mysurvey.solutions/api/v1/questionnaires",
        authenticate(user, password))
@@ -23,9 +30,6 @@ q<-GET("https://gepd.mysurvey.solutions/api/v1/questionnaires",
 str(content(q))
 
 
-
-user<-"bstacy_api"
-password <- rstudioapi::askForPassword()
 
 #Get list of questionnaires available
 q<-GET("https://gepd.mysurvey.solutions/api/v1/questionnaires",
