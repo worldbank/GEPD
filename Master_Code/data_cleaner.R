@@ -5,50 +5,79 @@
 library(ggplot2)
 library(dplyr)
 library(haven)
+library(readr)
+library(tidyr)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
+#move working directory to github main folder
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd('..')
+
 #Load the data
+
+###########################
 #read in school level file
-download_folder <- file.path("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solutions/Peru/Data")
+###########################
+download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
 
 school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 
+#Read in list of indicators
+indicators <- read_delim("./Indicators/indicators.md", delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
-##########Remove This##############
-#temporary change of coordinates
-school_dta$m1s0q9__Latitude[1]=-11.832258
-school_dta$m1s0q9__Longitude[1]=-77.000996
-school_dta$m1s0q9__Latitude[2]=-12.055666
-school_dta$m1s0q9__Longitude[2]=-77.027924
-school_dta$m1s0q9__Latitude[3]=-11.920157
-school_dta$m1s0q9__Longitude[3]=-77.045572
-school_dta$m1s0q9__Latitude[4]=-12.059618
-school_dta$m1s0q9__Longitude[4]=-76.992199
-###################################
+indicator_names <- indicators$indicator_tag
+#use dplyr select(contains()) to search for variables with select tags and create separate databases
+for (i in indicator_names ) {
+  temp_df<-school_dta %>%
+    select(contains(i))
+  if (ncol(temp_df) > 0) {
+    assign(paste("school_data_",i, sep=""), temp_df )
+  }
+}
 
+
+########################
 #read in ecd level file
+########################
 ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
 
+########################################
 #read in 4th grade assessment level file
+########################################
 assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
 
+#########################################
 #read in teacher questionnaire level file
+#########################################
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
 
-#read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+#use dplyr select(contains()) to search for variables with select tags and create separate databases
+for (i in indicator_names ) {
+  temp_df<-teacher_questionnaire %>%
+    select(contains(i))
+  if (ncol(temp_df) > 0) {
+    assign(paste("teacher_questionnaire_",i, sep=""), temp_df )
+  }
+}
 
+
+
+################################
 #read in principal absence file
+################################
 principal_absence_dta<-read_dta(file.path(download_folder, "principal_absence_roster2.dta"))
 
-#read in teacher assessment file
-teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment.dta"))
-
-#Note:  Schools can be identified between modules by the identifier:  interview__id
 
 #############################################
 ##### Teacher Absence ###########
 #############################################
+
+teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+
+
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(school_absent=case_when(
@@ -73,6 +102,8 @@ school_absence_rate <- teacher_absence_dta %>%
 #############################################
 ##### Teacher Knowledge ###########
 #############################################
+
+teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment.dta"))
 
 #create indicator for % correct on teacher assessment
 #Note:  in the future we could incorporate irt program like mirt
@@ -177,14 +208,6 @@ school_student_knowledge <- assess_4th_grade_dta %>%
 
 
 
-
-#############################################
-##### School Inputs ###########
-#############################################
-
-#############################################
-##### School Infrastructure ###########
-#############################################
 
 #############################################
 ##### School Level Info ###########

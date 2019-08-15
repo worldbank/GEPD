@@ -21,11 +21,11 @@ server_add<-"https://gepdmoz.mysurvey.solutions"
 
 #questionnaire version
 #e.g. quest_version<-8
-quest_version<-8
+quest_version<-2
   
   #path and folder where the .zip file will be stored
   #this needs to be entered
-  download_folder <- file.path()
+download_folder <- choose.dir(default = "", caption = "Select folder to save data downloaded from API")
 tounzip <- "mydata.zip" 
 
 
