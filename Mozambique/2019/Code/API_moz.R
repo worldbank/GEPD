@@ -13,7 +13,7 @@ library(tidyr)
 #user credentials
 #these credentials may need to be modified
 user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
-password <- rstudioapi::askForPassword(prompt = 'Please enter API username:')
+password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
