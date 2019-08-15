@@ -11,11 +11,21 @@ library(tidyr)
 ######################################
 
 #user credentials
-user<-"bstacy_api"
-password <- rstudioapi::askForPassword()
+#these credentials may need to be modified
+user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
+password <- rstudioapi::askForPassword(prompt = 'Please enter API username:')
 
+#Survey Solutions Server address
+#e.g. server_add<-"https://gepd.mysurvey.solutions"
+server_add<-""
+
+#questionnaire version
+#e.g. quest_version<-8
+quest_version<-
+  
 #path and folder where the .zip file will be stored
-download_folder <- file.path("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solutions/Peru/Data")
+#this needs to be entered
+download_folder <- file.path()
 tounzip <- "mydata.zip" 
 
 
@@ -24,34 +34,20 @@ tounzip <- "mydata.zip"
 ######################################
 
 #Get list of questionnaires available
-q<-GET("https://gepd.mysurvey.solutions/api/v1/questionnaires",
+#the server address may need to be modified
+q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
        authenticate(user, password))
 
 str(content(q))
 
 
-
-#Get list of questionnaires available
-q<-GET("https://gepd.mysurvey.solutions/api/v1/questionnaires",
-       authenticate(user, password))
-
-str(content(q))
-
-
-#pull data from version 8 of our Education Policy Dashboard Questionnaire
-POST("https://gepd.mysurvey.solutions/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$4/start",
+#pull data from version of our Education Policy Dashboard Questionnaire
+POST(paste(server_add,"/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
          authenticate(user, password))
 
 
-GET("https://gepd.mysurvey.solutions/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$4/details",
-    authenticate(user, password))
-
-
-GET("https://gepd.mysurvey.solutions/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$4/",
-    authenticate(user, password))
-
-dataDownload <- GET("https://gepd.mysurvey.solutions/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$4/",
-           authenticate(user, password))
+dataDownload <- GET(paste(server_add,"/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
+                    authenticate(user, password))
 
 redirectURL <- dataDownload$url 
 RawData <- GET(redirectURL) #Sucess!!
