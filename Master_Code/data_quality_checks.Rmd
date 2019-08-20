@@ -1,5 +1,5 @@
 ---
-title: "Data Quality Checks - Mozambique"
+title: "Data Quality Checks"
 author: "Brian Stacy"
 output: html_document
 params:
@@ -28,8 +28,12 @@ library(mice)
 library(stargazer)
 #Load the data
 #read in school level file
+save.dir <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
 
-load("./all_modules_clean.RData")
+load(paste(save.dir, "./all_modules_clean.RData", sep="/"))
+
+save.dir.para <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
+load(file=paste(save.dir.para, "paradata.RData", sep="/"))
 ```
 
 ## Introduction
@@ -37,6 +41,80 @@ load("./all_modules_clean.RData")
 This file produces a set of basic quality checks to highlight potential issues in data collection.  The survey used in this report is the 2018 Mozambique SDI survey.  
 
 
+## Paradata on Interview Lengths
+
+The following figures and tables show the time length of each question and modules.  Specific information for each enumerator, date, and module is available.
+
+```{r, echo=FALSE}
+
+######################################
+# Length of each question by Enumerator
+#######################################
+
+para_df_tab <- para_df %>%
+  select( responsible, date, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
+
+linked_df<-SharedData$new(para_df_tab)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
+         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+         filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
+         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+         
+       ),
+      
+       list (
+         plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+           layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
+         datatable(linked_df, 
+                   colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                            'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+         
+       )
+       
+)
+
+######################################
+# Length of each section by Enumerator
+#######################################
+
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+
+linked_df<-SharedData$new(para_df_section)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
+         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+       ),
+       list (
+       plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+      
+        datatable(linked_df, 
+                 colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                            'Length in Seconds' = 'timelength_sec'),
+                 extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                 options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+      
+       )
+       
+)
+
+  
+
+```
 
 
 ## Missing Values

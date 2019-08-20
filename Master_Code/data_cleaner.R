@@ -86,7 +86,7 @@ raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_asse
 #read in teacher questionnaire level file
 #########################################
 raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
-raw_teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
+teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
 
 #rename a few key variables up front
 raw_teacher_questionnaire<- raw_teacher_questionnaire %>%
@@ -137,6 +137,7 @@ raw_principal_absence_dta<-read_dta(file.path(download_folder, "principal_absenc
 #############################################
 
 raw_teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
 
 
 

@@ -10,14 +10,33 @@ library(tidyr)
 library(Hmisc)
 library(lubridate)
 library(stringr)
+library(here)
+library(crosstalk)
+library(DT)
+library(plotly)
+library(ggplot2)
+library(haven)
+library(readr)
+
 ######################################
 # User Inputs for API #
 ######################################
 
+# Here you need to indicate the path where you replicated the folder structures on your own computer
+here() #"C:/Users/wb469649/Documents/Github/GEPD"
+
+
 #user credentials
-#these credentials may need to be modified
+
+#Check whether password.R file is in Github repo
+pw_file<-here("password.R")
+if (file.exists(pw_file)) {
+  source(pw_file)
+} else {
+#these credentials may need to be entered
 user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
 password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
+}
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
@@ -97,13 +116,152 @@ label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 para_df <- para_df %>% 
   mutate(timestamp= ymd_hms(timestamp))
 
+#Generate length of time for each question, by calculating gap in time between when question was entered and previous question
+para_df <- para_df %>% 
+  arrange(ï..interview__id, order) %>% 
+  mutate(timelength=lag(timestamp) %--% timestamp) %>% 
+  mutate(timelength_sec=int_length(timelength)) %>%
+  mutate(date=date(timestamp))
+
 #Only keep paradata on actual questions for indicators. These are tagged with m******
 para_df <- para_df %>% 
-  filter(str_detect(parameters, "m1s|m2s|m3s|m4s|m5s|m6s|m7s|m8s"))
+  filter(str_detect(parameters, "m1s|m2s|m3s|m4s|m5s|m6s|m7s|m8s")) %>%
+  filter(responsible!="")
 
 
 #Split up question name to identify tags for each indicator
 para_df <- para_df %>% 
   separate(parameters, c("question", NA, "response", NA, "other"), remove=FALSE, sep = "[|]")
+
+#Add tags for module, section, and indicator
+para_df <- para_df %>% 
+  mutate(module = str_to_upper(substr(question, start=1, stop=2))) %>%
+  mutate(section = str_to_upper(substr(question, start=1, stop=4))) %>%
+  separate(question, c(NA, "indicator"), sep="_", remove=FALSE) %>%
+  mutate(indicator = str_to_upper(indicator))
+
+#Read in list of indicators
+indicators <- read_delim(here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+indicator_names <- indicators$indicator_tag
+
+
+#merge on question text
+#Create function to save metadata for each question in each module
+#The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
+makeVlist <- function(dta) { 
+  varlabels <- sapply(dta, function(x) attr(x,"label"))
+  vallabels <- sapply(dta, function(x) attr(x,"labels"))
+  tibble(name = names(varlabels),
+         varlabel = varlabels, vallabel = vallabels) 
+}
+
+download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+
+#create school metadata frame
+raw_school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+school_metadta<-makeVlist(raw_school_dta)
+
+#create teacher questionnaire metadata frame
+raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
+
+#create teacher absence metadata frame
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
+
+#create ecd metadata frame
+raw_ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_metadta<-makeVlist(raw_ecd_dta)
+
+#create 4th grade assessment metadata frame
+raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_metadta<-makeVlist(raw_assess_4th_grade_dta)
+
+metadata <- rbind(school_metadta, teacher_questionnaire_metadta, ecd_metadta, assess_4th_grade_metadta)
+metadata <- rbind(school_metadta, teacher_questionnaire_metadta, teacher_absence_metadta, ecd_metadta, assess_4th_grade_metadta)
+
+metadata <- metadata %>% 
+  mutate(question=name)
+
+para_df <- para_df %>% 
+  left_join(metadata )
+
+save.dir <- choose.dir(default = "", caption = "Select folder to save Final Paradata")
+save(para_df, file=paste(save.dir, "paradata.RData", sep="/"))
+
+para_dta<- para_df %>% 
+  mutate(interview_id=ï..interview__id) %>%
+  select(-vallabel, -varlabel, -ï..interview__id)
+write_dta(para_dta, path=paste(save.dir, "paradata.dta", sep="/"))
+
+######################################
+# Length of each question by Enumerator
+#######################################
+
+para_df_tab <- para_df %>%
+  select( responsible, date, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
+
+linked_df<-SharedData$new(para_df_tab)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
+         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+         filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
+         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+         
+       ),
+      
+       list (
+         plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+           layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
+         datatable(linked_df, 
+                   colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                            'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+         
+       )
+       
+)
+
+######################################
+# Length of each section by Enumerator
+#######################################
+
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+
+linked_df<-SharedData$new(para_df_section)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
+         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+       ),
+       list (
+       plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+      
+        datatable(linked_df, 
+                 colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                            'Length in Seconds' = 'timelength_sec'),
+                 extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                 options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+      
+       )
+       
+)
 
   
