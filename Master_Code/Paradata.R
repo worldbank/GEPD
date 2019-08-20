@@ -114,14 +114,16 @@ label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 ######################################
 #clean up timestamp
 para_df <- para_df %>% 
-  mutate(timestamp= ymd_hms(timestamp))
+  mutate(timestamp= ymd_hms(timestamp)+hms(offset)+hms('6:00:00'))
 
 #Generate length of time for each question, by calculating gap in time between when question was entered and previous question
 para_df <- para_df %>% 
   arrange(ï..interview__id, order) %>% 
   mutate(timelength=lag(timestamp) %--% timestamp) %>% 
   mutate(timelength_sec=int_length(timelength)) %>%
-  mutate(date=date(timestamp))
+  mutate(date=date(timestamp),
+         hour=hour(timestamp),
+         am_pm=am(timestamp))
 
 #Only keep paradata on actual questions for indicators. These are tagged with m******
 para_df <- para_df %>% 
@@ -212,7 +214,7 @@ linked_df<-SharedData$new(para_df_tab)
 bscols(widths=c(3,NA),
        list(
          filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
-         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+         filter_select("enumerator", "Enumerator", linked_df, ~responsible),
          filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
          filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
@@ -231,6 +233,8 @@ bscols(widths=c(3,NA),
        )
        
 )
+
+
 
 ######################################
 # Length of each section by Enumerator
@@ -264,4 +268,35 @@ bscols(widths=c(3,NA),
        
 )
 
-  
+######################################
+# Time of Day of each question by Enumerator
+#######################################
+
+para_df_tab <- para_df %>%
+  select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
+
+linked_df<-SharedData$new(para_df_tab)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("Time", "Time Question Completed", linked_df, ~timestamp),
+         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+         filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
+         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+         
+       ),
+       
+       list (
+         plot_ly(linked_df, x=~question, y=~timestamp, type='scatter', mode='markers', color=~responsible) %>%
+           layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID')),
+         datatable(linked_df, 
+                   colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                              'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
+                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+         
+       )
+       
+)  
