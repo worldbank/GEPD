@@ -5,15 +5,23 @@ library(httr)
 library(haven)
 library(dplyr)
 library(tidyr)
-
+library(here)
 ######################################
 # User Inputs for API #
 ######################################
+# Here you need to indicate the path where you replicated the folder structures on your own computer
+here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 #user credentials
-#these credentials may need to be modified
-user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
-password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
+#Check whether password.R file is in Github repo
+pw_file<-here("password.R")
+if (file.exists(pw_file)) {
+  source(pw_file)
+} else {
+  #these credentials may need to be entered
+  user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
+  password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
+}
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
@@ -93,12 +101,8 @@ teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire_dta)
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
-
-#read in principal absence file
-principal_absence_dta<-read_dta(file.path(download_folder, "principal_absence_roster2.dta"))
-principal_absence_metadta<-makeVlist(principal_absence_dta)
 
 #read in teacher assessment file
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment.dta"))

@@ -13,9 +13,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 #load relevant libraries
 library(knitr)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 library(haven)
 library(plotly)
 library(naniar)
@@ -145,7 +143,7 @@ bscols(widths=c(3,NA),
        list (
          plot_ly(linked_t_df, x=~question, y=~timestamp, type='scatter', mode='markers', color=~responsible) %>%
            layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID')),
-         datatable(linked_df, 
+         datatable(linked_t_df, 
                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
                               'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
@@ -157,7 +155,9 @@ bscols(widths=c(3,NA),
 
 ```
 
-## Missing Values
+
+
+## Missing Values and Other Checks
 
 To start, the following figures and tables will highlight missing values for a few of our key indicators.  Ignore the fact that school knowledge, operational management, management skills, instructional leadership, and ECD scores are missing for now, as this information was not available fully in SDI.
 
@@ -215,6 +215,37 @@ df.stats.tidy %>%
   kable_styling()
 
 ```
+
+
+In the next check, we will asssess whether any schools were not part of the pre-loaded list of schools.
+
+```{r, echo=FALSE}
+# We export the observations for which the schools are not part of the pre-loaded list
+# We identify these schools using the variable "school_name_preload", because this variable is not filled in case the school is not on the list
+
+
+df_school_preloaded <- school_indicator_data %>%
+  filter(is.na(school_name_preload)) %>%
+  select(interview__id, m1s0q2_name, m1s0q2_code, m1s0q2_emis, enumerator_name, enumerator_number) 
+  
+
+#setExcelSheet "Schools and Teachers"
+
+```
+
+These schools are not part of the pre-loaded list of schools:
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+kable(df_school_preloaded) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+Finally, we check whether teachers interviewed in the teacher questionnaire and the teacher assessment can be matched to teachers in the original roster.
+
+
+
 
 ## Interactive Map
 In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the schools that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only schools that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
@@ -282,7 +313,7 @@ icons <- awesomeIcons(
 
 
 
-map <- function(df_input) {    leaflet(linked_df) %>% 
+map <- function(df_input) {    leaflet(df_input) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
                     popup = paste("Name: ", school_map$school, " <br>",
