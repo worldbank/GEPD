@@ -24,6 +24,7 @@ library(kableExtra)
 library(DT)
 library(mice)
 library(stargazer)
+library(skimr)
 #Load the data
 #read in school level file
 save.dir <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
@@ -486,6 +487,32 @@ outlier_plot(school_map_filled)
 
 ```
 
+## Summary Statistics and Missings in Detail for Each Indicator
 
+```{r}
 
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd('..')
+
+#Read in list of indicators
+indicators <- read_delim("./Indicators/indicators.md", delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+indicator_names <- indicators$indicator_tag
+
+skim(final_school_data_INFR) %>%
+  skimr::kable()
+
+for (i in indicator_names ) {
+  if (exists(paste("final_school_data_",i, sep=""))) {
+    temp<-get(paste("final_school_data_",i, sep="")) 
+    skim(temp) %>%
+      skimr::kable()
+  }
+}
+
+```
 

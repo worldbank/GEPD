@@ -5,6 +5,10 @@
 library(tidyverse)
 library(haven)
 library(stringr)
+library(Hmisc)
+library(skimr)
+
+library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
 #move working directory to github main folder
@@ -42,7 +46,7 @@ download_folder <- choose.dir(default = "", caption = "Select folder to open dat
 #read in school level file
 ###########################
 school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
-
+vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name=m1s0q1_name  ,
@@ -92,6 +96,8 @@ for (i in indicator_names ) {
 #########################################
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
+
+
 
 #Create a function which will generate new binary variable using case_when, but 
 #if value is misisng it will generate binary variable to be missing
@@ -164,7 +170,7 @@ for (i in indicator_names ) {
     select( contains(i))
   if (ncol(temp_df) > 0) {
     temp_df<-teacher_questionnaire %>%
-      select(preamble_info, contains(i))
+      select(preamble_info_school, contains(i))
     assign(paste("teacher_questionnaire_",i, sep=""), temp_df )
   }
 }
@@ -178,6 +184,10 @@ for (i in indicator_names ) {
 #read in teacher absence file
 teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
+
+#number missing
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(n_mssing_EFFT=n_miss_row(.))
 
 #rename a few key variables up front
 teacher_absence_dta<- teacher_absence_dta %>%
@@ -275,6 +285,9 @@ final_school_data_EFFT <- teacher_absence_dta %>%
 
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment.dta"))
 
+#number missing
+teacher_assessment_dta <- teacher_assessment_dta %>%
+  mutate(n_mssing_CONT=n_miss_row(.))
 
 
 #rename a few key variables up front
@@ -344,6 +357,9 @@ final_school_data_CONT <- teacher_assessment_dta %>%
 #read in 4th grade assessment level file
 assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
 
+#number missing
+assess_4th_grade_dta <- assess_4th_grade_dta %>%
+  mutate(n_mssing_LERN=n_miss_row(.))
 
 #create indicator for % correct on student assessment
 #Note:  in the future we could incorporate irt program like mirt
@@ -409,12 +425,16 @@ final_school_data_LERN <- assess_4th_grade_dta %>%
 ##### ECD Assessment ###########
 #############################################
 
+
+
 #read in ecd level file
 ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
 
 #create indicator for % correct on student assessment
 #Note:  in the future we could incorporate irt program like mirt
-
+#number of missing values
+ecd_dta <- ecd_dta %>%
+  mutate(n_mssing_ECD=n_miss_row(.))
 
 #rename a few key variables up front
 ecd_dta<- ecd_dta %>%
@@ -540,6 +560,10 @@ final_school_data_LCAP <- ecd_dta %>%
 ##### School Inputs ###########
 #############################################
 
+#number of missing values
+school_data_INPT <- school_data_INPT %>%
+  mutate(n_mssing_INPT=n_miss_row(.))
+
 #functioning blackboard and chalk
 school_data_INPT <- school_data_INPT %>%
   mutate(blackboard_functional=case_when(
@@ -578,6 +602,9 @@ final_school_data_INPT <- school_data_INPT %>%
 ##### School Infrastructure ###########
 #############################################
 
+#number of missing values
+school_data_INFR <- school_data_INFR %>%
+  mutate(n_mssing_INFR=n_miss_row(.))
   
   #drinking water
 school_data_INFR <- school_data_INFR %>%
@@ -603,6 +630,7 @@ school_data_INFR <- school_data_INFR %>%
 school_data_INFR <- school_data_INFR %>%
   mutate(class_electricity=bin_var(m1sbq11_infr,1)) 
 
+
 #accessibility for people with disabilities
 school_data_INFR <- school_data_INFR %>%
   mutate(
@@ -621,8 +649,8 @@ school_data_INFR <- school_data_INFR %>%
     disab_class_entr=bin_var(m4scq3_infr,1),
     disab_screening=rowSums(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE)/3,
     #sum up all components for overall disability accessibility score
-    disability_accessibility=rowSums(select(.,disab_road_access,disab_school_ramp,disab_school_entr,
-                                            disab_class_ramp,disab_class_entr,disab_screening), na.rm = TRUE)
+    disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
+                                            disab_class_ramp+disab_class_entr+disab_screening)
   )
   
 final_school_data_INFR <- school_data_INFR 
@@ -642,7 +670,8 @@ final_school_data_PEDG <- ''
 #############################################
 
 school_data_OPMN <- school_data_OPMN %>%
-  mutate(vignette_1_resp=bin_var(m7sbq1_opmn,1),
+  mutate(n_mssing_OPMN=n_miss_row(.),
+         vignette_1_resp=bin_var(m7sbq1_opmn,1),
          vignette_1_address=bin_var(m7sbq3_opmn,3),
          #give total score for this vignette
          vignette_1=if_else(vignette_1_resp==1,vignette_1_address,as.numeric(NA), missing=as.numeric(NA)),
@@ -657,48 +686,99 @@ school_data_OPMN <- school_data_OPMN %>%
          vignette_2_textbook_access=bin_var(m7scq4_opmn,1),
          vignette_2=if_else(vignette_1_resp==1,(vignette_2_address+vignette_2_textbook_access)/2,as.numeric(NA), missing=as.numeric(NA)),
          #sum all components for overall score
-         operational_management=rowSums(select(.,vignette_1, vignette_2), na.rm=TRUE)
+         operational_management=(vignette_1+ vignette_2)
   )
-final_school_data_OPMN <- ''
+final_school_data_OPMN <- school_data_OPMN
 
 
 #############################################
 ##### School Instructional Leadership ###########
 #############################################
 
-final_school_data_ILDR <- ''
+school_data_ILDR <- school_data_ILDR %>%
+  mutate(n_mssing_ILDR=n_miss_row(.))
+
+teacher_questionnaire_ILDR <- teacher_questionnaire_ILDR %>%
+  mutate(n_mssing_ILDR=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise(n_mssing_teach_ILDR=sum(n_miss_row))
+
+
+final_school_data_ILDR <- school_data_ILDR %>%
+  left_join(teacher_questionnaire_ILDR)
 
 
 #############################################
 ##### School Principal School Knowledge ###########
 #############################################
 
-final_school_data_PKNW <- ''
+school_data_PKNW <- school_data_PKNW%>%
+  mutate(n_mssing_PKNW=n_miss_row(.))
+
+
+final_school_data_PKNW <- school_data_PKNW
 
 #############################################
 ##### School Principal Management Skills ###########
 #############################################
 
-final_school_data_PMAN <- ''
+school_data_PMAN <- school_data_PMAN %>%
+  mutate(n_mssing_ILDR=n_miss_row(.))
+
+
+final_school_data_PMAN <- school_data_PMAN
 
 #############################################
 ##### School Teaching Attraction ###########
 #############################################
 
-final_school_data_TATT <- ''
+school_data_TATT <- school_data_TATT %>%
+  mutate(n_mssing_TATT=n_miss_row(.))
+
+teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
+  mutate(n_mssing_TATT=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise(n_mssing_teach_TATT=sum(n_miss_row))
+
+
+
+final_school_data_TATT <- school_data_TATT %>%
+  left_join(teacher_questionnaire_TATT)
+
 
 
 #############################################
 ##### School Teaching Selection and Deployment ###########
 #############################################
 
-final_school_data_TSDP <- ''
+
+school_data_TSDP <- school_data_TSDP %>%
+  mutate(n_mssing_TSDP=n_miss_row(.))
+
+teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
+  mutate(n_mssing_TSDP=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise(n_mssing_teach_TSDP=sum(n_miss_row))
+
+
+final_school_data_TSDP <- school_data_TSDP %>%
+  left_join(teacher_questionnaire_TSDP)
 
 #############################################
 ##### School Teaching Support ###########
 #############################################
+school_data_TSUP <- school_data_TSUP %>%
+  mutate(n_mssing_TSUP=n_miss_row(.))
 
-final_school_data_TSUP <- ''
+
+teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
+  mutate(n_mssing_TSUP=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise(n_mssing_teach_TSUP=sum(n_miss_row))
+
+
+final_school_data_TSUP <- school_data_TSUP %>%
+  left_join(teacher_questionnaire_TSUP)
 
 
 
@@ -706,60 +786,105 @@ final_school_data_TSUP <- ''
 ##### School Teaching Evaluation ###########
 #############################################
 
-final_school_data_TEVL <- ''
+school_data_TEVL <- school_data_TEVL %>%
+  mutate(n_mssing_TEVL=n_miss_row(.))
+
+final_school_data_TEVL <- school_data_TEVL
 
 
 #############################################
 ##### School  Monitoring and Accountability ###########
 #############################################
+school_data_TMNA <- school_data_TMNA %>%
+  mutate(n_mssing_TMNA=n_miss_row(.))
 
-final_school_data_TMNA <- ''
+teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
+  mutate(n_mssing_TMNA=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise(n_mssing_teach_TMNA=sum(n_miss_row))
+
+
+
+final_school_data_TMNA <- school_data_TMNA  %>%
+  left_join(teacher_questionnaire_TMNA)
 
 #############################################
 ##### School  Intrinsic Motivation ###########
 #############################################
 
-final_school_data_TINM <- ''
+school_data_TINM <- school_data_TINM %>%
+  mutate(n_mssing_TINM=n_miss_row(.))
+
+teacher_questionnaire_TINM <- teacher_questionnaire_TINM %>%
+  mutate(n_mssing_TINM=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise(n_mssing_teach_TINM=sum(n_miss_row))
+
+
+final_school_data_TINM <- school_data_TINM %>%
+  left_join(teacher_questionnaire_TINM)
 
 #############################################
 ##### School  Inputs and Infrastructure Standards ###########
 #############################################
 
-final_school_data_ISTD <- ''
+school_data_ISTD <- school_data_ISTD %>%
+  mutate(n_mssing_ISTD=n_miss_row(.))
+
+
+final_school_data_ISTD <- school_data_ISTD
 
 #############################################
 ##### School  Inputs and Infrastructure Monitoring ###########
 #############################################
 
-final_school_data_IMON <- ''
+school_data_IMON <- school_data_IMON %>%
+  mutate(n_mssing_IMON=n_miss_row(.))
+
+
+final_school_data_IMON <- school_data_IMON
 
 
 
 #############################################
 ##### School School Management Attraction  ###########
 #############################################
+school_data_SATT <- school_data_SATT %>%
+  mutate(n_mssing_SATT=n_miss_row(.))
 
-final_school_data_SATT <- ''
+
+final_school_data_SATT <- school_data_SATT
 
 
 #############################################
 ##### School School Management Selection and Deployment  ###########
 #############################################
 
-final_school_data_SSLD <- ''
+school_data_SSLD <- school_data_SSLD %>%
+  mutate(n_mssing_SSLD=n_miss_row(.))
+
+final_school_data_SSLD <- school_data_SSLD
 
 
 #############################################
 ##### School School Management Support  ###########
 #############################################
 
-final_school_data_SSUP <- ''
+school_data_SSUP <- school_data_SSUP %>%
+  mutate(n_mssing_SSUP=n_miss_row(.))
+
+
+final_school_data_SSUP <- school_data_SSUP
 
 #############################################
 ##### School School Management Evaluation  ###########
 #############################################
 
-final_school_data_SEVL <- ''
+school_data_SEVL <- school_data_SEVL %>%
+  mutate(n_mssing_SEVL=n_miss_row(.))
+
+
+final_school_data_SEVL <- school_data_SEVL
 
 
 
@@ -820,4 +945,29 @@ write.csv(school_dta, file = "C:/Users/WB469649/OneDrive - WBG/Education Policy 
 #saves the following in R and stata format
 
 data_list <- c('school_dta', 'teacher_questionnaire','teacher_absence_final')
+
+#loop and produce list of data tables
+
+
+
+
+for (i in indicator_names ) {
+  if (exists(paste("final_school_data_",i, sep=""))) {
+  temp<-get(paste("final_school_data_",i, sep="")) 
+    skim(temp) %>%
+      DT::datatable()
+  }
+}
+
+
+for (i in indicator_names ) {
+  if (exists(paste("final_school_data_",i, sep=""))) {
+    temp<-get(paste("final_school_data_",i, sep="")) 
+    skim(temp) %>%
+      skimr::kable()
+  }
+}
+
+skim(final_school_data_INFR) %>%
+  skimr::kable()
 
