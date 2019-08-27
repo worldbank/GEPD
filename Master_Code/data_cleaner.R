@@ -42,6 +42,12 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
 }
 
+############################
+#read in teacher roster file
+############################
+
+teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+
 ###########################
 #read in school level file
 ###########################

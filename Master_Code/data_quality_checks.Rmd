@@ -245,6 +245,39 @@ kable(df_school_preloaded) %>%
 
 Finally, we check whether teachers interviewed in the teacher questionnaire and the teacher assessment can be matched to teachers in the original roster.
 
+```{r orphans, include=FALSE}
+
+###
+#Create list of orphan teachers (cant be matched to questionnaire,  or teacher exam files)
+###
+
+#Teachers who can't be matched between questionnaire and examiniation
+
+orphans_number_questionnaire <- teacher_questionnaire %>%
+  anti_join(teacher_roster, by=teacher_number) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
+  
+
+orphans_name_questionnaire <- teacher_questionnaire %>%
+  anti_join(teacher_roster, by=teacher_name) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
+  
+
+orphans_number_assess <- teacher_questionnaire %>%
+  anti_join(teacher_roster, by=teacher_number) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
+  
+
+orphans_name_assess <- teacher_questionnaire %>%
+  anti_join(teacher_roster, by=teacher_name) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
+  
+
+```
 
 
 
