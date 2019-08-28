@@ -25,31 +25,19 @@ if (file.exists(pw_file)) {
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<-""
+server_add<-rstudioapi::askForPassword(prompt = 'Please enter Server http Address:')
 
 #questionnaire version
 #e.g. quest_version<-8
-quest_version<-''
+quest_version<-rstudioapi::askForPassword(prompt = 'Please enter Questionnaire Version:')
   
 #path and folder where the .zip file will be stored
 #this needs to be entered
 #Please note that the following directory path may need to be created
   
 
-#Country name
-country <-''
-year <- ''
-
-
-# File paths
-if (Sys.getenv("USERNAME") == "wb469649"){
-  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work"
-  download_folder <-file.path(paste(project_folder,country,year,"Data/raw/School", sep="/"))
-} else {
-  
-  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
-}
 tounzip <- "mydata.zip" 
+
 
 
 ######################################

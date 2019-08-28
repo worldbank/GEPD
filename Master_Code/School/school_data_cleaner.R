@@ -27,10 +27,6 @@ makeVlist <- function(dta) {
 
 
 
-#Country name
-country <-'Mozambique'
-year <- '2019'
-
 
 # File paths
 #You can enter your UPI and specify a path, or you can select manually in a new window

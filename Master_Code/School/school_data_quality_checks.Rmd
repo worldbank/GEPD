@@ -27,12 +27,12 @@ library(stargazer)
 library(skimr)
 #Load the data
 #read in school level file
-save.dir <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
+save_folder <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
 
-load(paste(save.dir, "./all_modules_clean.RData", sep="/"))
+load(paste(save_folder, "./all_modules_clean.RData", sep="/"))
 
-save.dir.para <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
-load(file=paste(save.dir.para, "paradata.RData", sep="/"))
+save_folder.para <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
+load(file=paste(save_folder.para, "paradata.RData", sep="/"))
 ```
 
 ## Introduction
