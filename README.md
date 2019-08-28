@@ -10,13 +10,17 @@ This repository is for the Global Education Policy Dashboard team.
 
 The github repo is readable by the World Bank Github group members, but writable only for users in the World Bank EduAnalytics team. 
 
-All Stata datasets or csv files are set to .gitignore, meaning they will not be uploaded onto github when things are pushed, so that no data is accidentally pushed .  
-
 Country specific and generic code used to do sampling, clean data, do quality checks, and analysis are available in this repo.
 
 Folders are organized by Country -> Year -> Code
 
 Data is currently housed on our Dashboard team sharepoint folder, but will be migrated to a network drive when that is set up. 
+
+### User Notes
+All Stata datasets or csv files are set to .gitignore, meaning they will not be uploaded onto github when things are pushed, so that no data is accidentally pushed .  
+
+Additionally, users may set up a password.R file to store passwords for the Survey Solutions API.  The password.R file should be stored in the parent directory of your clone (i.e. something like C:\Users\wb{upi}\Documents\Github\GEPD\).  Files starting with password are included in the .gitignore file.  ** IF YOU AREN'T SURE HOW TO SET ONE UP PLEASE CONTACT BRIAN STACY bstacy@worldbank.org. **  If a password.R file is not setup, it is no problem, but you will be prompted each time to enter a username and password when running an api.R file.
+
 
 ## Background on Project
 Policymakers in low- and middle-income countries who are working to improve student learning often find themselves flying blind. They see the budget that goes into education and (sometimes) the learning that students come out with, but they lack information on the crucial factors in between— the practices, policies, and politics—that drive those learning outcomes. The new Global Education Policy Dashboard initiative will fill that gap.
