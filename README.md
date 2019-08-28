@@ -19,7 +19,7 @@ Data is currently housed on our Dashboard team sharepoint folder, but will be mi
 ### User Notes
 All Stata datasets or csv files are set to .gitignore, meaning they will not be uploaded onto github when things are pushed, so that no data is accidentally pushed .  
 
-Additionally, users may set up a password.R file to store passwords for the Survey Solutions API.  The password.R file should be stored in the parent directory of your clone (i.e. something like C:\Users\wb{upi}\Documents\Github\GEPD\).  Files starting with password are included in the .gitignore file.  **IF YOU AREN'T SURE HOW TO SET ONE UP PLEASE CONTACT BRIAN STACY bstacy@worldbank.org.**  If a password.R file is not setup, it is no problem, but you will be prompted each time to enter a username and password when running an api.R file.
+Additionally, users may set up a password.R file to store passwords for the Survey Solutions API.  The password.R file should be stored in the parent directory of your clone (i.e. something like C:\Users\wb{upi}\Documents\Github\GEPD\).  Files starting with password are included in the .gitignore file.  **If you aren't sure how to set one up, please contact Brian Stacy bstacy@worldbank.org.**  If a password.R file is not setup, it is no problem, but you will be prompted each time to enter a username and password when running an api.R file.
 
 
 ## Background on Project
