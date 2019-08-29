@@ -8,7 +8,6 @@ library(stringr)
 library(Hmisc)
 library(skimr)
 library(naniar)
-
 library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
@@ -53,11 +52,11 @@ vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
-         survey_time=m1s0q8,
-         lat=m1s0q9__Latitude,
-         lon=m1s0q9__Longitude
-  )
+            enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
+            survey_time=m1s0q8,
+            lat=m1s0q9__Latitude,
+            lon=m1s0q9__Longitude
+            )
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
@@ -461,18 +460,18 @@ list_topics<-c("vocabn", "comprehension","letters","words","sentence","name_writ
 #recode ECD variables to be 1 if student got it correct and zero otherwise
 ecd_dta<- ecd_dta %>%
   mutate_at(vars(ends_with("comprehension"),
-                 ends_with("letters"),
-                 ends_with("words"),
-                 ends_with("sentence"),
-                 ends_with("name_writing"),
-                 ends_with("print"),
-                 ends_with("produce_set"),
-                 ends_with( "number_ident"),
-                 ends_with("number_compare"),
-                 ends_with("simple_add"),
-                 ends_with("backward_digit"),
-                 ends_with("perspective"),
-                 ends_with("conflict_resol")), ~bin_var(.,1)  ) %>%
+            ends_with("letters"),
+            ends_with("words"),
+            ends_with("sentence"),
+            ends_with("name_writing"),
+            ends_with("print"),
+            ends_with("produce_set"),
+            ends_with( "number_ident"),
+            ends_with("number_compare"),
+            ends_with("simple_add"),
+            ends_with("backward_digit"),
+            ends_with("perspective"),
+            ends_with("conflict_resol")), ~bin_var(.,1)  ) %>%
   mutate_at(vars(ends_with("head_shoulders")), ~if_else(.x==2,1,0,missing=NULL)) %>%
   mutate_at(vars(ends_with("vocabn")), ~case_when(.x==98 ~ as.numeric(NA),
                                                   .x==99 ~ 0,
@@ -481,11 +480,11 @@ ecd_dta<- ecd_dta %>%
                                                   (.x!=98 & .x!=99 & .x<10) ~ as.numeric(.x)/10,
                                                   is.na(.x) ~ as.numeric(NA))) %>%
   mutate_at(vars(ends_with("counting")), ~case_when(.x==98 ~ as.numeric(NA),
-                                                    .x==99 ~ 0,
-                                                    .x==77 ~ 0,
-                                                    (.x!=98 & .x!=99 & .x>=30) ~ 1,
-                                                    (.x!=98 & .x!=99 & .x<30) ~ as.numeric(.x)/30,
-                                                    is.na(.x) ~ as.numeric(NA)))
+                                                   .x==99 ~ 0,
+                                                   .x==77 ~ 0,
+                                                   (.x!=98 & .x!=99 & .x>=30) ~ 1,
+                                                   (.x!=98 & .x!=99 & .x<30) ~ as.numeric(.x)/30,
+                                                   is.na(.x) ~ as.numeric(NA)))
 
 
 
@@ -502,7 +501,7 @@ ecd_dta$literacy_length<-length(lit_items)
 #calculate students lit items correct
 ecd_dta <- ecd_dta %>%
   mutate(literacy_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
-                                                   pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
+  pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -516,7 +515,7 @@ ecd_dta$math_length<-length(math_items)
 #calculate students math items correct
 ecd_dta <- ecd_dta %>%
   mutate(math_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
-                                               pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
+                                                   pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
 
 ####Executive Functioning####
 #calculate # of Exec Function items
@@ -544,7 +543,7 @@ ecd_dta$soc_length<-length(soc_items)
 #calculate students excec items correct
 ecd_dta <- ecd_dta %>%
   mutate(soc_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
-                                              pattern="perspective$|conflict_resol$")], na.rm=TRUE))
+                                               pattern="perspective$|conflict_resol$")], na.rm=TRUE))
 
 
 ####Total score####
@@ -673,7 +672,7 @@ final_school_data_INFR <- school_data_INFR
 
 
 
-final_school_data_PEDG <- ''
+#final_school_data_PEDG <- ''
 
 
 #############################################
@@ -905,48 +904,32 @@ final_school_data_SEVL <- school_data_SEVL
 
 #Build school level database
 
-
-
-#merge on 4th grade student learning
-school_dta <- school_dta %>%
-  left_join(school_student_knowledge, by="interview__id")
-
-#merge on teacher absence
-school_dta <- school_dta %>%
-  left_join(school_absence_rate, by="interview__id")
-
-#merge on teacher content knowledge
-school_dta <- school_dta %>%
-  left_join(school_content_knowledge, by="interview__id")
-
-
-######DELETE THIS########
-#Fill with random numbers of missing
-school_dta$rand1<-runif(nrow(school_dta))
-school_dta$rand2<-runif(nrow(school_dta))
-school_dta$rand3<-runif(nrow(school_dta))
-school_dta$pedagogical_knowledge<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$inputs<-rbinom(nrow(school_dta),40,0.5)/10
-school_dta$infrastructure<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$ecd<-runif(nrow(school_dta))
-school_dta$operational_management<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$instructional_leadership<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$school_knowledge<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$management_skills<-rbinom(nrow(school_dta),50,0.5)/10
-
-#replace missing indicator values with random numbers
-school_dta$student_knowledge[is.na(school_dta$student_knowledge)]<-school_dta$rand1[is.na(school_dta$student_knowledge)]
-school_dta$absence_rate[is.na(school_dta$absence_rate)]<-school_dta$rand2[is.na(school_dta$absence_rate)]
-school_dta$content_knowledge[is.na(school_dta$content_knowledge)]<-school_dta$rand3[is.na(school_dta$content_knowledge)]
-
-school_dta$learning_outcome<-100*runif(nrow(school_dta))
-school_dta$participation_outcome<-100*runif(nrow(school_dta))
-
-#rename database as practice data and collapse to single country observation
+for (i in indicator_names ) {
+  if (exists(paste("final_school_data_",i, sep=""))) {
+    #form temp data frame with each schools data
+    temp<-get(paste("final_school_data_",i, sep="")) 
+    
+    #Merge this to overall final_school_data frame
+    if (!exists('final_school_data')) {
+      final_school_data<-temp
+    } else {
+      final_school_data<-final_school_data %>%
+        left_join(temp)
+         }
+  }
+}
 
 
 
-write.csv(school_dta, file = "C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solutions/Peru/gepd_map_peru/school_dta.csv")
+
+
+write.csv(school_dta, file = file.path(save_folder, "final_complete_school_data.csv"))
+write_dta(school_dta, path = file.path(save_folder, "final_complete_school_data.dta"), version = 14)
+
+#Trim data frame to just contain main variables for indicators
+
+ind_list<-c()
+
 
 
 ################################

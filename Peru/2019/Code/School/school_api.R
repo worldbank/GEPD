@@ -38,7 +38,7 @@ quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter
 
 currentDate<-Sys.Date()
 
-tounzip <- paste("mydata-",currentData, ".zip" ,sep="")
+tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
 
 
 

@@ -7,7 +7,6 @@ library(haven)
 library(stringr)
 library(Hmisc)
 library(skimr)
-library(naniar)
 
 library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
@@ -52,18 +51,18 @@ school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
-  mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
-         survey_time=m1s0q8,
-         lat=m1s0q9__Latitude,
-         lon=m1s0q9__Longitude
-  )
+  mutate(enumerator_name=m1s0q1_name  ,
+            enumerator_number=m1s0q1_number ,
+            survey_time=m1s0q8,
+            lat=m1s0q9__Latitude,
+            lon=m1s0q9__Longitude
+            )
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim("./Indicators/indicators.md", delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -75,7 +74,7 @@ indicator_names <- indicators$indicator_tag
 preamble_info <- c('interview__id', 'school_name_preload', 'school_address_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'enumerator_name_other', 'enumerator_number', 'survey_time', 'lat', 'lon')
+                   'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
 #This will make the information for each indicator contained in an independent database
@@ -461,32 +460,24 @@ list_topics<-c("vocabn", "comprehension","letters","words","sentence","name_writ
 #recode ECD variables to be 1 if student got it correct and zero otherwise
 ecd_dta<- ecd_dta %>%
   mutate_at(vars(ends_with("comprehension"),
-                 ends_with("letters"),
-                 ends_with("words"),
-                 ends_with("sentence"),
-                 ends_with("name_writing"),
-                 ends_with("print"),
-                 ends_with("produce_set"),
-                 ends_with( "number_ident"),
-                 ends_with("number_compare"),
-                 ends_with("simple_add"),
-                 ends_with("backward_digit"),
-                 ends_with("perspective"),
-                 ends_with("conflict_resol")), ~bin_var(.,1)  ) %>%
+            ends_with("letters"),
+            ends_with("words"),
+            ends_with("sentence"),
+            ends_with("name_writing"),
+            ends_with("print"),
+            ends_with("countingproduce_set"),
+            ends_with( "number_ident"),
+            ends_with("number_compare"),
+            ends_with("simple_add"),
+            ends_with("backward_digit"),
+            ends_with("perspective"),
+            ends_with("conflict_resol")), ~bin_var(.,1)  ) %>%
   mutate_at(vars(ends_with("head_shoulders")), ~if_else(.x==2,1,0,missing=NULL)) %>%
   mutate_at(vars(ends_with("vocabn")), ~case_when(.x==98 ~ as.numeric(NA),
                                                   .x==99 ~ 0,
-                                                  .x==77 ~ 0,
                                                   (.x!=98 & .x!=99 & .x>=10) ~ 1,
                                                   (.x!=98 & .x!=99 & .x<10) ~ as.numeric(.x)/10,
-                                                  is.na(.x) ~ as.numeric(NA))) %>%
-  mutate_at(vars(ends_with("counting")), ~case_when(.x==98 ~ as.numeric(NA),
-                                                    .x==99 ~ 0,
-                                                    .x==77 ~ 0,
-                                                    (.x!=98 & .x!=99 & .x>=30) ~ 1,
-                                                    (.x!=98 & .x!=99 & .x<30) ~ as.numeric(.x)/30,
-                                                    is.na(.x) ~ as.numeric(NA)))
-
+                                                  is.na(.x) ~ as.numeric(NA)))
 
 
 ####Literacy####
@@ -502,7 +493,7 @@ ecd_dta$literacy_length<-length(lit_items)
 #calculate students lit items correct
 ecd_dta <- ecd_dta %>%
   mutate(literacy_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
-                                                   pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
+  pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -516,7 +507,7 @@ ecd_dta$math_length<-length(math_items)
 #calculate students math items correct
 ecd_dta <- ecd_dta %>%
   mutate(math_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
-                                               pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
+                                                   pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
 
 ####Executive Functioning####
 #calculate # of Exec Function items
@@ -538,13 +529,13 @@ ecd_dta <- ecd_dta %>%
 soc_items<-colnames(ecd_dta[,str_detect(
   colnames(ecd_dta), "perspective$|conflict_resol$")])
 
-ecd_dta$soc_length<-length(soc_items)
+ecd_dta$soc_length<-length(exec_items)
 
 
 #calculate students excec items correct
 ecd_dta <- ecd_dta %>%
   mutate(soc_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
-                                              pattern="perspective$|conflict_resol$")], na.rm=TRUE))
+                                               pattern="perspective$|conflict_resol$")], na.rm=TRUE))
 
 
 ####Total score####
