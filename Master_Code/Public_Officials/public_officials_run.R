@@ -54,7 +54,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #launch file to access data from API
 source('public_officials_api.R')
 
-#launch file to clear data
+#launch file to clean data
 source('public_officials_data_cleaner.R')
 
 #create R markdown file with quality checks
