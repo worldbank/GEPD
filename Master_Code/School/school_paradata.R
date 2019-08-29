@@ -10,52 +10,53 @@ library(tidyr)
 library(Hmisc)
 library(lubridate)
 library(stringr)
-library(here)
 library(crosstalk)
 library(DT)
 library(plotly)
 library(ggplot2)
 library(haven)
 library(readr)
+library(here)
 
 ######################################
 # User Inputs for API #
 ######################################
 
 # Here you need to indicate the path where you replicated the folder structures on your own computer
-here() #"C:/Users/wb469649/Documents/Github/GEPD"
-
+here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 #user credentials
-
 #Check whether password.R file is in Github repo
-pw_file<-here("password.R")
+pw_file<-here::here("password.R")
 if (file.exists(pw_file)) {
   source(pw_file)
 } else {
-#these credentials may need to be entered
-user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
-password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
+  #these credentials may need to be entered
+  user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
+  password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
 }
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<-"https://gepdmoz.mysurvey.solutions"
+server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://{enter here}.mysurvey.solutions')$res
 
 #questionnaire version
 #e.g. quest_version<-8
-quest_version<-"3"
-  
+quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter integer')$res 
+
 #path and folder where the .zip file will be stored
 #this needs to be entered
-download_folder <- choose.dir(default = "", caption = "Select folder to save data downloaded from API")
-tounzip <- "mydata.zip" 
+#Please note that the following directory path may need to be created
 
-  
+
+currentDate<-Sys.Date()
+
+tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
+
 ######################################
 # Interactions with API
 ######################################
-  
+
 #Get list of questionnaires available
 #the server address may need to be modified
 q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
@@ -96,15 +97,15 @@ para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
 
 #label variables
 var.labels=c(
-            interview__id = "Unique 32-character long identifier of the interview",
-            order = "Sequential event number within each interview",
-            event = "Type of event happened",
-            responsible = "Login name of the person who initiated the event",
-            role = "System role of the person who initiated the event",
-            timestamp = "Date and time when the event happened",
-            offset = "Timezone offset relative to UTC",
-            parameters = "Event-specific parameters"
-            )
+  interview__id = "Unique 32-character long identifier of the interview",
+  order = "Sequential event number within each interview",
+  event = "Type of event happened",
+  responsible = "Login name of the person who initiated the event",
+  role = "System role of the person who initiated the event",
+  timestamp = "Date and time when the event happened",
+  offset = "Timezone offset relative to UTC",
+  parameters = "Event-specific parameters"
+)
 # Label data
 label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 
@@ -114,7 +115,7 @@ label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 ######################################
 #clean up timestamp
 para_df <- para_df %>% 
-  mutate(timestamp= ymd_hms(timestamp)+hms(offset)+hms('6:00:00'))
+  mutate(timestamp= ymd_hms(timestamp))
 
 #Generate length of time for each question, by calculating gap in time between when question was entered and previous question
 para_df <- para_df %>% 
@@ -143,7 +144,7 @@ para_df <- para_df %>%
   mutate(indicator = str_to_upper(indicator))
 
 #Read in list of indicators
-indicators <- read_delim(here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
+indicators <- read_delim(here::here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -162,7 +163,6 @@ makeVlist <- function(dta) {
          varlabel = varlabels, vallabel = vallabels) 
 }
 
-download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
 
 #create school metadata frame
 raw_school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
@@ -173,7 +173,7 @@ raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_ro
 teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
 
 #create teacher absence metadata frame
-raw_teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
 
 #create ecd metadata frame
@@ -193,13 +193,12 @@ metadata <- metadata %>%
 para_df <- para_df %>% 
   left_join(metadata )
 
-save.dir <- choose.dir(default = "", caption = "Select folder to save Final Paradata")
-save(para_df, file=paste(save.dir, "paradata.RData", sep="/"))
+save(para_df, file=paste(save_folder, "paradata.RData", sep="/"))
 
 para_dta<- para_df %>% 
   mutate(interview_id=ï..interview__id) %>%
   select(-vallabel, -varlabel, -ï..interview__id)
-write_dta(para_dta, path=paste(save.dir, "paradata.dta", sep="/"))
+write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 
 ######################################
 # Length of each question by Enumerator
@@ -220,13 +219,13 @@ bscols(widths=c(3,NA),
          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
          
        ),
-      
+       
        list (
          plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
            layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
          datatable(linked_df, 
                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                            'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+                              'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
          
@@ -255,15 +254,15 @@ bscols(widths=c(3,NA),
          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
        ),
        list (
-       plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
-      
-        datatable(linked_df, 
-                 colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                            'Length in Seconds' = 'timelength_sec'),
-                 extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                 options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-      
+         plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+           layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+         
+         datatable(linked_df, 
+                   colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                              'Length in Seconds' = 'timelength_sec'),
+                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+         
        )
        
 )

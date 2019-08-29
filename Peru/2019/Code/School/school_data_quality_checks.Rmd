@@ -27,18 +27,15 @@ library(stargazer)
 library(skimr)
 #Load the data
 #read in school level file
-save_folder <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
 
-load(paste(save_folder, "./all_modules_clean.RData", sep="/"))
+load(paste(save_folder, "school_survey_data.RData", sep="/"))
 
-save_folder.para <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
-load(file=paste(save_folder.para, "paradata.RData", sep="/"))
+load(file=paste(save_folder, "paradata.RData", sep="/"))
 ```
 
 ## Introduction
 
-This file produces a set of basic quality checks to highlight potential issues in data collection.  The survey used in this report is mainly the 2018 Mozambique SDI survey.  The paradata section on the interview lengths and time completed are based on our Mozambique pre-pilot in August 2019.
-
+This file produces a set of basic quality checks to highlight potential issues in data collection.  
 
 ## Paradata on Interview Lengths & Time Completed
 
@@ -166,7 +163,7 @@ Teacher absence is the most problematic, followed by infrastructure, inputs, and
 
 ```{r missings, echo=FALSE, error=FALSE, message=FALSE}
 #plot missing values by indicator
-gg_miss_var(school_indicator_data)
+gg_miss_var(school_dta_short)
 ```
 
 Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation, total number of schools, and number of schools with missing information for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
@@ -175,13 +172,11 @@ Below the missings plot is a table of summary statistics for a few key indicator
 
 #table of summary stats
 #merge on teacher content knowledge
-school_indicator_data <- school_indicator_data %>%
-  left_join(region)
 
 
 
-sumstats<-school_indicator_data %>%
-  rename_all(.funs=funs(sub("_","", names(school_indicator_data)))) %>%
+sumstats<-school_dta_short %>%
+  rename_all(.funs=funs(sub("_","", names(school_dta_short)))) %>%
   select(c("studentknowledge", "absencerate", 
            "contentknowledge", "pedagogicalknowledge", "inputs", "infrastructure")) %>%  
   summarise_all(funs(min = min(.,na.rm=TRUE), 
@@ -225,9 +220,9 @@ In the next check, we will asssess whether any schools were not part of the pre-
 # We identify these schools using the variable "school_name_preload", because this variable is not filled in case the school is not on the list
 
 
-df_school_preloaded <- school_indicator_data %>%
+df_school_preloaded <- school_dta_short %>%
   filter(is.na(school_name_preload)) %>%
-  select(interview__id, m1s0q2_name, m1s0q2_code, m1s0q2_emis, enumerator_name, enumerator_number) 
+  select(interview__id, m1s0q2_name, m1s0q2_code, m1s0q2_emis, enumerator_name_other, enumerator_number) 
   
 
 #setExcelSheet "Schools and Teachers"
@@ -253,29 +248,29 @@ Finally, we check whether teachers interviewed in the teacher questionnaire and 
 
 #Teachers who can't be matched between questionnaire and examiniation
 
-orphans_number_questionnaire <- teacher_questionnaire %>%
-  anti_join(teacher_roster, by=teacher_number) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-  
-
-orphans_name_questionnaire <- teacher_questionnaire %>%
-  anti_join(teacher_roster, by=teacher_name) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-  
-
-orphans_number_assess <- teacher_questionnaire %>%
-  anti_join(teacher_roster, by=teacher_number) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-  
-
-orphans_name_assess <- teacher_questionnaire %>%
-  anti_join(teacher_roster, by=teacher_name) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-  
+# orphans_number_questionnaire <- teacher_questionnaire %>%
+#   anti_join(teacher_roster, by=teacher_number) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
+#   
+# 
+# orphans_name_questionnaire <- teacher_questionnaire %>%
+#   anti_join(teacher_roster, by=teacher_name) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
+#   
+# 
+# orphans_number_assess <- teacher_questionnaire %>%
+#   anti_join(teacher_roster, by=teacher_number) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
+#   
+# 
+# orphans_name_assess <- teacher_questionnaire %>%
+#   anti_join(teacher_roster, by=teacher_name) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
+#   
 
 ```
 
@@ -291,7 +286,7 @@ The map is color coded.  Green indicators, for instance, have no missing informa
 ####################################################################
 #######Map of schools with missing school info#####
 ####################################################################
-school_map <- school_indicator_data %>%
+school_map <- school_dta_short %>%
   filter(!is.na(lat) & !is.na(lon))
 
 #Create indicator of schools with missing values in our indicators
@@ -362,11 +357,8 @@ map <- function(df_input) {    leaflet(df_input) %>%
                                   "Teacher Pedagogical Skill: ", round(school_map$pedagogical_knowledge, digits=2), " <br>",
                                   "Basic Inputs: ", round(school_map$inputs, digits=2), " <br>",
                                   "Basic Infrastructure: ", round(school_map$infrastructure, digits=2), " <br>",
-                                  "Capacity for Learning: ", round(school_map$ecd, digits=2), "% <br>",
-                                  "Operational Management: ", round(school_map$operational_management, digits=2), " <br>",
-                                  "Instructional Leadership: ", round(school_map$instructional_leadership, digits=2), " <br>",
-                                  "School Knowledge: ", round(school_map$school_knowledge, digits=2), " <br>",
-                                  "Management Skills: ", round(school_map$management_skills, digits=2), " <br>" , sep =""))   %>%
+                                  "Capacity for Learning: ", round(school_map$ecd_student_knowledge, digits=2), "% <br>",
+                                  "Operational Management: ", round(school_map$operational_management, digits=2), " <br>"))   %>%
     addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
 
 }
@@ -384,168 +376,12 @@ linked_df<-SharedData$new(school_map)
 bscols(widths=c(3,NA),
   list(
   filter_slider("missings", "Missing Indicators", linked_df, ~total_missing),
-  filter_checkbox("prov", "Province", linked_df, ~province, inline=FALSE),
-  filter_checkbox("reg", "Region", linked_df, ~region, inline=FALSE)
+  filter_checkbox("prov", "Province", linked_df, ~school_province_preload, inline=FALSE),
+  filter_checkbox("reg", "District", linked_df, ~school_district_preload, inline=FALSE)
   ),
   map(linked_df) 
 
 )
-
-```
-
-
-## Outlier Plots
-
-In the following, we highlight schools that have outliers in terms terms of their practice indicators compared to their 4th grade learning outcomes.  A simple model is estimated relating 4th grade student learning to our practice indicators: teacher absence, teacher content knowledge, teacher pedagogy (TEACH), basic inputs, and basic infrastructure.  The learning outcomes are compared to predicted values from this model.  For instance, if the school scores poorly on teacher absence, content knowledge, pedagogy, inputs and infrastructure and thus has a low predicted value for student achievement, but in fact has very high student achievement, it may signal a problem with the quality of the data for that school.  This is meant to be merely a first check of the data, and does not necessarily indicate a problem.  
-
-We model the fraction correct on the student achievement exam using the logistic functional form:
-
-
-$$E(A_i|X_i)=\frac{e^{(\beta_0 + \beta_1X_i)}}{1+e^{(\beta_0 + \beta_1 X_i)}}$$
-
-
-Where $A_i$ is student achievement in fourth grade for school i.  $X_i$ is a vector of our practice indicators: teacher absence, teacher content knowledge, teacher pedagogy (TEACH), basic inputs, and basic infrastructure.  The logistic functional form for the fraction correct was chosen, because it can be justified using a very simple Rasch IRT model, in which the probability of answering correctly to each item also follows the logistic functional form.  
-
-The map below is color coded to show where the gap between the actual student achievement and the predicted student achievement are largest.  The slider allows users to filter based on the squared error from the model, the squared difference between actual achievement and predicted achievement, to look for school locations that may be concerning.  Again, this does not necessarily mean there is a problem, but should trigger more investigation.
-
-```{r outliers, include=FALSE}
-####################################################################
-#create simple model of indicators related to learning to check for strange outliers
-####################################################################
-linmod<- lm(student_knowledge ~ absence_rate + content_knowledge + pedagogical_knowledge + inputs + infrastructure , data=school_map)
-summary(linmod)
-
-school_map$student_knowledge_01<-school_map$student_knowledge/100
-logitmod<- glm(student_knowledge_01 ~ absence_rate + content_knowledge + pedagogical_knowledge + inputs + infrastructure , family=binomial(), data=school_map)
-summary(logitmod)
-
-
-#impute missing values for model using mice
-school_map_imp<-mice(school_map, m=5, maxit=40)
-
-logitmod_imp<- with(school_map_imp, glm(student_knowledge_01 ~ absence_rate + content_knowledge + pedagogical_knowledge + inputs + infrastructure , family=binomial()))
-combo_logitmod<- pool(logitmod_imp)
-summary(combo_logitmod)
-
-#Get average dataset
-school_map_filled <- complete(school_map_imp, "long")
-
-school_map_filled <- school_map_filled %>%
-  group_by(sch_id) %>%
-  summarise_all(funs(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
-
-#add fitted values from model
-school_map_filled$fitted_logit<- 100*predict(logitmod, school_map_filled, type="response")
-
-
-
-#add squared residual to school map
-school_map_filled$squared_resid<- (school_map_filled$student_knowledge-100*predict(logitmod, school_map_filled, type="response"))^2
-
-#add legend for icons
-pal <- colorNumeric(
-  palette = "Reds",
-  domain = school_map_filled$squared_resid
-)
-
-#create icons
-icons <- awesomeIcons(
-  icon = 'graduation-cap',
-  iconColor = 'black',
-  library = 'fa',
-  markerColor = getColor(school_map_filled)
-)
-
-
-
-
-
-
-```
-
-```{r outlier_map, echo=FALSE}
-
-linked_df<-SharedData$new(school_map_filled)
-
-
-bscols(
-  list(
-    filter_slider("outliers", "Squared Error", linked_df, ~squared_resid),
-    filter_checkbox("prov", "Province", linked_df, ~province, inline=FALSE),
-    filter_checkbox("reg", "Region", linked_df, ~region, inline=FALSE)
-  ),
-  leaflet(linked_df) %>% 
-    addTiles()  %>%
-    addCircleMarkers( lng=~lon, lat= ~lat, color=~pal(squared_resid),
-                      popup = paste("Name: ", as.data.frame(linked_df$data())$school, " <br>",
-                                  "Province: ", as.data.frame(linked_df$data())$province, " <br>",
-                                  "District: ", as.data.frame(linked_df$data())$district, " <br>",
-                                  "EMIS Code: ", as.data.frame(linked_df$data())$sch_id, " <br>",
-                                  "<font color='red' > Outcomes ", " <br> <font color='black' >",
-                                  "Avg 4th Grade Learning Score:", round(as.data.frame(linked_df$data())$student_knowledge, digits=2), "% <br>",
-                                  "<font color='red' > Practice Indicators ", " <br> <font color='black' >",
-                                  "Teacher Absence Rate: ", round(as.data.frame(linked_df$data())$absence_rate, digits=2), "% <br>",
-                                  "Teacher Content Knowledge Score: ", round(as.data.frame(linked_df$data())$content_knowledge, digits=2),"% <br>",
-                                  "Teacher Pedagogical Skill: ", round(as.data.frame(linked_df$data())$pedagogical_knowledge, digits=2), " <br>",
-                                  "Basic Inputs: ", round(as.data.frame(linked_df$data())$inputs, digits=2), " <br>",
-                                  "Basic Infrastructure: ", round(as.data.frame(linked_df$data())$infrastructure, digits=2), " <br>",
-                                  "Capacity for Learning: ", round(as.data.frame(linked_df$data())$ecd, digits=2), "% <br>",
-                                  "Operational Management: ", round(as.data.frame(linked_df$data())$operational_management, digits=2), " <br>",
-                                  "Instructional Leadership: ", round(as.data.frame(linked_df$data())$instructional_leadership, digits=2), " <br>",
-                                  "School Knowledge: ", round(as.data.frame(linked_df$data())$school_knowledge, digits=2), " <br>",
-                                  "Management Skills: ", round(as.data.frame(linked_df$data())$management_skills, digits=2), " <br>" , sep =""))   %>%
-    addLegend("bottomright", pal=pal, values=~squared_resid, title="Squared Error"    )
-)
-
-```
-
-## Summary Statistics from Outlier Model
-
-```{r, results='asis'}
-stargazer(logitmod, title="Logit Model of Outliers - Coefficients", type="html")
-```
-
-
-```{r , echo=FALSE}
-
-outlier_plot <- function(df_input) { df_input %>%
-  plot_ly(x= ~df_input$fitted_logit, y=~df_input$student_knowledge, type="scatter", name="Fitted Values"  ) %>%
-  add_lines(x=~df_input$fitted_logit, y=~df_input$fitted_logit, name='45 degree line') %>%
-  layout(xaxis=list(title="Logit Fitted Values"), yaxis=list(title="4th Grade Student Achievement"))
-}
-
-outlier_plot(school_map_filled)
-
-
-
-```
-
-## Summary Statistics and Missings in Detail for Each Indicator
-
-```{r}
-
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-setwd('..')
-
-#Read in list of indicators
-indicators <- read_delim("./Indicators/indicators.md", delim="|", trim_ws=TRUE)
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- indicators$indicator_tag
-
-skim(final_school_data_INFR) %>%
-  skimr::kable()
-
-for (i in indicator_names ) {
-  if (exists(paste("final_school_data_",i, sep=""))) {
-    temp<-get(paste("final_school_data_",i, sep="")) 
-    skim(temp) %>%
-      skimr::kable()
-  }
-}
 
 ```
 

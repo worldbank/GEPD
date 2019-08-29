@@ -57,7 +57,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # #launch file to clear data
 # source('school_data_cleaner.R')
 # 
-# #create R markdown file with quality checks
-# rmarkdown::render('school_data_quality_checks.Rmd',  
-#                   output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
-#                   output_dir = save_folder)
+ #create R markdown file with quality checks
+ rmarkdown::render('school_data_quality_checks.Rmd',  
+                   output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
+                   output_dir = save_folder)

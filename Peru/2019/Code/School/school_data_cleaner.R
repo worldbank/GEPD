@@ -62,7 +62,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -663,7 +663,8 @@ school_data_INFR <- school_data_INFR %>%
                                             disab_class_ramp+disab_class_entr+disab_screening)
   )
   
-final_school_data_INFR <- school_data_INFR 
+final_school_data_INFR <- school_data_INFR %>%
+  mutate(infrastructure=rowSums(select(.,drinking_water, functioning_toilet, visibility,  class_electricity, disability_accessibility), na.rm=TRUE))
 
 
 #############################################
@@ -923,14 +924,49 @@ for (i in indicator_names ) {
 
 
 
-write.csv(school_dta, file = file.path(save_folder, "final_complete_school_data.csv"))
-write_dta(school_dta, path = file.path(save_folder, "final_complete_school_data.dta"), version = 14)
+write.csv(final_school_data, file = file.path(save_folder, "final_complete_school_data.csv"))
+write_dta(final_school_data, path = file.path(save_folder, "final_complete_school_data.dta"), version = 14)
 
 #Trim data frame to just contain main variables for indicators
 
-ind_list<-c()
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
+            'absence_rate', 'school_absence_rate', 
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
+            'pedagogical_knowledge', 
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+            'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
+            'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'operational_management', 'vignette_1', 'vignette_2'
+            )
+
+#If indicator in this list doesn't exists, create empty column with Missing values
 
 
+for (i in ind_list ) {
+  if(!(i %in% colnames(final_school_data))) {
+    print(i)
+    final_school_data[, i] <- NA
+  }
+}
+
+
+
+
+#list additional info that will be useful to keep in dataframe
+preamble_info <- c('interview__id', 'school_name_preload', 'school_address_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                   'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                   'enumerator_name_other', 'enumerator_number', 'survey_time', 'lat', 'lon')
+
+
+
+
+
+school_dta_short <- final_school_data %>%
+  select(preamble_info, ind_list)
+
+write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
+write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)
 
 ################################
 #Store Key Created Datasets
@@ -938,8 +974,10 @@ ind_list<-c()
 
 #saves the following in R and stata format
 
-data_list <- c('school_dta', 'teacher_questionnaire','teacher_absence_final')
+data_list <- c('school_dta', 'school_dta_short', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment')
+data_list <- c( 'school_dta_short', 'final_school_data')
 
+save(school_dta_short, final_school_dta, file = file.path(save_folder, "school_survey_data.RData"))
 #loop and produce list of data tables
 
 

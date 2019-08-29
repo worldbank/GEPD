@@ -8,7 +8,6 @@ library(stringr)
 library(Hmisc)
 library(skimr)
 library(naniar)
-
 library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
@@ -35,8 +34,8 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work"
   download_folder <-file.path(paste(project_folder,country,year,"Data/raw/School", sep="/"))
 } else {
-
-download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
 }
 
 ############################
@@ -63,7 +62,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -161,9 +160,9 @@ label(teacher_questionnaire$grade) <- "Grade"
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info_school <- c('interview__id', 'questionnaire_roster__id', 'teacher_name', 'teacher_number',
-                   'available', 'teacher_position', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5',
-                   'teacher_language', 'teacher_math', 'teacher_both_subj', 'teacher_other_subj', 'teacher_education', 'teacher_year_began',
-                   'teacher_age')
+                          'available', 'teacher_position', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5',
+                          'teacher_language', 'teacher_math', 'teacher_both_subj', 'teacher_other_subj', 'teacher_education', 'teacher_year_began',
+                          'teacher_age')
 
 
 
@@ -279,7 +278,7 @@ final_school_data_EFFT <- teacher_absence_dta %>%
   summarise(school_absence_rate=mean(school_absent), 
             absence_rate=mean(absent),
             principal_absence_rate=mean(principal_absent)
-            )
+  )
 
 
 #############################################
@@ -599,7 +598,7 @@ school_data_INPT <- school_data_INPT %>%
 school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
   group_by(interview__id) %>%
   summarise(used_ict=mean(m3sbq4_inpt))
-            
+
 #access to ICT
 school_data_INPT <- school_data_INPT %>%
   mutate(access_ict=bin_var(m1sbq14_inpt,1))
@@ -616,8 +615,8 @@ final_school_data_INPT <- school_data_INPT %>%
 #number of missing values
 school_data_INFR <- school_data_INFR %>%
   mutate(n_mssing_INFR=n_miss_row(.))
-  
-  #drinking water
+
+#drinking water
 school_data_INFR <- school_data_INFR %>%
   #
   mutate(drinking_water=if_else((m1sbq9_infr==1 | m1sbq9_infr==2 | m1sbq9_infr==5 | m1sbq9_infr==6), 1,0, as.numeric(NA) ))
@@ -661,10 +660,11 @@ school_data_INFR <- school_data_INFR %>%
     disab_screening=rowSums(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE)/3,
     #sum up all components for overall disability accessibility score
     disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
-                                            disab_class_ramp+disab_class_entr+disab_screening)
+                                disab_class_ramp+disab_class_entr+disab_screening)
   )
-  
-final_school_data_INFR <- school_data_INFR 
+
+final_school_data_INFR <- school_data_INFR %>%
+  mutate(infrastructure=rowSums(select(.,drinking_water, functioning_toilet, visibility,  class_electricity, disability_accessibility), na.rm=TRUE))
 
 
 #############################################
@@ -673,7 +673,7 @@ final_school_data_INFR <- school_data_INFR
 
 
 
-final_school_data_PEDG <- ''
+#final_school_data_PEDG <- ''
 
 
 #############################################
@@ -905,49 +905,68 @@ final_school_data_SEVL <- school_data_SEVL
 
 #Build school level database
 
-
-
-#merge on 4th grade student learning
-school_dta <- school_dta %>%
-  left_join(school_student_knowledge, by="interview__id")
-
-#merge on teacher absence
-school_dta <- school_dta %>%
-  left_join(school_absence_rate, by="interview__id")
-
-#merge on teacher content knowledge
-school_dta <- school_dta %>%
-  left_join(school_content_knowledge, by="interview__id")
-
-
-######DELETE THIS########
-#Fill with random numbers of missing
-school_dta$rand1<-runif(nrow(school_dta))
-school_dta$rand2<-runif(nrow(school_dta))
-school_dta$rand3<-runif(nrow(school_dta))
-school_dta$pedagogical_knowledge<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$inputs<-rbinom(nrow(school_dta),40,0.5)/10
-school_dta$infrastructure<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$ecd<-runif(nrow(school_dta))
-school_dta$operational_management<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$instructional_leadership<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$school_knowledge<-rbinom(nrow(school_dta),50,0.5)/10
-school_dta$management_skills<-rbinom(nrow(school_dta),50,0.5)/10
-
-#replace missing indicator values with random numbers
-school_dta$student_knowledge[is.na(school_dta$student_knowledge)]<-school_dta$rand1[is.na(school_dta$student_knowledge)]
-school_dta$absence_rate[is.na(school_dta$absence_rate)]<-school_dta$rand2[is.na(school_dta$absence_rate)]
-school_dta$content_knowledge[is.na(school_dta$content_knowledge)]<-school_dta$rand3[is.na(school_dta$content_knowledge)]
-
-school_dta$learning_outcome<-100*runif(nrow(school_dta))
-school_dta$participation_outcome<-100*runif(nrow(school_dta))
-
-#rename database as practice data and collapse to single country observation
+for (i in indicator_names ) {
+  if (exists(paste("final_school_data_",i, sep=""))) {
+    #form temp data frame with each schools data
+    temp<-get(paste("final_school_data_",i, sep="")) 
+    
+    #Merge this to overall final_school_data frame
+    if (!exists('final_school_data')) {
+      final_school_data<-temp
+    } else {
+      final_school_data<-final_school_data %>%
+        left_join(temp)
+    }
+  }
+}
 
 
 
-write.csv(school_dta, file = "C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Survey Solutions/Peru/gepd_map_peru/school_dta.csv")
 
+
+write.csv(final_school_data, file = file.path(save_folder, "final_complete_school_data.csv"))
+write_dta(final_school_data, path = file.path(save_folder, "final_complete_school_data.dta"), version = 14)
+
+#Trim data frame to just contain main variables for indicators
+
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
+            'absence_rate', 'school_absence_rate', 
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
+            'pedagogical_knowledge', 
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+            'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
+            'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'operational_management', 'vignette_1', 'vignette_2'
+)
+
+#If indicator in this list doesn't exists, create empty column with Missing values
+
+
+for (i in ind_list ) {
+  if(!(i %in% colnames(final_school_data))) {
+    print(i)
+    final_school_data[, i] <- NA
+  }
+}
+
+
+
+
+#list additional info that will be useful to keep in dataframe
+preamble_info <- c('interview__id', 'school_name_preload', 'school_address_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                   'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                   'enumerator_name_other', 'enumerator_number', 'survey_time', 'lat', 'lon')
+
+
+
+
+
+school_dta_short <- final_school_data %>%
+  select(preamble_info, ind_list)
+
+write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
+write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)
 
 ################################
 #Store Key Created Datasets
@@ -955,8 +974,10 @@ write.csv(school_dta, file = "C:/Users/WB469649/OneDrive - WBG/Education Policy 
 
 #saves the following in R and stata format
 
-data_list <- c('school_dta', 'teacher_questionnaire','teacher_absence_final')
+data_list <- c('school_dta', 'school_dta_short', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment')
+data_list <- c( 'school_dta_short', 'final_school_data')
 
+save(school_dta_short, final_school_dta, file = file.path(save_folder, "school_survey_data.RData"))
 #loop and produce list of data tables
 
 
@@ -964,7 +985,7 @@ data_list <- c('school_dta', 'teacher_questionnaire','teacher_absence_final')
 
 for (i in indicator_names ) {
   if (exists(paste("final_school_data_",i, sep=""))) {
-  temp<-get(paste("final_school_data_",i, sep="")) 
+    temp<-get(paste("final_school_data_",i, sep="")) 
     skim(temp) %>%
       DT::datatable()
   }

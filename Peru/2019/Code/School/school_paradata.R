@@ -10,24 +10,24 @@ library(tidyr)
 library(Hmisc)
 library(lubridate)
 library(stringr)
-library(here)
 library(crosstalk)
 library(DT)
 library(plotly)
 library(ggplot2)
 library(haven)
 library(readr)
+library(here)
 
 ######################################
 # User Inputs for API #
 ######################################
 
 # Here you need to indicate the path where you replicated the folder structures on your own computer
-here() #"C:/Users/wb469649/Documents/Github/GEPD"
+here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 #user credentials
 #Check whether password.R file is in Github repo
-pw_file<-here("password.R")
+pw_file<-here::here("password.R")
 if (file.exists(pw_file)) {
   source(pw_file)
 } else {
@@ -51,7 +51,7 @@ quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter
 
 currentDate<-Sys.Date()
 
-tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
+tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
   
 ######################################
 # Interactions with API
@@ -115,7 +115,7 @@ label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 ######################################
 #clean up timestamp
 para_df <- para_df %>% 
-  mutate(timestamp= ymd_hms(timestamp)+hms(offset)+hms('6:00:00'))
+  mutate(timestamp= ymd_hms(timestamp))
 
 #Generate length of time for each question, by calculating gap in time between when question was entered and previous question
 para_df <- para_df %>% 
@@ -144,7 +144,7 @@ para_df <- para_df %>%
   mutate(indicator = str_to_upper(indicator))
 
 #Read in list of indicators
-indicators <- read_delim(here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
+indicators <- read_delim(here::here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -163,7 +163,6 @@ makeVlist <- function(dta) {
          varlabel = varlabels, vallabel = vallabels) 
 }
 
-download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
 
 #create school metadata frame
 raw_school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
@@ -174,7 +173,7 @@ raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_ro
 teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
 
 #create teacher absence metadata frame
-raw_teacher_absence_dta<-read_dta(file.path(download_folder, "absence_roster2.dta"))
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
 
 #create ecd metadata frame
@@ -194,13 +193,12 @@ metadata <- metadata %>%
 para_df <- para_df %>% 
   left_join(metadata )
 
-save.dir <- choose.dir(default = "", caption = "Select folder to save Final Paradata")
-save(para_df, file=paste(save.dir, "paradata.RData", sep="/"))
+save(para_df, file=paste(save_folder, "paradata.RData", sep="/"))
 
 para_dta<- para_df %>% 
   mutate(interview_id=ï..interview__id) %>%
   select(-vallabel, -varlabel, -ï..interview__id)
-write_dta(para_dta, path=paste(save.dir, "paradata.dta", sep="/"))
+write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 
 ######################################
 # Length of each question by Enumerator
