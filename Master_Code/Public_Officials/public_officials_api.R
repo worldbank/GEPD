@@ -30,11 +30,11 @@ server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://{
 #questionnaire version
 #e.g. quest_version<-8
 quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter integer')$res 
-
+  
 #path and folder where the .zip file will be stored
 #this needs to be entered
 #Please note that the following directory path may need to be created
-
+  
 currentDate<-Sys.Date()
 
 tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
@@ -55,7 +55,7 @@ str(content(q))
 
 #pull data from version of our Education Policy Dashboard Questionnaire
 POST(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", sep=""),
-     authenticate(user, password))
+         authenticate(user, password))
 
 
 dataDownload <- GET(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",sep=""),
@@ -91,4 +91,4 @@ makeVlist <- function(dta) {
 
 #read in public officials interview file
 public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta"))
-school_metadta<-makeVlist(public_officials_dta)
+public_officials_metadata<-makeVlist(public_officials_dta)
