@@ -14,7 +14,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 #user credentials
 #Check whether password.R file is in Github repo
-pw_file<-here("password.R")
+pw_file<-here::here("password.R")
 if (file.exists(pw_file)) {
   source(pw_file)
 } else {
@@ -35,7 +35,6 @@ quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter
 #this needs to be entered
 #Please note that the following directory path may need to be created
   
-
 currentDate<-Sys.Date()
 
 tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
@@ -55,11 +54,11 @@ str(content(q))
 
 
 #pull data from version of our Education Policy Dashboard Questionnaire
-POST(paste(server_add,"/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
+POST(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", sep=""),
          authenticate(user, password))
 
 
-dataDownload <- GET(paste(server_add,"/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
+dataDownload <- GET(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",sep=""),
                     authenticate(user, password))
 
 redirectURL <- dataDownload$url 
@@ -89,29 +88,7 @@ makeVlist <- function(dta) {
 
 
 
-#read in school level file
-school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
-school_metadta<-makeVlist(school_dta)
 
-#read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
-ecd_metadta<-makeVlist(ecd_dta)
-
-#read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
-assess_4th_grade_metadta<-makeVlist(assess_4th_grade_dta)
-
-#read in teacher questionnaire level file
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
-teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
-
-#read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
-teacher_absence_metadta<-makeVlist(teacher_absence_dta)
-
-#read in teacher assessment file
-teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment.dta"))
-teacher_assessment_metadta<-makeVlist(teacher_assessment_dta)
-
-
-
+#read in public officials interview file
+public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta"))
+public_officials_metadata<-makeVlist(public_officials_dta)

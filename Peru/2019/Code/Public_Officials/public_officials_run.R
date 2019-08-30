@@ -27,8 +27,8 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-''
-year <- ''
+country <-'Peru'
+year <- '2019'
 
 #########################
 # File paths #
@@ -51,8 +51,6 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #move working directory to github main folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-
-
 #launch file to access data from API
 #source('public_officials_api.R')
 
@@ -60,6 +58,6 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #source('public_officials_data_cleaner.R')
 
 #create R markdown file with quality checks
-rmarkdown::render('public_officials_data_quality_checks.Rmd',  
-                  output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
-                  output_dir = save_folder)
+#rmarkdown::render('public_officials_data_quality_checks.Rmd',  
+#                  output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
+#                  output_dir = save_folder)

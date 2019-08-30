@@ -67,6 +67,12 @@ The R markdown file (school_data_quality_checks.Rmd) can be run by clicking on t
 
   | Error | What to do |
   | ------| -----------|
+  <code> Error in library("blah blah") : there is no package called '[blah blah]' <code> | You need to install this package. Use the following command. <code> <br> install.packages('blah blah') |
+
+
+
+  | Error | What to do |
+  | ------| -----------|
   |Can't connect to Survey Solutions API | Run the following lines: |
 
   ```
@@ -82,4 +88,9 @@ Look in the output for Status: 404 or Status: 200.  If it is status code 200, th
 
   | Error | What to do |
   | ------| -----------|
-  | When I try to create RMarkdown Report, I get an error| This could be caused by a variety of reasons.  The most likely is that a file that used in the markdown document isn't available.  Please make sure the school_run.R, school_api.R, school_data_cleaner.R, and school_paradata.R are all run before attempting to create report.|
+  | When I try to create RMarkdown Report, I get an error| This could be caused by a variety of reasons.  The most likely is that a file that used in the markdown document isn't available.  Please make sure the school_run.R, school_api.R, school_data_cleaner.R, and school_paradata.R are all run without errors before attempting to create report.|
+
+
+  | Error | What to do |
+  | ------| -----------|
+  | <code> unzip(file.path(download_folder, tounzip), exdir=download_folder) <br>  Warning message: <br>  In unzip(file.path(download_folder, tounzip), exdir = download_folder) : <br>   error 1 in extracting from zip file <code> | If there is a previous zip file with the same name in the directory, try deleting it. |
