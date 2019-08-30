@@ -20,7 +20,7 @@
   
   If you have not already, please install RStudio and the latest version of R.  If you are using a World Bank machine, you can install both by searching for the programs at [http://edapps](http://edapps).  RStudio and R are used to access the Survey Solutions API, download the data, and do data cleaning.  Some Stata code is available as well, and more will be added, but because interacting with APIs in Stata is more difficult, I mostly have used R to write code.  Additionally, the interactive reports that are created as part of high frequency checks are done in R, and it is not currently possible to do these type of reports in Stata.
   
-    ## Passwords for API
+ ## Passwords for API
 
 It will be useful to create a password.R file, which stores the login information for the Survey Solutions API. To do this, go to the parent directory of the repo.  On my machine, it is  C:\Users\wb{upi}\Documents\Github\GEPD.  Create a new file called password.R in this directory.  In the file, you can enter your user names and passwords.  For example:
 
