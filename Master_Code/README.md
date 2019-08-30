@@ -44,7 +44,31 @@ You do not need to do this, but it will be more convenient if you do.  If you do
   | 2. school_api.R                       | This file will access the Survey Solutions API and pull rawdata           |
   | 3. school_data_cleaner.R              | This file opens the raw data and cleans it to produce our indicators for the Dashboard |
   | 4. school_paradata.R                  | This file pulls the paradata from the Survey Solutions API and opens paradata produced by Survey Solutions to calculate length of time per module and other checks                                                       | 
-  |  5. school_data_quality_checks.Rmd     | This file produces an R Markdown report containing several quality checks.             |
+  | 5. school_data_quality_checks.Rmd     | This file produces an R Markdown report containing several quality checks.             |
 
+The code in the file ending in .R (school_run.R, school_api.R, school_data_cleaner.R, school_paradata.R) can be run in RStudio by highlighting the lines to be run and clicking the 'run' button in the top right corner of the script viewer.  Alternatively, you can run by using the keyboard short-cut Ctrl+Enter.
+
+The R markdown file (school_data_quality_checks.Rmd) can be run by clicking on the 'knit' button near the top left of the script viewer or using 	Ctrl+Shift+K
+
+  ## Common Errors
   
+  Here is a list of common errors that I have experienced.  I will add more, or come up with better solutions to the code, as they come up.  If these solutions don't work, then contact me.
   
+  | Error | What to do |
+  | ------| -----------|
+  |Can't connect to Survey Solutions API | Run the following lines: |
+  
+  ```
+  q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
+       authenticate(user, password))
+
+str(content(q))
+#pull data from version of our Education Policy Dashboard Questionnaire
+POST(paste(server_add,"/api/v1/export/stata/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
+         authenticate(user, password))
+```
+Look in the output for Status: 404 or Status: 200.  If it is status code 200, then the connection was successful, and the error was somewhere beyond the connection.  If it was 404, then there was a problem with the connection, check the web address you entered for the server, the user name, and the password that you entered.  There can be a lot of problems here that are hard to diagnose in advance, so you might contact me here.
+
+  | Error | What to do |
+  | ------| -----------|
+  | When I try to create RMarkdown Report, I get an error| This could be caused by a variety of reasons.  The most likely is that a file that used in the markdown document isn't available.  Please make sure the school_run.R, school_api.R, school_data_cleaner.R, and school_paradata.R are all run before attempting to create report.|
