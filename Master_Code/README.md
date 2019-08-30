@@ -4,7 +4,7 @@
   
   After you clone this repo to your computer, if you want to use the code in this folder for a specific country, please copy all of the code and move it to a new directory.  Best practice is to do something like the following:
  
- 1. If you are just starting out, clone the repo to your machine.  If you aren't sure where, I cloned mine to this folder (insert your own upi:
+ 1. If you are just starting out, clone the repo to your machine.  If you aren't sure where, I cloned mine to this folder (insert your own upi):
  C:\Users\wb{upi}\Documents\Github\GEPD
  2. Copy the code in the Master_Code directory to a new folder.  For example:
  C:\Users\wb{upi}\Documents\Github\GEPD\Peru\2019
@@ -36,19 +36,15 @@ You do not need to do this, but it will be more convenient if you do.  If you do
 
   ## Sequence of R scripts
   
-  The R scrips in the School and Public_Officials sub-folders in this directory should be run in a specific order.   
+  The R scrips in the School and Public_Officials sub-folders in this directory should be run in a specific order.  Each file can be run independently, but you will be prompted for certain paths that may not be specified.  If you run the R scripts the correct way you will produce a R markdown html file with high frequency and data quality checks for the school survey or survey of public officials. I am substituting school into the file names, but it is the same for the public_officials code.
   
-  
-  ##
- This file will run four R scripts in order.
- Each file can be run independently, but you will be prompted for certain paths that may not be specified
- This file will sequency the R scripts the correct way to produce an
- R markdown html file with high frequency and data quality checks for the school survey.
- 1. school_api.R                       #This file will access the Survey Solutions API and pull rawdata and paradata  
- 2. school_data_cleaner.R              #This file opens the raw data and cleans it to produce our indicators for the Dashboard
- 3. school_paradata.R                  #This file opens paradata produced by Survey Solutions to calculate length 
-                                        of time per module and other checks
- 4. school_data_quality_checks.Rmd     #This file produces an R Markdown report containing several quality checks.
+  | File Name | What it does |
+  | ---       | ---          |
+  | 1. school_run.R                       | This file will set the directory paths where data will be downloaded from the API and where the cleaned data will be saved.  |
+  | 2. school_api.R                       | This file will access the Survey Solutions API and pull rawdata           |
+  | 3. school_data_cleaner.R              | This file opens the raw data and cleans it to produce our indicators for the Dashboard |
+  | 4. school_paradata.R                  | This file pulls the paradata from the Survey Solutions API and opens paradata produced by Survey Solutions to calculate length of time per module and other checks                                                       | 
+  |  5. school_data_quality_checks.Rmd     | This file produces an R Markdown report containing several quality checks.             |
 
   
   
