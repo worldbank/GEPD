@@ -58,6 +58,6 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #source('public_officials_data_cleaner.R')
 
 #create R markdown file with quality checks
-#rmarkdown::render('public_officials_data_quality_checks.Rmd',  
-#                  output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
-#                  output_dir = save_folder)
+rmarkdown::render('public_officials_quality_checks.Rmd',  
+                  output_file =  paste("public_officials_quality_checks_", country,".html", sep=''), 
+                  output_dir = save_folder)

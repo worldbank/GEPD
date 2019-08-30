@@ -1003,3 +1003,5 @@ for (i in indicator_names ) {
 skim(final_school_data_INFR) %>%
   skimr::kable()
 
+skim(sumstats) %>%
+  skimr::kable()

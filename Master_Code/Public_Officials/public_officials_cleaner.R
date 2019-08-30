@@ -51,8 +51,8 @@ bin_var <- function(var, val) {
 public_officials_dta<- public_officials_dta %>%
   mutate(enumerator_name=m1s0q1_name_other  ,
          enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
-         school_district=if_else(!is.na(school_district_preload),school_district_preload, district_other),
-         school_province=if_else(!is.na(school_province_preload),school_province_preload, region_other),
+         district=if_else(!is.na(school_district_preload),school_district_preload, district_other),
+         province=if_else(!is.na(school_province_preload),school_province_preload, region_other),
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
@@ -86,7 +86,7 @@ public_officials_dta<- public_officials_dta %>%
                   )
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'school_district', 'school_province','location', 'govt_tier',
+preamble_info <- c('interview__id', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',

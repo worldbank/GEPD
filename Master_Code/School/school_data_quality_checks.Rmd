@@ -1,5 +1,5 @@
 ---
-title: "Data Quality Checks"
+title: "Data Quality Checks - School Survey"
 author: "Brian Stacy"
 output: html_document
 params:
@@ -27,19 +27,17 @@ library(stargazer)
 library(skimr)
 #Load the data
 #read in school level file
-save_folder <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
 
-load(paste(save_folder, "./all_modules_clean.RData", sep="/"))
+load(paste(save_folder, "school_survey_data.RData", sep="/"))
 
-save_folder.para <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/clean'
-load(file=paste(save_folder.para, "paradata.RData", sep="/"))
+load(file=paste(save_folder, "paradata.RData", sep="/"))
 ```
 
 ## Introduction
 
-This file produces a set of basic quality checks to highlight potential issues in data collection.  The survey used in this report is mainly the 2018 Mozambique SDI survey.  The paradata section on the interview lengths and time completed are based on our Mozambique pre-pilot in August 2019.
+This file produces a set of basic quality checks to highlight potential issues in data collection.  
 
-
+## Paradata on Interview Lengths & Time Completed
 ## Paradata on Interview Lengths & Time Completed
 
 The following figures and tables show the time length of each question and modules.  Specific information for each enumerator, date, and module is available.
