@@ -25,7 +25,7 @@
 
  ## Github
 
- Given you have made it this far, you have some passing familiarity with Github.  If you would like more instructions on how to use Github, including cloning repos and the push/pull process, please contact me (bstacy@worldbank.org), or check out the [DIME Analytics info on Github](https://worldbank.github.io/dimeanalytics/git/).
+ Given you have made it this far, you have some passing familiarity with Github.  If you would like more instructions on how to use Github, including cloning repos and the push/pull process, please contact me (bstacy@worldbank.org).
 
   ## RStudio
 
