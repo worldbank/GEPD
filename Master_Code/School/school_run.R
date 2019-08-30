@@ -52,12 +52,12 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
-source('school_api.R')
+#source('school_api.R')
 
 #launch file to clear data
-source('school_data_cleaner.R')
+#source('school_data_cleaner.R')
 
 #create R markdown file with quality checks
-rmarkdown::render('school_data_quality_checks.Rmd',  
-                  output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
-                  output_dir = save_folder)
+#rmarkdown::render('school_data_quality_checks.Rmd',  
+#                  output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
+#                  output_dir = save_folder)
