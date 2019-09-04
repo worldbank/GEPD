@@ -214,40 +214,10 @@ kable(df_school_preloaded) %>%
 
 ```
 
-## Orphan Teachers
-
-The following table shows teachers in the teacher questionnaire module who could not be matched back to the original teacher roster based on the name and number.  This doesn't necessarily indicate a problem, because the difference may only be due to spelling, but should be investigated.
-
-```{r orphans, warning=FALSE, include=FALSE}
-
-###
-#Create list of orphan teachers (cant be matched to questionnaire,  or teacher exam files)
-###
-
-#Teachers who can't be matched between questionnaire and examiniation
-
-teacher_roster_list<-teacher_roster %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info,  teacher_number, teacher_name) 
 
 
-orphans_number_questionnaire <- teacher_questionnaire %>%
-  select(keep_info, teacher_name, teacher_number) %>%
-  anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
-  select(-teacher_name) %>%
-  select(school_code, teacher_number,  everything())
 
 
-```
-
-```{r orphans2, echo=FALSE}
-
-datatable(orphans_number_questionnaire,
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE)
-          )  
-
-```
 
 
 
@@ -269,51 +239,51 @@ school_map <- school_dta_short %>%
 
 school_map <- school_map %>%
   mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(content_knowledge) | 
-                     is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure)))%>%
+                     is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) | is.na(operational_management)))%>%
   mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(content_knowledge) + 
-           is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure)) %>%
-  mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(content_knowledge) + 
-           is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure))
+           is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) +is.na(operational_management) )
+
 
 #color coded markers for missing values
 getColor <- function(df_input) {
   sapply(df_input$total_missing, function(total_missing) {
     if (total_missing == 0) {
-      "green"
+      "#12E539" #green
     } 
     else if (total_missing == 1) {
-      "blue"
+      "#1232E5" #blue
     } 
     else if (total_missing == 2) {
-      "yellow"
+      "#E5E512" #yellow
     } 
     else if (total_missing == 3) {
-      "orange"
+      "#E59412" #orange
     }     
     else if (total_missing == 4) {
-      "purple"
+      "#8A12E5" #purple
     } 
     else if (total_missing == 5) {
-      "red"
+      "#E51212" #red
     }
     else {
-      "black"
+      "#000000" #black
     } 
     })
 }
 
 #add legend for icons
 pal <- colorFactor(
-  palette = c('darkgreen', 'blue', 'yellow', 'darkorange', 'purple', 'red', 'black'),
+  levels = c( '0','1', '2', '3', '4', '5', '6+'),
+  palette = c('#12E539', '#1232E5', '#E5E512', '#E59412', '#8A12E5', '#E51212', '#000000'),
   domain = school_map$total_missing
 )
 
 #create icons
 icons <- awesomeIcons(
   icon = 'graduation-cap',
-  iconColor = 'black',
+  iconColor = getColor(school_map),
   library = 'fa',
-  markerColor = getColor(school_map)
+  markerColor = 'black'
 )
 
 
@@ -360,3 +330,139 @@ bscols(widths=c(3,NA),
 
 ```
 
+
+
+
+
+## Orphan Teachers
+
+The following table shows teachers in the teacher questionnaire module who could not be matched back to the original teacher roster based on the name and number.  This doesn't necessarily indicate a problem, because the difference may only be due to spelling, but should be investigated.
+
+```{r orphans, warning=FALSE, include=FALSE}
+
+###
+#Create list of orphan teachers (cant be matched to questionnaire,  or teacher exam files)
+###
+
+#Teachers who can't be matched between questionnaire and examiniation
+
+teacher_roster_list<-teacher_roster %>%
+  left_join(school_data_preamble) %>%
+  select(preamble_info,  teacher_number, teacher_name) %>%
+  select(-enumerator_name_other)
+
+
+orphans_number_questionnaire <- teacher_questionnaire %>%
+  select(keep_info, enumerator_name_other, teacher_name, teacher_number) %>%
+  anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
+  select(-teacher_name) %>%
+  select(school_code, teacher_number,  everything())
+
+
+```
+
+```{r orphans2, echo=FALSE}
+
+datatable(orphans_number_questionnaire,
+                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE)
+          )  
+
+```
+
+
+```{r orphan_map_guts, include=FALSE}
+
+####################################################################
+#######Map of schools with missing school info#####
+####################################################################
+orphan_map <- orphans_number_questionnaire %>%
+  filter(!is.na(lat) & !is.na(lon))
+
+#Create indicator of schools with missing values in our indicators
+
+orphan_map_counts <- orphan_map %>%
+  group_by(school_code) %>%
+  summarise(orphan_count=n())
+  
+orphan_map <- orphan_map %>%
+  left_join(orphan_map_counts)
+
+#color coded markers for missing values
+getColor <- function(df_input) {
+  sapply(df_input$orphan_count, function(orphan_count) {
+    if (orphan_count == 1) {
+      "#0EF293" #green
+    } 
+    else if (orphan_count == 2) {
+      "#0E43F2" #blue
+    } 
+    else if (orphan_count == 3) {
+      "#EAF20E" #yellow
+    } 
+    else if (orphan_count == 4) {
+      "#F2AD0E" #orange
+    }     
+    else if (orphan_count == 5) {
+      "#F2210E" #red
+    }
+    else {
+      "#000000" #black
+    } 
+    })
+}
+
+#add legend for icons
+pal2 <- colorFactor(
+  levels = c( '1', '2', '3', '4', '5', '6+'),
+  palette = c('#0EF293', '#0E43F2', '#EAF20E', '#F2AD0E',  '#F2210E', '#000000'),
+  domain = orphan_map$orphan_count
+)
+
+#create icons
+icons <- awesomeIcons(
+  icon = 'graduation-cap',
+  iconColor = getColor(orphan_map),
+  library = 'fa',
+  markerColor = 'black'
+)
+
+
+
+map <- function(df_input) {    leaflet(df_input) %>% 
+  addTiles()  %>%
+  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
+                    popup = paste("Name: ", orphan_map$school_name_preload, " <br>",
+                                  "Province: ", orphan_map$school_province_preload, " <br>",
+                                  "District: ", orphan_map$school_district_preload, " <br>",
+                                  "EMIS Code: ", orphan_map$school_emis_preload, " <br>",
+                                  "Enumerator: ", orphan_map$enumerator_name_other, " <br>",
+                                  "<font color='red' > Number of Orphan Teachers ", " <br> <font color='black' >",
+                                  "Orphan Teachers: ", orphan_map$orphan_count, " <br>"))   %>%
+    addLegend("bottomright", pal=pal2, values=~orphan_count, title="Orphan Teachers"    )
+
+}
+
+```
+
+
+```{r orphan_map_plot, echo=FALSE}
+
+
+linked_df_orphan<-SharedData$new(orphan_map)
+
+
+
+bscols(widths=c(3,NA),
+  list(
+  filter_slider("orphans", "Orphan Teacher Count", linked_df_orphan, ~orphan_count),
+  filter_select("enumerator", "Enumerator", linked_df_orphan, ~enumerator_name_other),
+  filter_checkbox("prov", "Province", linked_df_orphan, ~school_province_preload, inline=FALSE),
+  filter_checkbox("reg", "District", linked_df_orphan, ~school_district_preload, inline=FALSE)
+  
+  ),
+  map(linked_df_orphan) 
+
+)
+
+```

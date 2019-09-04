@@ -102,7 +102,6 @@ for (i in indicator_names ) {
 
 
 
-
 #########################################
 #read in teacher questionnaire level file
 #########################################
@@ -112,7 +111,8 @@ teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 #Add school preamble info
 teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
-  select(preamble_info, everything())
+  select(preamble_info, enumerator_name_other, everything())
+
 
 
 

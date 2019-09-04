@@ -37,8 +37,6 @@ load(file=paste(save_folder, "paradata.RData", sep="/"))
 
 This file produces a set of basic quality checks to highlight potential issues in data collection.  
 
-## Paradata on Interview Lengths & Time Completed
-
 
 ## Paradata on Interview Lengths & Time Completed
 
