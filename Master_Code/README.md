@@ -52,7 +52,7 @@ You do not need to do this, but it will be more convenient if you do.  If you do
   | File Name | What it does |
   | ---       | ---          |
   | 1. school_run.R                       | This file will set the directory paths where data will be downloaded from the API and where the cleaned data will be saved.  |
-  | 2. school_api.R                       | This file will access the Survey Solutions API and pull rawdata           |
+  | 2. school_api.R                       | This file will access the Survey Solutions API and pull rawdata.  I would always recommend running the API script twice, because sometimes the Survey Solutions API has a lag in how quickly it compiles a Stata version of the dataset.           |
   | 3. school_data_cleaner.R              | This file opens the raw data and cleans it to produce our indicators for the Dashboard |
   | 4. school_paradata.R                  | This file pulls the paradata from the Survey Solutions API and opens paradata produced by Survey Solutions to calculate length of time per module and other checks                                                       |
   | 5. school_data_quality_checks.Rmd     | This file produces an R Markdown report containing several quality checks.             |
@@ -69,7 +69,9 @@ The R markdown file (school_data_quality_checks.Rmd) can be run by clicking on t
   | ------| -----------|
   <code> Error in library("blah blah") : there is no package called '[blah blah]' <code> | You need to install this package. Use the following command. <code> <br> install.packages('blah blah') |
 
-
+  | Error | What to do |
+  | ------| -----------|
+  I am running the API script, but my data isn't updating | There is sometimes a lag between when Survey Solutions creates a stata version of the dataset and when the API script runs.  I would always recommend running the API script twice, just in case. |
 
   | Error | What to do |
   | ------| -----------|
