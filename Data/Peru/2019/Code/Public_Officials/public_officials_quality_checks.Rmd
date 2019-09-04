@@ -26,7 +26,7 @@ library(mice)
 library(stargazer)
 library(skimr)
 #Load the data
-#read in school level file
+#read in office level file
 
 load(paste(save_folder, "public_officials_survey_data.RData", sep="/"))
 
@@ -44,7 +44,7 @@ The following figures and tables show the time length of each question and modul
 
 A useful check is to examine the length of time that passes between questions.  It may be useful for detecting anomalies with respect to enumerators, and also could be useful for streamlining our survey.  The filter in the sidebar gives the user the ability to filter by length of time that passes between questions.  By scrolling all the way to the right, only the questions that take an exceptionally long time to fill out appear.  Additionally, the user has the option to filter by enumerator, date of survey, section of the questionnaire, and module.
 
-```{r, echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 
 ######################################
 # Length of each question by Enumerator
@@ -117,7 +117,7 @@ bscols(widths=c(3,NA),
 
 The next graph shows the time of day each question was completed by each enumerator.  One quality check that this provides is to determine when the enumerator filled out the question.  Enumerators that fill out questions outside of normal operating hours of the office can be asked to clarify why they did so.
 
-```{r time_day, echo=FALSE}
+```{r time_day, echo=FALSE, warning=FALSE}
 
 ######################################
 # Time of Day of each question by Enumerator
@@ -177,7 +177,7 @@ sumstats<-public_officials_dta_clean %>%
 gg_miss_var(sumstats)
 ```
 
-Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
+Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation for each variable.  The means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
 
 ```{r missings4, results='asis' }
 skim(sumstats) %>% skimr::kable()
@@ -208,14 +208,14 @@ interviewed<- public_officials_dta_clean %>%
 ```
 
 ## Interactive Map
-In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the schools that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only offices that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
+In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the offices that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only offices that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
 
 The map is color coded.  Green indicators, for instance, have no missing information on our key bureaucracy indicators.  
 
 ```{r map_guts, include=FALSE}
 
 ####################################################################
-#######Map of schools with missing school info#####
+#######Map of offices with missing offices info#####
 ####################################################################
 public_officials_map <- public_officials_office_level %>%
   filter(!is.na(lat) & !is.na(lon))
@@ -226,51 +226,50 @@ public_officials_map <- public_officials_map %>%
   mutate(missings=(is.na(national_learning_goals) | is.na(mandates_accountability) | is.na(quality_bureaucracy) | 
                      is.na(impartial_decision_making)))%>%
   mutate(total_missing=is.na(national_learning_goals) + is.na(mandates_accountability) + is.na(quality_bureaucracy) + 
-           is.na(impartial_decision_making) ) %>%
-  mutate(total_missing=is.na(national_learning_goals) + is.na(mandates_accountability) + is.na(quality_bureaucracy) + 
-           is.na(impartial_decision_making) )
+           is.na(impartial_decision_making) ) 
+
 
 #color coded markers for missing values
 getColor <- function(df_input) {
   sapply(df_input$total_missing, function(total_missing) {
     if (total_missing == 0) {
-      "green"
+      "#12E539" #green
     } 
     else if (total_missing == 1) {
-      "blue"
+      "#1232E5" #blue
     } 
     else if (total_missing == 2) {
-      "yellow"
+      "#E5E512" #yellow
     } 
     else if (total_missing == 3) {
-      "orange"
+      "#E59412" #orange
     }     
     else if (total_missing == 4) {
-      "purple"
+      "#8A12E5" #purple
     } 
     else if (total_missing == 5) {
-      "red"
+      "#E51212" #red
     }
     else {
-      "black"
+      "#000000" #black
     } 
     })
 }
 
 #add legend for icons
 pal <- colorFactor(
-  palette = c('darkgreen', 'blue', 'yellow', 'darkorange', 'purple', 'red', 'black'),
+  levels = c( '0','1', '2', '3', '4', '5', '6+'),
+  palette = c('#12E539', '#1232E5', '#E5E512', '#E59412', '#8A12E5', '#E51212', '#000000'),
   domain = public_officials_map$total_missing
 )
 
 #create icons
 icons <- awesomeIcons(
-  icon = 'graduation-cap',
-  iconColor = 'black',
+  icon = 'user',
+  iconColor = getColor(public_officials_map),
   library = 'fa',
-  markerColor = getColor(public_officials_map)
+  markerColor = 'black'
 )
-
 
 
 map <- function(df_input) {    leaflet(df_input) %>% 
@@ -301,10 +300,9 @@ linked_df<-SharedData$new(public_officials_map)
 
 bscols(widths=c(3,NA),
   list(
-  filter_slider("missings", "Missing Indicators", linked_df, ~total_missing),
+  filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name),
   filter_checkbox("prov", "Province", linked_df, ~province, inline=FALSE),
-  filter_checkbox("dist", "District", linked_df, ~district, inline=FALSE),
-  filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name)
+  filter_checkbox("dist", "District", linked_df, ~district, inline=FALSE)
 
   ),
   map(linked_df) 

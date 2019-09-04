@@ -199,7 +199,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
 
 data_list <- c( 'public_officials_dta_clean', 'public_officials_office_level')
 
-save(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.RData"))
+save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
 #loop and produce list of data tables
 
 
