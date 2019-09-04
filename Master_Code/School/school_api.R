@@ -10,11 +10,11 @@ library(here)
 # User Inputs for API #
 ######################################
 # Here you need to indicate the path where you replicated the folder structures on your own computer
-here() #"C:/Users/wb469649/Documents/Github/GEPD"
+here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 #user credentials
 #Check whether password.R file is in Github repo
-pw_file<-here("password.R")
+pw_file<-here::here("password.R")
 if (file.exists(pw_file)) {
   source(pw_file)
 } else {

@@ -52,11 +52,11 @@ quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter
 currentDate<-Sys.Date()
 
 tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
-
+  
 ######################################
 # Interactions with API
 ######################################
-
+  
 #Get list of questionnaires available
 #the server address may need to be modified
 q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
@@ -97,15 +97,15 @@ para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
 
 #label variables
 var.labels=c(
-  interview__id = "Unique 32-character long identifier of the interview",
-  order = "Sequential event number within each interview",
-  event = "Type of event happened",
-  responsible = "Login name of the person who initiated the event",
-  role = "System role of the person who initiated the event",
-  timestamp = "Date and time when the event happened",
-  offset = "Timezone offset relative to UTC",
-  parameters = "Event-specific parameters"
-)
+            interview__id = "Unique 32-character long identifier of the interview",
+            order = "Sequential event number within each interview",
+            event = "Type of event happened",
+            responsible = "Login name of the person who initiated the event",
+            role = "System role of the person who initiated the event",
+            timestamp = "Date and time when the event happened",
+            offset = "Timezone offset relative to UTC",
+            parameters = "Event-specific parameters"
+            )
 # Label data
 label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 
@@ -219,13 +219,13 @@ bscols(widths=c(3,NA),
          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
          
        ),
-       
+      
        list (
          plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
            layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
          datatable(linked_df, 
                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                              'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+                            'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
          
@@ -254,15 +254,15 @@ bscols(widths=c(3,NA),
          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
        ),
        list (
-         plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
-         
-         datatable(linked_df, 
-                   colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                              'Length in Seconds' = 'timelength_sec'),
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-         
+       plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+      
+        datatable(linked_df, 
+                 colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+                            'Length in Seconds' = 'timelength_sec'),
+                 extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                 options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+      
        )
        
 )

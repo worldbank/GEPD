@@ -75,7 +75,7 @@ bscols(widths=c(3,NA),
                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
                             'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
          
        )
        
@@ -107,7 +107,7 @@ bscols(widths=c(3,NA),
                  colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
                             'Length in Seconds' = 'timelength_sec'),
                  extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                 options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+                 options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
       
        )
        
@@ -117,7 +117,7 @@ bscols(widths=c(3,NA),
 
 ```
 
-The next graph shows the time of day each question was completed by each enumerator.  One quality check that this provides is to determine when the enumerator filled out the question.  Enumerators that fill out questions outside of normal operating hours of the school can be asked to clarify why they did so.
+The next graph shows the time of day each question was completed by each enumerator.  One quality check that this provides is to determine when the enumerator filled out the question.  Enumerators that fill out questions outside of normal operating hours of the office can be asked to clarify why they did so.
 
 ```{r time_day, echo=FALSE}
 
@@ -148,7 +148,7 @@ bscols(widths=c(3,NA),
                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
                               'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
          
        )
        
@@ -160,41 +160,66 @@ bscols(widths=c(3,NA),
 
 ## Missing Values and Other Checks
 
-To start, the following figures and tables will highlight missing values for a few of our key indicators.  Ignore the fact that school knowledge, operational management, management skills, instructional leadership, and ECD scores are missing for now, as this information was not available fully in SDI.
+To start, the following figures and tables will highlight missing values for a few of our key indicators.  
 
-Teacher absence is the most problematic, followed by infrastructure, inputs, and content knowledge.
-
-```{r missings, echo=FALSE, error=FALSE, message=FALSE}
+```{r missings, error=FALSE, message=FALSE, include=FALSE}
 
 sumstats<-public_officials_dta_clean %>%
   select(c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making')) 
 
 
-skim(sumstats)
 
+```
+
+
+
+
+```{r missings3, echo=FALSE, error=FALSE, message=FALSE}
 #plot missing values by indicator
 gg_miss_var(sumstats)
 ```
 
-Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation, total number of schools, and number of schools with missing information for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
+Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
 
-```{r missings3, results='asis' }
-skim(sumstats) %>% kable()
+```{r missings4, results='asis' }
+skim(sumstats) %>% skimr::kable()
 
 ```
 
 
-## Interactive Map
-In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the schools that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only schools that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
+## Who Was Interviewed?
 
-The map is color coded.  Green indicators, for instance, have no missing information on our key indicators: 4th grade student achievement, teacher absence, teacher content knowledge, teacher pedagogy (TEACH), basic inputs, and basic infrastructure ).  Black indicators are missing all six indicators.  More indicators can be added to this list, but for now in the SDI data this is what we could produce before our data collection.
+The following table shows the position of the individual interviewed in each office.
+
+```{r interviewed, include=FALSE}
+
+interviewed<- public_officials_dta_clean %>%
+  mutate(ID = group_indices(., govt_tier, region_code, district_code))  %>%
+  arrange(govt_tier, region_code, district_code) %>%
+  select(ID, govt_tier, region_code, district_code, district, province, location, position) 
+
+```
+
+
+```{r interviewed2, echo=FALSE}
+
+  datatable(interviewed,
+            extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                 options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+
+```
+
+## Interactive Map
+In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the schools that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only offices that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
+
+The map is color coded.  Green indicators, for instance, have no missing information on our key bureaucracy indicators.  
 
 ```{r map_guts, include=FALSE}
 
 ####################################################################
 #######Map of schools with missing school info#####
 ####################################################################
-public_officials_map <- public_officials_dta_clean %>%
+public_officials_map <- public_officials_office_level %>%
   filter(!is.na(lat) & !is.na(lon))
 
 #Create indicator of public_officialss with missing values in our indicators
@@ -253,12 +278,13 @@ icons <- awesomeIcons(
 map <- function(df_input) {    leaflet(df_input) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
-                    popup = paste("Name: ", public_officials_map$public_officials, " <br>",
+                    popup = paste("Name: ", public_officials_map$enumerator_name, " <br>",
                                   "Province: ", public_officials_map$province, " <br>",
                                   "District: ", public_officials_map$district, " <br>",
-                                  "<font color='red' > Practice Indicators ", " <br> <font color='black' >",
-                                  "National Learning Goals: ", round(as.data.frame(linked_df$data())$national_learning_goals, digits=2), "% <br>",
-                                  "Mandates & Accountability: ", round(as.data.frame(linked_df$data())$mandates_accountability, digits=2),"% <br>",
+                                  "Government Tier", public_officials_map$govt_tier, " <br>",
+                                  "<font color='red' > Bureaucracy Indicators ", " <br> <font color='black' >",
+                                  "National Learning Goals: ", round(as.data.frame(linked_df$data())$national_learning_goals, digits=2), " <br>",
+                                  "Mandates & Accountability: ", round(as.data.frame(linked_df$data())$mandates_accountability, digits=2)," <br>",
                                   "Quality of Bureaucracy: ", round(as.data.frame(linked_df$data())$quality_bureaucracy, digits=2), " <br>",
                                   "Impartial Decision Making: ", round(as.data.frame(linked_df$data())$impartial_decision_making, digits=2)))   %>%
     addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
@@ -279,7 +305,9 @@ bscols(widths=c(3,NA),
   list(
   filter_slider("missings", "Missing Indicators", linked_df, ~total_missing),
   filter_checkbox("prov", "Province", linked_df, ~province, inline=FALSE),
-  filter_checkbox("dist", "District", linked_df, ~district, inline=FALSE)
+  filter_checkbox("dist", "District", linked_df, ~district, inline=FALSE),
+  filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name)
+
   ),
   map(linked_df) 
 

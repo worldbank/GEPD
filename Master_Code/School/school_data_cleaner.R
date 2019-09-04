@@ -42,7 +42,9 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #read in teacher roster file
 ############################
 
-teacher_roster<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
+teacher_roster<-read_dta(file.path(download_folder, "questionnaire_selected.dta")) %>%
+  mutate(teacher_name=m2saq2,
+         teacher_number=questionnaire_selected__id)
 
 ###########################
 #read in school level file
@@ -1071,12 +1073,36 @@ write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_schoo
 
 #saves the following in R and stata format
 
-data_list <- c('school_dta', 'school_dta_short', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment')
-data_list <- c( 'school_dta_short', 'final_school_data')
+data_list <- c('school_dta', 'school_dta_short', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment', 'teacher_roster')
 
 save(data_list, file = file.path(save_folder, "school_survey_data.RData"))
 #loop and produce list of data tables
 
+teacher_roster_list<-teacher_roster %>%
+  left_join(school_data_preamble) %>%
+  select(preamble_info,  teacher_number, teacher_name) 
+
+
+orphans_number_questionnaire <- teacher_questionnaire %>%
+  select(keep_info, teacher_name, teacher_number) %>%
+  anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) 
+
+orphans_name_questionnaire <- teacher_questionnaire %>%
+  anti_join(teacher_roster) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
+
+
+orphans_number_assess <- teacher_questionnaire %>%
+  anti_join(teacher_roster) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
+
+
+orphans_name_assess <- teacher_questionnaire %>%
+  anti_join(teacher_roster) %>%
+  select(interview__id, teacher_name, teacher_number) %>%
+  datatable()
 
 # 
 # 

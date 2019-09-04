@@ -214,6 +214,8 @@ kable(df_school_preloaded) %>%
 
 ```
 
+## Orphan Teachers
+
 The following table shows teachers in the teacher questionnaire module who could not be matched back to the original teacher roster based on the name and number.  This doesn't necessarily indicate a problem, because the difference may only be due to spelling, but should be investigated.
 
 ```{r orphans, warning=FALSE, include=FALSE}
@@ -232,7 +234,8 @@ teacher_roster_list<-teacher_roster %>%
 orphans_number_questionnaire <- teacher_questionnaire %>%
   select(keep_info, teacher_name, teacher_number) %>%
   anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
-  select(school_code, teacher_name, teacher_number, everything())
+  select(-teacher_name) %>%
+  select(school_code, teacher_number,  everything())
 
 
 ```
