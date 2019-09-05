@@ -64,13 +64,13 @@ bscols(widths=c(3,NA),
        ),
       
        list (
-         plot_ly(linked_q_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
-         datatable(linked_q_df, 
-                   colnames=c( 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                            'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+         plot_ly(linked_q_df, x=~responsible, y=~timelength_sec, type='scatter', mode='markers', color=~question) %>%
+           layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Enumerator ID'))
+         # datatable(linked_q_df, 
+         #           colnames=c( 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+         #                    'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+         #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
+         #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
          
        )
        
@@ -96,14 +96,14 @@ bscols(widths=c(3,NA),
        ),
        list (
        plot_ly(linked_s_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name'))
       
-        datatable(linked_s_df, 
-                 colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                            'Length in Seconds' = 'timelength_sec'),
-                 extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                 options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
-      
+        # datatable(linked_s_df, 
+        #          colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+        #                     'Length in Seconds' = 'timelength_sec'),
+        #          extensions="Scroller", style="bootstrap", class="compact", width="100%",
+        #          options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+        # 
        )
        
 )
@@ -139,12 +139,12 @@ bscols(widths=c(3,NA),
        
        list (
          plot_ly(linked_t_df, x=~question, y=~timestamp, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID')),
-         datatable(linked_t_df, 
-                   colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                              'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE)) 
+           layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID'))
+         # datatable(linked_t_df, 
+         #           colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+         #                      'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
+         #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
+         #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE)) 
          
        )
        
@@ -156,9 +156,8 @@ bscols(widths=c(3,NA),
 
 ## Missing Values and Other Checks
 
-To start, the following figures and tables will highlight missing values for a few of our key indicators.  Ignore the fact that school knowledge, operational management, management skills, instructional leadership, and ECD scores are missing for now, as this information was not available fully in SDI.
+To start, the following figures and tables will highlight missing values for a few of our key indicators. 
 
-Teacher absence is the most problematic, followed by infrastructure, inputs, and content knowledge.
 
 ```{r missings, echo=FALSE, error=FALSE, message=FALSE}
 
@@ -182,9 +181,21 @@ sumstats<-school_dta_short %>%
            "content_knowledge", "ecd_student_knowledge", "inputs", "infrastructure")) 
 
 
-skim(sumstats) %>%
-  skimr::kable()
+sumstats_df<-skim(sumstats) %>%
+  select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  mutate(variable=factor(variable, levels=c("student_knowledge", "absence_rate", "content_knowledge", "ecd_student_knowledge", "inputs", "infrastructure"),
+                         labels=c("4th Grade Student Knowledge (Fraction Correct)", "Teacher Absence Rate", 
+           "Teacher Content Knowledge", "1st Grade Assessment (Fraction Correct)", "Inputs", "Infrastructure")))
 
+```
+
+
+```{r missings_kable}
+
+kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , ) %>%
+  kable_styling()
 
 ```
 

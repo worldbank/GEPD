@@ -643,20 +643,33 @@ school_data_INPT <- school_data_INPT %>%
   mutate(share_desk=1-(m4scq11_inpt)/(m4scq4_inpt))
 
 
-#Used ICT
+#Used ICT 
 school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
   group_by(school_code) %>%
-  summarise(used_ict=mean(m3sbq4_inpt))
+  summarise(used_ict_pct=mean(m3sbq4_inpt, na.rm=TRUE))
+
+school_data_INPT <- school_data_INPT %>%
+  mutate(used_ict_num=case_when(
+    m1sbq12_inpt==0  ~ 0,
+    (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
+    (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
+  ))
 
 #access to ICT
 school_data_INPT <- school_data_INPT %>%
-  mutate(access_ict=bin_var(m1sbq14_inpt,1))
+  mutate(access_ict=case_when(
+                  m1sbq12_inpt==0 | m1sbq13_inpt==0 | m1sbq15_inpt<2 ~ 0,
+                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==2) ~ 1,
+                  (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) | is.na(m1sbq15_inpt<2)) ~ as.numeric(NA)
+                  ))
+
 
 
 inpt_list<-c('blackboard_functional', 'pens_etc', 'share_desk',  'used_ict', 'access_ict')
 
 final_school_data_INPT <- school_data_INPT %>%
   left_join(school_teacher_questionnaire_INPT) %>%
+  mutate(used_ict=if_else((used_ict_pct>=0.5 & used_ict_num>=3), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
   group_by(school_code) %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -764,9 +777,13 @@ final_school_data_OPMN <- school_data_OPMN %>%
            m7scq2_opmn==4 ~ .25,
            m7scq2_opmn==5 ~ 0),
          vignette_2_textbook_access=bin_var(m7scq4_opmn,1),
-         vignette_2=if_else(vignette_1_resp==1,(vignette_2_address+vignette_2_textbook_access)/2,as.numeric(NA), missing=as.numeric(NA)),
+         vignette_2=if_else(vignette_2_resp==1,(vignette_2_address+vignette_2_textbook_access)/2,as.numeric(NA), missing=as.numeric(NA)),
          #sum all components for overall score
-         operational_management=(vignette_1+ vignette_2)
+         operational_management=case_when(
+           !is.na(vignette_1) & !is.na(vignette_2) ~ vignette_1 + vignette_2,
+           !is.na(vignette_1) & is.na(vignette_2) ~ vignette_1 ,
+           is.na(vignette_1) & !is.na(vignette_2) ~ vignette_2 ,
+           is.na(vignette_1) & is.na(vignette_2) ~ as.numeric(NA) )
   )
 
 final_school_data_OPMN <- final_school_data_OPMN %>%

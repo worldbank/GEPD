@@ -171,6 +171,9 @@ bureau_ind<-c( 'national_learning_goals','mandates_accountability' ,'quality_bur
 public_officials_dta_clean <-public_officials_dta_clean %>%
   dplyr::select(preamble_info, bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
 
+public_officials_dta_short <-public_officials_dta_clean %>%
+  dplyr::select(preamble_info, bureau_ind, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+
 
 write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
 write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
@@ -186,8 +189,7 @@ keep_info <- c('region_code', 'district_code', 'district', 'province','location'
 
 public_officials_office_level<- public_officials_dta_clean %>%
   group_by(region_code, district_code, govt_tier) %>%
-  select(keep_info,bureau_ind ) %>%
-  summarise_each(list(if(is.numeric(.)) ~mean(.,na.rm=TRUE) else ~first(.)))
+  select(keep_info,bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) 
   
   
 
@@ -197,10 +199,11 @@ public_officials_office_level<- public_officials_dta_clean %>%
 
 #saves the following in R and stata format
 
-data_list <- c( 'public_officials_dta_clean', 'public_officials_office_level')
+data_list <- c( 'public_officials_dta_clean','public_officials_office_level')
 
-save(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.RData"))
+save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
 #loop and produce list of data tables
+
 
 
 

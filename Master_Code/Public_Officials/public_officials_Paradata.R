@@ -69,6 +69,8 @@ str(content(q))
 POST(paste(server_add,"/api/v1/export/paradata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", sep=""),
      authenticate(user, password))
 
+#sleep for 10 seconds to wait for stata file to compile
+Sys.sleep(10)
 
 dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",sep=""),
                     authenticate(user, password))
@@ -139,8 +141,7 @@ para_df <- para_df %>%
 para_df <- para_df %>% 
   mutate(module = str_to_upper(substr(question, start=1, stop=3))) %>%
   mutate(section = str_to_upper(substr(question, start=1, stop=4))) %>%
-  separate(question, c(NA, "indicator"), sep="_", remove=FALSE) %>%
-  mutate(indicator = str_to_upper(indicator))
+  mutate(indicator=str_to_upper(if_else(substr(question, start=1, stop=2)=="QB", substr(question, start=1, stop=2), substr(question, start=1, stop=3))))
 
 
 #merge on question text
@@ -172,102 +173,102 @@ para_dta<- para_df %>%
   select(-vallabel, -varlabel, -ï..interview__id)
 write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 
-######################################
-# Length of each question by Enumerator
-#######################################
-
-para_df_tab <- para_df %>%
-  select( responsible, date, module, section, question, varlabel, timelength_sec, ï..interview__id,)
-
-linked_df<-SharedData$new(para_df_tab)
-
-
-bscols(widths=c(3,NA),
-       list(
-         filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
-         filter_select("enumerator", "Enumerator", linked_df, ~responsible),
-         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
-         filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
-         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
-         
-       ),
-       
-       list (
-         plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
-         datatable(linked_df, 
-                   colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                              'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-         
-       )
-       
-)
-
-
-
-######################################
-# Length of each section by Enumerator
-#######################################
-
-para_df_section <- para_df %>% 
-  group_by(ï..interview__id, section) %>% 
-  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
-
-linked_df<-SharedData$new(para_df_section)
-
-
-bscols(widths=c(3,NA),
-       list(
-         filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
-         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
-         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
-         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
-       ),
-       list (
-         plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
-         
-         datatable(linked_df, 
-                   colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                              'Length in Seconds' = 'timelength_sec'),
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-         
-       )
-       
-)
-
-######################################
-# Time of Day of each question by Enumerator
-#######################################
-
-para_df_tab <- para_df %>%
-  select( responsible, date, timestamp, module, section, question, varlabel, timelength_sec, ï..interview__id,)
-
-linked_df<-SharedData$new(para_df_tab)
-
-
-bscols(widths=c(3,NA),
-       list(
-         filter_slider("Time", "Time Question Completed", linked_df, ~timestamp),
-         filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
-         filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
-         filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
-         filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
-         
-       ),
-       
-       list (
-         plot_ly(linked_df, x=~question, y=~timestamp, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID')),
-         datatable(linked_df, 
-                   colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-                              'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-         
-       )
-       
-)  
+# ######################################
+# # Length of each question by Enumerator
+# #######################################
+# 
+# para_df_tab <- para_df %>%
+#   select( responsible, date, module, section, question, varlabel, timelength_sec, ï..interview__id,)
+# 
+# linked_df<-SharedData$new(para_df_tab)
+# 
+# 
+# bscols(widths=c(3,NA),
+#        list(
+#          filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
+#          filter_select("enumerator", "Enumerator", linked_df, ~responsible),
+#          filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+#          filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
+#          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+#          
+#        ),
+#        
+#        list (
+#          plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+#            layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
+#          datatable(linked_df, 
+#                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+#                               'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+#                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
+#                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+#          
+#        )
+#        
+# )
+# 
+# 
+# 
+# ######################################
+# # Length of each section by Enumerator
+# #######################################
+# 
+# para_df_section <- para_df %>% 
+#   group_by(ï..interview__id, section) %>% 
+#   summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+# 
+# linked_df<-SharedData$new(para_df_section)
+# 
+# 
+# bscols(widths=c(3,NA),
+#        list(
+#          filter_slider("time", "Length in Seconds", linked_df, ~timelength_sec),
+#          filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+#          filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+#          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+#        ),
+#        list (
+#          plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+#            layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+#          
+#          datatable(linked_df, 
+#                    colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+#                               'Length in Seconds' = 'timelength_sec'),
+#                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
+#                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+#          
+#        )
+#        
+# )
+# 
+# ######################################
+# # Time of Day of each question by Enumerator
+# #######################################
+# 
+# para_df_tab <- para_df %>%
+#   select( responsible, date, timestamp, module, section, question, varlabel, timelength_sec, ï..interview__id,)
+# 
+# linked_df<-SharedData$new(para_df_tab)
+# 
+# 
+# bscols(widths=c(3,NA),
+#        list(
+#          filter_slider("Time", "Time Question Completed", linked_df, ~timestamp),
+#          filter_checkbox("enumerator", "Enumerator", linked_df, ~responsible),
+#          filter_checkbox("date", "Date of Survey", linked_df, ~as.character(date), inline=FALSE),
+#          filter_checkbox("section", "Section", linked_df, ~section, inline=FALSE),
+#          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
+#          
+#        ),
+#        
+#        list (
+#          plot_ly(linked_df, x=~question, y=~timestamp, type='scatter', mode='markers', color=~responsible) %>%
+#            layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID')),
+#          datatable(linked_df, 
+#                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+#                               'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
+#                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
+#                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+#          
+#        )
+#        
+# )  

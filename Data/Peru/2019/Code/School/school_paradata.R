@@ -70,6 +70,9 @@ POST(paste(server_add,"/api/v1/export/paradata/06756cace6d24cc996ffccbfc26a2264$
      authenticate(user, password))
 
 
+#sleep for 10 seconds to wait for stata file to compile
+Sys.sleep(10)
+
 dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
                     authenticate(user, password))
 
