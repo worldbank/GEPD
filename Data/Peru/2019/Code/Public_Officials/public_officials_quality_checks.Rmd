@@ -395,8 +395,8 @@ linked_df<-SharedData$new(public_officials_map)
 bscols(widths=c(3,NA),
   list(
   filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name),
-  filter_checkbox("prov", "Province", linked_df, ~province, inline=FALSE),
-  filter_checkbox("dist", "District", linked_df, ~district, inline=FALSE)
+  filter_select("prov", "Province", linked_df, ~province),
+  filter_select("dist", "District", linked_df, ~district)
 
   ),
   map(linked_df) 

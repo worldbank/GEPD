@@ -269,14 +269,15 @@ preamble_info_absence <- c('interview__id', 'questionnaire_selected__id', 'teach
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(school_absent=case_when(
-    m2sbq6_efft==6  ~ 1,
+    m2sbq6_efft==6 | teacher_available==2 ~ 1,
+    
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absent=case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 | m2sbq6_efft==2  ~ 1,
+    m2sbq6_efft==6 | m2sbq6_efft==5 | m2sbq6_efft==2 | teacher_available==2 ~ 1,
     m2sbq6_efft==1 | m2sbq6_efft==3 |  m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
@@ -798,11 +799,22 @@ final_school_data_OPMN <- final_school_data_OPMN %>%
 
 final_school_data_ILDR <- teacher_questionnaire_ILDR %>%
   mutate(n_mssing_ILDR=n_miss_row(.)) %>%
+  mutate(classroom_observed=bin_var(m3sdq15_ildr,1),
+         classroom_observed_recent=if_else((classroom_observed==1 & m3sdq16_ildr<=12),1,0), #set recent to mean under 12 months
+         purpose_observation=case_when(
+           m3sdq18_ildr__1==1 ~ "Evaluation",
+           m3sdq18_ildr__2==1 ~ "Professional Development",
+           m3sdq18_ildr__3==1 ~ "Monitoring",
+           m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
+         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>1),1,0), #make sure there was discussion and lasted more than 10 min
+         feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
+                                                          | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
+         lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
+mutate(instructional_leadership=rowSums(select(., classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback), na.rm=TRUE)) %>%
   group_by(school_code) %>%
-  summarise(n_mssing_teach_ILDR=sum(n_mssing_ILDR),
-            interview__id=first(interview__id), 
-            enumerator_name_other=first(enumerator_name_other), 
-            enumerator_number=first(enumerator_number))
+  summarise_at(vars(n_mssing_ILDR, interview__id,enumerator_name_other,enumerator_number,
+                    classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback, purpose_observation, instructional_leadership),
+               list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 
@@ -924,13 +936,48 @@ final_school_data_TMNA <- teacher_questionnaire_TMNA %>%
 ##### Teacher  Intrinsic Motivation ###########
 #############################################
 
+#create function to clean teacher attitudes questions.  Need to reverse the order for scoring for some questions.  
+#Should have thought about this, when programming in Survey Solutions and scale 1-5.
+
+attitude_fun  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
+    x==4 ~ 5,
+    x==3 ~ 3.67,
+    x==2 ~ 2.33,
+    x==1 ~ 1
+  )
+}
+
+attitude_fun_rev  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
+    x==1 ~ 5,
+    x==2 ~ 3.67,
+    x==3 ~ 2.33,
+    x==4 ~ 1
+  )
+}
+
+intrinsic_motiv_q_rev <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
+                     'm3scq7_tinm', 'm3scq10_tinm')
+
+intrinsic_motiv_q <- c( 'm3scq11_tinm', 'm3scq14_tinm')
+
+intrinsic_motiv_q_all <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
+                           'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm')
+
 final_school_data_TINM <- teacher_questionnaire_TINM %>%
   mutate(n_mssing_TINM=n_miss_row(.)) %>%
+  mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
+  mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
+  mutate(intrinsic_motivation=rowSums(.[intrinsic_motiv_q_all], na.rm=TRUE)/10) %>%
   group_by(school_code) %>%
   summarise(n_mssing_teach_TINM=sum(n_mssing_TINM),
             interview__id=first(interview__id), 
             enumerator_name_other=first(enumerator_name_other), 
-            enumerator_number=first(enumerator_number))
+            enumerator_number=first(enumerator_number),
+            intrinsic_motivation=mean(intrinsic_motivation))
 
 
 #############################################
@@ -1049,7 +1096,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-            'operational_management', 'vignette_1', 'vignette_2'
+            'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership'
 )
 
 
