@@ -373,6 +373,7 @@ map <- function(df_input) {    leaflet(df_input) %>%
                                   "Province: ", public_officials_map$province, " <br>",
                                   "District: ", public_officials_map$district, " <br>",
                                   "Government Tier: ", public_officials_map$govt_tier, " <br>",
+                                  "Number Interviewed: ", public_officials_map$count, " <br>",
                                   "<font color='red' > Bureaucracy Indicators ", " <br> <font color='black' >",
                                   "National Learning Goals: ", round(as.data.frame(linked_df$data())$national_learning_goals, digits=2), " <br>",
                                   "Mandates & Accountability: ", round(as.data.frame(linked_df$data())$mandates_accountability, digits=2)," <br>",

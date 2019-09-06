@@ -74,7 +74,7 @@ data_set_filled <- complete(data_set_imp, "long")
 data_set_filled <- data_set_filled %>%
   group_by(sch_id) %>%
   summarise_all(list(if(is.numeric(.)) ~mean(., na.rm = TRUE) else ~first(.))) %>%
-  select(-ecd, -operational_management, - instructional_leadership, -school_knowledge, -management_skills)
+  dplyr::select(-ecd, -operational_management, - instructional_leadership, -school_knowledge, -management_skills)
 
 
 
@@ -160,7 +160,7 @@ strata <- strata %>%
   # In the first case, no action is required. In the second case, it is necessary to reduce the number of units, by equally applying the same reduction rate in each stratum. In the third case, we could either to set more tight precision constraints, or proceed to increase the sample size by applying the same increase rate in each stratum. This increase/reduction process is iterative, as by applying the same rate we could find that in some strata there are not enough units to increase or to reduce. The function adjustSize permits to obtain the desired final sample size. Let us suppose that the obtained sample size is not affordable. We can reduce it by executing the following code:
   #   
 
-    adjustedStrata <- adjustSize(size=150,strata=solution1$aggr_strata,cens=NULL)
+    adjustedStrata <- adjustSize(size=172,strata=solution1$aggr_strata,cens=NULL)
 
   sum(adjustedStrata$SOLUZ)
   # The difference between the desired sample size and the actual adjusted size depends on the number of strata in the optimized solution. Consider that the adjustment is performed in each stratum by taking into account the relative difference between the current sample size and the desired one: this produces an allocation that is expressed by a real number, that must be rounded, while taking into account the requirement of the minimum number of units in the strata. The higher the number of strata, the higher the impact on the final adjusted sample size.
@@ -275,27 +275,8 @@ dist_list<- sample_final %>%
   group_by(district) %>%
   summarise(n=n() )
 
-district_office_sample <- dist_list %>%
-  sample_n(20)
 
-#save as csv
-dist_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/district_sample_",currentDate,".csv", sep="")
 
-write.csv(district_office_sample,dist_frame_name) 
-
-###Run an iteration where we choose 20 districts linked to schools and link up to provinces
-#columns to keep
-cols<-c( "province")
-
-dist_list_alt1<- sample_final %>%
-  filter(district %in% as.vector(district_office_sample$district)) %>%
-  group_by(district) %>%
-  sample_n(1) %>%
-  summarise_at(cols, first)
-#save as csv
-dist_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/district_sample_20region_1ugel",currentDate,".csv", sep="")
-
-write.csv(dist_list_alt1,dist_frame_name) 
 
 #Run an iteration where we choose 10 districts linked to schools and link up to provinces
 #columns to keep
@@ -312,169 +293,19 @@ province_office_sample <- prov_list %>%
 dist_list_alt2<- sample_final %>%
   filter(province %in% as.vector(province_office_sample$province)) %>%
   group_by(province) %>%
-  sample_n(1) %>%
-  summarise_at(cols, first)
+  mutate(n_districts=if_else((province=="Maputo Cidade" | province=="Maputo Provincia"), 1,2) )%>% #Select 2 districts from each province, but 1 in the smallest provinces
+  
+  sample_n(n_districts) %>%
+  dplyr::select(province, district)
 
 #save as csv
-dist_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/district_sample_10region_10ugel",currentDate,".csv", sep="")
+dist_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/district_sample_10region_18ugel",currentDate,".csv", sep="")
 
 write.csv(dist_list_alt2,dist_frame_name) 
 
 ###save our sample  
 dist_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/district_sample_",currentDate,".RData", sep="")
 
-save(district_office_sample, dist_list_alt1, dist_list_alt2,
+save(dist_list_alt2,
      file=dist_frame_name) 
 
-
-#################################################################
-###### Upload Assignments to Survey Solutions using API ########
-#################################################################
-
-
-currentDate<-Sys.Date()
-sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
-load(file=sample_frame_name) 
-#prepare data for upload to API
-
-vars<-c("SCHOOL", "REGION", "WOREDA", "ADMINCODE")
-
-assignments <- sample_final %>%
-  filter(sample_dashboard==1) %>%
-  select( school_name_preload=denominacion.ie, 
-          school_province_preload=provincia, school_district_preload=distrito, 
-          school_emis_preload=codigo.modular) %>%
-  mutate(school_code_preload=9000+1:n()) %>%
-  mutate(interviewer="")
-
-assign_file_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/assignments_schools.csv", sep="")
-write.csv(assignments,assign_file_name)
-
-#now do same for public officials
-dist_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/district_sample_",currentDate,".RData", sep="")
-
-load(file=dist_frame_name) 
-dist_list_alt2<- dist_list_alt2 %>%
-  mutate(interviewer="")
-
-assign_file_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/assignments_offices.csv", sep="")
-write.csv(dist_list_alt2,assign_file_name)
-
-## Load the libraries
-library("httr")
-library("xml2")
-library("jsonlite")
-
-#create some values
-user<-"bstacy_api"
-password <- rstudioapi::askForPassword()
-
-url_base<-"https://gepdmoz.mysurvey.solutions"
-QUID<-"06756cace6d24cc996ffccbfc26a2264"
-version<-"1"
-
-#Get list of questionnaires available  (if needed)
-q<-GET(paste0(url_base,"/api/v1/questionnaires"),
-       authenticate(user, password))
-
-#Produce dataset with supervisors
-#path and folder where the .zip file will be stored
-url=paste0(url_base, "/api/v1/supervisors")
-
-df<-GET(url=url,
-        authenticate(user, password))  
-str(content(df))
-
-#convert to useful dataframe
-df<-fromJSON(txt=content(df, as="text"))
-supervisors<-df$Users  
-
-#Now merge list of supervisors to identifying data of schools
-#randomly assign supervisors to districts
-
-#first collapse assignments to district level
-assign_dist<- assignments %>%
-  select(school_province_preload, school_district_preload) %>%
-  group_by(school_district_preload) %>%
-  summarise( school_province_preload=first(school_province_preload))
-
-#Now randomly select a supervisor from list and assign
-assign_dist$supervisor=""
-for(i in 1:nrow(assign_dist)){
-  #print(assign_dist$school_district_preload[i])
-  rand_super<-sample_n(supervisors,1)
-  print(rand_super$UserName[1])
-  assign_dist$supervisor[i]=rand_super$UserName[1]
-}
-
-
-#now merge back onto full list of schools
-assignments <- assignments %>%
-  left_join(assign_dist, by="school_district_preload")
-
-
-
-##  API parameters
-url=paste0(url_base, "/api/v1/assignments")
-quid=paste0(QUID,"$", version)
-##  the post
-resp<-assignments$supervisor
-#resp<-rep("bstacy1_inter",length(resp))
-status_list<-list()
-
-#drop some stray variables
-assignments_clean <- assignments %>%
-  select(-c(school_province_preload.x , school_province_preload.y, supervisor ))
-
-for(i in 1:nrow(assignments)){
-  print(resp[i])
-  js_ch<-list(Responsible=unbox(resp[i]),
-              Quantity=unbox(1),
-              QuestionnaireId=unbox(quid),
-              IdentifyingData=data.frame(Variable=names(assignments_clean),
-                                         Answer=unlist(assignments_clean[i,],use.names = F)))
-  test_post<-httr::POST(url = url,
-                        accept_json(),add_headers(charset="utf-8"),
-                        authenticate(user, password, type = "basic"),
-                        body=js_ch, encode = "json")
-  ##  ATTENTION: USE THE RESPONSE
-  aJsonFile<-tempfile()
-  writeBin(content(test_post, "raw"), aJsonFile)
-  status_list[[i]]<-fromJSON(aJsonFile)
-}
-
-
-# Now do Survey of Public Officials
-
-##  API parameters
-url=paste0(url_base, "/api/v1/assignments")
-QUID<-"25534a374fa8434bb7d6f5133cdebab2"
-version<-"2"
-quid=paste0(QUID,"$", version)
-##  the post
-resp<-district_office_sample$supervisor
-#resp<-rep("bstacy1_inter",length(resp))
-status_list<-list()
-
-#drop some stray variables
-district_office_sample_clean <- district_office_sample %>%
-  select(-c( supervisor ))
-
-for(i in 1:nrow(district_office_sample_clean)){
-  print(resp[i])
-  js_ch<-list(Responsible=unbox(resp[i]),
-              Quantity=unbox(1),
-              QuestionnaireId=unbox(quid),
-              IdentifyingData=data.frame(Variable=names(district_office_sample_clean),
-                                         Answer=unlist(district_office_sample_clean[i,],use.names = F)))
-  test_post<-httr::POST(url = url,
-                        accept_json(),add_headers(charset="utf-8"),
-                        authenticate(user, password, type = "basic"),
-                        body=js_ch, encode = "json")
-  ##  ATTENTION: USE THE RESPONSE
-  aJsonFile<-tempfile()
-  writeBin(content(test_post, "raw"), aJsonFile)
-  status_list[[i]]<-fromJSON(aJsonFile)
-}
-
-    
