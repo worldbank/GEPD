@@ -1,5 +1,5 @@
-| Series | Indicator Name | Short Definition | Topic | Related Indicators| Value |
-|---|---|---|---|---|---|
+| Series | Indicator Name | Short Definition | Topic | Related Indicators| Value | Coding Decisions |
+|---|---|---|---|---|---|---|
 |SE.PRM.LERN | Learning | This outcome indicator measures whether students are learning, by reporting data from well-designed student assessments.  | Outcome | Learning | 0-100 |
 |SE.PRM.PART |Participation|This indicator will summarize school participation by reporting the enrollment rate among primary-age children.|Outcome | Participation| 0-100 |
 |SE.PRM.EFFT |Teacher Effort|---|Teaching|Teacher Effort|0-100  |
