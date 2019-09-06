@@ -160,7 +160,7 @@ strata <- strata %>%
   # In the first case, no action is required. In the second case, it is necessary to reduce the number of units, by equally applying the same reduction rate in each stratum. In the third case, we could either to set more tight precision constraints, or proceed to increase the sample size by applying the same increase rate in each stratum. This increase/reduction process is iterative, as by applying the same rate we could find that in some strata there are not enough units to increase or to reduce. The function adjustSize permits to obtain the desired final sample size. Let us suppose that the obtained sample size is not affordable. We can reduce it by executing the following code:
   #   
 
-    adjustedStrata <- adjustSize(size=172,strata=solution1$aggr_strata,cens=NULL)
+    adjustedStrata <- adjustSize(size=176,strata=solution1$aggr_strata,cens=NULL)
 
   sum(adjustedStrata$SOLUZ)
   # The difference between the desired sample size and the actual adjusted size depends on the number of strata in the optimized solution. Consider that the adjustment is performed in each stratum by taking into account the relative difference between the current sample size and the desired one: this produces an allocation that is expressed by a real number, that must be rounded, while taking into account the requirement of the minimum number of units in the strata. The higher the number of strata, the higher the impact on the final adjusted sample size.
@@ -243,6 +243,96 @@ sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (T
 save(sample_final, data_set_updated,
      file=sample_frame_name)   
 
+
+##################################
+#Select Replacement Schools
+###############################
+
+#read in full sample frame
+df<-read.csv("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/mozambique_sampling_frame.csv")
+
+#drop extra columns at end
+df<-df %>% 
+  dplyr::select(1:73)
+
+#update orginal dataframe with sampled schools.
+data_set_updated <- df %>%
+  dplyr::select(-rural) %>%
+  mutate(sch_id=codigo) %>% 
+  left_join(sample_final) %>%
+  mutate(sample_dashboard=ifelse(is.na(sample_dashboard),0,sample_dashboard))
+  dplyr::select(-n_prov)
+#This will be done so that 2 replacements in every province are chosen  
+#get a list of  districts sampled
+
+districts <- sample_final %>%
+  group_by(district) %>%
+  summarise(n_prov=n()) %>%
+  mutate(orig_distrito=district) %>%
+  dplyr::select(-district)
+
+district_list<-as.vector(districts$orig_distrito)
+
+#produce table with randomly replacement selected schools
+sample_replacement1<- data_set_updated %>%
+  left_join(districts) %>%
+  filter(orig_distrito %in% district_list) %>%
+  filter(sample_dashboard==0) %>%
+  group_by(orig_distrito) %>%
+  sample_n(n_prov, weight=ipw ) %>%
+  mutate(sample_replacement1=1) %>%
+  dplyr::select(-n_prov)
+
+data_set_updated <- data_set_updated %>%
+  left_join(sample_replacement1) %>%
+  mutate(sample_replacement1=ifelse(is.na(sample_replacement1),0,sample_replacement1))
+
+
+sample_replacement2<- data_set_updated %>%
+  left_join(districts) %>%
+  filter(orig_distrito %in% district_list) %>%
+  filter(sample_dashboard==0 & sample_replacement1==0) %>%
+  group_by(orig_distrito) %>%
+  sample_n(n_prov, weight=ipw ) %>%
+  mutate(sample_replacement2=1) %>% 
+  dplyr::select(-n_prov)
+
+data_set_updated <- data_set_updated %>%
+  left_join(sample_replacement2) %>%
+  mutate(sample_replacement2=ifelse(is.na(sample_replacement2),0,sample_replacement2))
+
+sample_maputo<- data_set_updated %>%
+  filter(orig_province == "Maputo" | orig_province == "Cidade de Maputo") %>%
+  filter(sample_dashboard==0 & sample_replacement1==0 & sample_replacement2==0) %>%
+  ungroup() %>% 
+  sample_n(5, weight=ipw ) %>%
+  mutate(sample_maputo=1)
+
+data_set_updated <- data_set_updated %>%
+  left_join(sample_maputo) %>%
+  mutate(sample_maputo=ifelse(is.na(sample_maputo),0,sample_maputo)) %>%
+  mutate(sample=case_when(
+    sample_dashboard==1  ~ 1,
+    sample_replacement1==1 ~ 2,
+    sample_replacement2==1 ~ 3,
+    sample_maputo==1 ~ 4)) %>%
+  mutate(sample=factor(sample, levels=c(1,2,3,4), labels=c('Sampled School', "Replacement 1", "Replacement 2", 'Maputo Pilot Schools')))
+
+sample_updated<-data_set_updated  %>%
+  filter(!is.na(sample)) %>%
+  dplyr::select(-(74:115)) %>%
+  dplyr::select(codigo, sample, everything())
+
+#Save sample file
+currentDate<-Sys.Date()
+sample_file_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".csv", sep="")
+write.csv(sample_updated,sample_file_name)
+
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+save(sample_updated, data_set_updated,
+     file=sample_frame_name)   
+
+
 #################################################
 #Get list of teachers for each school selected based on previous SDI visit
 ################################################
@@ -292,6 +382,8 @@ province_office_sample <- prov_list %>%
 
 dist_list_alt2<- sample_final %>%
   filter(province %in% as.vector(province_office_sample$province)) %>%
+  group_by(district) %>%
+  summarise_all(first) %>%
   group_by(province) %>%
   mutate(n_districts=if_else((province=="Maputo Cidade" | province=="Maputo Provincia"), 1,2) )%>% #Select 2 districts from each province, but 1 in the smallest provinces
   
