@@ -191,7 +191,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
   group_by(region_code, district_code, govt_tier) %>%
   select(keep_info,bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
   mutate(count=n() )%>% 
-  summarise_all(funs(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+  summarise_all(list(if(is.numeric(.)) ~mean(., na.rm = TRUE) else ~first(.)))
   
   
 

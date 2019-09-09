@@ -472,7 +472,8 @@ final_school_data_LERN <- assess_4th_grade_dta %>%
             g4_teacher_code=first(m8_teacher_code),
             interview__id=first(interview__id), 
             enumerator_name_other=first(enumerator_name_other), 
-            enumerator_number=first(enumerator_number))
+            enumerator_number=first(enumerator_number),
+            n_students=n())
 
 
 
@@ -745,7 +746,7 @@ final_school_data_INFR <- school_data_INFR %>%
     disab_screening=rowSums(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE)/3,
     #sum up all components for overall disability accessibility score
     disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
-                                disab_class_ramp+disab_class_entr+disab_screening)/5
+                                disab_class_ramp+disab_class_entr+disab_screening)/6
   )
 
 
@@ -844,7 +845,7 @@ mutate(instructional_leadership=1+rowSums(select(., classroom_observed, classroo
   group_by(school_code) %>%
   summarise_at(vars(n_mssing_ILDR, interview__id,enumerator_name_other,enumerator_number,
                     classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback, purpose_observation, instructional_leadership),
-               list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+               list(if(is.numeric(.)) ~mean(., na.rm = TRUE) else ~first(.)))
 
 
 
@@ -864,9 +865,28 @@ final_school_data_PKNW <- school_data_PKNW %>%
 ##### School Principal Management Skills ###########
 #############################################
 
-
+#Create variables for whether school goals exists, are clear, are relevant to learning, and are measured in an appropriate way.
 
 final_school_data_PMAN <- school_data_PMAN %>%
+  mutate(school_goals_exist=bin_var(m7sdq1_pman,1),
+         school_goals_clear=if_else(m7sdq1_pman==1, 
+                                    rowSums(select(.,m7sdq3_pman__1, m7sdq3_pman__2, m7sdq3_pman__3, m7sdq3_pman__4, m7sdq3_pman__5), na.rm=TRUE)/5,
+                                    0) ,
+         school_goals_relevant_total=rowSums(select(.,m7sdq4_pman__1, m7sdq4_pman__2, m7sdq4_pman__3, m7sdq4_pman__4, m7sdq4_pman__5, m7sdq4_pman__6, m7sdq4_pman__7, m7sdq4_pman__8, m7sdq4_pman__97), na.rm=TRUE),
+         school_goals_relevant=if_else(m7sdq1_pman==1, 
+                                       case_when(
+                                         (school_goals_relevant_total > 0) ~ 1,
+                                         (school_goals_relevant_total == 0) ~ 0),
+                                       0),
+         school_goals_measured=if_else((m7sdq1_pman==1), 
+                                       case_when(
+                                         (m7sdq5_pman==1) ~ 0,
+                                         (m7sdq5_pman==2 | m7sdq5_pman==97 ) ~ 0.5,
+                                         (m7sdq5_pman==3) ~ 1),
+                                       0)) %>%
+  mutate(principal_management=1+school_goals_exist+school_goals_clear+school_goals_relevant+school_goals_measured)
+
+final_school_data_PMAN <- final_school_data_PMAN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PMAN=n_miss_row(.)) 
@@ -1126,7 +1146,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-            'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership'
+            'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management'
 )
 
 
