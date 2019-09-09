@@ -11,7 +11,7 @@ Global Education Policy Dashboard
       - [OUR APPROACH:  HOW THE DASHBOARD WILL ACHIEVE THIS](#our-approach-how-the-dashboard-will-achieve-this)   
 
 <!-- /MDTOC -->
-This repository is for the Global Education Policy Dashboard team.  
+This repository is for the Global Education Policy Dashboard team.  Please contact our team at educationdashboard@worldbank.org with any questions.
 
 ## Organization of Repo
 
