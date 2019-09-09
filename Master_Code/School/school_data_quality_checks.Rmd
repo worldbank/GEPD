@@ -9,7 +9,7 @@ params:
     input: password
 ---
 
-```{r setup, echo=FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #load relevant libraries
 library(knitr)
@@ -174,20 +174,40 @@ Below the missings plot is a table of summary statistics for a few key indicator
 #table of summary stats
 #merge on teacher content knowledge
 
+indicator_list<-c("student_knowledge", 
+                  "absence_rate", 
+                  "content_knowledge", 
+                  "ecd_student_knowledge", 
+                  "inputs", 
+                  "infrastructure", 
+                  "operational_management", 
+                  "instructional_leadership",
+                  'principal_management',
+                  "intrinsic_motivation"
+                  )
 
+indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)", 
+                    "Teacher Absence Rate", 
+                    "Teacher Content Knowledge", 
+                    "1st Grade Assessment (Fraction Correct)", 
+                    "Inputs", 
+                    "Infrastructure",
+                    "Operational Management",
+                    "Instructional Leadership",
+                    'Principal Management Skills',
+                    "Teacher Intrinsic Motivation"
+                    )
 
 sumstats<-school_dta_short %>%
-  select(c("student_knowledge", "absence_rate", 
-           "content_knowledge", "ecd_student_knowledge", "inputs", "infrastructure")) 
+  select(indicator_list) 
 
 
 sumstats_df<-skim(sumstats) %>%
   select(-level, -type, -value) %>%
   spread(stat, formatted) %>%
   select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
-  mutate(variable=factor(variable, levels=c("student_knowledge", "absence_rate", "content_knowledge", "ecd_student_knowledge", "inputs", "infrastructure"),
-                         labels=c("4th Grade Student Knowledge (Fraction Correct)", "Teacher Absence Rate", 
-           "Teacher Content Knowledge", "1st Grade Assessment (Fraction Correct)", "Inputs", "Infrastructure")))
+  mutate(variable=factor(variable, levels=indicator_list,
+                         labels=indicator_labels))
 
 ```
 
@@ -250,9 +270,11 @@ school_map <- school_dta_short %>%
 
 school_map <- school_map %>%
   mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(content_knowledge) | 
-                     is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) | is.na(operational_management)))%>%
+                     is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) |  is.na(operational_management)
+                   | is.na(intrinsic_motivation) | is.na(instructional_leadership) | is.na(principal_management)))%>%
   mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(content_knowledge) + 
-           is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) +is.na(operational_management) )
+           is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) + is.na(operational_management)
+         + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management))
 
 
 #color coded markers for missing values
@@ -314,7 +336,11 @@ map <- function(df_input) {    leaflet(df_input) %>%
                                   "Basic Inputs: ", round(school_map$inputs, digits=2), " <br>",
                                   "Basic Infrastructure: ", round(school_map$infrastructure, digits=2), " <br>",
                                   "Capacity for Learning: ", round(100*school_map$ecd_student_knowledge, digits=2), "% <br>",
-                                  "Operational Management: ", round(school_map$operational_management, digits=2), " <br>"))   %>%
+                                  "Operational Management: ", round(school_map$operational_management, digits=2), " <br>",
+                                  "Instructional Leadership: ", round(school_map$instructional_leadership, digits=2), " <br>",
+                                  "Principal Management Skills: ", round(school_map$principal_management, digits=2), " <br>",
+                                  "<font color='blue' > Policy Indicators ", " <br> <font color='black' >",
+                                  "Teacher Intrinsic Motivation: ", round(school_map$intrinsic_motivation, digits=2), "<br>") )  %>%
     addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
 
 }
@@ -332,8 +358,8 @@ linked_df<-SharedData$new(school_map)
 bscols(widths=c(3,NA),
   list(
   filter_slider("missings", "Missing Indicators", linked_df, ~total_missing),
-  filter_checkbox("prov", "Province", linked_df, ~school_province_preload, inline=FALSE),
-  filter_checkbox("reg", "District", linked_df, ~school_district_preload, inline=FALSE)
+  filter_select("prov", "Province", linked_df, ~school_province_preload),
+  filter_select("reg", "District", linked_df, ~school_district_preload)
   ),
   map(linked_df) 
 
@@ -468,8 +494,8 @@ bscols(widths=c(3,NA),
   list(
   filter_slider("orphans", "Orphan Teacher Count", linked_df_orphan, ~orphan_count),
   filter_select("enumerator", "Enumerator", linked_df_orphan, ~enumerator_name_other),
-  filter_checkbox("prov", "Province", linked_df_orphan, ~school_province_preload, inline=FALSE),
-  filter_checkbox("reg", "District", linked_df_orphan, ~school_district_preload, inline=FALSE)
+  filter_select("prov", "Province", linked_df_orphan, ~school_province_preload),
+  filter_select("reg", "District", linked_df_orphan, ~school_district_preload)
   
   ),
   map(linked_df_orphan) 

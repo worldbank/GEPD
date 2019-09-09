@@ -57,6 +57,8 @@ str(content(q))
 POST(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", sep=""),
          authenticate(user, password))
 
+#sleep for 10 seconds to wait for stata file to compile
+Sys.sleep(10)
 
 dataDownload <- GET(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",sep=""),
                     authenticate(user, password))

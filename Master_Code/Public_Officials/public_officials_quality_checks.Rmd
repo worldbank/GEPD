@@ -373,6 +373,7 @@ map <- function(df_input) {    leaflet(df_input) %>%
                                   "Province: ", public_officials_map$province, " <br>",
                                   "District: ", public_officials_map$district, " <br>",
                                   "Government Tier: ", public_officials_map$govt_tier, " <br>",
+                                  "Number Interviewed: ", public_officials_map$count, " <br>",
                                   "<font color='red' > Bureaucracy Indicators ", " <br> <font color='black' >",
                                   "National Learning Goals: ", round(as.data.frame(linked_df$data())$national_learning_goals, digits=2), " <br>",
                                   "Mandates & Accountability: ", round(as.data.frame(linked_df$data())$mandates_accountability, digits=2)," <br>",
@@ -395,8 +396,8 @@ linked_df<-SharedData$new(public_officials_map)
 bscols(widths=c(3,NA),
   list(
   filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name),
-  filter_checkbox("prov", "Province", linked_df, ~province, inline=FALSE),
-  filter_checkbox("dist", "District", linked_df, ~district, inline=FALSE)
+  filter_select("prov", "Province", linked_df, ~province),
+  filter_select("dist", "District", linked_df, ~district)
 
   ),
   map(linked_df) 
