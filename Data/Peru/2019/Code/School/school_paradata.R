@@ -202,6 +202,7 @@ para_dta<- para_df %>%
   mutate(interview_id=ï..interview__id) %>%
   select(-vallabel, -varlabel, -ï..interview__id)
 write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
+
 # 
 # ######################################
 # # Length of each question by Enumerator

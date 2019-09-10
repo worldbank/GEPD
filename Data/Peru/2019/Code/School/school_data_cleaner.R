@@ -843,9 +843,7 @@ final_school_data_ILDR <- teacher_questionnaire_ILDR %>%
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
 mutate(instructional_leadership=1+rowSums(select(., classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback), na.rm=TRUE)) %>%
   group_by(school_code) %>%
-  summarise_at(vars(n_mssing_ILDR, interview__id,enumerator_name_other,enumerator_number,
-                    classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback, purpose_observation, instructional_leadership),
-               list(if(is.numeric(.)) ~mean(., na.rm = TRUE) else ~first(.)))
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 
@@ -896,14 +894,69 @@ final_school_data_PMAN <- final_school_data_PMAN %>%
 #############################################
 
 
+
+#create function to clean teacher attitudes questions.  Need to reverse the order for scoring for some questions.  
+#Should have thought about this, when programming in Survey Solutions and scale 1-5.
+
+attitude_fun  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
+    x==4 ~ 5,
+    x==3 ~ 3.67,
+    x==2 ~ 2.33,
+    x==1 ~ 1
+  )
+}
+
+attitude_fun_rev  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
+    x==1 ~ 5,
+    x==2 ~ 3.67,
+    x==3 ~ 2.33,
+    x==4 ~ 1
+  )
+}
+
+
+teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
+  mutate(teacher_satisfied_job=attitude_fun_rev(m3seq1_tatt)/5,
+         teacher_satisfied_status=attitude_fun_rev(m3seq2_tatt)/5,
+         better_teachers_promoted=bin_var(m3seq3_tatt,1),
+         teacher_bonus=bin_var(m3seq4_tatt,1),
+         teacher_bonus_attend=if_else(m3seq4_tatt==1,
+                                      bin_var(m3seq5_tatt__1,1),
+                                      0),
+         teacher_bonus_student_perform=if_else(m3seq4_tatt==1,
+                                               bin_var(m3seq5_tatt__2,1),
+                                               0),
+         teacher_bonus_extra_duty=if_else(m3seq4_tatt==1,
+                                          bin_var(m3seq5_tatt__3,1),
+                                          0),
+         teacher_bonus_hard_staff=if_else(m3seq4_tatt==1,
+                                          bin_var(m3seq5_tatt__4,1),
+                                          0),
+         teacher_bonus_subj_shortages=if_else(m3seq4_tatt==1,
+                                              bin_var(m3seq5_tatt__5,1),
+                                              0),
+         teacher_bonus_add_qualif=if_else(m3seq4_tatt==1,
+                                          bin_var(m3seq5_tatt__6,1),
+                                          0),
+         teacher_bonus_school_perform=if_else(m3seq4_tatt==1,
+                                              bin_var(m3seq5_tatt__7,1),
+                                              0),
+         teacher_bonus_other=if_else(m3seq4_tatt==1,
+                                     if_else(m3seq5_tatt__97==1,m3seq5_other_tatt,"NA"),
+                                     "NA"),
+         salary_delays=if_else(m3seq6_tatt==1, m3seq7_tatt,0)) %>%
+  mutate(teacher_attraction=1+teacher_satisfied_job+teacher_satisfied_status+better_teachers_promoted+teacher_bonus)
+  
+
 final_school_data_TATT <- teacher_questionnaire_TATT %>%
   mutate(n_mssing_TATT=n_miss_row(.)) %>%
+  select(-c('teacher_name','teacher_number')) %>%
   group_by(school_code) %>%
-  summarise(n_mssing_teach_TATT=sum(n_mssing_TATT),
-            interview__id=first(interview__id), 
-            enumerator_name_other=first(enumerator_name_other), 
-            enumerator_number=first(enumerator_number))
-
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 
@@ -912,17 +965,40 @@ final_school_data_TATT <- teacher_questionnaire_TATT %>%
 ##### Teacher Teaching Selection and Deployment ###########
 #############################################
 
+# School Survey. The De Facto portion of the Teacher Selection and Deployment Indicator considers two issues: how teachers are selected into the profession and how teachers are assigned to positions (transferred) once in the profession. Research shows that degrees and years of experience explanin little variation in teacher quality, so more points are assigned for systems that also base hiring on content knowledge or pedagogical skill. 2 points are available for the way teachers are selected and 2 points are available for deployment. 
+# 
+# Selection 
+# - 0 Points. None of the below 
+# - 1 point. Teachers selected based on completion of coursework, educational qualifications, graduating from tertiary program (including specialized programs), selected based on experience 
+# - 2 points. Teacher recruited based on passing written content knowledge test, passed interview stage assessment, passed an assessment conducted by supervisor based on practical experience, conduct during mockup class. 
+# 
+# Deployment 
+# - 0 Points. None of the below 
+# - 1 point. Teachers deployed based on years of experience or job title hierarchy 
+# - 2 points. Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview.
 
 
+teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
+  mutate(
+    teacher_selection=case_when(
+      (m3sdq1_tsdp__5==1 | m3sdq1_tsdp__6==1 | m3sdq1_tsdp__8==1 | m3sdq1_tsdp__9==1 )  ~ 2,
+      (m3sdq1_tsdp__1==1 | m3sdq1_tsdp__2==1 | m3sdq1_tsdp__3==1 | m3sdq1_tsdp__4==1 | m3sdq1_tsdp__7==1) ~ 1,
+      (m3sdq1_tsdp__1==0 & m3sdq1_tsdp__2==0 & m3sdq1_tsdp__3==0 & m3sdq1_tsdp__4==0 & m3sdq1_tsdp__5==0 & m3sdq1_tsdp__6==0 & m3sdq1_tsdp__7==0 & m3sdq1_tsdp__8==0 & m3sdq1_tsdp__9==0) ~ 0
+      ),
+    teacher_deployment=case_when(
+      (m3seq8_tsdp__3==1 | m3seq8_tsdp__4==1 | m3seq8_tsdp__5==1  )  ~ 2,
+      (m3seq8_tsdp__1==1 | m3seq8_tsdp__2==1 | m3seq8_tsdp__97==1) ~ 1,
+      ((m3seq8_tsdp__1==0 & m3seq8_tsdp__2==0 & m3seq8_tsdp__3==0 & m3seq8_tsdp__4==0 & m3seq8_tsdp__5==0) | ( m3seq8_tsdp__99==1)) ~ 0
+      
+      )
+    ) %>%
+  mutate(teacher_selection_deployment=1+teacher_selection+teacher_deployment)
 
-final_school_data_TSDP <- teacher_questionnaire_TSDP %>%
+
+final_school_data_TSDP <- teacher_questionnaire_TSDP %>%  
   mutate(n_mssing_TSDP=n_miss_row(.)) %>%
   group_by(school_code) %>%
-  summarise(n_mssing_teach_TSDP=sum(n_mssing_TSDP),
-            interview__id=first(interview__id), 
-            enumerator_name_other=first(enumerator_name_other), 
-            enumerator_number=first(enumerator_number))
-
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 #############################################
@@ -934,11 +1010,7 @@ final_school_data_TSDP <- teacher_questionnaire_TSDP %>%
 final_school_data_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(n_mssing_TSUP=n_miss_row(.)) %>%
   group_by(school_code) %>%
-  summarise(n_mssing_teach_TSUP=sum(n_mssing_TSUP),
-            interview__id=first(interview__id), 
-            enumerator_name_other=first(enumerator_name_other), 
-            enumerator_number=first(enumerator_number))
-
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 #############################################
@@ -986,28 +1058,6 @@ final_school_data_TMNA <- teacher_questionnaire_TMNA %>%
 ##### Teacher  Intrinsic Motivation ###########
 #############################################
 
-#create function to clean teacher attitudes questions.  Need to reverse the order for scoring for some questions.  
-#Should have thought about this, when programming in Survey Solutions and scale 1-5.
-
-attitude_fun  <- function(x) {
-  case_when(
-    x==99 ~ as.numeric(NA),
-    x==4 ~ 5,
-    x==3 ~ 3.67,
-    x==2 ~ 2.33,
-    x==1 ~ 1
-  )
-}
-
-attitude_fun_rev  <- function(x) {
-  case_when(
-    x==99 ~ as.numeric(NA),
-    x==1 ~ 5,
-    x==2 ~ 3.67,
-    x==3 ~ 2.33,
-    x==4 ~ 1
-  )
-}
 
 intrinsic_motiv_q_rev <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
                      'm3scq7_tinm', 'm3scq10_tinm')
@@ -1115,6 +1165,10 @@ keep_info <-       c('school_code',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                      'survey_time', 'lat', 'lon')
 
+if (exists('final_school_data')) {
+  rm('final_school_data')
+  }
+
 for (i in indicator_names ) {
   if (exists(paste("final_school_data_",i, sep=""))) {
     #form temp data frame with each schools data
@@ -1146,7 +1200,8 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-            'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management'
+            'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
+            'teacher_selection_deployment'
 )
 
 

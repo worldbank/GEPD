@@ -94,3 +94,4 @@ makeVlist <- function(dta) {
 #read in public officials interview file
 public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta"))
 public_officials_metadata<-makeVlist(public_officials_dta)
+===

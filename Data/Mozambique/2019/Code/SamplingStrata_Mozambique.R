@@ -377,15 +377,14 @@ prov_list<- sample_final %>%
   summarise(n=n() )
 
 
-province_office_sample <- prov_list %>%
-  sample_n(10)
+province_office_sample <- prov_list 
 
 dist_list_alt2<- sample_final %>%
   filter(province %in% as.vector(province_office_sample$province)) %>%
   group_by(district) %>%
   summarise_all(first) %>%
   group_by(province) %>%
-  mutate(n_districts=if_else((province=="Maputo Cidade" | province=="Maputo Provincia"), 1,2) )%>% #Select 2 districts from each province, but 1 in the smallest provinces
+  mutate(n_districts=if_else((province=="Maputo Cidade" | province=="Maputo Provincia" | province=="Niassa" | province=="Sofala"), 1,2) )%>% #Select 2 districts from each province, but 1 in the smallest provinces
   
   sample_n(n_districts) %>%
   dplyr::select(province, district)
