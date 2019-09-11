@@ -184,7 +184,8 @@ indicator_list<-c("student_knowledge",
                   "instructional_leadership",
                   'principal_management',
                   'teacher_attraction',
-                  'teacher_selection_deployment'
+                  'teacher_selection_deployment',
+                  'teacher_support',
                   "intrinsic_motivation"
                   )
 
@@ -198,7 +199,8 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     "Instructional Leadership",
                     'Principal Management Skills',
                     'Teacher Attraction (De Facto)',
-                    'Teacher Selection & Deployment (De Facto)'
+                    'Teacher Selection & Deployment (De Facto)',
+                    'Teacher Support (De Facto)',
                     "Teacher Intrinsic Motivation"
                     )
 
@@ -275,10 +277,11 @@ school_map <- school_dta_short %>%
 school_map <- school_map %>%
   mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(content_knowledge) | 
                      is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) |  is.na(operational_management)
-                   | is.na(intrinsic_motivation) | is.na(instructional_leadership) | is.na(principal_management) | is.na(teacher_attraction) | is.na(teacher_selection_deployment)))%>%
+                   | is.na(intrinsic_motivation) | is.na(instructional_leadership) | is.na(principal_management) | is.na(teacher_attraction) | is.na(teacher_selection_deployment)
+                   | is.na(teacher_support)))%>%
   mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(content_knowledge) + 
            is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) + is.na(operational_management)
-         + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management) + is.na(teacher_attraction) + is.na(teacher_selection_deployment))
+         + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management) + is.na(teacher_attraction) + is.na(teacher_selection_deployment) + is.na(teacher_support))
 
 
 #color coded markers for missing values
@@ -346,6 +349,7 @@ map <- function(df_input) {    leaflet(df_input) %>%
                                   "<font color='blue' > Policy Indicators ", " <br> <font color='black' >",
                                   "Teacher Attraction (De Facto): ", round(school_map$teacher_attraction, digits=2), " <br>",
                                   "Teacher Selection & Deployment (De Facto): ", round(school_map$teacher_selection_deployment, digits=2), " <br>",
+                                  "Teacher Support (De Facto): ", round(school_map$teacher_support, digits=2), " <br>",
                                   "Teacher Intrinsic Motivation: ", round(school_map$intrinsic_motivation, digits=2), "<br>") )  %>%
     addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
 

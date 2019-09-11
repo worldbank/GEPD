@@ -199,6 +199,11 @@ for (i in indicator_names ) {
 ##### Teacher Absence ###########
 #############################################
 
+# School survey. Percent of teachers absent. Teacher is coded absent if they are: 
+#   - not in school 
+# - in school but absent from the class 
+# - in the class but not teaching.
+
 #read in teacher absence file
 teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
@@ -310,6 +315,8 @@ final_school_data_EFFT <- teacher_absence_dta %>%
 #############################################
 ##### Teacher Knowledge ###########
 #############################################
+
+# School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
 
@@ -482,6 +489,7 @@ final_school_data_LERN <- assess_4th_grade_dta %>%
 ##### ECD Assessment ###########
 #############################################
 
+# School survey. Fraction correct on the Early Childhoold Assessment given to students in school.
 
 
 #read in ecd level file
@@ -636,6 +644,11 @@ final_school_data_LCAP <- ecd_dta %>%
 ##### School Inputs ###########
 #############################################
 
+# School survey. Total score starts at 1 and points added are the sum of whether a school has: 
+#   - Functional blackboard 
+# - Pens, pencils, textbooks, exercise books 
+# - Fraction of students in class with a desk 
+# - Used ICT in class and have access to ICT in the school.
 
 
 #functioning blackboard and chalk
@@ -698,7 +711,11 @@ final_school_data_INPT <- school_data_INPT %>%
 ##### School Infrastructure ###########
 #############################################
 
-
+# School survey. Total score starts at 1 and points added are the sum of whether a school has: 
+#   - Access to adequate drinking water 
+# -Functional toilets that are separate for boys/girls, private, useable, accessible, and have hand washing facilities 
+# - Electricity and Visibility in the classroom 
+# - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
 
 #drinking water
 school_data_INFR <- school_data_INFR %>%
@@ -826,7 +843,11 @@ final_school_data_OPMN <- final_school_data_OPMN %>%
 ##### School Instructional Leadership ###########
 #############################################
 
-
+# School survey. Total score starts at 1 and points added are the sum of whether a teacher has: 
+#   - Had a classroom observation in past year 
+# - Had a discussion based on that observation that lasted longer than 10 min 
+# - Received actionable feedback from that observation 
+# - Teacher had a lesson plan and discussed it with another person
 
 final_school_data_ILDR <- teacher_questionnaire_ILDR %>%
   mutate(n_mssing_ILDR=n_miss_row(.)) %>%
@@ -863,6 +884,13 @@ final_school_data_PKNW <- school_data_PKNW %>%
 ##### School Principal Management Skills ###########
 #############################################
 
+
+# Score of 1-5 based on sum of following: 
+#   - 1 Point. School Goals Exists 
+# - 1 Point. School goals are clear to school director, teachers, students, parents, and other members of community (partial credit available) 
+# - 1 Point. Specific goals related to improving student achievement ( improving test scores, improving pass rates, reducing drop out, reducing absenteeism, improving pedagogy, more resources for infrastructure, more resources for inputs) 
+# - 1 Point. School has defined system to measure goals (partial credit available)
+
 #Create variables for whether school goals exists, are clear, are relevant to learning, and are measured in an appropriate way.
 
 final_school_data_PMAN <- school_data_PMAN %>%
@@ -893,6 +921,11 @@ final_school_data_PMAN <- final_school_data_PMAN %>%
 ##### Teacher Teaching Attraction ###########
 #############################################
 
+# In the school survey, a number of De Facto questions on teacher attraction are asked. One point is awarded for each of the following: 
+#   - 1 Point. Teacher satisfied with job 
+# - 1 Point. Teacher satisfied with status in community 
+# - 1 Point. Would better teachers be promoted faster? 
+#   - 1 Point. Do teachers receive bonuses?
 
 
 #create function to clean teacher attitudes questions.  Need to reverse the order for scoring for some questions.  
@@ -1006,6 +1039,50 @@ final_school_data_TSDP <- teacher_questionnaire_TSDP %>%
 #############################################
 
 
+# School survey. Our teaching support indicator asks teachers about participation and the experience with two types of training: pre-service training (induction training) and in-service training. A maximum of 2 points are assigned for quality pre-service training and 2 points for quality in-service training. 
+# 
+# Pre-Service (Induction) Training: 
+#   - 0.5 Points. Had a pre-service training 
+# - 0.5 Points. Teacher reported receiving usable skills from training 
+# - 0.5 Points. Pre-service training contained a teacher practicum (teach a class with supervision) 
+# - 0.5 Points. Practicum lasted more than 3 months and teacher spent more than one hour per day teaching to students. 
+# 
+# In-Service Training: 
+#   - 0.5 Points. Had an in-service training 
+# - 0.5 Points. In-service training lasted more than 2 total days. 
+# - 0.5 Points. More than 25% of the in-service training was done in the classroom. 
+# - 0.5 Points. More than 50% of in-service training done in the classroom.
+
+teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
+  mutate(pre_training_exists=bin_var(m3sdq3_tsup,1)/2,
+         pre_training_useful=if_else(m3sdq3_tsup==1,
+                                     bin_var(m3sdq4_tsup,1),
+                                     0)/2,
+         pre_training_practicum=if_else(m3sdq3_tsup==1,
+                                        bin_var(m3sdq6_tsup,1),
+                                        0)/2,
+         pre_training_practicum_lngth=case_when(
+           (m3sdq6_tsup==1 & m3sdq7_tsup>=3 & m3sdq8_tsup>=1) ~  0.5,
+            (m3sdq6_tsup==1 & (m3sdq7_tsup<3 | m3sdq8_tsup<1))  ~ 0,
+            m3sdq6_tsup==2 ~ 0,
+            m3sdq3_tsup==0 ~ 0 ),
+         in_service_exists=bin_var(m3sdq9_tsup,1),
+         in_servce_lngth=case_when(
+           (m3sdq9_tsup==1 & m3sdq10_tsup>2 ) ~ 1,
+           (m3sdq9_tsup==1 & m3sdq10_tsup<=2) ~ 0,
+           m3sdq9_tsup==0 ~ 0
+         ),
+         in_service_classroom=case_when(
+           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 2,
+           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup==1)  ~ 0,
+           m3sdq9_tsup==0 ~ 0
+         )
+                                     ) %>%
+  mutate(pre_service=pre_training_exists+pre_training_practicum+pre_training_practicum_lngth,
+         in_service=in_service_exists+in_servce_lngth+in_service_classroom) %>%
+  mutate(teacher_support=pre_service+in_service)
+
 
 final_school_data_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(n_mssing_TSUP=n_miss_row(.)) %>%
@@ -1017,7 +1094,11 @@ final_school_data_TSUP <- teacher_questionnaire_TSUP %>%
 ##### Teacher Teaching Evaluation ###########
 #############################################
 
-
+# School survey. This policy lever measures whether there is a teacher evaluation system in place, and if so, the types of decisions that are made based on the evaluation results. Score is the sum of the following: 
+# - 1 Point. Was teacher formally evaluated in past school year? 
+# - 1 Point. Evaluation included evaluation of either knowledge of subject matter or pedagogical skills 
+# - 1 Point. Consequences exist if teacher receives 2 or more negative evaluations 
+# - 1 Point. Rewards exist if teacher receives 2 or more positive evaluations
 
 
 #list of teacher evluation questions
@@ -1027,7 +1108,11 @@ tevl<-c('m3sbq6_tmna',
         'm3sbq9_tmna__1', 'm3sbq9_tmna__2', 'm3sbq9_tmna__3', 'm3sbq9_tmna__4', 'm3sbq9_tmna__7', 'm3sbq9_tmna__97', 'm3sbq9_tmna__98',
         'm3bq10_tmna__1', 'm3bq10_tmna__2', 'm3bq10_tmna__3', 'm3bq10_tmna__4', 'm3bq10_tmna__7', 'm3bq10_tmna__97', 'm3bq10_tmna__98')
 
-final_school_data_TEVL <- teacher_questionnaire_TMNA %>%
+teacher_questionnaire_TEVL <- teacher_questionnaire_TMNA %>%
+  dplyr::select(preamble_info, preamble_info_teacher, tevl)
+
+
+final_school_data_TEVL <- teacher_questionnaire_TEVL %>%
   dplyr::select(preamble_info, preamble_info_teacher, tevl) %>%
   mutate(n_mssing_TEVL=n_miss_row(.)) %>%
   group_by(school_code) %>%
@@ -1201,7 +1286,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
-            'teacher_selection_deployment'
+            'teacher_selection_deployment', 'teacher_support'
 )
 
 
