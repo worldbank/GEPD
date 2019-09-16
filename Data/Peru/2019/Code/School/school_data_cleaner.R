@@ -81,6 +81,15 @@ preamble_info <- c('interview__id', 'school_code',
                    'survey_time', 'lat', 'lon', 
                    'enumerator_name_other', 'enumerator_number')
 
+#Create a list of info to drop from final teacher files aggregated to school level. This will be necessary for merging these databases later
+
+drop_teacher_info <- c( "school_code", "school_code_preload", "school_emis_preload", "survey_time", "lat", "lon",
+                        "questionnaire_roster__id", "teacher_name", "teacher_number", "available", 
+                       "teacher_position", "teacher_grd1", "teacher_grd2", "teacher_grd3", "teacher_grd4", 
+                       "teacher_grd5", "teacher_language", "teacher_math", "teacher_both_subj", "teacher_other_subj", 
+                       "teacher_education", "teacher_year_began", "teacher_age" )
+
+
 #create school database with just preamble info.  This will be useful for merging on school level info to some databases
 school_data_preamble <- school_dta %>%
   group_by(interview__id) %>%
@@ -863,8 +872,11 @@ final_school_data_ILDR <- teacher_questionnaire_ILDR %>%
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
 mutate(instructional_leadership=1+rowSums(select(., classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback), na.rm=TRUE)) %>%
+  group_by(interview__id) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+  summarise_all(~first(na.omit(.))) %>%
+  select(-drop_teacher_info)
 
 
 
@@ -987,9 +999,11 @@ teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
 
 final_school_data_TATT <- teacher_questionnaire_TATT %>%
   mutate(n_mssing_TATT=n_miss_row(.)) %>%
-  select(-c('teacher_name','teacher_number')) %>%
+  group_by(interview__id) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+  summarise_all(~first(na.omit(.))) %>%
+  select(-drop_teacher_info)
 
 
 
@@ -1030,8 +1044,11 @@ teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
 
 final_school_data_TSDP <- teacher_questionnaire_TSDP %>%  
   mutate(n_mssing_TSDP=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+  summarise_all(~first(na.omit(.))) %>%
+  select(-drop_teacher_info)
 
 
 #############################################
@@ -1086,8 +1103,11 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
 
 final_school_data_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(n_mssing_TSUP=n_miss_row(.)) %>%
+  group_by(interview__id) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+  summarise_all(~first(na.omit(.))) %>%
+  select(-drop_teacher_info)
 
 
 #############################################
