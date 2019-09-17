@@ -222,8 +222,17 @@ para_dta<- para_df %>%
   select(-vallabel, -varlabel, -ï..interview__id)
 write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+
+para_df_tab <- para_df %>%
+  select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id) %>%
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timestamp=last(timestamp))
 
 
+save(para_df_section, para_df_tab, file=paste(save_folder, "paradata_light.RData", sep="/"))
 
 
 # 
