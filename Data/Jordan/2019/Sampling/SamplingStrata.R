@@ -363,11 +363,26 @@ sample_replacement2<- data_set_updated %>%
 
 data_set_updated <- data_set_updated %>%
   left_join(sample_replacement2) %>%
-  mutate(sample_replacement2=ifelse(is.na(sample_replacement2),0,sample_replacement2)) %>%
+  mutate(sample_replacement2=ifelse(is.na(sample_replacement2),0,sample_replacement2)) 
+
+
+sample_amman<- data_set_updated %>%
+  filter(governorate == "The Capital Amman") %>%
+  filter(sample_dashboard==0 & sample_replacement1==0 & sample_replacement2==0) %>%
+  ungroup() %>% 
+  sample_n(5, weight=total_students_grade_4 ) %>%
+  mutate(sample_amman=1)
+
+data_set_updated <- data_set_updated %>%
+  left_join(sample_amman) %>%
+  mutate(sample_maputo=ifelse(is.na(sample_amman),0,sample_amman)) %>%
   mutate(sample=case_when(
     sample_dashboard==1  ~ 1,
     sample_replacement1==1 ~ 2,
-    sample_replacement2==1 ~ 3))
+    sample_replacement2==1 ~ 3,
+    sample_amman==1 ~ 4)) %>%
+  mutate(sample=factor(sample, levels=c(1,2,3,4), labels=c('Sampled School', "Replacement 1", "Replacement 2", 'Amman Pilot Schools')))
+
 
 #get nearest neighbor replacement for each sampled school
 # sample_optimal_match<-sample_optimal[,c("latitude", "longitude")]
@@ -417,8 +432,8 @@ sample_updated <- sample_updated %>%
   group_by(district, replace_group_id) %>%
   mutate(replace_school_code=first(organization_code),
          replace_school_name=first(school_name)) %>%
-  mutate(replace_school_code_2=if_else(sample==1,as.numeric(NA), replace_school_code),
-         replace_school_name_2=if_else(sample==1,as.character(NA), replace_school_name)) %>%
+  mutate(replace_school_code_2=if_else((sample==1 | sample==4),as.numeric(NA), replace_school_code),
+         replace_school_name_2=if_else((sample==1 | sample==4),as.character(NA), replace_school_name)) %>%
   arrange(district, replace_group_id) 
 
 #Save sample file

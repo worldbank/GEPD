@@ -1,3 +1,12 @@
+<style type="text/css">
+.main-container {
+  max-width: 1500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
 ---
 title: "Data Quality Checks - School Survey"
 author: "Brian Stacy"
@@ -182,7 +191,13 @@ indicator_list<-c("student_knowledge",
                   'teacher_attraction',
                   'teacher_selection_deployment',
                   'teacher_support',
-                  "intrinsic_motivation"
+                  'teaching_evaluation',
+                  'teacher_monitoring',
+                  'intrinsic_motivation',
+                  'school_monitoring',
+                  'school_management_attraction',
+                  'school_selection_deployment',
+                  'school_support'
                   )
 
 indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)", 
@@ -197,7 +212,13 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     'Teacher Attraction (De Facto)',
                     'Teacher Selection & Deployment (De Facto)',
                     'Teacher Support (De Facto)',
-                    "Teacher Intrinsic Motivation"
+                    'Teacher Evaluation (De Facto)',
+                    'Teacher Monitoring & Accountability (De Facto)',
+                    "Teacher Intrinsic Motivation",
+                    "Inputs and Infrastructure Monitoring",
+                    "School Management Attraction",
+                    "School Management Selection & Deployment",
+                    "School Management Support"
                     )
 
 sumstats<-school_dta_short %>%
@@ -274,10 +295,16 @@ school_map <- school_map %>%
   mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(content_knowledge) | 
                      is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) |  is.na(operational_management)
                    | is.na(intrinsic_motivation) | is.na(instructional_leadership) | is.na(principal_management) | is.na(teacher_attraction) | is.na(teacher_selection_deployment)
-                   | is.na(teacher_support)))%>%
+                   | is.na(teacher_support) | is.na(teaching_evaluation) | is.na(teacher_monitoring)
+                   | is.na(school_monitoring) | is.na(school_management_attraction) | is.na(school_selection_deployment) 
+                   | is.na(school_support))
+         
+         )%>%
   mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(content_knowledge) + 
            is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) + is.na(operational_management)
-         + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management) + is.na(teacher_attraction) + is.na(teacher_selection_deployment) + is.na(teacher_support))
+         + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management) + is.na(teacher_attraction) + is.na(teacher_selection_deployment) + is.na(teacher_support) + is.na(teaching_evaluation) +
+         is.na(teacher_monitoring) + is.na(school_monitoring) + is.na(school_management_attraction) + is.na(school_selection_deployment) +
+         is.na(school_support))
 
 
 #color coded markers for missing values
@@ -324,7 +351,7 @@ icons <- awesomeIcons(
 
 
 
-map <- function(df_input) {    leaflet(df_input) %>% 
+map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
                     popup = paste("Name: ", school_map$school_name_preload, " <br>",
@@ -346,7 +373,16 @@ map <- function(df_input) {    leaflet(df_input) %>%
                                   "Teacher Attraction (De Facto): ", round(school_map$teacher_attraction, digits=2), " <br>",
                                   "Teacher Selection & Deployment (De Facto): ", round(school_map$teacher_selection_deployment, digits=2), " <br>",
                                   "Teacher Support (De Facto): ", round(school_map$teacher_support, digits=2), " <br>",
-                                  "Teacher Intrinsic Motivation: ", round(school_map$intrinsic_motivation, digits=2), "<br>") )  %>%
+                                  "Teacher Evaluation (De Facto): ", round(school_map$teaching_evaluation, digits=2), " <br>",
+                                  "Teacher Monitoring & Accoutability (De Facto): ", round(school_map$teaching_evaluation, digits=2), " <br>",
+
+                                  "Teacher Intrinsic Motivation: ", round(school_map$intrinsic_motivation, digits=2), "<br>",
+                                  "Inputs & Infrastructure Monitoring (De Facto): ", round(school_map$school_monitoring, digits=2), "<br>",
+                                  "School Management Attraction (De Facto): ", round(school_map$school_management_attraction, digits=2), "<br>",
+                                  "School Management Selection & Deployment: ", round(school_map$school_selection_deployment, digits=2), "<br>",
+                                  "School Management Support: ", round(school_map$school_support, digits=2), "<br>"
+
+                                  ) )  %>%
     addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
 
 }
@@ -472,7 +508,7 @@ icons <- awesomeIcons(
 
 
 
-map <- function(df_input) {    leaflet(df_input) %>% 
+map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
                     popup = paste("Name: ", orphan_map$school_name_preload, " <br>",

@@ -31,7 +31,7 @@ library(skimr)
 #sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/jordan/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 
 #Specify the file name containing the sample information
-currentDate<-c("2019-09-17")
+currentDate<-c("2019-09-18")
 
 sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Jordan/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 
@@ -153,14 +153,10 @@ sample_map <- sample_updated %>%
     mutate(longitude=as.character(longitude)) %>%
     mutate(latitude=as.character(latitude)) %>%
     mutate(longitude=as.numeric(longitude)) %>%
-    mutate(latitude=as.numeric(latitude)) %>%
-  mutate(sample_text=case_when(
-    sample==1  ~ "Sampled",
-    sample==2  ~ "1st Replacement",
-    sample==3  ~ "2nd Replacement" ))
+    mutate(latitude=as.numeric(latitude)) 
 
   sample_map_chosen <- sample_updated %>%
-     filter(sample==1) %>%
+     filter(sample=='Sampled School') %>%
      mutate(longitude=as.character(longitude)) %>%
      mutate(latitude=as.character(latitude)) %>%
      mutate(longitude=as.numeric(longitude)) %>%
@@ -169,7 +165,7 @@ sample_map <- sample_updated %>%
    
    pal <- colorFactor(
      palette = c("red", "green", "blue"),
-     domain = sample_map$sample_text
+     domain = sample_map$sample
    )
    
 map <- function(df_input) {    leaflet(df_input) %>% 
@@ -189,11 +185,10 @@ map <- function(df_input) {    leaflet(df_input) %>%
 
 map2 <- function(df_input) {    leaflet(df_input) %>% 
     addTiles()  %>%
-    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(sample_text),
+    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(sample),
                 popup =  paste("School Code: ", sample_map$organization_code, " <br>",
                                "School Name: ", sample_map$school_name, " <br>",
-                               "Replacement for School (code):", sample_map$replace_school_code_2, " <br>",
-                               "Replacement for School (name):", sample_map$replace_school_name_2, " <br>",
+                               "Replacement for Governorate:", sample_map$replace_governorate, " <br>",
                                   "Governorate", sample_map$governorate, "<br>",
                                   "District: ", sample_map$district, " <br>",
                                   "Total # of 1st Graders", sample_map$total_students_grade_1, " <br>",
@@ -201,7 +196,7 @@ map2 <- function(df_input) {    leaflet(df_input) %>%
                                   "Total # of Boys", sample_map$total_male_students, " <br>",
                                   "Total # of Girls", sample_map$total_female_students, " <br>",
                                   "Total # of Teachers", sample_map$total_teachers )) %>%
-  addLegend(position="bottomright", pal=pal, values=~sample_text, title="Schools w/ Replacements")
+  addLegend(position="bottomright", pal=pal, values=~sample, title="Schools w/ Replacements")
 }    
 
 ```
@@ -237,7 +232,7 @@ linked_df_orphan<-SharedData$new(sample_map)
 
 bscols(widths=c(3,NA),
   list(
-  filter_select("school", "School Code", linked_df_orphan, ~replace_school_code),
+  filter_select("school", "School Code", linked_df_orphan, ~organization_code),
   filter_select("prov", "Province", linked_df_orphan, ~governorate),
   filter_select("reg", "District", linked_df_orphan, ~district)
   

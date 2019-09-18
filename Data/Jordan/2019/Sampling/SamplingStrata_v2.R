@@ -30,15 +30,15 @@ set.seed(54351324)
 #################################
 
 #Specify directory where sampling frame located
-dir_frame<-""
+dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Jordan/2019/Data/Sampling"
 
 #specify name of sampling frame file.  This needs to be a csv file
-file_frame<-""
+file_frame<-"schools_Jordan.xlsx"
 
 #specify date that sample was created.  This may be useful if you want to access stored results
 #date_frame<-c("2019-07-22")
 
-date_frame<-c("")
+date_frame<-c("2019-09-16")
   
 
 #################################
@@ -46,19 +46,89 @@ date_frame<-c("")
 #################################
 
 
-df=read.csv(paste(dir_frame, file_frame, sep="/"))
+df=read_excel(paste(dir_frame, file_frame, sep="/"))
+
 
 #make column names lower case 
 colnames(df)<-tolower(colnames(df))
 
-# #create variable ID for strata and keep schools with more than 3 1st and 4th grade students
-# df<-df %>%
-#   mutate(rural=(area=="Rural")) %>%
-#   mutate(total_4th=x4to.boys+x4to.girls) %>%
-#   mutate(total_1st=x1ro.boys+x1ro.girls) %>%
-#   filter(total_4th>=3 & total_1st>=3 )
-# 
-# domains<-df %>% group_by(departamento) %>% summarise(n=n())
+#remove spaces in column names
+colnames(df)<-gsub(" ","_",colnames(df))
+
+
+#rename one variable
+df <- df %>%
+  rename(district=major_general)
+
+#Trim down data frame:
+frame_vars<-c('directorate',
+              'organization_code',
+              'school_name',
+              'sex_of_the_founder',
+              'supervisory_authority',
+              'territory',
+              'governorate',
+              'district',
+              'elimination',
+              'address',
+              'longitude',
+              'latitude',
+              'education_type',
+              'property_type',
+              'classification_area',
+              'foundation_period',
+              'top_row',
+              'the_lowest_row',
+              'total_number_of_divisions',
+              'total_male_students',
+              'total_female_students',
+              'total_students_grade_1',
+              'total_students_grade_4',
+              'total_teachers',
+              'male_teachers',
+              'female_teachers',
+              'total_grade_1_teachers',
+              'total_primary_teachers'
+)
+
+df_short<-df %>%
+  dplyr::select(frame_vars)
+
+#take a look at data
+#number of supervisory types
+ggplot(df_short, aes(x=supervisory_authority)) +
+   geom_bar()
+
+#town/village
+ggplot(df_short, aes(x=classification_area)) +
+   geom_bar()
+
+#territory
+ggplot(df_short, aes(x=territory)) +
+  geom_bar()
+
+#Governorate
+ggplot(df_short, aes(x=governorate)) +
+  geom_bar()
+
+#district
+ggplot(df_short, aes(x=district)) +
+  geom_bar() +
+  facet_wrap(vars(governorate), scales='free')
+
+ggplot(df_short, aes(x=district, y=governorate)) +
+  geom_raster() 
+
+# #create variable ID for strata and keep schools with more than 3 1st and 4th grade students.  
+# Also keep only private schools and schools supervised by Ministry of Education
+df_short<-df_short %>%
+  mutate(rural=(classification_area=="Village")) %>%
+  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
+  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private")
+
+domains<-df_short %>% group_by(governorate, supervisory_authority ) %>% summarise(n=n())
+
+
 
 
 
@@ -67,14 +137,14 @@ colnames(df)<-tolower(colnames(df))
 #########################################
 
 # #turn string variables into factor variables
-# df$departamento_factor=as.numeric(factor(df$departamento))
-# df$rural_factor<-as.numeric(factor(df$rural))
+ df_short$governorate_factor=as.numeric(factor(df_short$governorate))
+ df_short$supervisory_authority_factor=as.numeric(factor(df_short$supervisory_authority))
+ df_short$rural_factor<-as.numeric(factor(df_short$rural))
 
 #produce max coefficients of variation we will tolerate
 cv <- as.data.frame(list(DOM=rep("DOM1",),
-                         CV1=rep(0.1,2),
-                         CV2=rep(0.1,2),
-                         CV3=rep(0.1,2),                         
+                         CV1=rep(0.05,2),
+                         CV2=rep(0.05,2),
                          domainvalue=c(1:2)
 ))
 cv
@@ -82,13 +152,13 @@ cv
 #See https://cran.r-project.org/web/packages/SamplingStrata/vignettes/SamplingStrata.html
 
 
-df$id <- c(1:nrow(df))
+df_short$id <- c(1:nrow(df_short))
 
 
-frame <- buildFrameDF(df = df,
-                      id = "id",
-                      X = c("departamento_factor"),
-                      Y = c("d_score", "total_4th", "total_1st"),
+frame <- buildFrameDF(df = df_short,
+                      id = "organization_code",
+                      X = c("governorate_factor", "supervisory_authority_factor"),
+                      Y = c("total_students_grade_4", "total_students_grade_1"),
                       domainvalue = "rural_factor")
 str(frame)
 
@@ -106,7 +176,7 @@ strata <- buildStrataDF(frame, progress = FALSE)
 #   left_join(df_stats) %>%
 #   mutate(S1=M1_SD) %>%
 #   mutate(CENS=1) %>%
-#   select(-c("departamento", "rural", "M1_Mean", "M1_SD"))
+#   select(-c("governorate", "rural", "M1_Mean", "M1_SD"))
 # #strata$CENS<-1
 
   
@@ -186,21 +256,26 @@ strata <- buildStrataDF(frame, progress = FALSE)
     
     
     #update original database with stratum labels
-   df<- df %>%
-      mutate(ID=codigo.modular) %>%
+   df_short<- df_short %>%
+      mutate(ID=organization_code) %>%
       left_join(framenew, by="ID" )
     
     #create variable so that sorting is done reversed
-  df$rev_total_4th=-df$total_4th
+  df_short$rev_total_4th=-df_short$total_students_grade_4
     
     #Note: This reverse order sampling approach is identical to TIMSS.  See https://timssandpirls.bc.edu/methods/pdf/Sampling_Schools.pdf
+  df_short<-as.data.frame(df_short)
     
-   sample_optimal <- selectSampleSystematic(df, adjustedStrata, sortvariable = "rev_total_4th", writeFiles=FALSE) 
+   sample_optimal <- selectSampleSystematic(frame=df_short, outstrata = adjustedStrata, sortvariable = 'rev_total_4th', writeFiles=FALSE) %>%
+     sample_n(200)
   
   colnames(sample_optimal)<-tolower(colnames(sample_optimal))
 
-  region_selected<-sample_optimal %>% group_by(departamento) %>% summarise(n=n())
-#############################    
+  region_selected<-sample_optimal %>% group_by(governorate,supervisory_authority ) %>% summarise(n=n())
+
+  
+  
+  #############################    
 #Summary Stats on Selected schools
 ###################################    
     #Tabulate by rural variable
@@ -213,33 +288,33 @@ strata <- buildStrataDF(frame, progress = FALSE)
       summarise(tot=sum(n))
 
 #Compare optimal solution to random selection based on stratification
-  adjustedStrata_actual<- df %>%
-    group_by(departamento, rural) %>%
+  adjustedStrata_actual<- df_short %>%
+    group_by(governorate, rural) %>%
     summarise(N=n()) 
   
   
-  adjustedStrata_actual$SOLUZ<-round(adjustedStrata_actual$N*0.008282945)
+  adjustedStrata_actual$SOLUZ<-round(adjustedStrata_actual$N*(200/3300))
   adjustedStrata_actual %>%
     summarise(tot=sum(SOLUZ))
   
-  df<- df %>%
-    left_join( adjustedStrata_actual, c("departamento", "rural") )
+  df_short<- df_short %>%
+    left_join( adjustedStrata_actual, c("governorate", "rural") )
   
   #produce table with randomly selected schools
-  sample_random<- df %>%
-    group_by(departamento, rural) %>%
-    sample_n(SOLUZ, weight=total_4th )
+  sample_random<- df_short %>%
+    group_by(governorate, rural) %>%
+    sample_n(SOLUZ, weight=total_students_grade_4 )
 
 #summary stats to compare optimally stratified schools with random schools
   sumstats_rand<-sample_random %>%
-    group_by(departamento, rural) %>%
-    summarise(count=n(), frac_rural=mean(rural), mean_4th_grade=mean(total_4th)) %>%
-    arrange(departamento, rural)
+    group_by(governorate, rural) %>%
+    summarise(count=n(), frac_rural=mean(rural), mean_4th_grade=mean(total_students_grade_4)) %>%
+    arrange(governorate, rural)
 
   sumstats_opt<-sample_optimal %>%
-    group_by(departamento, rural) %>%
-    summarise(count=n(), frac_rural=mean(rural), mean_4th_grade=mean(total_4th)) %>%
-    arrange(departamento, rural) 
+    group_by(governorate, rural) %>%
+    summarise(count=n(), frac_rural=mean(rural), mean_4th_grade=mean(total_students_grade_4)) %>%
+    arrange(governorate, rural) 
   
 ##################################
   #Select Replacement Schools
@@ -250,26 +325,26 @@ strata <- buildStrataDF(frame, progress = FALSE)
     mutate(sample_dashboard=1)
   
   #update orginal dataframe with sampled schools.
-data_set_updated <- df %>%
+data_set_updated <- df_short %>%
   left_join(sample_final) %>%
   mutate(sample_dashboard=ifelse(is.na(sample_dashboard),0,sample_dashboard))
   
 #This will be done so that 2 replacements in every province are chosen  
-  #get a list of provincial districts sampled
+  #get a list of districtl districts sampled
 
 provinces <- sample_final %>%
-  group_by(provincia) %>%
+  group_by(governorate) %>%
   summarise(n_prov=n())
   
-province_list<-as.vector(provinces$provincia)
+province_list<-as.vector(provinces$governorate)
 
 #produce table with randomly replacement selected schools
 sample_replacement1<- data_set_updated %>%
   left_join(provinces) %>%
-  filter(provincia %in% province_list) %>%
+  filter(governorate %in% province_list) %>%
   filter(sample_dashboard==0) %>%
-  group_by(provincia) %>%
-  sample_n(n_prov, weight=total_4th ) %>%
+  group_by(governorate, rural) %>%
+  sample_n(1, weight=total_students_grade_4 ) %>%
   mutate(sample_replacement1=1) %>%
   select(-n_prov)
 
@@ -280,15 +355,16 @@ data_set_updated <- data_set_updated %>%
 
 sample_replacement2<- data_set_updated %>%
   left_join(provinces) %>%
-  filter(provincia %in% province_list) %>%
+  filter(governorate %in% province_list) %>%
   filter(sample_dashboard==0 & sample_replacement1==0) %>%
-  group_by(provincia) %>%
-  sample_n(n_prov, weight=total_4th ) %>%
+  group_by(governorate, rural) %>%
+  sample_n(1, weight=total_students_grade_4 ) %>%
   mutate(sample_replacement2=1)
 
 data_set_updated <- data_set_updated %>%
   left_join(sample_replacement2) %>%
   mutate(sample_replacement2=ifelse(is.na(sample_replacement2),0,sample_replacement2)) 
+
 
 sample_amman<- data_set_updated %>%
   filter(governorate == "The Capital Amman") %>%
@@ -309,24 +385,60 @@ data_set_updated <- data_set_updated %>%
 
 
 #get nearest neighbor replacement for each sampled school
-sample_optimal_match<-sample_optimal[,c("latitude", "longitude")]
-rownames(sample_optimal_match) <- sample_optimal$codigo.modular
-sample_replacement1_match<-sample_replacement1[,c("latitude", "longitude")]
-rownames(sample_replacement1_match) <- sample_replacement1$codigo.modular
+# sample_optimal_match<-sample_optimal[,c("latitude", "longitude")]
+# rownames(sample_optimal_match) <- sample_optimal$organization_code
+# sample_replacement1_match<-sample_replacement1[,c("latitude", "longitude")]
+# rownames(sample_replacement1_match) <- sample_replacement1$organization_code
+# 
+# neighbor1<-nn2(sample_optimal_match, sample_replacement1_match, k=1)
 
-neighbor1<-nn2(sample_optimal_match, sample_replacement1_match, k=1)
 
+
+#replace one geocode that has lat and long switched
+data_set_updated <- data_set_updated %>%
+  mutate(latitude_temp=latitude) %>%
+  mutate(latitude=if_else(organization_code==113128, longitude, latitude),
+         longitude=if_else(organization_code==113128, latitude_temp, longitude)) %>%
+  select(-latitude_temp)
+  
 sample_updated<-data_set_updated  %>%
-  filter(!is.na(sample))
+  filter(!is.na(sample)) %>%
+  select(-c("governorate_factor",
+            "supervisory_authority_factor",
+            "rural_factor",
+            "id",
+            "ID",
+            "DOMAINVALUE",
+            "STRATUM",
+            "X1",
+            "X2",
+            "Y1",
+            "Y2",
+            "LABEL",
+            "rev_total_4th",
+            "domainvalue",
+            "strato",
+            "id.1",
+            "stratum",
+            "x1",
+            "x2",
+            "y1",
+            "y2"))
 
-
+sample_updated <- sample_updated %>% 
+  arrange(district, sample) %>%
+  group_by(district, sample) %>% 
+  mutate(replace_group_id=row_number()) %>%
+  group_by(district, replace_group_id) %>%
+  mutate( replace_governorate=if_else((sample==1 | sample==4),as.character(NA), governorate)) %>%
+  arrange(district, replace_group_id) 
 
 #Save sample file
    currentDate<-Sys.Date()
-   sample_file_name <- paste(dir_frame,"school_sample_",currentDate,".csv", sep="")
-   write.csv(sample_updated,sample_file_name)
+   sample_file_name <- paste(dir_frame,"/school_sample_",currentDate,".xlsx", sep="")
+   writexl::write_xlsx(sample_updated, path=sample_file_name)
 
-sample_frame_name <- paste(dir_frame,"school_sample_",currentDate,".RData", sep="")
+sample_frame_name <- paste(dir_frame,"/school_sample_",currentDate,".RData", sep="")
 save(sample_updated, data_set_updated,
     file=sample_frame_name)   
    
@@ -371,7 +483,7 @@ leaflet(data=sample_map_chosen) %>%
   #Choose district offices to visit randomly among the list of districts we are already visiting for the schools
   #We will choose 20 of these district offices from the Regional level
   dist_list<- sample_updated %>%
-    group_by(departamento) %>%
+    group_by(governorate) %>%
     summarise( )
   
   district_office_sample <- dist_list %>%
@@ -386,14 +498,14 @@ leaflet(data=sample_map_chosen) %>%
   
   #Run an iteration where we choose 10 provinces (UGEL) linked to schools and link up to regions
   #columns to keep
-  cols<-c( "provincia", "dsc.ugel")
+  cols<-c( "district", "dsc.ugel")
   
   district_office_sample <- dist_list %>%
     sample_n(10)
   
   dist_list_alt2<- sample_updated %>%
-    filter(departamento %in% as.vector(district_office_sample$departamento)) %>%
-    group_by(departamento) %>%
+    filter(governorate %in% as.vector(district_office_sample$governorate)) %>%
+    group_by(governorate) %>%
     sample_n(1) %>%
     summarise_at(cols, first)
   

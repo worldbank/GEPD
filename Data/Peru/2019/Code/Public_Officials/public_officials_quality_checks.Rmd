@@ -366,7 +366,7 @@ icons <- awesomeIcons(
 )
 
 
-map <- function(df_input) {    leaflet(df_input) %>% 
+map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
                     popup = paste("Name: ", public_officials_map$enumerator_name, " <br>",
