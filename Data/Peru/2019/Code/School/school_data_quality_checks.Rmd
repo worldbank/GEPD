@@ -180,6 +180,7 @@ Below the missings plot is a table of summary statistics for a few key indicator
 #merge on teacher content knowledge
 
 indicator_list<-c("student_knowledge", 
+                  'student_attendance',
                   "absence_rate", 
                   "content_knowledge", 
                   "ecd_student_knowledge", 
@@ -197,10 +198,12 @@ indicator_list<-c("student_knowledge",
                   'school_monitoring',
                   'school_management_attraction',
                   'school_selection_deployment',
-                  'school_support'
+                  'school_support',
+                  'principal_evaluation'
                   )
 
 indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)", 
+                    "Student Attendance Rate",
                     "Teacher Absence Rate", 
                     "Teacher Content Knowledge", 
                     "1st Grade Assessment (Fraction Correct)", 
@@ -218,7 +221,8 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     "Inputs and Infrastructure Monitoring",
                     "School Management Attraction",
                     "School Management Selection & Deployment",
-                    "School Management Support"
+                    "School Management Support",
+                    "School Management Evaluation"
                     )
 
 sumstats<-school_dta_short %>%
@@ -230,7 +234,8 @@ sumstats_df<-skim(sumstats) %>%
   spread(stat, formatted) %>%
   select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   mutate(variable=factor(variable, levels=indicator_list,
-                         labels=indicator_labels))
+                         labels=indicator_labels)) %>%
+  arrange(match(variable, indicator_labels))
 
 ```
 
@@ -292,19 +297,19 @@ school_map <- school_dta_short %>%
 #Create indicator of schools with missing values in our indicators
 
 school_map <- school_map %>%
-  mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(content_knowledge) | 
+  mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(student_attendance) | is.na(content_knowledge) | 
                      is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) |  is.na(operational_management)
                    | is.na(intrinsic_motivation) | is.na(instructional_leadership) | is.na(principal_management) | is.na(teacher_attraction) | is.na(teacher_selection_deployment)
                    | is.na(teacher_support) | is.na(teaching_evaluation) | is.na(teacher_monitoring)
                    | is.na(school_monitoring) | is.na(school_management_attraction) | is.na(school_selection_deployment) 
-                   | is.na(school_support))
+                   | is.na(school_support) | is.na(principal_evaluation))
          
          )%>%
-  mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(content_knowledge) + 
+  mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(student_attendance) + is.na(content_knowledge) + 
            is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) + is.na(operational_management)
          + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management) + is.na(teacher_attraction) + is.na(teacher_selection_deployment) + is.na(teacher_support) + is.na(teaching_evaluation) +
          is.na(teacher_monitoring) + is.na(school_monitoring) + is.na(school_management_attraction) + is.na(school_selection_deployment) +
-         is.na(school_support))
+         is.na(school_support) + is.na(principal_evaluation))
 
 
 #color coded markers for missing values
@@ -360,6 +365,7 @@ map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>%
                                   "EMIS Code: ", school_map$school_emis_preload, " <br>",
                                   "<font color='red' > Outcomes ", " <br> <font color='black' >",
                                   "Avg 4th Grade Learning Score:", round(100*school_map$student_knowledge, digits=2), "% <br>",
+                                  "Avg 4th Grade Student Attendance:", round(100*school_map$student_attendance, digits=2), "% <br>",
                                   "<font color='red' > Practice Indicators ", " <br> <font color='black' >",
                                   "Teacher Absence Rate: ", round(100*school_map$absence_rate, digits=2), "% <br>",
                                   "Teacher Content Knowledge Score: ", round(100*school_map$content_knowledge, digits=2),"% <br>",
@@ -380,7 +386,9 @@ map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>%
                                   "Inputs & Infrastructure Monitoring (De Facto): ", round(school_map$school_monitoring, digits=2), "<br>",
                                   "School Management Attraction (De Facto): ", round(school_map$school_management_attraction, digits=2), "<br>",
                                   "School Management Selection & Deployment: ", round(school_map$school_selection_deployment, digits=2), "<br>",
-                                  "School Management Support: ", round(school_map$school_support, digits=2), "<br>"
+                                  "School Management Support: ", round(school_map$school_support, digits=2), "<br>",
+                                  "School Management Evaluation: ", round(school_map$principal_evaluation, digits=2), "<br>"
+
 
                                   ) )  %>%
     addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
