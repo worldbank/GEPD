@@ -1,4 +1,4 @@
-#Test of Survey Solutions API system
+#Use of Survey Solutions API system
 #Brian Stacy 6/11/2019
 
 library(httr)

@@ -174,6 +174,11 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
 public_officials_dta_short <-public_officials_dta_clean %>%
   dplyr::select(preamble_info, bureau_ind, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
+if (backup_onedrive=="yes") {
+  write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
+  write_dta(public_officials_dta_clean, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+}
+
 
 write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
 write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
@@ -206,6 +211,8 @@ data_list <- c( 'public_officials_dta_clean','public_officials_office_level')
 save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
 #loop and produce list of data tables
 
-
+if (backup_onedrive=="yes") {
+  save(data_list, file = file.path(save_folder_onedrive, "public_officials_survey_data.RData"))
+}
 
 

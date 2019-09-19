@@ -1454,13 +1454,18 @@ for (i in indicator_names ) {
       final_school_data<-temp
       print(i)
       write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_school_data.dta", sep="")), version = 14)
+      if (backup_onedrive=="yes") {
+        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_school_data.dta", sep="")), version = 14)
+      }
       
     } else {
       final_school_data<-final_school_data %>%
         left_join(temp)
       
       write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_school_data.dta", sep="")), version = 14)
-      
+      if (backup_onedrive=="yes") {
+        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_school_data.dta", sep="")), version = 14)
+      }
     }
   }
 }
@@ -1487,8 +1492,10 @@ final_school_data <- final_school_data %>%
 
 write.csv(final_school_data, file = file.path(save_folder, "final_complete_school_data.csv"))
 write_dta(final_school_data, path = file.path(save_folder, "final_complete_school_data.dta"), version = 14)
-
-
+if (backup_onedrive=="yes") {
+  write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
+  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+}
 #If indicator in this list doesn't exists, create empty column with Missing values
 
 
@@ -1509,64 +1516,74 @@ school_dta_short <- final_school_data %>%
 write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
 write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)
 
+if (backup_onedrive=="yes") {
+  write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
+  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+}
+
 ################################
 #Store Key Created Datasets
 ################################
 
 #saves the following in R and stata format
 
-data_list <- c('school_dta', 'school_dta_short', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment', 'teacher_roster')
+data_list <- c('school_dta', 'school_dta_short',  'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster')
 
-save(data_list, file = file.path(save_folder, "school_survey_data.RData"))
+save(list=data_list, file = file.path(save_folder, "school_survey_data.RData"))
+
+if (backup_onedrive=="yes") {
+  save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
+}
+
 #loop and produce list of data tables
-
-teacher_roster_list<-teacher_roster %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info,  teacher_number, teacher_name) 
-
-
-orphans_number_questionnaire <- teacher_questionnaire %>%
-  select(keep_info, teacher_name, teacher_number) %>%
-  anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) 
-
-orphans_name_questionnaire <- teacher_questionnaire %>%
-  anti_join(teacher_roster) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-
-
-orphans_number_assess <- teacher_questionnaire %>%
-  anti_join(teacher_roster) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-
-
-orphans_name_assess <- teacher_questionnaire %>%
-  anti_join(teacher_roster) %>%
-  select(interview__id, teacher_name, teacher_number) %>%
-  datatable()
-
+# 
+# teacher_roster_list<-teacher_roster %>%
+#   left_join(school_data_preamble) %>%
+#   select(preamble_info,  teacher_number, teacher_name) 
 # 
 # 
-# for (i in indicator_names ) {
-#   if (exists(paste("final_school_data_",i, sep=""))) {
-#     temp<-get(paste("final_school_data_",i, sep="")) 
-#     skim(temp) %>%
-#       DT::datatable()
-#   }
-# }
+# orphans_number_questionnaire <- teacher_questionnaire %>%
+#   select(keep_info, teacher_name, teacher_number) %>%
+#   anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) 
+# 
+# orphans_name_questionnaire <- teacher_questionnaire %>%
+#   anti_join(teacher_roster) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
 # 
 # 
-# for (i in indicator_names ) {
-#   if (exists(paste("final_school_data_",i, sep=""))) {
-#     temp<-get(paste("final_school_data_",i, sep="")) 
-#     skim(temp) %>%
-#       skimr::kable()
-#   }
-# }
+# orphans_number_assess <- teacher_questionnaire %>%
+#   anti_join(teacher_roster) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
 # 
-# skim(final_school_data_INFR) %>%
-#   skimr::kable()
 # 
-# skim(sumstats) %>%
-#   skimr::kable()
+# orphans_name_assess <- teacher_questionnaire %>%
+#   anti_join(teacher_roster) %>%
+#   select(interview__id, teacher_name, teacher_number) %>%
+#   datatable()
+# 
+# # 
+# # 
+# # for (i in indicator_names ) {
+# #   if (exists(paste("final_school_data_",i, sep=""))) {
+# #     temp<-get(paste("final_school_data_",i, sep="")) 
+# #     skim(temp) %>%
+# #       DT::datatable()
+# #   }
+# # }
+# # 
+# # 
+# # for (i in indicator_names ) {
+# #   if (exists(paste("final_school_data_",i, sep=""))) {
+# #     temp<-get(paste("final_school_data_",i, sep="")) 
+# #     skim(temp) %>%
+# #       skimr::kable()
+# #   }
+# # }
+# # 
+# # skim(final_school_data_INFR) %>%
+# #   skimr::kable()
+# # 
+# # skim(sumstats) %>%
+# #   skimr::kable()
