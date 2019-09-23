@@ -27,7 +27,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'PER'
+country <-'Peru'
 year <- '2019'
 
 #########################
@@ -37,7 +37,8 @@ year <- '2019'
 #The save_folder will be the location of where cleaned data is stored
 
 if (Sys.getenv("USERNAME") == "wb469649"){
-  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
   download_folder <-file.path(paste(project_folder,country,year,"Data/raw/Public_Officials", sep="/"))
   save_folder <- file.path(paste(project_folder,country,year,"Data/clean/Public_Officials", sep="/"))
   
@@ -59,10 +60,14 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
-#source('public_officials_api.R')
+source('public_officials_api.R', local=TRUE)
 
 #launch file to clean data
-#source('public_officials_data_cleaner.R')
+source('public_officials_data_cleaner.R', local=TRUE)
+
+#launch file to access data from API
+source('public_officials_paradata.R', local=TRUE)
+
 
 #create R markdown file with quality checks
 rmarkdown::render('public_officials_quality_checks.Rmd',  

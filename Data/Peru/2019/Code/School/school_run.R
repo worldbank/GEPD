@@ -41,9 +41,11 @@ backup_onedrive="no"
 
 
 if (Sys.getenv("USERNAME") == "wb469649"){
-  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  download_folder <-file.path(paste(project_folder,country,year,"Data/raw/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
+  
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/School", sep="/"))
   
   backup_onedrive="yes"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/School", sep="/"))
@@ -63,11 +65,14 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch file to access data from API
-# source('school_api.R')
-# 
+source('school_api.R', local=TRUE)
+ 
 # #launch file to clear data
-# source('school_data_cleaner.R')
-# 
+source('school_data_cleaner.R', local=TRUE)
+
+# #launch paradata file 
+source('school_paradata.R', local=TRUE)
+
  #create R markdown file with quality checks
  rmarkdown::render('school_data_quality_checks.Rmd',  
                    output_file =  paste("school_data_quality_checks_",country_name,".html", sep=''), 
