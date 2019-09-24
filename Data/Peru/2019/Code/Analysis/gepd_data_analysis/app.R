@@ -19,6 +19,7 @@ library(skimr)
 library(ggcorrplot)
 library(Cairo)
 library(scales)
+library(ggpmisc)
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 
@@ -46,10 +47,11 @@ ui <- fluidPage(
           h2(textOutput('var_name')),
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
-                        tabPanel("Histogram Plot", plotOutput("distPlot", height=1000)),
-                        tabPanel("BoxPlot", plotOutput("boxPlot", height=1000)),
+                        tabPanel("Histogram Plot", plotOutput("distPlot", height=800)),
+                        tabPanel("BoxPlot", plotOutput("boxPlot", height=800)),
                         tabPanel("Summary", DT::dataTableOutput("tableset") ),
-                        tabPanel("Correlations", plotlyOutput("corrPlot", height=1200))
+                        tabPanel("Correlations", plotlyOutput("corrPlot", height=1200)),
+                        tabPanel("Regression Analysis", plotOutput("regplot", height=800))
             )        )
     )
 )
@@ -120,7 +122,14 @@ server <- function(input, output, session) {
                           indicator_labels=as.character(indicator_labels))
     
     indicators<- indicators %>%
-        filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR")
+        filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR") %>%
+      mutate(indicator_tag=case_when(
+        indicator_tag=='BQBR' ~ "QB",
+        indicator_tag=='BIMP' ~ "IDM",
+        indicator_tag=='BMAC' ~ "ACM",
+        indicator_tag=='BNLG' ~ "NLG",
+        TRUE ~ indicator_tag
+      )  ) #fix a few issues with Survey of Public Officials naming
     
     updateSelectizeInput(session, 'indicators', choices = indicators$Indicator.Name, server = TRUE)
     
@@ -133,6 +142,9 @@ server <- function(input, output, session) {
     get_tag_df[,'indicator_tag']
     })
     
+    ##########################
+    #Produce dataset based on indicator selected
+    ##########################
     dat <- reactive({
 
         df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
@@ -150,12 +162,19 @@ server <- function(input, output, session) {
             filter(rural==FALSE)  
         }
         df
+        
+        
+
     })
     
+    ##########################
     #Diplay name of variable
+    ##########################
     output$var_name<-renderText({paste(input$indicators, input$urban_rural, sep=" - ")})
     
+    ###################################
     #Output histogram of key indicators
+    ##################################
     output$distPlot<-renderPlot({
         
         df_plot <- dat() %>%
@@ -183,8 +202,9 @@ server <- function(input, output, session) {
         p
    
     })
-    
-    #Output histogram of key indicators
+    ###################################
+    #Output boxplot of key indicators
+    ##################################
     output$boxPlot<-renderPlot({
       
       df_plot <- dat() %>%
@@ -206,8 +226,10 @@ server <- function(input, output, session) {
         
         q
     })
-
+    
+    ##########################
     #summary statistics table
+    #########################
     output$tableset <- DT::renderDataTable({
 
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m1s?q?|m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
@@ -239,8 +261,9 @@ server <- function(input, output, session) {
         
     })
   
-    
+    #####################################
     #Correlation Plot of key indicators
+    ####################################
     output$corrPlot<-renderPlotly({
         
         #drop non-numeric elements
@@ -267,6 +290,70 @@ server <- function(input, output, session) {
         
         ggplotly(pcorr)
     })
+    
+    
+    
+    #############################
+    # Create database with just learning outcomes for regressions
+    ##############################
+    
+    dat_learn <- reactive({
+      #create database with just learning outcomes
+      df_learn<-get(paste("final_indicator_data_",'LERN', sep=""))
+      
+      df_learn<- df_learn %>%
+        mutate(codigo.modular=as.numeric(school_code)) %>%
+        left_join(data_set_updated)
+      
+      
+      if (input$urban_rural=="Rural") {
+        df_learn<- df_learn %>%
+          filter(rural==TRUE)
+      } else if (input$urban_rural=="Urban") {
+        df_learn<- df_learn %>%
+          filter(rural==FALSE)  
+      }
+      
+      #keep just school code and learning outcome
+      df_learn %>%
+        select(school_code, student_knowledge)
+    })
+    
+    ########################################
+    #Regression Analysis of key indicators
+    #########################################
+    output$regplot<-renderPlot({
+      
+      
+
+
+      df_reg_plot <- dat() %>%
+        select(one_of(ind_list), school_code) %>%
+        rowid_to_column("ID") %>%
+        pivot_longer(cols=one_of(ind_list),
+                     names_to='indicators', values_to='values') %>%
+        left_join(labels_df) %>%
+        left_join(dat_learn())
+
+      regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=student_knowledge, group=indicator_labels, colour=indicator_labels)) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10)), nrow = 3) +
+        theme_classic() + 
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ggtitle("Linear Regression of Dashboard Indicators on 4th Grade Student Knowledge") +
+        labs(colour = "Indicator") +
+        ylab('4th Grade Student Knowledge') +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = 0.15,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      regplots
+    })  
     
     
     }
