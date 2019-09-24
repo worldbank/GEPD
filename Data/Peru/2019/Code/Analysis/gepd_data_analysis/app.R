@@ -25,14 +25,18 @@ library(Cairo)
 ui <- fluidPage(
 
     # Application title
-    titlePanel("GEPD Data Analyzer"),
+    titlePanel("GEPD Data Explorer"),
 
     # Sidebar with an input for the specific indicator 
     sidebarLayout(
         sidebarPanel(
             selectizeInput("indicators",
                         "Indicator Name:",
-                        choices=NULL)
+                        choices=NULL),
+            selectInput("urban_rural", "Urban or Rural:",
+                        c("All"='All',
+                          "Urban"="Urban",
+                          "Rural"="Rural"))
         ),
 
         # Show a plot of the generated distribution
@@ -41,7 +45,7 @@ ui <- fluidPage(
           h2(textOutput('var_name')),
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
-                        tabPanel("Histogram Plot", plotlyOutput("distPlot", height=800)),
+                        tabPanel("Histogram Plot", plotOutput("distPlot", height=1000)),
                         tabPanel("Summary", DT::dataTableOutput("tableset") ),
                         tabPanel("Correlations", plotlyOutput("corrPlot", height=1200))
             )        )
@@ -52,23 +56,66 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
     #Load the GEPD indicator data
-    #df_path<-"C:/Users/wb469649/Documents/Github/GEPD/Data/Peru/2019/Code/School/02_analysis/gepd_data_analysis"
     load(paste("school_indicators_data.RData", sep="/"))
     load(paste("public_officials_indicators_data.RData", sep="/"))
+    
+    
+    
+    
+    load(paste("school_sample_2019_07_22.RData"))
     
     names(indicators)<-make.names(names(indicators), unique=TRUE)
     
     #Create list of key indicators
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
-                'absence_rate', 'school_absence_rate', 'student_attendance',
+                'student_attendance',
+                'absence_rate', 'school_absence_rate',
                 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity', 'disability_accessibility', 'disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-                'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
-                'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring','school_monitoring',
-                'school_management_attraction', 'school_selection_deployment', 'school_support', 'principal_evaluation'
+                'operational_management', 'vignette_1', 'vignette_2', 
+                'instructional_leadership',
+                'principal_management',
+                'teacher_attraction',
+                'teacher_selection_deployment', 
+                'teacher_support', 
+                'teaching_evaluation', 
+                'teacher_monitoring',
+                'intrinsic_motivation', 
+                'school_monitoring',
+                'school_management_attraction', 
+                'school_selection_deployment', 
+                'school_support', 
+                'principal_evaluation'
     )
+    
+    
+    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge",
+                        "Student Attendance Rate",
+                        "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge",
+                        "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "Inputs", "Functioning Blackboard", "Classroom Materials", "Desks", "ICT Usage", "ICT Access",
+                        "Infrastructure", "Clean Drinking Water", "Functioning/Accessible Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
+                        "Operational Management", "Operational Management - Vignette 1", "Operational Management - Vignette 2",
+                        "Instructional Leadership",
+                        'Principal Management Skills',
+                        'Teacher Attraction (De Facto)',
+                        'Teacher Selection & Deployment (De Facto)',
+                        'Teacher Support (De Facto)',
+                        'Teacher Evaluation (De Facto)',
+                        'Teacher Monitoring & Accountability (De Facto)',
+                        "Teacher Intrinsic Motivation",
+                        "Inputs and Infrastructure Monitoring",
+                        "School Management Attraction",
+                        "School Management Selection & Deployment",
+                        "School Management Support",
+                        "School Management Evaluation"
+    )
+    
+    labels_df<-data.frame(indicators=as.character(ind_list),
+                          indicator_labels=as.character(indicator_labels))
     
     indicators<- indicators %>%
         filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR")
@@ -87,34 +134,53 @@ server <- function(input, output, session) {
     dat <- reactive({
 
         df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
+        
+        df<- df %>%
+          mutate(codigo.modular=as.numeric(school_code)) %>%
+          left_join(data_set_updated) %>%
+          mutate(longitude=as.character(longitude)) %>%
+          mutate(latitude=as.character(latitude)) %>%
+          mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+                 lon=if_else(is.na(lon), as.numeric(longitude), lon))
+        
+       if (input$urban_rural=="Rural") {
+          df<- df %>%
+            filter(rural==TRUE)
+        } else if (input$urban_rural=="Urban") {
+          df<- df %>%
+            filter(rural==FALSE)  
+        }
         df
     })
     
     #Diplay name of variable
-    output$var_name<-renderText({input$indicators})
+    output$var_name<-renderText({paste(input$indicators, input$urban_rural, sep=" - ")})
     
     #Output histogram of key indicators
-    output$distPlot<-renderPlotly({
+    output$distPlot<-renderPlot({
         
         df_plot <- dat() %>%
             select(one_of(ind_list)) %>%
             rowid_to_column("ID") %>%
             pivot_longer(cols=one_of(ind_list),
-                         names_to='indicator', values_to='values')
-        
-
-        
-        p<- ggplot(data=df_plot, aes(x=values)) +
-            geom_histogram() +
-            facet_wrap(indicator ~ ., scales='free_x' ) +
-            theme_classic() + 
-            theme(
-                text = element_text(size = 16),
-                
-            )
+                         names_to='indicators', values_to='values') %>%
+            left_join(labels_df)
         
         
-        ggplotly(p)
+        #levels(df_plot$indicator) <- as.vector(df_plot['indicator_labels'])
+        
+        p<- ggplot(data=df_plot, aes(x=values, colour=indicator_labels)) +
+          geom_histogram() +
+          facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
+          theme_classic() + 
+          theme(
+            text = element_text(size = 16),
+            
+          ) +
+          ggtitle("Histograms of Dashboard Indicators")
+        
+        
+        p
     })
 
     #summary statistics table
@@ -132,8 +198,11 @@ server <- function(input, output, session) {
         
         #add variable label
         sumstats_df <- sumstats_df %>%
-            mutate(name=variable) %>%
+            mutate(name=variable,
+                   indicators=variable) %>%
             left_join(metadta) %>%
+            left_join(labels_df) %>%
+            mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
             select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
 
         DT::datatable(sumstats_df, caption="Summary Statistics of Key Indicator Variables and Components of Indicator",
