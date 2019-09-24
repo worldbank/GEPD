@@ -18,6 +18,7 @@ library(kableExtra)
 library(skimr)
 library(ggcorrplot)
 library(Cairo)
+library(scales)
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 
@@ -46,6 +47,7 @@ ui <- fluidPage(
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
                         tabPanel("Histogram Plot", plotOutput("distPlot", height=1000)),
+                        tabPanel("BoxPlot", plotOutput("boxPlot", height=1000)),
                         tabPanel("Summary", DT::dataTableOutput("tableset") ),
                         tabPanel("Correlations", plotlyOutput("corrPlot", height=1200))
             )        )
@@ -137,11 +139,8 @@ server <- function(input, output, session) {
         
         df<- df %>%
           mutate(codigo.modular=as.numeric(school_code)) %>%
-          left_join(data_set_updated) %>%
-          mutate(longitude=as.character(longitude)) %>%
-          mutate(latitude=as.character(latitude)) %>%
-          mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
-                 lon=if_else(is.na(lon), as.numeric(longitude), lon))
+          left_join(data_set_updated)
+
         
        if (input$urban_rural=="Rural") {
           df<- df %>%
@@ -167,9 +166,8 @@ server <- function(input, output, session) {
             left_join(labels_df)
         
         
-        #levels(df_plot$indicator) <- as.vector(df_plot['indicator_labels'])
-        
-        p<- ggplot(data=df_plot, aes(x=values, colour=indicator_labels)) +
+
+        p<- ggplot(data=na.omit(df_plot), aes(x=values, group=indicator_labels, colour=indicator_labels)) +
           geom_histogram() +
           facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
           theme_classic() + 
@@ -177,10 +175,36 @@ server <- function(input, output, session) {
             text = element_text(size = 16),
             
           ) +
-          ggtitle("Histograms of Dashboard Indicators")
+          ggtitle("Histograms of Dashboard Indicators") +
+          labs(colour = "Indicator")
+        
         
         
         p
+   
+    })
+    
+    #Output histogram of key indicators
+    output$boxPlot<-renderPlot({
+      
+      df_plot <- dat() %>%
+        select(one_of(ind_list)) %>%
+        rowid_to_column("ID") %>%
+        pivot_longer(cols=one_of(ind_list),
+                     names_to='indicators', values_to='values') %>%
+        left_join(labels_df)
+      
+      
+        q<- ggplot(data=na.omit(df_plot), aes(y=values, x=indicator_labels)) +
+          geom_boxplot(fill="gold1", line='goldernrod2') +
+          theme_classic() + 
+          theme(
+            text = element_text(size = 16),
+          ) +
+          ggtitle("Boxplot of Dashboard Indicators")+
+          xlab("Indicator")
+        
+        q
     })
 
     #summary statistics table
