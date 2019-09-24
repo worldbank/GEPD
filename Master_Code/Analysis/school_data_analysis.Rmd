@@ -1,3 +1,4 @@
+
 <style type="text/css">
 .main-container {
   max-width: 1500px;
@@ -8,15 +9,11 @@
 
 
 ---
-title: "Data Quality Checks - School Survey"
+title: "Data Analysis - School Survey"
 author: "Brian Stacy"
 output: html_document
-params:
-  pwd:
-    label: "Enter the Password, please!"
-    value: ""
-    input: password
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -35,139 +32,30 @@ library(skimr)
 library(knitr)
 library(kableExtra)
 
+library(sandwich)
+library(lmtest)
+library(rpart)
+library(rpart.plot)
+library(ipred)
+library(caret)
 #Load the data
 #read in school level file
 
 
-load(file=paste(save_folder, "paradata_light.RData", sep="/"))
+load(paste(open_folder, "school_survey_data.RData", sep="/"))
+
 ```
 
 ## Introduction
 
-This file produces a set of basic quality checks to highlight potential issues in data collection.  
 
-## Paradata on Interview Lengths & Time Completed
-
-The following figures and tables show the time length of each section.  Specific information for each enumerator, date, and module is available.
-
-A useful check is to examine the length of time that passes between questions in a section.  It may be useful for detecting anomalies with respect to enumerators, and also could be useful for streamlining our survey.  The filter in the sidebar gives the user the ability to filter by length of time that passes between sections.  By scrolling all the way to the right, only the sections that take an exceptionally long time to fill out appear.  Additionally, the user has the option to filter by enumerator, date of survey, and module.
-
-```{r, echo=FALSE, warning=FALSE}
-
-######################################
-# Length of each question by Enumerator
-#######################################
-
-# para_df_tab <- para_df %>%
-#   select( responsible, date, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id)
-
-# linked_q_df<-SharedData$new(para_df_tab)
-# 
-# 
-# bscols(widths=c(3,NA),
-#        list(
-#          filter_slider("time", "Length in Seconds", linked_q_df, ~timelength_sec),
-#          filter_select("enumerator", "Enumerator", linked_q_df, ~responsible),
-#          filter_checkbox("date", "Date of Survey", linked_q_df, ~as.character(date), inline=FALSE),
-#          filter_checkbox("module", "Module", linked_q_df, ~module, inline=FALSE)
-#          
-#        ),
-#       
-#        list (
-#          plot_ly(linked_q_df, x=~responsible, y=~timelength_sec, type='scatter', mode='markers', color=~question) %>%
-#            layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Enumerator ID'))
-#          # datatable(linked_q_df, 
-#          #           colnames=c( 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-#          #                    'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
-#          #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
-#          #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
-#          
-#        )
-#        
-# )
-
-######################################
-# Length of each section by Enumerator
-#######################################
-
-
-linked_s_df<-SharedData$new(para_df_section)
-
-
-bscols(widths=c(3,NA),
-       list(
-         filter_slider("time", "Length in Seconds", linked_s_df, ~timelength_sec),
-         filter_select("enumerator", "Enumerator", linked_s_df, ~responsible),
-         filter_checkbox("date", "Date of Survey", linked_s_df, ~as.character(date), inline=FALSE),
-         filter_checkbox("module", "Module", linked_s_df, ~module, inline=FALSE)
-       ),
-       list (
-       plot_ly(linked_s_df, x=~responsible, y=~timelength_sec, type='scatter', mode='markers', color=~section) %>%
-         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Section in Seconds'), xaxis=list(title='Enumerator ID'))
-      
-        # datatable(linked_s_df, 
-        #          colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-        #                     'Length in Seconds' = 'timelength_sec'),
-        #          extensions="Scroller", style="bootstrap", class="compact", width="100%",
-        #          options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
-        # 
-       )
-       
-)
-
-  
-
-```
-
-The next graph shows the time of day each section was completed by each enumerator.  One quality check that this provides is to determine when the enumerator filled out the questions.  Enumerators that fill out questions outside of normal operating hours of the school can be asked to clarify why they did so.
-
-```{r time_day, echo=FALSE, warning=FALSE}
-
-######################################
-# Time of Day of each question by Enumerator
-#######################################
-
-
-
-linked_t_df<-SharedData$new(para_df_tab)
-
-
-
-
-bscols(widths=c(3,NA),
-       list(
-         filter_slider("Time", "Time Section Completed", linked_t_df, ~timestamp),
-         filter_select("enumerator", "Enumerator", linked_t_df, ~responsible),
-         filter_checkbox("date", "Date of Survey", linked_t_df, ~as.character(date), inline=FALSE),
-         filter_checkbox("module", "Module", linked_t_df, ~module, inline=FALSE)
-         
-       ),
-       
-       list (
-         plot_ly(linked_t_df, x=~section, y=~timestamp, type='scatter', mode='markers', color=~responsible) %>%
-           layout(title='Time Section Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Section ID'))
-         # datatable(linked_t_df, 
-         #           colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-         #                      'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
-         #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
-         #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE)) 
-         
-       )
-       
-)  
-
-```
-
-
-
-## Missing Values and Other Checks
 
 To start, the following figures and tables will highlight missing values for a few of our key indicators. 
 
 
-```{r missings, echo=FALSE, error=FALSE, message=FALSE}
+```{r preamble, echo=FALSE, error=FALSE, message=FALSE}
 
-load(paste(save_folder, "school_survey_data.RData", sep="/"))
+load(paste(open_folder, "school_survey_data.RData", sep="/"))
 
 #Load original sample of schools
 currentDate<-c("2019-07-22")
@@ -180,7 +68,8 @@ preamble_info <- c('interview__id', 'school_code',
                    'school_name_preload', 'school_address_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon')
+                   'survey_time', 'lat', 'lon', 
+                   'enumerator_name_other', 'enumerator_number')
 
 keep_info <-       c('school_code',
                      'school_name_preload', 'school_address_preload', 
@@ -207,8 +96,7 @@ school_dta_short <- school_dta_short %>%
  
 
 
-#plot missing values by indicator
-gg_miss_var(school_dta_short[,orig_colnames])
+
 ```
 
 Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation, total number of schools, and number of schools with missing information for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
@@ -293,39 +181,6 @@ knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables
   footnote(general="The summary statistics in this table do not factor in the survey design. For instance, means are unweighted and Confidence Intervals do not factor in sampling weights.")
 
 ```
-
-
-In the next check, we will asssess whether any schools were not part of the pre-loaded list of schools.
-
-```{r, echo=FALSE}
-# We export the observations for which the schools are not part of the pre-loaded list
-# We identify these schools using the variable "school_name_preload", because this variable is not filled in case the school is not on the list
-
-
-df_school_preloaded <- school_dta_short %>%
-  filter(is.na(school_name_preload)) %>%
-  select(m1s0q2_name, m1s0q2_code, m1s0q2_emis) 
-
-
-
-
-#setExcelSheet "Schools and Teachers"
-
-```
-
-These schools are not part of the pre-loaded list of schools (an empty list is good!):
-
-```{r message=FALSE, warning=FALSE, echo=FALSE}
-
-kable(df_school_preloaded) %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
-```
-
-
-
-
-
 
 
 
@@ -477,135 +332,90 @@ bscols(widths=c(3,NA),
 )
 ```
 
+## Linear Model of Learning on Indicators
 
+```{r linear_model, include=FALSE}
 
-
-
-## Orphan Teachers
-
-The following table shows teachers in the teacher questionnaire module who could not be matched back to the original teacher roster based on the name and number.  This doesn't necessarily indicate a problem, because the difference may only be due to spelling, but should be investigated.
-
-```{r orphans, warning=FALSE, include=FALSE}
-
-###
-#Create list of orphan teachers (cant be matched to questionnaire,  or teacher exam files)
-###
-
-#Teachers who can't be matched between questionnaire and examiniation
-
-teacher_roster_list<-teacher_roster %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info,  teacher_number, teacher_name) 
-
-orphans_number_questionnaire <- teacher_questionnaire %>%
-  select(keep_info, teacher_name, teacher_number) %>%
-  anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
-  select(-teacher_name) %>%
-  select(school_code, teacher_number,  everything())
-
-
-```
-
-```{r orphans2, echo=FALSE}
-
-datatable(orphans_number_questionnaire,
-                   extensions="Scroller", style="bootstrap", class="compact", width="100%",
-                   options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE)
-          )  
-
-```
-
-
-```{r orphan_map_guts, include=FALSE}
-
-####################################################################
-#######Map of schools with missing school info#####
-####################################################################
-orphan_map <- orphans_number_questionnaire %>%
-  filter(!is.na(lat) & !is.na(lon))
-
-#Create indicator of schools with missing values in our indicators
-
-orphan_map_counts <- orphan_map %>%
-  group_by(school_code) %>%
-  summarise(orphan_count=n())
-  
-orphan_map <- orphan_map %>%
-  left_join(orphan_map_counts)
-
-#color coded markers for missing values
-getColor <- function(df_input) {
-  sapply(df_input$orphan_count, function(orphan_count) {
-    if (orphan_count == 1) {
-      "#0EF293" #green
-    } 
-    else if (orphan_count == 2) {
-      "#0E43F2" #blue
-    } 
-    else if (orphan_count == 3) {
-      "#EAF20E" #yellow
-    } 
-    else if (orphan_count == 4) {
-      "#F2AD0E" #orange
-    }     
-    else if (orphan_count == 5) {
-      "#F2210E" #red
-    }
-    else {
-      "#000000" #black
-    } 
-    })
-}
-
-#add legend for icons
-pal2 <- colorFactor(
-  levels = c( '1', '2', '3', '4', '5', '6+'),
-  palette = c('#0EF293', '#0E43F2', '#EAF20E', '#F2AD0E',  '#F2210E', '#000000'),
-  domain = orphan_map$orphan_count
+#Create list of key indicators
+ind_list<-c('student_knowledge', 
+            'absence_rate', 'school_absence_rate', 'student_attendance',
+            'content_knowledge', 
+            'ecd_student_knowledge',  
+            'inputs', 
+            'infrastructure',
+            'operational_management',  'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
+            'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring','school_monitoring',
+            'school_management_attraction', 'school_selection_deployment', 'school_support', 'principal_evaluation'
 )
 
-#create icons
-icons <- awesomeIcons(
-  icon = 'graduation-cap',
-  iconColor = getColor(orphan_map),
-  library = 'fa',
-  markerColor = 'black'
-)
+#create database with just indicators
+school_dta_indicators <- school_dta_short %>%
+  select(ind_list)
+
+linear.1 <- lm(student_knowledge ~ ., data=school_dta_indicators)
+
+linear.1 <- coeftest(linear.1, vcov = vcovHC(linear.1, type="HC1"))
+
+logit.1 <- glm(student_knowledge ~ ., data=school_dta_indicators, family=binomial())
+
+logit.1 <- coeftest(logit.1, vcov = vcovHC(logit.1, type="HC1"))
 
 
+```
 
-map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
-  addTiles()  %>%
-  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
-                    popup = paste("Name: ", orphan_map$school_name_preload, " <br>",
-                                  "Province: ", orphan_map$school_province_preload, " <br>",
-                                  "District: ", orphan_map$school_district_preload, " <br>",
-                                  "EMIS Code: ", orphan_map$school_emis_preload, " <br>",
-                                  "<font color='red' > Number of Orphan Teachers ", " <br> <font color='black' >",
-                                  "Orphan Teachers: ", orphan_map$orphan_count, " <br>"))   %>%
-    addLegend("bottomright", pal=pal2, values=~orphan_count, title="Orphan Teachers"    )
-
-}
+```{r, results='asis'}
+stargazer(linear.1, logit.1, title="Linear/Logit Model of Student Learning on Indicators - Coefficients", type="html")
 
 ```
 
 
-```{r orphan_map_plot, echo=FALSE}
+## Machine Learning Models to Predict Learning Based on Indicators
+
+```{r ml_train, echo=FALSE}
 
 
-linked_df_orphan<-SharedData$new(orphan_map)
+
+tree<- school_dta_indicators %>%
+  rpart(student_knowledge~., data=.)
+
+tree
+
+rpart.plot(tree, box.palette="RdBu", shadow.col = "gray", nn=TRUE)
+
+plotcp(tree)
 
 
+bagged_m1 <- school_dta_indicators %>%
+  bagging(
+    formula = student_knowledge ~ .,
+    data    = .,
+    coob    = TRUE
+    )
 
-bscols(widths=c(3,NA),
-  list(
-  filter_slider("orphans", "Orphan Teacher Count", linked_df_orphan, ~orphan_count),
-  filter_select("prov", "Province", linked_df_orphan, ~school_province_preload),
-  filter_select("reg", "District", linked_df_orphan, ~school_district_preload)
-  
-  ),
-  map(linked_df_orphan) 
+bagged_m1
 
-)
+
+# Specify 10-fold cross validation
+ctrl <- trainControl(method = "cv",  number = 10) 
+
+# CV bagged model
+bagged_cv <- train(
+  student_knowledge ~ .,
+  data = school_dta_indicators,
+  method = "treebag",
+  trControl = ctrl,
+  importance = TRUE,
+  na.action=na.omit
+  )
+
+# assess results
+bagged_cv
+## Bagged CART 
+
+
+# plot most important variables
+plot(varImp(bagged_cv), 20)  
+
 
 ```
+

@@ -25,6 +25,14 @@ makeVlist <- function(dta) {
 }
 
 
+#Read in list of indicators
+indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+indicator_names <- indicators$indicator_tag
 
 
 #read in public officials interview file
@@ -174,6 +182,11 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
 public_officials_dta_short <-public_officials_dta_clean %>%
   dplyr::select(preamble_info, bureau_ind, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
+if (backup_onedrive=="yes") {
+  write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
+  write_dta(public_officials_dta_clean, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+}
+
 
 write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
 write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
@@ -204,7 +217,36 @@ public_officials_office_level<- public_officials_dta_clean %>%
 data_list <- c( 'public_officials_dta_clean','public_officials_office_level')
 
 save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
+
+
+#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
+
+#Create indicator level databases
+
+ind_dta_list<-c()
+
+for (i in indicator_names ) {
+  temp_df<-public_officials_dta_clean %>%
+    select( contains(i))
+  if (ncol(temp_df) > 0) {
+    temp_df<-public_officials_dta_clean %>%
+      select(keep_info,bureau_ind, starts_with('DEM'), starts_with(i))
+    assign(paste("final_indicator_data_",i, sep=""), temp_df )
+    
+    ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",i, sep=""))
+    
+  }
+}
+
+save(list=c(ind_dta_list, "public_officials_dta_clean" ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
+
+
 #loop and produce list of data tables
+
+if (backup_onedrive=="yes") {
+  save(data_list, file = file.path(save_folder_onedrive, "public_officials_survey_data.RData"))
+}
 
 
 

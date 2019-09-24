@@ -67,8 +67,11 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # #launch file to access data from API
 source('school_api.R', local=TRUE)
  
-# #launch file to clear data
+# #launch file to clear data=
 source('school_data_cleaner.R', local=TRUE)
+
+
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch paradata file 
 source('school_paradata.R', local=TRUE)

@@ -25,7 +25,7 @@ library(Cairo)
 ui <- fluidPage(
 
     # Application title
-    titlePanel("GEPD Data Analyzer"),
+    titlePanel("GEPD Data Explorer"),
 
     # Sidebar with an input for the specific indicator 
     sidebarLayout(
@@ -52,7 +52,6 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
     #Load the GEPD indicator data
-    #df_path<-"C:/Users/wb469649/Documents/Github/GEPD/Data/Peru/2019/Code/School/02_analysis/gepd_data_analysis"
     load(paste("school_indicators_data.RData", sep="/"))
     load(paste("public_officials_indicators_data.RData", sep="/"))
     

@@ -87,8 +87,15 @@ writeBin(RawData$content, filecon)
 #close the connection
 close(filecon)
 
+
+
 #unzip
-unzip(file.path(download_folder, tounzip), exdir=download_folder) 
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else {
+  unzip(file.path(download_folder, tounzip), exdir=download_folder)
+}
 
 
 #########################################
@@ -96,7 +103,19 @@ unzip(file.path(download_folder, tounzip), exdir=download_folder)
 #########################################
 
 #read in data
-para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+
+if (quest_version!=17) {
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  
+  para_df <- para_df %>%
+    bind_rows(para_df_17)
+
+} else if (quest_version==17) {
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  
+}
+
 
 #label variables
 var.labels=c(
@@ -202,6 +221,20 @@ para_dta<- para_df %>%
   mutate(interview_id=ï..interview__id) %>%
   select(-vallabel, -varlabel, -ï..interview__id)
 write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
+
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+
+para_df_tab <- para_df %>%
+  select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id) %>%
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timestamp=last(timestamp))
+
+
+save(para_df_section, para_df_tab, file=paste(save_folder, "paradata_light.RData", sep="/"))
+
+
 # 
 # ######################################
 # # Length of each question by Enumerator

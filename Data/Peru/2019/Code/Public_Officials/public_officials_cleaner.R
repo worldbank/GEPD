@@ -25,7 +25,11 @@ makeVlist <- function(dta) {
 }
 
 
-
+#Read in list of indicators
+indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag

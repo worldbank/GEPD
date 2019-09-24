@@ -63,7 +63,10 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source('public_officials_api.R', local=TRUE)
 
 #launch file to clean data
-source('public_officials_data_cleaner.R', local=TRUE)
+source('public_officials_cleaner.R', local=TRUE)
+
+
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
 source('public_officials_paradata.R', local=TRUE)

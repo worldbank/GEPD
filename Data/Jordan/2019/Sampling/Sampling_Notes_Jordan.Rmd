@@ -140,6 +140,58 @@ sumstats_rand %>%
 
 ```
 
+## Summary Statistics for Sampled Schools 
+
+```{r stats, echo=FALSE}
+
+  sumstats_rand2<-sample_updated %>%
+    filter(sample=="Sampled School") %>%
+  mutate(private=if_else(supervisory_authority=="Private",1,0),
+         rural=if_else(rural==TRUE,1,0),
+         all_boy=if_else(total_female_students==0,1,0),
+         all_girl=if_else(total_male_students==0,1,0))
+           
+
+
+  indicator_list2<-c('total_male_students',
+                    'total_female_students',
+                    'total_teachers',
+                    'male_teachers',
+                    'female_teachers',
+                    'private',
+                    'rural',
+                    'all_boy',
+                    'all_girl'
+                  )
+
+indicator_labels2<-c('Total Male Students',
+                    'Total Female Students',
+                    'Total Teachers',
+                    'Total Male Teachers',
+                    'Total Female Teachers',
+                    'Private Schools',
+                    'Rural Schools',
+                    'All Boy Schools',
+                    'All Girl Schools'
+                    )
+
+sumstats2<-sumstats_rand2 %>%
+  ungroup() %>%
+    dplyr::select(indicator_list2) 
+
+sumstats_df2<-skim(sumstats2) %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  mutate(variable=factor(variable, levels=indicator_list2,
+                         labels=indicator_labels2))
+
+sumstats_df2 %>%
+  kable( caption="Summary Statistics of Sampled Schools") %>%
+  kable_styling()
+
+```
+
 
 ## Map of Jordan Schools
 
