@@ -200,10 +200,10 @@ school_dta_short <- school_dta_short %>%
   mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
          lon=if_else(is.na(lon), as.numeric(longitude), lon))
   
- school_dta_short %>%data_set
-    group_by(rural) %>%
-    summarise(N=n()) 
- 
+ # school_dta_short %>% data_set
+ #    group_by(rural) %>%
+ #    summarise(N=n()) 
+ # 
  
 
 
