@@ -55,6 +55,8 @@ bin_var <- function(var, val) {
     is.na(var) ~ as.numeric(NA))
 }
 
+
+
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
   mutate(enumerator_name=m1s0q1_name_other  ,
@@ -95,12 +97,84 @@ public_officials_dta<- public_officials_dta %>%
          private_sector_two_years=bin_var(DEM1q12,1)
                   )
 
+
+############################
+#Clean up idiosyncratic variables
+#############################
+
+# Clean up some variables that need to be reversed coded, so that 5 is best and 1 is worst
+
+attitude_fun_rev  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
+    x==1 ~ 5,
+    x==2 ~ 4,
+    x==3 ~ 3,
+    x==4 ~ 2,
+    x==5 ~ 1
+  )
+}
+
+#create list of these variables
+var_rev_list<-c('QB2q2',  'QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4q4f', 'QB4q4g',
+                'IDM1q1', 'IDM1q2' )
+
+public_officials_dta <- public_officials_dta %>%
+  mutate_at(var_rev_list, attitude_fun_rev)
+
+
+#scale some variables that ask integers as 1-5 (e.g. motivation)
+public_officials_dta <- public_officials_dta %>%
+  mutate(avg_class_size_guess=QB1q2,
+         avg_absence_guess=QB1q1,
+         motivation_relative_start=QB4q2, 
+         proportion_reported_underperformance=IDM1q3,
+         proportion_broke_rules=IDM3q1,
+         proportion_contracts_political=IDM3q2,
+         proportion_producement_political=IDM3q3,) %>%
+  mutate(QB1q2= if_else(abs(QB1q2-16)<=4, 5-abs(QB1q2-16), 1),
+         QB1q1= if_else(abs(QB1q1-13)<=4, 5-abs(QB1q1-13), 1),
+         QB4q2= case_when(
+           QB4q2>=120 ~ 5,
+           QB4q2>=110 ~ 4,
+           QB4q2>=100 ~ 3,
+           QB4q2>=90 ~ 2,
+           QB4q2>=80 ~ 1,
+           TRUE ~ 1),
+         IDM1q3=case_when(
+           IDM1q3==0 ~ 5,
+           (IDM1q3>0 & IDM1q3<=5) ~ 4,
+           (IDM1q3>5 & IDM1q3<=10) ~ 3,
+           (IDM1q3>10 & IDM1q3<=15) ~ 2,
+           TRUE ~ 1),
+         IDM3q1=case_when(
+           IDM3q1==0 ~ 5,
+           (IDM3q1>0 & IDM3q1<=5) ~ 4,
+           (IDM3q1>5 & IDM3q1<=10) ~ 3,
+           (IDM3q1>10 & IDM3q1<=15) ~ 2,
+           TRUE ~ 1),
+         IDM3q2=case_when(
+           IDM3q2==0 ~ 5,
+           (IDM3q2>0 & IDM3q2<=5) ~ 4,
+           (IDM3q2>5 & IDM3q2<=10) ~ 3,
+           (IDM3q2>10 & IDM3q2<=15) ~ 2,
+           TRUE ~ 1),
+         IDM3q3=case_when(
+           IDM3q3==0 ~ 5,
+           (IDM3q3>0 & IDM3q3<=5) ~ 4,
+           (IDM3q3>5 & IDM3q3<=10) ~ 3,
+           (IDM3q3>10 & IDM3q3<=15) ~ 2,
+           TRUE ~ 1)
+  )
+    
+
+
 #list info that will be useful to keep in each indicator dataframe
 preamble_info <- c('interview__id', 'region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
-                   'education','gender')
+                   'education','gender', 'director_hr')
 
 
 
@@ -113,6 +187,10 @@ public_officials_dta_clean <-public_officials_dta %>%
   dplyr::select(preamble_info, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
   dplyr::select(-starts_with("enumerators_preload"))
 
+#filter out the director of HR, which isn't specifically asked about indicator questions
+
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  filter(director_hr==0)
 
 
 #######################################
@@ -239,7 +317,7 @@ for (i in indicator_names ) {
   }
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_clean" ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables

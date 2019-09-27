@@ -35,10 +35,8 @@ ui <- fluidPage(
             selectizeInput("indicators",
                         "Indicator Name:",
                         choices=NULL),
-            selectInput("urban_rural", "Urban or Rural:",
-                        c("All"='All',
-                          "Urban"="Urban",
-                          "Rural"="Rural"))
+            selectizeInput("subgroup", "Subgroup:",
+                        choices=NULL)
         ),
 
         # Show a plot of the generated distribution
@@ -91,7 +89,11 @@ server <- function(input, output, session) {
                 'school_management_attraction', 
                 'school_selection_deployment', 
                 'school_support', 
-                'principal_evaluation'
+                'principal_evaluation',
+                "national_learning_goals",
+                "mandates_accountability",
+                "quality_bureaucracy",
+                "impartial_decision_making"
     )
     
     
@@ -115,23 +117,29 @@ server <- function(input, output, session) {
                         "School Management Attraction",
                         "School Management Selection & Deployment",
                         "School Management Support",
-                        "School Management Evaluation"
-    )
+                        "School Management Evaluation", 
+                        "National Learning Goals",
+                        "Mandates and Accountability",
+                        "Quality of Bureaucracy",
+                        "Impartial Decision Making"
+                        )
     
     labels_df<-data.frame(indicators=as.character(ind_list),
                           indicator_labels=as.character(indicator_labels))
     
     indicators<- indicators %>%
-        filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR") %>%
+        filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR" & 
+                 indicator_tag!="BIMP" & indicator_tag!="BMAC" & indicator_tag!="BNLG" & indicator_tag!="BFIN") %>%
+#keep just one Bureaucracy indicator, because all with show in one
       mutate(indicator_tag=case_when(
         indicator_tag=='BQBR' ~ "QB",
-        indicator_tag=='BIMP' ~ "IDM",
-        indicator_tag=='BMAC' ~ "ACM",
-        indicator_tag=='BNLG' ~ "NLG",
-        TRUE ~ indicator_tag
-      )  ) #fix a few issues with Survey of Public Officials naming
+        TRUE ~ indicator_tag)) %>%
+      mutate(Indicator.Name=if_else(indicator_tag=="QB", 'Politics and Bureaucratic Capacity', Indicator.Name))
+        
+       #fix a few issues with Survey of Public Officials naming
     
     updateSelectizeInput(session, 'indicators', choices = indicators$Indicator.Name, server = TRUE)
+    
     
     
     get_tag <- reactive({
@@ -139,27 +147,61 @@ server <- function(input, output, session) {
     get_tag_df<-indicators %>%
         filter(Indicator.Name==input$indicators)
     
+    
     get_tag_df[,'indicator_tag']
+    
     })
     
+
+    
+    observe({ 
+      if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+        
+        updateSelectizeInput(session, 'subgroup', choices = c('All', 'Urban', 'Rural'))
+        
+      } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+        
+        choice<-unique(as.character(public_officials_dta_clean$govt_tier))
+        choice<-append('All',choice)
+        
+        updateSelectizeInput(session, 'subgroup', choices = choice)
+        
+        
+      }
+      
+    })  
+      
     ##########################
     #Produce dataset based on indicator selected
     ##########################
     dat <- reactive({
-
+      if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
         df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
         
+        
+
         df<- df %>%
           mutate(codigo.modular=as.numeric(school_code)) %>%
           left_join(data_set_updated)
 
         
-       if (input$urban_rural=="Rural") {
+       if (input$subgroup=="Rural") {
           df<- df %>%
             filter(rural==TRUE)
-        } else if (input$urban_rural=="Urban") {
+        } else if (input$subgroup=="Urban") {
           df<- df %>%
             filter(rural==FALSE)  
+        }
+        } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+          
+          df<-public_officials_dta_clean 
+          
+          
+          if (input$subgroup!="All") {
+            df<- df %>%
+              filter(govt_tier==input$subgroup)
+          }
+          
         }
         df
         
@@ -167,10 +209,14 @@ server <- function(input, output, session) {
 
     })
     
+    
+
+    
+    
     ##########################
     #Diplay name of variable
     ##########################
-    output$var_name<-renderText({paste(input$indicators, input$urban_rural, sep=" - ")})
+    output$var_name<-renderText({paste(input$indicators, input$subgroup, sep=" - ")})
     
     ###################################
     #Output histogram of key indicators
@@ -232,8 +278,13 @@ server <- function(input, output, session) {
     #########################
     output$tableset <- DT::renderDataTable({
 
+      if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m1s?q?|m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
-        
+        metadata<-metadta
+      } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+        sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="gender|DEM|NLG|ACM|QB|ORG")])
+        metadata<-public_officials_metadata
+      }
         sumstats <- dat() %>%
           select(one_of(ind_list), one_of(sum_items) ) 
         
@@ -246,7 +297,7 @@ server <- function(input, output, session) {
         sumstats_df <- sumstats_df %>%
             mutate(name=variable,
                    indicators=variable) %>%
-            left_join(metadta) %>%
+            left_join(metadata) %>%
             left_join(labels_df) %>%
             mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
             select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
@@ -306,10 +357,10 @@ server <- function(input, output, session) {
         left_join(data_set_updated)
       
       
-      if (input$urban_rural=="Rural") {
+      if (input$subgroup=="Rural") {
         df_learn<- df_learn %>%
           filter(rural==TRUE)
-      } else if (input$urban_rural=="Urban") {
+      } else if (input$subgroup=="Urban") {
         df_learn<- df_learn %>%
           filter(rural==FALSE)  
       }

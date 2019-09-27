@@ -397,7 +397,11 @@ bscols(widths=c(3,NA),
   list(
   filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name),
   filter_select("prov", "Province", linked_df, ~province),
-  filter_select("dist", "District", linked_df, ~district)
+  filter_select("dist", "District", linked_df, ~district),
+  filter_slider("nlg", "National Learning Goals:", linked_df, ~national_learning_goals, round=TRUE),
+  filter_slider("mna", "Mandates & Accountability:", linked_df, ~mandates_accountability, round=TRUE),
+  filter_slider("qb", "Quality of Bureaucracy:", linked_df, ~quality_bureaucracy, round=TRUE),
+  filter_slider("idm", "Impartial Decision Making:", linked_df, ~impartial_decision_making, round=TRUE)
 
   ),
   map(linked_df) 
