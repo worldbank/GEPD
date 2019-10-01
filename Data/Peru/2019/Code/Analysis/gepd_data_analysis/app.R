@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(shinyjs)
 library(tidyverse)
 library(plotly)
 library(glue)
@@ -37,6 +38,7 @@ ui <- fluidPage(
                         choices=NULL),
             selectizeInput("subgroup", "Subgroup:",
                         choices=NULL)
+
         ),
 
         # Show a plot of the generated distribution
@@ -45,11 +47,16 @@ ui <- fluidPage(
           h2(textOutput('var_name')),
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
-                        tabPanel("Histogram Plot", plotOutput("distPlot", height=800)),
-                        tabPanel("BoxPlot", plotOutput("boxPlot", height=800)),
-                        tabPanel("Summary", DT::dataTableOutput("tableset") ),
-                        tabPanel("Correlations", plotlyOutput("corrPlot", height=1200)),
-                        tabPanel("Regression Analysis", plotOutput("regplot", height=800))
+                        id='tabset',
+                        tabPanel("Histogram Plot", value=1, plotOutput("distPlot", height=800)),
+                        tabPanel("BoxPlot", value=2, plotOutput("boxPlot", height=800)),
+                        tabPanel("Summary", value=3, DT::dataTableOutput("tableset") ),
+                        tabPanel("Correlations", value=4, plotlyOutput("corrPlot", height=1200)),
+                        tabPanel("Regression Analysis", value=5, 
+                                 selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
+                                                choices=NULL),                               
+                                 plotOutput("regplot", height=800)
+                                 )
             )        )
     )
 )
@@ -138,10 +145,13 @@ server <- function(input, output, session) {
         
        #fix a few issues with Survey of Public Officials naming
     
+    #update indicator choices for session and for regression tables
     updateSelectizeInput(session, 'indicators', choices = indicators$Indicator.Name, server = TRUE)
     
+    updateSelectizeInput(session, 'reg_choices', choices = indicator_labels, server = TRUE)
     
     
+
     get_tag <- reactive({
     
     get_tag_df<-indicators %>%
@@ -288,11 +298,29 @@ server <- function(input, output, session) {
         sumstats <- dat() %>%
           select(one_of(ind_list), one_of(sum_items) ) 
         
-        sumstats_df<-skim(sumstats) %>%
-            select(-level, -type, -value) %>%
-            spread(stat, formatted) %>%
-            select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        #impute missing weights with median
+        school_dta_short <- school_dta_short %>%
+          mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw))
         
+        school_ipw<-school_dta_short$school_ipw 
+        
+        
+        #add function to produce weighted summary stats
+        my_skim <- skim_with( numeric = sfl( mean = ~ weighted.mean(.,  w=school_ipw, na.rm=TRUE),
+                                             sd = ~ sqrt(wtd.var(.,  weights=school_ipw, na.rm=TRUE)),
+                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=school_ipw, na.rm=TRUE)),
+                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=school_ipw, na.rm=TRUE)),
+                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=school_ipw, na.rm=TRUE)),
+                                             complete_count= ~ sum(!is.na(.))))
+        
+        
+        
+        sumstats_df<-my_skim(sumstats) %>%
+          select(-skim_type) %>%
+          rename(variable=skim_variable) %>%
+          select(variable, numeric.mean, numeric.sd, numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100, numeric.complete_count, n_missing, numeric.hist)
+        
+
         #add variable label
         sumstats_df <- sumstats_df %>%
             mutate(name=variable,
@@ -300,14 +328,17 @@ server <- function(input, output, session) {
             left_join(metadata) %>%
             left_join(labels_df) %>%
             mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
-            select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+            select(variable, varlabel, numeric.mean, numeric.sd, numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100, numeric.complete_count, n_missing, numeric.hist)
 
         DT::datatable(sumstats_df, caption="Summary Statistics of Key Indicator Variables and Components of Indicator",
                       colnames=c("Indicator", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"),
                       extensions = 'Buttons', options=list(
                           dom = 'Bfrtip',
                           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-                          pageLength = 60))
+                          pageLength = 60)) %>%
+          formatRound(columns = c('numeric.mean', 'numeric.sd', 'numeric.p0', 
+                                  'numeric.p25', 'numeric.p50', 'numeric.p75', 'numeric.p100'),
+                      digits=2)
 
         
     })
@@ -348,26 +379,40 @@ server <- function(input, output, session) {
     # Create database with just learning outcomes for regressions
     ##############################
     
-    dat_learn <- reactive({
-      #create database with just learning outcomes
-      df_learn<-get(paste("final_indicator_data_",'LERN', sep=""))
+    
+    get_tag_reg <- reactive({
       
-      df_learn<- df_learn %>%
+      get_tag_reg_df<-labels_df %>%
+        filter(indicator_labels==input$reg_choices)
+      
+      
+      get_tag_reg_df[,'indicators']
+      
+    })
+    
+    
+    dat_reg <- reactive({
+      #create database with just learning outcomes
+      df_reg<-school_dta_short
+      
+      df_reg<- df_reg %>%
         mutate(codigo.modular=as.numeric(school_code)) %>%
         left_join(data_set_updated)
       
       
       if (input$subgroup=="Rural") {
-        df_learn<- df_learn %>%
+        df_reg<- df_reg %>%
           filter(rural==TRUE)
       } else if (input$subgroup=="Urban") {
-        df_learn<- df_learn %>%
+        df_reg<- df_reg %>%
           filter(rural==FALSE)  
       }
       
       #keep just school code and learning outcome
-      df_learn %>%
-        select(school_code, student_knowledge)
+      df_reg %>%
+        select(school_code, as.character(get_tag_reg()[1]), weights ) %>%
+        rename(y=2) %>%
+        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
     })
     
     ########################################
@@ -377,27 +422,27 @@ server <- function(input, output, session) {
       
       
 
-
       df_reg_plot <- dat() %>%
         select(one_of(ind_list), school_code) %>%
         rowid_to_column("ID") %>%
         pivot_longer(cols=one_of(ind_list),
                      names_to='indicators', values_to='values') %>%
-        left_join(labels_df) %>%
-        left_join(dat_learn())
-
-      regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=student_knowledge, group=indicator_labels, colour=indicator_labels)) +
+        left_join(dat_reg()) %>%
+        left_join(labels_df) 
+        
+      
+      regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=y, group=indicator_labels, colour=indicator_labels)) +
         geom_point() +
-        geom_smooth(method='lm') +
+        geom_smooth(method='lm', mapping = aes(weight = school_ipw)) +
         facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10)), nrow = 3) +
         theme_classic() + 
         theme(
           text = element_text(size = 16),
           
         ) +
-        ggtitle("Linear Regression of Dashboard Indicators on 4th Grade Student Knowledge") +
+        ggtitle(paste0("Linear Regression of Dashboard Indicators on ", input$reg_choices)) +
         labs(colour = "Indicator") +
-        ylab('4th Grade Student Knowledge') +
+        ylab(input$reg_choices) +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = 0.15,
                      formula = 'y~x', parse = TRUE, size = 5)
