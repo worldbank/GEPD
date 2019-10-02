@@ -54,7 +54,8 @@ stunting$REGION[stunting$REGION=='Oromia']='Oromiya'
 stunting$REGION[stunting$REGION=='SNNPR']='SNNP'
 
 
-df=read_dta("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Sampling/Sampling Data/Ethiopia/ETH_sampling_data.dta")
+df=read_dta("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2019/Data/Sampling/ETH_sampling_data.dta")
+
 
 
 

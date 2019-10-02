@@ -88,37 +88,69 @@ colnames(df)<-gsub(" ","_",colnames(df))
 df<-df %>%
   mutate(rural=(classification_area=="Village")) %>%
   filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3 ) %>%
-  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private")
+  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private") %>%
+  mutate(private=if_else(supervisory_authority=="Private",1,0),
+         rural=if_else(rural==TRUE,1,0),
+         all_boy=if_else(total_female_students==0,1,0),
+         all_girl=if_else(total_male_students==0,1,0),
+         north=if_else(territory=="North",1,0),
+         middle=if_else(territory=="Middle",1,0),
+         south=if_else(territory=="South",1,0),
+         shift_1=if_else(foundation_period=="Morning",1,0),
+         shift_2=if_else(foundation_period=="Evening",1,0),
+         shift_both=if_else(foundation_period=="One Period",1,0))
 
-  indicator_list<-c('total_male_students',
+  indicator_list2<-c('total_male_students',
                     'total_female_students',
                     'total_teachers',
                     'male_teachers',
                     'female_teachers',
-                    'total_primary_teachers'
+                    'private',
+                    'rural',
+                    'north',
+                    'middle',
+                    'south',
+                    'shift_1',
+                    'shift_2',
+                    'shift_both',
+                    'all_boy',
+                    'all_girl'
                   )
 
-indicator_labels<-c('Total Male Students',
+indicator_labels2<-c('Total Male Students',
                     'Total Female Students',
                     'Total Teachers',
                     'Total Male Teachers',
                     'Total Female Teachers',
-                    'Total Primary Teachers'
+                    'Private Schools',
+                    'Rural Schools',
+                    'North',
+                    'Middle',
+                    'South',
+                    'Morning Shift',
+                    'Evening Shift',
+                    'One Period',
+                    'All Boy Schools',
+                    'All Girl Schools'
                     )
 
 sumstats<-df %>%
-  dplyr::select(indicator_list) 
+  dplyr::select(indicator_list2) 
 
 sumstats_df<-skim(sumstats) %>%
   dplyr::select(-level, -type, -value) %>%
   spread(stat, formatted) %>%
   dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
-  mutate(variable=factor(variable, levels=indicator_list,
-                         labels=indicator_labels))
+  mutate(variable=factor(variable, levels=indicator_list2,
+                         labels=indicator_labels2)) %>%
+  arrange(match(variable, indicator_labels2))
+
 
 ```
 
-```{r stats_kable}
+## Summary Statistics for Jordan Schools Overall in Sampling Frame
+
+```{r stats_kable, echo=FALSE}
 
 kable(sumstats_df, caption="Summary Statistics for Sampling Frame" , ) %>%
   kable_styling()
@@ -149,7 +181,15 @@ sumstats_rand %>%
   mutate(private=if_else(supervisory_authority=="Private",1,0),
          rural=if_else(rural==TRUE,1,0),
          all_boy=if_else(total_female_students==0,1,0),
-         all_girl=if_else(total_male_students==0,1,0))
+         all_girl=if_else(total_male_students==0,1,0),
+         north=if_else(territory=="North",1,0),
+         middle=if_else(territory=="Middle",1,0),
+         south=if_else(territory=="South",1,0),
+         shift_1=if_else(foundation_period=="Morning",1,0),
+         shift_2=if_else(foundation_period=="Evening",1,0),
+         shift_both=if_else(foundation_period=="One Period",1,0))
+    
+        
            
 
 
@@ -160,6 +200,12 @@ sumstats_rand %>%
                     'female_teachers',
                     'private',
                     'rural',
+                    'north',
+                    'middle',
+                    'south',
+                    'shift_1',
+                    'shift_2',
+                    'shift_both',
                     'all_boy',
                     'all_girl'
                   )
@@ -171,6 +217,12 @@ indicator_labels2<-c('Total Male Students',
                     'Total Female Teachers',
                     'Private Schools',
                     'Rural Schools',
+                    'North',
+                    'Middle',
+                    'South',
+                    'Morning Shift',
+                    'Evening Shift',
+                    'One Period',
                     'All Boy Schools',
                     'All Girl Schools'
                     )
@@ -184,7 +236,8 @@ sumstats_df2<-skim(sumstats2) %>%
   spread(stat, formatted) %>%
   dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   mutate(variable=factor(variable, levels=indicator_list2,
-                         labels=indicator_labels2))
+                         labels=indicator_labels2)) %>%
+  arrange(match(variable, indicator_labels2))
 
 sumstats_df2 %>%
   kable( caption="Summary Statistics of Sampled Schools") %>%

@@ -12,9 +12,9 @@
   # How to use the files in the Master Code directory
 
    This folder contains code to sample, clean, and analyze data from the Global Education Policy Dashboard project.  The folder is broken up into four sub-folders: Sampling, School, Public_Officials, and Analysis.  Most of the discussion in this Readme will concern the School and Public_officials folders, which contain code to pull raw data from the Survey Solutions API, clean the data, and produce final indicators.
-   
-   The Sampling folder contains our generic approach to sampling for our Dashboard Surveys.  Generally, we use an optimal stratification approach to sampling, where we generally stratify by the urban/rural status of schools and by province of the country.  
-   
+
+   The Sampling folder contains our generic approach to sampling for our Dashboard Surveys.  Generally, we use an optimal stratification approach to sampling, where we generally stratify by the urban/rural status of schools and by province of the country.  We would like to thank Michael Wild, Deon Filmer, Ciro Avitabile, Andres Yi Chang, Jonathan Kastelic, Kristen Himelein for helpful comments on our sampling approach.  We would also like to thank Michael Wild again for sharing R code that formed the basis of our optimal sampling approach.  All errors are our own.
+
    The Analysis folder contains code to produce a Shiny App, which allows users to produce quick summary statisitcs, graphs, and correlation plots of items from our questionnaire and our final indicators.  The Analysis folder also contains some experimental code to do regression analysis and machine learning to detect relationships in our survey data.
 
   Please read below for how to run and use the code for cleaning the school survey and survey of public officials data.
