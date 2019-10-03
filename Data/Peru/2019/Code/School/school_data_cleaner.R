@@ -1254,9 +1254,8 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
   mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
   mutate(intrinsic_motivation=rowSums(.[intrinsic_motiv_q_all], na.rm=TRUE)/10) %>%
   group_by(school_code) %>%
-  summarise(n_mssing_teach_TINM=sum(n_mssing_TINM),
-            interview__id=first(interview__id), 
-            intrinsic_motivation=mean(intrinsic_motivation))  %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
 
@@ -1502,7 +1501,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
-            'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
             'intrinsic_motivation', 'm3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm', 'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm',
             'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',

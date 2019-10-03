@@ -16,12 +16,13 @@ library(DT)
 library(rvg)
 library(officer)
 library(kableExtra)
-library(skimr)
 library(ggcorrplot)
+library(stargazer)
+library(sandwich)
 library(Cairo)
 library(scales)
 library(ggpmisc)
-library(RCurl)
+
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 
@@ -39,7 +40,10 @@ ui <- fluidPage(
                         choices=NULL),
             selectizeInput("subgroup", "Subgroup:",
                         choices=NULL),
+
+            h2("Scoring Metadata on Indicator"),
             htmlOutput('metadata' )
+
 
         ),
 
@@ -56,8 +60,13 @@ ui <- fluidPage(
                         tabPanel("Correlations", value=4, plotlyOutput("corrPlot", height=1000)),
                         tabPanel("Regression Analysis", value=5, 
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
-                                                choices=NULL),                               
+                                                choices=NULL)   ,
                                  plotOutput("regplot", height=600)
+                                 ),
+                        tabPanel("Sub-Indicator Regression Analysis", value=6,
+                                 selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
+                                                choices=NULL)   ,
+                                 htmlOutput('scoring')
                                  )
             )        )
     )
@@ -79,35 +88,35 @@ server <- function(input, output, session) {
 
     
     names(indicators)<-make.names(names(indicators), unique=TRUE)
+  
     
     #Create list of key indicators
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
                 'student_attendance',
-                'absence_rate', 'school_absence_rate',
+                'absence_rate', 'school_absence_rate', 
                 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
-                'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity', 'disability_accessibility', 'disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-                'operational_management', 'vignette_1', 'vignette_2', 
-                'instructional_leadership',
-                'principal_management',
-                'teacher_attraction',
-                'teacher_selection_deployment', 
-                'teacher_support', 
-                'teaching_evaluation', 
-                'teacher_monitoring',
-                'intrinsic_motivation', 
-                'school_monitoring',
-                'school_management_attraction', 
+                'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+                'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                'intrinsic_motivation', 'm3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm', 'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_training_exists','pre_training_practicum','pre_training_practicum_lngth','in_service_exists','in_servce_lngth','in_service_classroom',
+                'teaching_evaluation', 'formally_evaluated','evaluation_knowledge_skill','negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions',
+                'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'school_management_attraction', 'principal_satisfaction',
                 'school_selection_deployment', 
-                'school_support', 
-                'principal_evaluation',
+                'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                 "national_learning_goals",
                 "mandates_accountability",
                 "quality_bureaucracy",
                 "impartial_decision_making"
     )
-    
     
     indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge",
                         "Student Attendance Rate",
@@ -116,26 +125,54 @@ server <- function(input, output, session) {
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Desks", "ICT Usage", "ICT Access",
                         "Infrastructure", "Clean Drinking Water", "Functioning/Accessible Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
-                        "Operational Management", "Operational Management - Vignette 1", "Operational Management - Vignette 2",
-                        "Instructional Leadership",
-                        'Principal Management Skills',
-                        'Teacher Attraction (De Facto)',
-                        'Teacher Selection & Deployment (De Facto)',
-                        'Teacher Support (De Facto)',
-                        'Teacher Evaluation (De Facto)',
-                        'Teacher Monitoring & Accountability (De Facto)',
-                        "Teacher Intrinsic Motivation",
-                        "Inputs and Infrastructure Monitoring",
-                        "School Management Attraction",
+                        "Operational Management", "Operational Management - Vignette 1", 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', "Operational Management - Vignette 2",'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                        "Teacher Intrinsic Motivation", 'm3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm', 'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm',
+                        "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus',
+                        'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                        'Teacher Support (De Facto)', 'pre_training_exists','pre_training_practicum','pre_training_practicum_lngth','in_service_exists','in_servce_lngth','in_service_classroom',
+                        'Teacher Evaluation (De Facto)', 'formally_evaluated','evaluation_knowledge_skill','negative_consequences','positive_consequences',
+                        'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions',
+                        "Inputs and Infrastructure Monitoring", 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Attraction", 'principal_satisfaction',
                         "School Management Selection & Deployment",
-                        "School Management Support",
-                        "School Management Evaluation", 
+                        "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                         "National Learning Goals",
                         "Mandates and Accountability",
                         "Quality of Bureaucracy",
                         "Impartial Decision Making"
                         )
-    
+  
+    #create subset with just main indicators
+    main_indicator_labels<-c("4th Grade Student Knowledge", 
+                        "Student Attendance Rate",
+                        "Teacher Classroom Absence Rate", 
+                        "Teacher Content Knowledge", 
+                        "1st Grade Assessment Score", 
+                        "Inputs", 
+                        "Infrastructure", 
+                        "Operational Management", 
+                        "Teacher Intrinsic Motivation", 
+                        "Instructional Leadership", 
+                        'Principal Management Skills', 
+                        'Teacher Attraction (De Facto)',
+                        'Teacher Selection & Deployment (De Facto)',
+                        'Teacher Support (De Facto)', 
+                        'Teacher Evaluation (De Facto)', 
+                        'Teacher Monitoring & Accountability (De Facto)', 
+                        "Inputs and Infrastructure Monitoring", 
+                        "School Management Attraction", 
+                        "School Management Selection & Deployment",
+                        "School Management Support", 
+                        "School Management Evaluation", 
+                        "National Learning Goals",
+                        "Mandates and Accountability",
+                        "Quality of Bureaucracy",
+                        "Impartial Decision Making"
+    )  
+      
     labels_df<-data.frame(indicators=as.character(ind_list),
                           indicator_labels=as.character(indicator_labels))
     
@@ -155,6 +192,7 @@ server <- function(input, output, session) {
     
     updateSelectizeInput(session, 'reg_choices', choices = indicator_labels, server = TRUE)
     
+    updateSelectizeInput(session, 'sub_reg_choices', choices = main_indicator_labels, server = TRUE)
     
 
     get_tag <- reactive({
@@ -225,8 +263,35 @@ server <- function(input, output, session) {
     })
     
     
+    
+    # #Update list of subindicators
+    # 
+    # subind_dat <- reactive({
+    #   if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+    #     df_subindicators<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
+    #     } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+    #     
+    #     df_subindicators<-public_officials_dta_clean 
+    # 
+    #     }
+    #   
+    #   df_subindicators<- df_subindicators %>%
+    #     select(one_of(ind_list))  
+    #   
+    #   df_subindicators
+    #   
+    #   
+    #   
+    # })
+    #   
+    # 
+    # updateVarSelectInput(session, 'subindicators', data = subind_dat() , server = TRUE)
+    # 
+    #   
 
     
+    
+
     
     ##########################
     #Diplay name of variable
@@ -239,8 +304,7 @@ server <- function(input, output, session) {
     ##########################
     
     #Get metadata from github
-    url<-url("https://raw.githubusercontent.com/worldbank/GEPD/master/Indicators/indicators_choices.md")
-    indicator_choices<-read_delim(url, delim="|", trim_ws=TRUE)
+    indicator_choices<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
     
     #Display metadata for indicator
     indicator_choices <- indicator_choices %>%
@@ -480,7 +544,7 @@ server <- function(input, output, session) {
           text = element_text(size = 16),
           
         ) +
-        ggtitle(paste0("Linear Regression of Dashboard Indicators on ", input$reg_choices)) +
+        ggtitle(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices)) +
         labs(colour = "Indicator") +
         ylab(input$reg_choices) +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
@@ -492,7 +556,106 @@ server <- function(input, output, session) {
     })  
     
     
-    }
+    
+
+    #Create list of key sub-indicators
+
+    
+    
+    sub_ind_list<-c( 'math_student_knowledge', 'literacy_student_knowledge',
+                'math_content_knowledge', 'literacy_content_knowledge',
+                 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
+                'drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+                 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                 'm3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm', 'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm',
+                 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus',
+                'teacher_selection','teacher_deployment',
+                 'pre_training_exists','pre_training_practicum','pre_training_practicum_lngth','in_service_exists','in_servce_lngth','in_service_classroom',
+                 'formally_evaluated','evaluation_knowledge_skill','negative_consequences','positive_consequences',
+                'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions',
+                 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'principal_satisfaction',
+                 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+    )
+
+########################################
+#Sub-indicator Regressions
+#########################################
+    
+    get_tag_sub_reg <- reactive({
+      
+      get_tag_sub_reg_df<-labels_df %>%
+        filter(indicator_labels==input$sub_reg_choices)
+      
+      
+      get_tag_sub_reg_df[,'indicators']
+      
+    })
+    
+    
+    dat_sub_reg <- reactive({
+      #create database with just learning outcomes
+      df_sub_reg<-school_dta_short
+      
+      df_sub_reg<- df_sub_reg %>%
+        mutate(codigo.modular=as.numeric(school_code)) %>%
+        left_join(data_set_updated)
+      
+      
+      if (input$subgroup=="Rural") {
+        df_sub_reg<- df_sub_reg %>%
+          filter(rural==TRUE)
+      } else if (input$subgroup=="Urban") {
+        df_sub_reg<- df_sub_reg %>%
+          filter(rural==FALSE)  
+      }
+      
+      #keep just school code and learning outcome
+      df_sub_reg %>%
+        select(school_code, as.character(get_tag_sub_reg()[1]), weights ) %>%
+        rename(y=2) %>%
+        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
+    })
+    
+    
+output$scoring<-renderUI({
+  
+  
+  
+  df_scoring_reg <- dat() %>%
+    select(one_of(sub_ind_list), school_code) %>%
+    left_join(dat_sub_reg()) %>%
+    select(-school_code,-weights, -school_ipw)
+  
+  scoring_reg<-lm(y~., df_scoring_reg, weights = dat()$school_ipw)
+  
+# Adjust standard errors
+cov1         <- vcovHC(scoring_reg, type = "HC1")
+robust_se    <- sqrt(diag(cov1))
+
+
+
+HTML(paste(
+  stargazer( scoring_reg, type = "html",
+          se        = list(robust_se),
+          title = "Regressions of Indicator variables on Set of Sub-Indicators",
+          column.labels = input$sub_reg_choices
+          )
+))      
+  
+
+})  
+
+
+}
+
+
+
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)

@@ -1502,7 +1502,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
-            'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
             'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring','school_monitoring',
             'school_management_attraction', 'school_selection_deployment', 'school_support', 'principal_evaluation'
