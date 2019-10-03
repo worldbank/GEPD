@@ -1503,9 +1503,20 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-            'operational_management', 'vignette_1', 'vignette_2', 'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
-            'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring','school_monitoring',
-            'school_management_attraction', 'school_selection_deployment', 'school_support', 'principal_evaluation'
+            'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+            'intrinsic_motivation', 'm3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm', 'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm',
+            'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+            'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus',
+            'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+            'teacher_support', 'pre_training_exists','pre_training_practicum','pre_training_practicum_lngth','in_service_exists','in_servce_lngth','in_service_classroom',
+            'teaching_evaluation', 'formally_evaluated','evaluation_knowledge_skill','negative_consequences','positive_consequences',
+            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions',
+            'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+            'school_management_attraction', 'principal_satisfaction',
+            'school_selection_deployment', 
+            'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+            'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
 )
 
 

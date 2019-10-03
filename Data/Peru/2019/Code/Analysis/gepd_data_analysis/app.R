@@ -21,6 +21,7 @@ library(ggcorrplot)
 library(Cairo)
 library(scales)
 library(ggpmisc)
+library(RCurl)
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 
@@ -37,7 +38,8 @@ ui <- fluidPage(
                         "Indicator Name:",
                         choices=NULL),
             selectizeInput("subgroup", "Subgroup:",
-                        choices=NULL)
+                        choices=NULL),
+            htmlOutput('metadata' )
 
         ),
 
@@ -48,14 +50,14 @@ ui <- fluidPage(
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
                         id='tabset',
-                        tabPanel("Histogram Plot", value=1, plotOutput("distPlot", height=800)),
-                        tabPanel("BoxPlot", value=2, plotOutput("boxPlot", height=800)),
+                        tabPanel("Histogram Plot", value=1, plotOutput("distPlot", height=600)),
+                        tabPanel("BoxPlot", value=2, plotOutput("boxPlot", height=600)),
                         tabPanel("Summary", value=3, DT::dataTableOutput("tableset") ),
-                        tabPanel("Correlations", value=4, plotlyOutput("corrPlot", height=1200)),
+                        tabPanel("Correlations", value=4, plotlyOutput("corrPlot", height=1000)),
                         tabPanel("Regression Analysis", value=5, 
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL),                               
-                                 plotOutput("regplot", height=800)
+                                 plotOutput("regplot", height=600)
                                  )
             )        )
     )
@@ -72,6 +74,9 @@ server <- function(input, output, session) {
     
     
     load(paste("school_sample_2019_07_22.RData"))
+    
+    
+
     
     names(indicators)<-make.names(names(indicators), unique=TRUE)
     
@@ -227,7 +232,42 @@ server <- function(input, output, session) {
     #Diplay name of variable
     ##########################
     output$var_name<-renderText({paste(input$indicators, input$subgroup, sep=" - ")})
+
     
+    ##########################
+    #Diplay metadata of variable
+    ##########################
+    
+    #Get metadata from github
+    url<-url("https://raw.githubusercontent.com/worldbank/GEPD/master/Indicators/indicators_choices.md")
+    indicator_choices<-read_delim(url, delim="|", trim_ws=TRUE)
+    
+    #Display metadata for indicator
+    indicator_choices <- indicator_choices %>%
+      dplyr::select(-X1, -X6) %>%
+      dplyr::filter(Series!="---") 
+    
+    names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
+    
+    
+    get_meta <- reactive({
+      
+      get_meta_df<-indicator_choices %>%
+        dplyr::filter(Indicator.Name==input$indicators) 
+      
+      
+      get_meta_df[,'How.is.the.indicator.scored.']
+      
+    })
+    
+    output$metadata<-renderUI({
+      
+    paste(get_meta()[1])
+      
+    })
+    
+
+        
     ###################################
     #Output histogram of key indicators
     ##################################
