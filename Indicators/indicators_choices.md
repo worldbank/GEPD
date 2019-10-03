@@ -1,6 +1,6 @@
 | Series | Indicator Name |  Value | How is the indicator scored? |
 |---|---|---|---|
-|SE.PRM.LERN | Learning | 0-100 | Part of this indicator is created from fraction correct on 4th grade student assessment.  In future, we will align with SDG criteria for minimum proficiency. |
+|SE.PRM.LERN | Proficiency on GEPD Assessment | 0-100 | Part of this indicator is created from fraction correct on 4th grade student assessment.  In future, we will align with SDG criteria for minimum proficiency. |
 |SE.PRM.PART |Participation | 0-100 | Based on adjusted net enrollment data.  Not based on survey data|
 |SE.PRM.EFFT |Teacher Effort|0-100  | School survey.  Percent of teachers absent.  Teacher is coded absent if they are: <br/> - not in school <br/> - in school but absent from the class <br/> - in the class but not teaching.
 |SE.PRM.CONT |Teacher Content Knowledge| 0-100  | School survey.  Fraction correct on teacher assessment.  In the future, we will align with SDG criteria for minimum proficiency.  |

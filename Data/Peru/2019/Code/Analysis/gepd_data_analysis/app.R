@@ -262,7 +262,7 @@ server <- function(input, output, session) {
     
     output$metadata<-renderUI({
       
-    paste(get_meta()[1])
+    HTML(paste(get_meta()[1]))
       
     })
     
