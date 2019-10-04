@@ -6,6 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
+devtools::install_github("ropensci/skimr",  ref = "v2")
 
 library(shiny)
 library(shinyjs)
@@ -22,6 +23,7 @@ library(sandwich)
 library(Cairo)
 library(scales)
 library(ggpmisc)
+library(skimr)
 
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
@@ -54,18 +56,26 @@ ui <- fluidPage(
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
                         id='tabset',
-                        tabPanel("Histogram Plot", value=1, plotOutput("distPlot", height=600)),
-                        tabPanel("BoxPlot", value=2, plotOutput("boxPlot", height=600)),
+                        tabPanel("Histogram Plot", value=1, 
+                                 downloadButton("downloadhist", "Download"),
+                                 plotOutput("distPlot", height=600)),
+                        tabPanel("BoxPlot", value=2, 
+                                 downloadButton("downloadboxplot", "Download"),
+                                 plotOutput("boxPlot", height=600)),
                         tabPanel("Summary", value=3, DT::dataTableOutput("tableset") ),
-                        tabPanel("Correlations", value=4, plotlyOutput("corrPlot", height=1000)),
+                        tabPanel("Correlations", value=4, 
+                                 downloadButton("downloadcorr", "Download"),
+                                 plotlyOutput("corrPlot", height=1000)),
                         tabPanel("Regression Analysis", value=5, 
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
+                                 downloadButton("downloadregplot", "Download"),
                                  plotOutput("regplot", height=600)
                                  ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
                                  selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
+                                 downloadButton("downloadscoring", "Download"),
                                  htmlOutput('scoring')
                                  )
             )        )
@@ -335,37 +345,8 @@ server <- function(input, output, session) {
     ###################################
     #Output histogram of key indicators
     ##################################
-    output$distPlot<-renderPlot({
-        
-        df_plot <- dat() %>%
-            select(one_of(ind_list)) %>%
-            rowid_to_column("ID") %>%
-            pivot_longer(cols=one_of(ind_list),
-                         names_to='indicators', values_to='values') %>%
-            left_join(labels_df)
-        
-        
-
-        p<- ggplot(data=na.omit(df_plot), aes(x=values, group=indicator_labels, colour=indicator_labels)) +
-          geom_histogram() +
-          facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
-          theme_classic() + 
-          theme(
-            text = element_text(size = 16),
-            
-          ) +
-          ggtitle("Histograms of Dashboard Indicators") +
-          labs(colour = "Indicator")
-        
-        
-        
-        p
-   
-    })
-    ###################################
-    #Output boxplot of key indicators
-    ##################################
-    output$boxPlot<-renderPlot({
+    
+    histo <- reactive ({
       
       df_plot <- dat() %>%
         select(one_of(ind_list)) %>%
@@ -375,17 +356,84 @@ server <- function(input, output, session) {
         left_join(labels_df)
       
       
-        q<- ggplot(data=na.omit(df_plot), aes(y=values, x=indicator_labels)) +
-          geom_boxplot(fill="gold1", line='goldernrod2') +
-          theme_classic() + 
-          theme(
-            text = element_text(size = 16),
-          ) +
-          ggtitle("Boxplot of Dashboard Indicators")+
-          xlab("Indicator")
-        
-        q
+      
+      p<- ggplot(data=na.omit(df_plot), aes(x=values, group=indicator_labels, colour=indicator_labels)) +
+        geom_histogram() +
+        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
+        theme_classic() + 
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ggtitle("Histograms of Dashboard Indicators") +
+        labs(colour = "Indicator")
+      
+      p
+      
     })
+    
+    output$distPlot<-renderPlot({
+        
+      histo()
+      
+   
+    })
+    
+    # Downloadable png of selected dataset ----
+    output$downloadhist <- downloadHandler(
+      filename = function() {
+        paste('histogram - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      },
+      content = function(file) {
+        ggsave(file, plot = histo(), device = "png", width=16, height=12)
+      }
+    )
+    
+    
+    ###################################
+    #Output boxplot of key indicators
+    ##################################
+    
+    boxp <- reactive({
+      
+      df_plot <- dat() %>%
+        select(one_of(ind_list)) %>%
+        rowid_to_column("ID") %>%
+        pivot_longer(cols=one_of(ind_list),
+                     names_to='indicators', values_to='values') %>%
+        left_join(labels_df)
+      
+      
+      q<- ggplot(data=na.omit(df_plot), aes(y=values, x=indicator_labels)) +
+        geom_boxplot(fill="gold1", line='goldernrod2') +
+        theme_classic() + 
+        theme(
+          text = element_text(size = 16),
+        ) +
+        ggtitle("Boxplot of Dashboard Indicators")+
+        xlab("Indicator") +
+        coord_flip()
+      
+      q
+      
+    })
+    
+    output$boxPlot<-renderPlot({
+      
+      boxp()
+
+    })
+    
+    # Downloadable png of selected dataset ----
+    output$downloadboxplot <- downloadHandler(
+      filename = function() {
+        paste('boxplot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      },
+      content = function(file) {
+        ggsave(file, plot = boxp(), device = "png", width=16, height=12)
+      }
+    )
+    
     
     ##########################
     #summary statistics table
@@ -450,33 +498,49 @@ server <- function(input, output, session) {
     #####################################
     #Correlation Plot of key indicators
     ####################################
-    output$corrPlot<-renderPlotly({
-        
-        #drop non-numeric elements
-        
-        corr_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
-        
-        df_corr_plot <- dat() %>%
-            select(one_of(ind_list), one_of(corr_items) ) %>%
-            select_if(is.numeric)
-        
-        df_corr_plot <-    round(cor(df_corr_plot, use="complete.obs"), 2)
-        
-        
-        pcorr<- ggcorrplot(df_corr_plot,
-                           outline.color = "white",
-                           ggtheme = theme_bw(),
-                           colors = c("#F8696B", "#FFEB84", "#63BE7B"),
-                           legend.title = "Correlation",
-                           title = "Correlation Between Questionnaire Items") + 
-            theme(
-                text = element_text(size = 16),
-            )
-        
-        
-        ggplotly(pcorr)
+    
+    corrp<- reactive({
+      
+      #drop non-numeric elements
+      
+      corr_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
+      
+      df_corr_plot <- dat() %>%
+        select(one_of(ind_list), one_of(corr_items) ) %>%
+        select_if(is.numeric)
+      
+      df_corr_plot <-    round(cor(df_corr_plot, use="complete.obs"), 2)
+      
+      
+      pcorr<- ggcorrplot(df_corr_plot,
+                         outline.color = "white",
+                         ggtheme = theme_bw(),
+                         colors = c("#F8696B", "#FFEB84", "#63BE7B"),
+                         legend.title = "Correlation",
+                         title = "Correlation Between Questionnaire Items") + 
+        theme(
+          text = element_text(size = 16),
+        )
+      
+      pcorr
+      
     })
     
+    output$corrPlot<-renderPlotly({
+        
+      ggplotly(corrp())
+
+    })
+    
+    # Downloadable png of selected dataset ----
+    output$downloadcorr <- downloadHandler(
+      filename = function() {
+        paste('Correlation Plot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      },
+      content = function(file) {
+        ggsave(file, plot = corrp(), device = "png", width=16, height=12)
+      }
+    )
     
     
     #############################
@@ -522,10 +586,10 @@ server <- function(input, output, session) {
     ########################################
     #Regression Analysis of key indicators
     #########################################
-    output$regplot<-renderPlot({
+    
+    
+    regp<- reactive({
       
-      
-
       df_reg_plot <- dat() %>%
         select(one_of(ind_list), school_code) %>%
         rowid_to_column("ID") %>%
@@ -533,7 +597,7 @@ server <- function(input, output, session) {
                      names_to='indicators', values_to='values') %>%
         left_join(dat_reg()) %>%
         left_join(labels_df) 
-        
+      
       
       regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=y, group=indicator_labels, colour=indicator_labels)) +
         geom_point() +
@@ -553,9 +617,24 @@ server <- function(input, output, session) {
       
       
       regplots
+      
+    })
+    output$regplot<-renderPlot({
+      
+      regp()
+
+
     })  
     
-    
+    # Downloadable png of selected dataset ----
+    output$downloadregplot <- downloadHandler(
+      filename = function() {
+        paste('Regression Plot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      },
+      content = function(file) {
+        ggsave(file, plot = regp(), device = "png", width=16, height=12)
+      }
+    )
     
 
     #Create list of key sub-indicators
@@ -621,10 +700,8 @@ server <- function(input, output, session) {
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
     })
     
-    
-output$scoring<-renderUI({
-  
-  
+
+score<-reactive({
   
   df_scoring_reg <- dat() %>%
     select(one_of(sub_ind_list), school_code) %>%
@@ -633,22 +710,47 @@ output$scoring<-renderUI({
   
   scoring_reg<-lm(y~., df_scoring_reg, weights = dat()$school_ipw)
   
-# Adjust standard errors
-cov1         <- vcovHC(scoring_reg, type = "HC1")
-robust_se    <- sqrt(diag(cov1))
-
-
-
-HTML(paste(
+  # Adjust standard errors
+  cov1         <- vcovHC(scoring_reg, type = "HC1")
+  robust_se    <- sqrt(diag(cov1))
+  
   stargazer( scoring_reg, type = "html",
-          se        = list(robust_se),
-          title = "Regressions of Indicator variables on Set of Sub-Indicators",
-          column.labels = input$sub_reg_choices
-          )
+             se        = list(robust_se),
+             title = "Regressions of Indicator variables on Set of Sub-Indicators",
+             column.labels = input$sub_reg_choices
+  )
+  
+})        
+    
+output$scoring<-renderUI({
+  
+  
+  
+
+
+
+
+HTML(paste(score()
+
 ))      
   
 
 })  
+
+
+# Downloadable html of selected regressions ----
+output$downloadscoring <- downloadHandler(
+  
+  
+  filename = function() {
+    paste('Subindicator Regressions - ',input$indicators," - ",input$subgroup, ".html", sep = "")
+  },
+  content = function(file) {
+    
+    writeLines(paste(score()), file)
+    
+      }
+)
 
 
 }

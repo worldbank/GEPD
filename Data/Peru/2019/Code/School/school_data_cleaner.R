@@ -704,7 +704,7 @@ final_indicator_data_INPT <- school_data_INPT %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_INPT=n_miss_row(.)) %>%
-  mutate(inputs=1+rowSums(select(.,blackboard_functional, pens_etc, share_desk,  0.5*used_ict, 0.5*access_ict), na.rm=TRUE)) %>%
+  mutate(inputs=1+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
   
