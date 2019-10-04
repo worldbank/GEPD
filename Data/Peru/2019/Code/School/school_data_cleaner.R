@@ -123,8 +123,10 @@ teacher_questionnaire <- teacher_questionnaire %>%
   select(preamble_info, everything())
   
 
+#filter out teachers who did not consent to interview
 
-
+teacher_questionnaire <- teacher_questionnaire %>%
+  filter(m3s0q1==1)
 
 #Create a function which will generate new binary variable using case_when, but 
 #if value is misisng it will generate binary variable to be missing
@@ -381,7 +383,7 @@ lit_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_d
 
 #calculate teachers lit items correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(literacy_content_knowledge=rowSums(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE))
+  mutate(literacy_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -391,14 +393,12 @@ math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_
 
 #calculate teachers math items correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(math_content_knowledge=rowSums(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE))
+  mutate(math_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE))
 
 ####Total score####
 #calculate teachers percent correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(content_knowledge=(math_content_knowledge+literacy_content_knowledge)/(literacy_length+math_length),
-         math_content_knowledge=math_content_knowledge/math_length,
-         literacy_content_knowledge=literacy_content_knowledge/literacy_length)
+  mutate(content_knowledge=(math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length))
 
 
 #calculate % correct for literacy, math, and total
@@ -448,11 +448,11 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq5"),
                  starts_with("m8sbq6"),
                  ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq2_id=rowSums(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE)/3,
-         m8saq3_id=rowSums(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE)/3,
+  mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
+         m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
          m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-         m8sbq1_number_sense=rowSums(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)/3)         %>%
+         m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE))         %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 
@@ -466,7 +466,7 @@ lit_items<-colnames(assess_4th_grade_dta[,grep(x=colnames(assess_4th_grade_dta),
 
 #calculate students lit items correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(literacy_student_knowledge=rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq")], na.rm=TRUE))
+  mutate(literacy_student_knowledge=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -477,14 +477,12 @@ math_items<-colnames(assess_4th_grade_dta[,grep(x=colnames(assess_4th_grade_dta)
 
 #calculate students math items correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(math_student_knowledge=rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq")], na.rm=TRUE))
+  mutate(math_student_knowledge=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq")], na.rm=TRUE))
 
 ####Total score####
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/(literacy_length+math_length),
-         math_student_knowledge=math_student_knowledge/math_length,
-         literacy_student_knowledge=literacy_student_knowledge/literacy_length)
+  mutate(student_knowledge=(math_student_knowledge*math_length+literacy_student_knowledge*literacy_length)/(literacy_length+math_length))
 
 
 #calculate % correct for literacy, math, and total
@@ -580,7 +578,7 @@ ecd_dta$literacy_length<-length(lit_items)
 
 #calculate students lit items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_literacy_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_literacy_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
                                                    pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
 
 ####Math####
@@ -594,7 +592,7 @@ ecd_dta$math_length<-length(math_items)
 
 #calculate students math items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_math_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_math_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
                                                pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
 
 ####Executive Functioning####
@@ -608,7 +606,7 @@ ecd_dta$exec_length<-length(exec_items)
 
 #calculate students excec items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_exec_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_exec_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
                                                pattern="backward_digit|head_shoulders")], na.rm=TRUE))
 
 ####Socio-Emotional####
@@ -624,18 +622,16 @@ ecd_dta$soc_length<-length(soc_items)
 
 #calculate students excec items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_soc_student_knowledge=rowSums(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_soc_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
                                               pattern="perspective$|conflict_resol$")], na.rm=TRUE))
 
 
 ####Total score####
 #calculate students percent correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_student_knowledge=(ecd_math_student_knowledge+ecd_literacy_student_knowledge+ecd_exec_student_knowledge + ecd_soc_student_knowledge)/(literacy_length+math_length+exec_length+soc_length),
-         ecd_math_student_knowledge=ecd_math_student_knowledge/math_length,
-         ecd_literacy_student_knowledge=ecd_literacy_student_knowledge/literacy_length,
-         ecd_exec_student_knowledge=ecd_exec_student_knowledge/exec_length,
-         ecd_soc_student_knowledge=ecd_soc_student_knowledge/soc_length)
+  mutate(ecd_student_knowledge=(ecd_math_student_knowledge*math_length+ecd_literacy_student_knowledge*literacy_length+
+                                  ecd_exec_student_knowledge*exec_length + ecd_soc_student_knowledge*soc_length)/(literacy_length+math_length+
+                                                                                             exec_length+soc_length))
 
 
 #calculate % correct for literacy, math, and total
@@ -693,7 +689,7 @@ school_data_INPT <- school_data_INPT %>%
 school_data_INPT <- school_data_INPT %>%
   mutate(access_ict=case_when(
                   m1sbq12_inpt==0 | m1sbq13_inpt==0 | m1sbq15_inpt<2 ~ 0,
-                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==2) ~ 0.5,
+                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==2) ~ 1,
                   (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) | is.na(m1sbq15_inpt<2)) ~ as.numeric(NA)
                   ))
 
@@ -703,12 +699,12 @@ inpt_list<-c('blackboard_functional', 'pens_etc', 'share_desk',  'used_ict', 'ac
 
 final_indicator_data_INPT <- school_data_INPT %>%
   left_join(school_teacher_questionnaire_INPT) %>%
-  mutate(used_ict=if_else((used_ict_pct>=0.5 & used_ict_num>=3), 0.5,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
+  mutate(used_ict=if_else((used_ict_pct>=0.5 & used_ict_num>=3), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
   group_by(school_code) %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_INPT=n_miss_row(.)) %>%
-  mutate(inputs=1+rowSums(select(.,blackboard_functional, pens_etc, share_desk,  used_ict, access_ict), na.rm=TRUE)) %>%
+  mutate(inputs=1+rowSums(select(.,blackboard_functional, pens_etc, share_desk,  0.5*used_ict, 0.5*access_ict), na.rm=TRUE)) %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
   
@@ -768,7 +764,7 @@ final_indicator_data_INFR <- school_data_INFR %>%
       (m4scq1_infr==0 & m4scq1_infr==1) ~ 0,
       is.na(m4scq1_infr) ~ as.numeric(NA)),
     disab_class_entr=bin_var(m4scq3_infr,1),
-    disab_screening=rowSums(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE)/3,
+    disab_screening=rowMeans(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE),
     #sum up all components for overall disability accessibility score
     disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
                                 disab_class_ramp+disab_class_entr+disab_screening)/6
@@ -863,8 +859,8 @@ final_indicator_data_OPMN <- final_indicator_data_OPMN %>%
 
 final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
   mutate(n_mssing_ILDR=n_miss_row(.)) %>%
-  mutate(classroom_observed=bin_var(m3sdq15_ildr,0.5),
-         classroom_observed_recent=if_else((classroom_observed==1 & m3sdq16_ildr<=12),0.5,0), #set recent to mean under 12 months
+  mutate(classroom_observed=bin_var(m3sdq15_ildr,1),
+         classroom_observed_recent=if_else((classroom_observed==1 & m3sdq16_ildr<=12),1,0), #set recent to mean under 12 months
          purpose_observation=case_when(
            m3sdq18_ildr__1==1 ~ "Evaluation",
            m3sdq18_ildr__2==1 ~ "Professional Development",
@@ -874,7 +870,9 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
          feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
-mutate(instructional_leadership=1+rowSums(select(., classroom_observed, classroom_observed_recent, discussed_observation, feedback_observation, lesson_plan_w_feedback), na.rm=TRUE)) %>%
+  mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
+  mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
+  filter(!is.na(instructional_leadership)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -916,7 +914,7 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
 final_indicator_data_PMAN <- school_data_PMAN %>%
   mutate(school_goals_exist=bin_var(m7sdq1_pman,1),
          school_goals_clear=if_else(m7sdq1_pman==1, 
-                                    rowSums(select(.,m7sdq3_pman__1, m7sdq3_pman__2, m7sdq3_pman__3, m7sdq3_pman__4, m7sdq3_pman__5), na.rm=TRUE)/5,
+                                    rowMeans(select(.,m7sdq3_pman__1, m7sdq3_pman__2, m7sdq3_pman__3, m7sdq3_pman__4, m7sdq3_pman__5), na.rm=TRUE),
                                     0) ,
          school_goals_relevant_total=rowSums(select(.,m7sdq4_pman__1, m7sdq4_pman__2, m7sdq4_pman__3, m7sdq4_pman__4, m7sdq4_pman__5, m7sdq4_pman__6, m7sdq4_pman__7, m7sdq4_pman__8, m7sdq4_pman__97), na.rm=TRUE),
          school_goals_relevant=if_else(m7sdq1_pman==1, 
@@ -1009,6 +1007,7 @@ teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
 
 final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
   mutate(n_mssing_TATT=n_miss_row(.)) %>%
+  filter(!is.na(teacher_attraction)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1056,6 +1055,7 @@ teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
 
 final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%  
   mutate(n_mssing_TSDP=n_miss_row(.)) %>%
+  filter(!is.na(teacher_selection_deployment)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1117,6 +1117,7 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
 
 final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(n_mssing_TSUP=n_miss_row(.)) %>%
+  filter(!is.na(teacher_support)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1159,9 +1160,11 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
                                             0),
          negative_consequences=case_when(
            (m3sbq9_tmna__1==1 | m3sbq9_tmna__2==1 | m3sbq9_tmna__3==1 | m3sbq9_tmna__4==1 | m3sbq9_tmna__97==1) ~ 1,
+           (is.na(m3sbq9_tmna__1) & is.na(m3sbq9_tmna__2) & is.na(m3sbq9_tmna__3) & is.na(m3sbq9_tmna__4) & is.na(m3sbq9_tmna__97)) ~ as.numeric(NA),
            TRUE ~ 0),
          positive_consequences=case_when(
            (m3bq10_tmna__1==1 | m3bq10_tmna__2==1 | m3bq10_tmna__3==1 | m3bq10_tmna__4==1 | m3bq10_tmna__97==1) ~ 1,
+           (is.na(m3bq10_tmna__1) & is.na(m3bq10_tmna__2) & is.na(m3bq10_tmna__3) & is.na(m3bq10_tmna__4) & is.na(m3bq10_tmna__97)) ~ as.numeric(NA),
            TRUE ~ 0)
          ) %>%
   mutate(teaching_evaluation=1+formally_evaluated+evaluation_knowledge_skill+negative_consequences+positive_consequences)
@@ -1169,6 +1172,7 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
 
 final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
   mutate(n_mssing_TEVL=n_miss_row(.)) %>%
+  filter(!is.na(teaching_evaluation)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1207,19 +1211,21 @@ teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
                                         0),
            attendance_rewarded=if_else(m3seq4_tatt==1,
                                        case_when(
-                                         (m3seq5_tatt__1==1) ~ 1.5,
+                                         (m3seq5_tatt__1==1) ~ 1,
                                          TRUE ~ 0
                                        ),
                                        0),
            attendence_sanctions=case_when(
-             (m3sbq2_tmna__1==1 | m3sbq2_tmna__2==1 | m3sbq2_tmna__3==1 | m3sbq2_tmna__4==1 | m3sbq2_tmna__97==1) ~ 1.5,
+             (m3sbq2_tmna__1==1 | m3sbq2_tmna__2==1 | m3sbq2_tmna__3==1 | m3sbq2_tmna__4==1 | m3sbq2_tmna__97==1) ~ 1,
+             (is.na(m3sbq2_tmna__1) & is.na(m3sbq2_tmna__2) & is.na(m3sbq2_tmna__3) & is.na(m3sbq2_tmna__4) & is.na(m3sbq2_tmna__97)) ~ as.numeric(NA),
              TRUE ~ 0
            )
            )  %>%
-    mutate(teacher_monitoring=1+attendance_evaluated + attendance_rewarded + attendence_sanctions)
+    mutate(teacher_monitoring=1+attendance_evaluated + 1.5*attendance_rewarded + 1.5*attendence_sanctions)
 
 final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
   mutate(n_mssing_TMNA=n_miss_row(.)) %>%
+  filter(!is.na(teacher_monitoring)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1252,7 +1258,8 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
   mutate(n_mssing_TINM=n_miss_row(.)) %>%
   mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
   mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
-  mutate(intrinsic_motivation=rowSums(.[intrinsic_motiv_q_all], na.rm=TRUE)/10) %>%
+  mutate(intrinsic_motivation=rowMeans(.[intrinsic_motiv_q_all], na.rm=TRUE)) %>%
+  filter(intrinsic_motivation!=0) %>% #screens out missing values
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-drop_teacher_info)  %>%
@@ -1278,19 +1285,19 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
 # - 1 Point. Is the community involved in the monitoring?
 
 school_data_IMON <- school_data_IMON %>%
-  mutate(standards_monitoring_input=rowSums(.[grep(x=colnames(school_data_IMON), 
+  mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                    pattern="m1scq13_imon__")], na.rm=TRUE),
-         standards_monitoring_infrastructure=rowSums(.[grep(x=colnames(school_data_IMON), 
+         standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                             pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
-  mutate(standards_monitoring=(standards_monitoring_input+standards_monitoring_infrastructure)/10) %>%
+  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/10) %>%
   mutate(monitoring_inputs=if_else(m1scq1_imon==1,
-                                   rowSums(.[grep(x=colnames(school_data_IMON), 
+                                   rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
-                                   0)/6,
+                                   0),
          monitoring_infrastructure=if_else(m1scq1_imon==1,
-                                   rowSums(.[grep(x=colnames(school_data_IMON), 
+                                           rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq9_imon__")], na.rm=TRUE),
-                                   0)/4,
+                                   0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
   mutate(school_monitoring=standards_monitoring+monitoring_inputs+monitoring_infrastructure+parents_involved)
@@ -1298,11 +1305,17 @@ school_data_IMON <- school_data_IMON %>%
 
 
 final_indicator_data_IMON <- school_data_IMON %>%
+  filter(!is.na(school_monitoring)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_IMON=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
+
+#############################################
+##### School School Management Clarity of Functions  ###########
+#############################################
+
 
 
 
@@ -1320,6 +1333,7 @@ school_data_SATT <- school_data_SATT %>%
   mutate(school_management_attraction=principal_satisfaction)
   
 final_indicator_data_SATT <- school_data_SATT %>%
+  filter(!is.na(school_management_attraction)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SATT=n_miss_row(.))  %>%
@@ -1354,6 +1368,7 @@ school_data_SSLD <- school_data_SSLD %>%
     )
 
 final_indicator_data_SSLD <- school_data_SSLD %>%
+  filter(!is.na(school_selection_deployment)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.))  %>%
@@ -1380,9 +1395,9 @@ final_indicator_data_SSLD <- school_data_SSLD %>%
 school_data_SSUP <- school_data_SSUP %>%
   mutate(prinicipal_trained=bin_var(m7sgq3_ssup,1),
          principal_training=if_else(m7sgq3_ssup==1,
-                                    rowSums(.[grep(x=colnames(school_data_SSUP), 
+                                    rowMeans(.[grep(x=colnames(school_data_SSUP), 
                                                    pattern="m7sgq4_ssup__")], na.rm=TRUE),
-                                    0)/3,
+                                    0),
          principal_used_skills=if_else(m7sgq3_ssup==1,
                                        bin_var(m7sgq5_ssup,1),
                                        0),
@@ -1391,6 +1406,7 @@ school_data_SSUP <- school_data_SSUP %>%
   mutate(school_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
 
 final_indicator_data_SSUP <- school_data_SSUP %>%
+  filter(!is.na(school_support)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSUP=n_miss_row(.))  %>%
@@ -1429,6 +1445,7 @@ school_data_SEVL<- school_data_SEVL %>%
   mutate(principal_evaluation=1+principal_formally_evaluated+principal_evaluation_multiple+principal_negative_consequences+principal_positive_consequences)
 
 final_indicator_data_SEVL <- school_data_SEVL %>%
+  filter(!is.na(principal_evaluation)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SEVL=n_miss_row(.))  %>%
