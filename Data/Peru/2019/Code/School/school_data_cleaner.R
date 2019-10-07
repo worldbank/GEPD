@@ -941,11 +941,12 @@ final_indicator_data_PMAN <- final_indicator_data_PMAN %>%
 ##### Teacher Teaching Attraction ###########
 #############################################
 
-# In the school survey, a number of De Facto questions on teacher attraction are asked. One point is awarded for each of the following: 
-#   - 1 Point. Teacher satisfied with job 
-# - 1 Point. Teacher satisfied with status in community 
-# - 1 Point. Would better teachers be promoted faster? 
-#   - 1 Point. Do teachers receive bonuses?
+# In the school survey, a number of De Facto questions on teacher attraction are asked. 0.8 points is awarded for each of the following: 
+#   - 0.8 Points. Teacher satisfied with job 
+# - 0.8 Points. Teacher satisfied with status in community 
+# - 0.8 Points. Would better teachers be promoted faster? 
+#   - 0.8 Points. Do teachers receive bonuses? 
+#   - 0.8 Points. One minus the fraction of months in past year with a salary delay.
 
 
 #create function to clean teacher attitudes questions.  Need to reverse the order for scoring for some questions.  
@@ -1002,7 +1003,8 @@ teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
                                      if_else(m3seq5_tatt__97==1,m3seq5_other_tatt,"NA"),
                                      "NA"),
          salary_delays=if_else(m3seq6_tatt==1, m3seq7_tatt,0)) %>%
-  mutate(teacher_attraction=1+teacher_satisfied_job+teacher_satisfied_status+better_teachers_promoted+teacher_bonus)
+  mutate(salary_delays=if_else(salary_delays>12,12,salary_delays)) %>%
+  mutate(teacher_attraction=1+0.8*teacher_satisfied_job+.8*teacher_satisfied_status+.8*better_teachers_promoted+.8*teacher_bonus+.8*(1-salary_delays/12))
   
 
 final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
@@ -1070,19 +1072,29 @@ final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%
 #############################################
 
 
-# School survey. Our teaching support indicator asks teachers about participation and the experience with two types of training: pre-service training (induction training) and in-service training. A maximum of 2 points are assigned for quality pre-service training and 2 points for quality in-service training. 
-# 
-# Pre-Service (Induction) Training: 
+# School survey. Our teaching support indicator asks teachers about participation and the experience with several types of formal/informal training: 
+#   
+#   Pre-Service (Induction) Training: 
 #   - 0.5 Points. Had a pre-service training 
 # - 0.5 Points. Teacher reported receiving usable skills from training 
-# - 0.5 Points. Pre-service training contained a teacher practicum (teach a class with supervision) 
+# 
+# Teacher practicum (teach a class with supervision) 
+# - 0.5 Points. Teacher participated in a practicum 
 # - 0.5 Points. Practicum lasted more than 3 months and teacher spent more than one hour per day teaching to students. 
 # 
 # In-Service Training: 
 #   - 0.5 Points. Had an in-service training 
-# - 0.5 Points. In-service training lasted more than 2 total days. 
-# - 0.5 Points. More than 25% of the in-service training was done in the classroom. 
-# - 0.5 Points. More than 50% of in-service training done in the classroom.
+# - 0.25 Points. In-service training lasted more than 2 total days 
+# - 0.125 Points. More than 25% of the in-service training was done in the classroom. 
+# - 0.125 Points. More than 50% of the in-service training was done in the classroom. 
+# 
+# Opportunities for teachers to come together to share ways of improving teaching: 
+#   - 1 Point if such opportunities exist.
+
+#Add in question on teach opportunities so share ways of teaching
+opp_share<- teacher_questionnaire_ILDR %>%
+  select(interview__id, m3sdq14_ildr) %>%
+  mutate(opportunities_teachers_share=bin_var(m3sdq14_ildr,1))
 
 teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(pre_training_exists=bin_var(m3sdq3_tsup,1)/2,
@@ -1110,9 +1122,15 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
            m3sdq9_tsup==0 ~ 0
          )
                                      ) %>%
-  mutate(pre_service=pre_training_exists+pre_training_practicum+pre_training_practicum_lngth,
-         in_service=in_service_exists+in_servce_lngth+in_service_classroom) %>%
-  mutate(teacher_support=pre_service+in_service)
+  left_join(opp_share) %>%
+  mutate(pre_service=pre_training_exists+pre_training_useful,
+         practicum=pre_training_practicum+pre_training_practicum_lngth,
+         in_service=0.5*in_service_exists+0.25*in_servce_lngth+0.25*in_service_classroom) %>%
+  mutate(teacher_support=pre_service+practicum+in_service+opportunities_teachers_share) 
+
+
+
+
 
 
 final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
@@ -1132,8 +1150,8 @@ final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
 #############################################
 
 # School survey. This policy lever measures whether there is a teacher evaluation system in place, and if so, the types of decisions that are made based on the evaluation results. Score is the sum of the following: 
-# - 1 Point. Was teacher formally evaluated in past school year? 
-# - 1 Point. Evaluation included evaluation of either knowledge of subject matter or pedagogical skills 
+#   - 1 Point. Was teacher formally evaluated in past school year? 
+#   - 1 Point total. 0.2 points for each of the following: Evaluation included evaluation of attendance, knowledge of subject matter, pedagogical skills in the classroom, students' academic achievement, students' socio-emotional development 
 # - 1 Point. Consequences exist if teacher receives 2 or more negative evaluations 
 # - 1 Point. Rewards exist if teacher receives 2 or more positive evaluations
 
@@ -1150,13 +1168,8 @@ teacher_questionnaire_TEVL <- teacher_questionnaire_TMNA %>%
 
 teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
   mutate(formally_evaluated=bin_var(m3sbq6_tmna,1),
-         evaluation_knowledge_skill=if_else(m3sbq6_tmna==1,
-                                            case_when(
-                                              (m3sbq8_tmna__2==1 | m3sbq8_tmna__3==1) ~ 1,
-                                              (m3sbq8_tmna__1==1 | m3sbq8_tmna__4==1 | m3sbq8_tmna__5==1 | m3sbq8_tmna__6==1 | m3sbq8_tmna__7==1 | m3sbq8_tmna__8==1) ~ 0.5,
-                                              (m3sbq8_tmna__97==1 | m3sbq8_tmna__98==1 ) ~ 0,
-                                              TRUE ~ 0
-                                            ),
+         evaluation_content=if_else(m3sbq6_tmna==1,
+                                    (m3sbq8_tmna__1+m3sbq8_tmna__2+ m3sbq8_tmna__3 + m3sbq8_tmna__5 + m3sbq8_tmna__6)/5,
                                             0),
          negative_consequences=case_when(
            (m3sbq9_tmna__1==1 | m3sbq9_tmna__2==1 | m3sbq9_tmna__3==1 | m3sbq9_tmna__4==1 | m3sbq9_tmna__97==1) ~ 1,
@@ -1167,7 +1180,7 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
            (is.na(m3bq10_tmna__1) & is.na(m3bq10_tmna__2) & is.na(m3bq10_tmna__3) & is.na(m3bq10_tmna__4) & is.na(m3bq10_tmna__97)) ~ as.numeric(NA),
            TRUE ~ 0)
          ) %>%
-  mutate(teaching_evaluation=1+formally_evaluated+evaluation_knowledge_skill+negative_consequences+positive_consequences)
+  mutate(teaching_evaluation=1+formally_evaluated+evaluation_content+negative_consequences+positive_consequences)
 
 
 final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
@@ -1190,11 +1203,12 @@ final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
 
 # School Survey. This policy lever measures the extent to which teacher presence is being monitored, whether attendance is rewarded, and whether there are consequences for chronic absence. Score is the sum of the following: 
 #   - 1 Point. Teachers evaluated by some authority on basis of absence. 
-# - 1.5 Points. Good attendance is rewarded. 
-# - 1.5 Points. There are consequences for chronic absence (more than 30% absence).
+# - 1 Point. Good attendance is rewarded. 
+# - 1 Point. There are consequences for chronic absence (more than 30% absence). 
+# - 1 Point. One minus the fraction of teachers that had to miss class because of any of the following: collect paycheck, school administrative procedure, errands or request of the school district office, other administrative tasks.
 
 teacher_questionnaire_TMNA2 <- teacher_questionnaire_TATT %>%
-  select(interview__id, school_code, teacher_name, teacher_number, m3seq4_tatt, m3seq5_tatt__1, m3sbq1_other_tatt )
+  select(interview__id, school_code, teacher_name, teacher_number, m3seq4_tatt, m3seq5_tatt__1, m3sbq1_tatt__1, m3sbq1_tatt__2, m3sbq1_tatt__3, m3sbq1_tatt__97, m3sbq1_other_tatt )
 
 teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
   dplyr::select(-tevl)
@@ -1219,9 +1233,15 @@ teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
              (m3sbq2_tmna__1==1 | m3sbq2_tmna__2==1 | m3sbq2_tmna__3==1 | m3sbq2_tmna__4==1 | m3sbq2_tmna__97==1) ~ 1,
              (is.na(m3sbq2_tmna__1) & is.na(m3sbq2_tmna__2) & is.na(m3sbq2_tmna__3) & is.na(m3sbq2_tmna__4) & is.na(m3sbq2_tmna__97)) ~ as.numeric(NA),
              TRUE ~ 0
+           ),
+           miss_class_admin=case_when(
+             (m3sbq1_tatt__1==1 | m3sbq1_tatt__2==1 | m3sbq1_tatt__3==1 | m3sbq1_tatt__97==1) ~ 1,
+             (m3sbq1_tatt__1==0 & m3sbq1_tatt__2==0 & m3sbq1_tatt__3==0 & m3sbq1_tatt__97==0) ~ 0,
+             (grepl('salud', teacher_questionnaire_TMNA$m3sbq1_other_tatt)) ~ 0, #some teachers reported missing for health reasons, we don't want these included.
+             TRUE ~ as.numeric(NA)
            )
            )  %>%
-    mutate(teacher_monitoring=1+attendance_evaluated + 1.5*attendance_rewarded + 1.5*attendence_sanctions)
+    mutate(teacher_monitoring=1+attendance_evaluated + 1*attendance_rewarded + 1*attendence_sanctions + (1-miss_class_admin))
 
 final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
   mutate(n_mssing_TMNA=n_miss_row(.)) %>%
@@ -1258,7 +1278,15 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
   mutate(n_mssing_TINM=n_miss_row(.)) %>%
   mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
   mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
-  mutate(intrinsic_motivation=rowMeans(.[intrinsic_motiv_q_all], na.rm=TRUE)) %>%
+  mutate(acceptable_absent=(m3scq1_tinm+ m3scq2_tinm + m3scq3_tinm)/3,
+         students_deserve_attention=(m3scq4_tinm+ m3scq5_tinm + m3scq6_tinm )/3,
+         growth_mindset=(m3scq7_tinm + m3scq10_tinm + m3scq11_tinm + m3scq14_tinm)/4,
+         motivation_teaching=case_when(
+           m3scq15_tinm__3>=1 ~ 0,
+           (m3scq15_tinm__3!=1 & (m3scq15_tinm__1>=1 | m3scq15_tinm__2>=1 | m3scq15_tinm__4>=1 & m3scq15_tinm__5>=1)) ~ 1,
+           TRUE ~ as.numeric(NA)
+           )) %>%
+  mutate(intrinsic_motivation=0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching) %>%
   filter(intrinsic_motivation!=0) %>% #screens out missing values
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1520,14 +1548,14 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-            'intrinsic_motivation', 'm3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm', 'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm',
+            'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
             'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
             'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
-            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus',
+            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
             'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
-            'teacher_support', 'pre_training_exists','pre_training_practicum','pre_training_practicum_lngth','in_service_exists','in_servce_lngth','in_service_classroom',
-            'teaching_evaluation', 'formally_evaluated','evaluation_knowledge_skill','negative_consequences','positive_consequences',
-            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions',
+            'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+            'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
             'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
             'school_management_attraction', 'principal_satisfaction',
             'school_selection_deployment', 
