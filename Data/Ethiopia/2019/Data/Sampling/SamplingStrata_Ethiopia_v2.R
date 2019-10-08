@@ -24,6 +24,7 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 library(RecordLinkage)
+library(fuzzyjoin)
 
 
 set.seed(5435177)
@@ -85,11 +86,40 @@ df_2009$school_code <- seq.int(nrow(df_2009))
 #change names to lowercase
 colnames(df_2009) <-  tolower(colnames(df_2009))
 #convert to common names
-df_2009$school<-df_2009['school_name']
+df_2009<-df_2009 %>%
+  mutate(school=school_name)
+
 #idenfity common fields
 df_match_list<-df[,c('admincode', 'region', 'zone', 'woreda', 'school')]
 df_2009_match_list<-df_2009[,c( 'school_code', 'region', 'zone', 'woreda', 'school')]
 
+
+#Simple merge
+df_merge <- df %>%
+  left_join(df_2009, by=c('region', 'zone', 'school'))
+
+
+#User purrr with fuzzy match to match within region/zone/woreda
+
+#first create nested frame
+df_merge_fuzzy <- df %>%
+  group_by(region, zone, woreda) %>%
+  nest()
+
+#first create nested frame
+df_2009_merge_fuzzy <- df_2009 %>%
+  group_by(region, zone, woreda) %>%
+  nest()
+
+join_df <- function(df_nest, df_other) {
+  df_all <- stringdist_inner_join(df_nest, df_other, by=c('school'), max_dist=1)
+  return(df_all)
+}
+
+#Now use map to do fuzzy join
+
+df_merge_fuzzy_joined <- df_merge_fuzzy %>%
+  mutate(merge_data=map(data, ~ join_df(.,df_2009)))
 
 
 #convert all rows to upper case

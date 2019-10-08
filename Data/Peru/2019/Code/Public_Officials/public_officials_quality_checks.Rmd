@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #load relevant libraries
+
+
 library(knitr)
 library(tidyverse)
 library(haven)
@@ -160,17 +162,19 @@ overall_time_avg<-para_df %>%
   summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60) %>%
   mutate(indicator='Overall')
 
+
+
 #add function to produce weighted summary stats
-my_skim <- skim_with( numeric = sfl( complete_count= ~ sum(!is.na(.))))
+skim_with( numeric = list( complete_count= ~ sum(!is.na(.))))
 
 overall_time_comb<-bind_rows(overall_time, overall_time_avg) %>%
   spread(indicator, timelength_min) %>%
   ungroup() %>%
   select( Overall, DEM, NLG, ACM, QB, IDM, ORG ) %>%
-  my_skim() %>%
-  select(-skim_type) %>%
-  rename(variable=skim_variable) %>%
-  select(variable, numeric.mean, numeric.sd, numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100, numeric.complete_count, n_missing, numeric.hist) %>%
+  skim() %>%
+  select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   arrange(factor(variable, levels=c('Overall', 'NLG','ACM' ,'QB', 'IDM','DEM', 'ORG'))) %>%
   mutate(variable=factor(variable, levels=c('NLG','ACM' ,'QB', 'IDM','DEM', 'ORG', 'Overall'),
                          labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making', 'Demographics', 'Organizational Characteristics and Capabilities', 'Overall')))
@@ -265,12 +269,13 @@ Below the missings plot is a table of summary statistics for a few key indicator
 
 
 
-sumstats_df<-my_skim(sumstats) %>%
-  select(-skim_type) %>%
-  rename(variable=skim_variable) %>%
-  select(variable, numeric.mean, numeric.sd, numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100, numeric.complete_count, n_missing, numeric.hist) %>%
+sumstats_df<-skim(sumstats) %>%
+  select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   mutate(variable=factor(variable, levels=c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making'),
                          labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making')))
+
 
 ```
 

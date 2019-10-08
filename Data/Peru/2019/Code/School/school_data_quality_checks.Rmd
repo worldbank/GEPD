@@ -276,7 +276,7 @@ school_ipw<-school_dta_short$school_ipw
 
 
 #add function to produce weighted summary stats
-my_skim <- skim_with( numeric = sfl( mean = ~ weighted.mean(.,  w=school_ipw, na.rm=TRUE),
+skim_with( numeric = list( mean = ~ weighted.mean(.,  w=school_ipw, na.rm=TRUE),
                                      sd = ~ sqrt(wtd.var(.,  weights=school_ipw, na.rm=TRUE)),
                                      p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=school_ipw, na.rm=TRUE)),
                                      p50 = ~ (wtd.quantile(., probs=c(0.5), weights=school_ipw, na.rm=TRUE)),
@@ -285,16 +285,16 @@ my_skim <- skim_with( numeric = sfl( mean = ~ weighted.mean(.,  w=school_ipw, na
 
 
 
-sumstats_df<-my_skim(sumstats) %>%
-  select(-skim_type) %>%
-  rename(variable=skim_variable) %>%
-  select(variable, numeric.mean, numeric.sd, numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100, numeric.complete_count, n_missing, numeric.hist) %>%
+sumstats_df<-skim(sumstats) %>%
+  select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   mutate(variable=factor(variable, levels=indicator_list,
                          labels=indicator_labels)) %>%
-  mutate(ci_low=as.numeric(numeric.mean)-1.96*(as.numeric(numeric.sd)/sqrt(as.numeric(numeric.complete_count))),
-         ci_high=as.numeric(numeric.mean)+1.96*(as.numeric(numeric.sd)/sqrt(as.numeric(numeric.complete_count)))) %>%
+  mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+         ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
   mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-  select(variable, numeric.mean, ci, numeric.sd, numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100, numeric.complete_count, n_missing, numeric.hist) %>%
+  select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   arrange(match(variable, indicator_labels))
 
 ```

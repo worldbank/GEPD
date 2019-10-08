@@ -339,7 +339,7 @@ bscols(widths=c(3,NA),
 #Create list of key indicators
 ind_list<-c('student_knowledge', 
             'absence_rate', 'school_absence_rate', 'student_attendance',
-            'content_knowledge', 
+            #'content_knowledge', 
             'ecd_student_knowledge',  
             'inputs', 
             'infrastructure',
@@ -373,9 +373,11 @@ stargazer(linear.1, logit.1, title="Linear/Logit Model of Student Learning on In
 
 ```{r ml_train, echo=FALSE}
 
+#inpute missings using mice
+imputed_Data <- mice(data = school_dta_indicators, m = 5, method = "rf", maxit = 50, seed = 500)
+completeData <- complete(imputed_Data,2)
 
-
-tree<- school_dta_indicators %>%
+tree<- completeData %>%
   rpart(student_knowledge~., data=.)
 
 tree
@@ -385,7 +387,7 @@ rpart.plot(tree, box.palette="RdBu", shadow.col = "gray", nn=TRUE)
 plotcp(tree)
 
 
-bagged_m1 <- school_dta_indicators %>%
+bagged_m1 <- completeData %>%
   bagging(
     formula = student_knowledge ~ .,
     data    = .,
@@ -401,7 +403,7 @@ ctrl <- trainControl(method = "cv",  number = 10)
 # CV bagged model
 bagged_cv <- train(
   student_knowledge ~ .,
-  data = school_dta_indicators,
+  data = completeData,
   method = "treebag",
   trControl = ctrl,
   importance = TRUE,
@@ -411,6 +413,62 @@ bagged_cv <- train(
 # assess results
 bagged_cv
 ## Bagged CART 
+
+#Linear
+linear.1 <- lm(student_knowledge ~ ., data=completeData)
+
+#Logit
+
+logit.1 <- glm(student_knowledge ~ ., data=completeData, family=binomial())
+
+
+
+#predictions
+school_dta_indicators_pred<- completeData %>%
+  modelr::add_predictions(bagged_cv, var="pred_bagged") %>%
+  modelr::add_predictions(linear.1, var="pred_linear") %>%
+  modelr::add_predictions(logit.1, var="pred_logit", type="response") %>%
+  select(student_knowledge, pred_bagged, pred_linear, pred_logit, everything())
+
+#plot
+pred_plot_dta <- school_dta_indicators_pred %>%
+  select(student_knowledge, pred_bagged, pred_linear, pred_logit) %>%
+  pivot_longer(
+    cols=c('pred_bagged', 'pred_linear', 'pred_logit'), 
+    names_to = "type",
+    values_to="predictions"
+  )
+
+ggplot(pred_plot_dta, aes(y=student_knowledge, x=predictions, colour=type)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  expand_limits(x = 0, y = 0) +
+  expand_limits(x = 1, y = 1)
+
+
+#save regression output
+
+mod_fun <- function(df) {      
+  lm(student_knowledge ~ predictions, data = df) 
+}
+
+b_fun <- function(mod)   {   
+  coefficients(mod)[[2]] 
+}
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+#create database with saved regression output to test model fit (with R^2)
+fit <- pred_plot_dta %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            r2 = map_dbl(model, r2_fun)  )
+
+
 
 
 # plot most important variables
