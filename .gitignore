@@ -77,6 +77,10 @@
 
 # csv files
 
+#Powerpoint files
+!/**/**/*.ppt
+!/**/**/*.pptx
+
 
 #######################
 # Include all the files with passwords or tokens here. All files named
@@ -88,4 +92,3 @@ password.*
 passwords.*
 password/
 passwords/
-

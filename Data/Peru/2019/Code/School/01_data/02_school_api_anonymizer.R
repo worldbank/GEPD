@@ -297,3 +297,248 @@ metadta %>%
 
 }
 
+
+#########################################################################
+# Get DDI #
+##########################################################################
+
+
+
+tounzip <- paste("myddi-",currentDate, ".zip" ,sep="")
+
+######################################
+# Interactions with API
+######################################
+
+#Get list of questionnaires available
+#the server address may need to be modified
+q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
+       authenticate(user, password))
+
+str(content(q))
+
+
+#pull data from version of our Education Policy Dashboard Questionnaire
+POST(paste(server_add,"/api/v1/export/DDI/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
+     authenticate(user, password))
+
+
+#sleep for 10 seconds to wait for stata file to compile
+Sys.sleep(10)
+
+dataDownload <- GET(paste(server_add,"/api/v1/export/DDI/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
+                    authenticate(user, password))
+
+
+
+#Now save zip to computer
+filecon <- file(file.path(download_folder, tounzip), "wb")
+
+writeBin(dataDownload$content, filecon) 
+#close the connection
+close(filecon)
+
+
+
+#unzip
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else {
+  unzip(file.path(download_folder, tounzip), exdir=download_folder)
+}
+
+
+
+
+
+#########################################################################
+# Get Paradata #
+##########################################################################
+
+
+
+tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
+
+######################################
+# Interactions with API
+######################################
+
+#Get list of questionnaires available
+#the server address may need to be modified
+q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
+       authenticate(user, password))
+
+str(content(q))
+
+
+#pull data from version of our Education Policy Dashboard Questionnaire
+POST(paste(server_add,"/api/v1/export/paradata/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
+     authenticate(user, password))
+
+
+#sleep for 10 seconds to wait for stata file to compile
+Sys.sleep(10)
+
+dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
+                    authenticate(user, password))
+
+redirectURL <- dataDownload$url 
+RawData <- GET(redirectURL) #Sucess!!
+
+
+#Now save zip to computer
+filecon <- file(file.path(download_folder, tounzip), "wb")
+
+writeBin(RawData$content, filecon) 
+#close the connection
+close(filecon)
+
+
+
+#unzip
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else {
+  unzip(file.path(download_folder, tounzip), exdir=download_folder)
+}
+
+
+#########################################
+# Read in paradata and do basic cleaning
+#########################################
+
+#read in data
+
+if (quest_version!=17) {
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  
+  para_df <- para_df %>%
+    bind_rows(para_df_17)
+  
+} else if (quest_version==17) {
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  
+}
+
+
+#label variables
+var.labels=c(
+  interview__id = "Unique 32-character long identifier of the interview",
+  order = "Sequential event number within each interview",
+  event = "Type of event happened",
+  responsible = "Login name of the person who initiated the event",
+  role = "System role of the person who initiated the event",
+  timestamp = "Date and time when the event happened",
+  offset = "Timezone offset relative to UTC",
+  parameters = "Event-specific parameters"
+)
+# Label data
+label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
+
+
+######################################
+# Clean Paradata files
+######################################
+#clean up timestamp
+para_df <- para_df %>% 
+  mutate(timestamp= ymd_hms(timestamp))
+
+#Generate length of time for each question, by calculating gap in time between when question was entered and previous question
+para_df <- para_df %>% 
+  arrange(ï..interview__id, order) %>% 
+  mutate(timelength=lag(timestamp) %--% timestamp) %>% 
+  mutate(timelength_sec=int_length(timelength)) %>%
+  mutate(date=date(timestamp),
+         hour=hour(timestamp),
+         am_pm=am(timestamp))
+
+#Only keep paradata on actual questions for indicators. These are tagged with m******
+para_df <- para_df %>% 
+  filter(str_detect(parameters, "m1s|m2s|m3s|m4s|m5s|m6s|m7s|m8s")) %>%
+  filter(responsible!="")
+
+
+#Split up question name to identify tags for each indicator
+para_df <- para_df %>% 
+  separate(parameters, c("question", NA, "response", NA, "other"), remove=FALSE, sep = "[|]")
+
+#Add tags for module, section, and indicator
+para_df <- para_df %>% 
+  mutate(module = str_to_upper(substr(question, start=1, stop=2))) %>%
+  mutate(section = str_to_upper(substr(question, start=1, stop=4))) %>%
+  separate(question, c(NA, "indicator"), sep="_", remove=FALSE) %>%
+  mutate(indicator = str_to_upper(indicator))
+
+#Read in list of indicators
+indicators <- read_delim(here::here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+indicator_names <- indicators$indicator_tag
+
+
+#merge on question text
+#Create function to save metadata for each question in each module
+#The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
+makeVlist <- function(dta) { 
+  varlabels <- sapply(dta, function(x) attr(x,"label"))
+  vallabels <- sapply(dta, function(x) attr(x,"labels"))
+  tibble(name = names(varlabels),
+         varlabel = varlabels, vallabel = vallabels) 
+}
+
+
+#create school metadata frame
+raw_school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+school_metadta<-makeVlist(raw_school_dta)
+
+#create teacher questionnaire metadata frame
+raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
+
+#create teacher absence metadata frame
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
+teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
+
+#create ecd metadata frame
+raw_ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_metadta<-makeVlist(raw_ecd_dta)
+
+#create 4th grade assessment metadata frame
+raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_metadta<-makeVlist(raw_assess_4th_grade_dta)
+
+metadata <- rbind(school_metadta, teacher_questionnaire_metadta, ecd_metadta, assess_4th_grade_metadta)
+metadata <- rbind(school_metadta, teacher_questionnaire_metadta, teacher_absence_metadta, ecd_metadta, assess_4th_grade_metadta)
+
+metadata <- metadata %>% 
+  mutate(question=name)
+
+para_df <- para_df %>% 
+  left_join(metadata )
+
+save(para_df, file=paste(download_folder, "paradata.RData", sep="/"))
+
+para_dta<- para_df %>% 
+  mutate(interview_id=ï..interview__id) %>%
+  select(-vallabel, -varlabel, -ï..interview__id)
+write_dta(para_dta, path=paste(download_folder, "paradata.dta", sep="/"))
+
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+
+para_df_tab <- para_df %>%
+  select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id) %>%
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timestamp=last(timestamp))
+
+
+save(para_df_section, para_df_tab, file=paste(download_folder, "paradata_light.RData", sep="/"))
+
+

@@ -297,3 +297,56 @@ metadta %>%
 
 }
 
+
+
+#########################################################################
+# Get DDI #
+##########################################################################
+
+
+
+tounzip <- paste("myddi-",currentDate, ".zip" ,sep="")
+
+######################################
+# Interactions with API
+######################################
+
+#Get list of questionnaires available
+#the server address may need to be modified
+q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
+       authenticate(user, password))
+
+str(content(q))
+
+
+#pull data from version of our Education Policy Dashboard Questionnaire
+POST(paste(server_add,"/api/v1/export/DDI/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
+     authenticate(user, password))
+
+
+#sleep for 10 seconds to wait for stata file to compile
+Sys.sleep(10)
+
+dataDownload <- GET(paste(server_add,"/api/v1/export/DDI/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
+                    authenticate(user, password))
+
+
+
+#Now save zip to computer
+filecon <- file(file.path(download_folder, tounzip), "wb")
+
+writeBin(dataDownload$content, filecon) 
+#close the connection
+close(filecon)
+
+
+
+#unzip
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else {
+  unzip(file.path(download_folder, tounzip), exdir=download_folder)
+}
+
+
