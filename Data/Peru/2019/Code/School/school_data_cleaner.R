@@ -339,15 +339,28 @@ final_indicator_data_ATTD<- school_data_INPT %>%
 ##### Teacher Knowledge ###########
 #############################################
 
+
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
-teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+#read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
+school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "EPDash.dta"))
+
+school_dta_21<- school_dta_21 %>%
+  mutate(school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code))
+  )
+
+preamble_info_21 <- c('school_code' )
+
+school_data_preamble_21<- school_dta_21 %>%
+  select(interview__key, preamble_info_21)
+
+teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
 
 #Add school preamble info
-teacher_assessment_dta <- teacher_assessment_dta %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info, everything())
-  
+teacher_assessment_dta <- teacher_assessment_dta_21 %>%
+  left_join(school_data_preamble_21) %>%
+  select(preamble_info_21, everything()) 
+
 
 #number missing
 teacher_assessment_dta <- teacher_assessment_dta %>%
@@ -395,17 +408,19 @@ math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_
 teacher_assessment_dta <- teacher_assessment_dta %>%
   mutate(math_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE))
 
-####Total score####
-#calculate teachers percent correct
-teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(content_knowledge=(math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length))
+
 
 
 #calculate % correct for literacy, math, and total
 final_indicator_data_CONT <- teacher_assessment_dta %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
+  mutate(content_knowledge=case_when(
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
+    is.na(math_content_knowledge)  ~ literacy_content_knowledge,
+    is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
+         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
 
 
@@ -1521,6 +1536,7 @@ for (i in indicator_names ) {
     #Merge this to overall final_school_data frame
     if (!exists('final_school_data')) {
       final_school_data<-temp
+      stop
       print(i)
       write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
       if (backup_onedrive=="yes") {
@@ -1564,7 +1580,14 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
 )
 
 
+school_data_preamble_short<-school_data_preamble %>%
+  group_by(school_code) %>%
+  select(-starts_with('interview')) %>%
+  summarise_all(~first(na.omit(.)))
+                
+
 final_school_data <- final_school_data %>%
+  left_join(school_data_preamble_short) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   select(keep_info, ind_list, everything())

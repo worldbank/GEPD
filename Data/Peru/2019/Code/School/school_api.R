@@ -82,7 +82,10 @@ unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_
 } else if (quest_version==15) {
   unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_15', sep="/"))
   
-} else {
+} else if (quest_version==21) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_21', sep="/"))
+  
+}else {
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
 }
 
@@ -115,6 +118,8 @@ indicator_names <- sapply(indicator_names, tolower)
 if (quest_version!=17) {
 #read in school level file
 school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+
+school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "EPDash.dta"))
 
 
 school_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "EPDash.dta"))
@@ -266,6 +271,7 @@ teacher_absence_dta %>%
 
 #read in teacher assessment file
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
 teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
 teacher_assessment_dta_15<-read_dta(file.path(paste(download_folder,'version_15', sep="/"), "teacher_assessment_answers.dta"))
 

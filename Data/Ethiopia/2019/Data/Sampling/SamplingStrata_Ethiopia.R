@@ -216,7 +216,8 @@ strata <- strata %>%
   
 
 
-  sample_final<-sample_optimal
+  sample_final<-sample_optimal %>%
+    sample_n(300)
 
 ######################################################
 #### Map the selected schools #####

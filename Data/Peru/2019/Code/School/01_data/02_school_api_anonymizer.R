@@ -3,9 +3,9 @@
 
 library(httr)
 library(haven)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 library(here)
+library(digest)
 ######################################
 # User Inputs for API #
 ######################################
@@ -108,9 +108,17 @@ indicators <- indicators %>%
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
 
-#############################
+###################################################################################
+# Anonymize our survey files (scrub names, geo-codes, other identifying info)
+####################################################################################
+
+
+###########################
+# School file #
+##########################
+
 #Because we switched versions of our survey in the middle, have to append version 17 databases
-############################
+
 
 if (quest_version!=17) {
 #read in school level file
@@ -142,10 +150,65 @@ school_dta <- school_dta %>%
   bind_rows(school_dta_17) %>%
   bind_rows(school_dta_15) 
 
+####################
+# Code to anonymize
+####################
+#create hashed school code
+school_dta$hashed_school_code <-lapply(school_dta$school_code_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)})
+school_dta$hashed_school_province <-lapply(school_dta$school_province_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)})
+school_dta$hashed_school_district <-lapply(school_dta$school_district_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)})
+
+#save a hashed version of the dataset, to produce a link file
 school_dta %>%
-  write_dta(file.path(download_folder, "EPDash.dta"))
+  select(school_code_preload)
+  write_dta(file.path(download_folder, "EPDash_linkfile_hashed.dta"))
+
+#Scrub names, geocodes
+school_dta <- school_dta %>%
+  select(-starts_with('school_'), -c('m1s0q2_name', 'm1s0q2_code','m1s0q2_emis')) %>% # drop school names and address
+  select(-starts_with('m1s0q9')) %>%  #drop geo-codes
+  select(-starts_with('enumerators_preload'), -c('m1s0q1_name', 'm1s0q1_name_other','m1s0q1_comments')) %>%  #get rid of enumerator names
+  select(-c('m1saq1_first','m1saq1_last', 'm1saq2', 'm1saq2b')) #drop principal names and phone numbers
+
+#Drop any "other" responses to questions
+school_dta <- school_dta %>%
+  select(-contains('_other'))
+
+#convert # of students in school to categorical
+school_dta <- school_dta %>%
+  mutate(students_enrolled=case_when(
+    m1saq7<25 ~ 1,
+    m1saq7>=25 &  m1saq7<50 ~ 2,
+    m1saq7>=50 &  m1saq7<75 ~ 3,
+    m1saq7>=75 &  m1saq7<100 ~ 4,
+    m1saq7>=100 &  m1saq7<150 ~ 5,
+    m1saq7>=150 &  m1saq7<300 ~ 6,
+    m1saq7>=300 &  m1saq7<500 ~ 7,
+    m1saq7>=500  ~ 8
+  )) %>%
+  mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  mutate(boy_students_enrolled=case_when(
+    m1saq8<25 ~ 1,
+    m1saq8>=25 &  m1saq8<50 ~ 2,
+    m1saq8>=50 &  m1saq8<75 ~ 3,
+    m1saq8>=75 &  m1saq8<100 ~ 4,
+    m1saq8>=100 &  m1saq8<150 ~ 5,
+    m1saq8>=150 &  m1saq8<300 ~ 6,
+    m1saq8>=300 &  m1saq8<500 ~ 7,
+    m1saq8>=500  ~ 8
+  )) %>%
+  mutate(boy_students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  select(-m1saq7, -m1saq8)
+
+  
+#save anonymized data  
+school_dta %>%
+  write_dta(file.path(save_folder, "EPDash.dta"))
 
 
+###########################
+# ECD #
+##########################
 
 #read in ecd level file
 ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
@@ -169,10 +232,12 @@ ecd_dta <- ecd_dta %>%
 
 
 ecd_dta %>%
-  write_dta(file.path(download_folder, "ecd_assessment.dta"))
+  write_dta(file.path(save_folder, "ecd_assessment.dta"))
 
 
-
+###########################
+# 4th Grade Assessment #
+##########################
 #read in 4th grade assessment level file
 assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
 assess_4th_grade_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "fourth_grade_assessment.dta"))
@@ -195,10 +260,12 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 
 
 assess_4th_grade_dta %>%
-  write_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+  write_dta(file.path(save_folder, "fourth_grade_assessment.dta"))
 
 
-
+###########################
+# Teacher Questionnaire #
+##########################
 #read in teacher questionnaire level file
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
 teacher_questionnaire_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_roster.dta"))
@@ -228,10 +295,12 @@ teacher_questionnaire <- teacher_questionnaire %>%
 
 
 teacher_questionnaire %>%
-  write_dta(file.path(download_folder, "questionnaire_roster.dta"))
+  write_dta(file.path(save_folder, "questionnaire_roster.dta"))
 
 
-
+###########################
+# Teacher Absence #
+##########################
 #read in teacher absence file
 teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_selected.dta"))
@@ -260,10 +329,12 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
 
 teacher_absence_dta %>%
-  write_dta(file.path(download_folder, "questionnaire_selected.dta"))
+  write_dta(file.path(save_folder, "questionnaire_selected.dta"))
 
 
-
+###########################
+# Teacher Assessment #
+##########################
 #read in teacher assessment file
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
 teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
@@ -293,7 +364,7 @@ school_metadta$varlabel<-as.character(school_metadta$varlabel)
 metadta<-bind_rows(school_metadta,  ecd_metadta, assess_4th_grade_metadta, teacher_questionnaire_metadta, teacher_assessment_metadta)
 
 metadta %>%
-  writexl::write_xlsx( path=file.path(download_folder, "metadata.xlsx"))
+  writexl::write_xlsx( path=file.path(save_folder, "metadata.xlsx"))
 
 }
 

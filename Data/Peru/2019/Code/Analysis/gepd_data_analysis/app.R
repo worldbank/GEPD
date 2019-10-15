@@ -45,9 +45,6 @@ ui <- fluidPage(
             selectizeInput("subgroup", "Subgroup:",
                         choices=NULL),
 
-            h2("Scoring Metadata on Indicator"),
-            htmlOutput('metadata' )
-
 
         ),
 
@@ -72,7 +69,7 @@ ui <- fluidPage(
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  downloadButton("downloadregplot", "Download"),
-                                 plotOutput("regplot", height=600)
+                                 plotOutput("regplot", height=800)
                                  ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
                                  selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 

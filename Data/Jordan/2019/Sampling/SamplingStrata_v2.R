@@ -375,7 +375,7 @@ sample_amman<- data_set_updated %>%
 
 data_set_updated <- data_set_updated %>%
   left_join(sample_amman) %>%
-  mutate(sample_maputo=ifelse(is.na(sample_amman),0,sample_amman)) %>%
+  mutate(sample_amman=ifelse(is.na(sample_amman),0,sample_amman)) %>%
   mutate(sample=case_when(
     sample_dashboard==1  ~ 1,
     sample_replacement1==1 ~ 2,
