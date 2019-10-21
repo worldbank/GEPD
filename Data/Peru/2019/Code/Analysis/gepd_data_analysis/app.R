@@ -103,7 +103,7 @@ server <- function(input, output, session) {
     #Create list of key indicators
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
                 'absence_rate', 'school_absence_rate', 'student_attendance',
-                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
+                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze', 'correct_letter', 'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
@@ -125,7 +125,7 @@ server <- function(input, output, session) {
     
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
                 'absence_rate', 'school_absence_rate', 'student_attendance',
-                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
+                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze', 'correct_letter', 'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
@@ -152,7 +152,7 @@ server <- function(input, output, session) {
     indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge",
                         "Student Attendance Rate",
                         "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
-                        "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge",
+                        "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammer', 'Cloze Task', 'Correct Letter', 'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Desks", "ICT Usage", "ICT Access",
                         "Infrastructure", "Clean Drinking Water", "Functioning/Accessible Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
@@ -380,7 +380,7 @@ server <- function(input, output, session) {
       
       p<- ggplot(data=na.omit(df_plot), aes(x=values, group=indicator_labels, colour=indicator_labels)) +
         geom_histogram() +
-        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
+        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10)), nrow=3) +
         theme_classic() + 
         theme(
           text = element_text(size = 16),

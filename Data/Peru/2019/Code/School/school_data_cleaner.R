@@ -367,10 +367,7 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
   mutate(n_mssing_CONT=n_miss_row(.))
 
 
-#rename a few key variables up front
-teacher_assessment_dta<- teacher_assessment_dta %>%
-  mutate(g4_teacher_name=m5sb_troster  ,
-         g4_teacher_number=m5sb_tnum   )
+
 
 
 #Drop columns that end in "mistake".  THis is not necessary for computing indicator
@@ -396,7 +393,11 @@ lit_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_d
 
 #calculate teachers lit items correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(literacy_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE))
+  mutate(literacy_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE),
+         correct_letter=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q3")], na.rm=TRUE),
+         cloze=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q2")], na.rm=TRUE),
+         grammar=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q1")], na.rm=TRUE),
+         read_passage=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q4")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -406,9 +407,15 @@ math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_
 
 #calculate teachers math items correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(math_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE))
+  mutate(math_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE),
+         arithmetic_number_relations=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="number")], na.rm=TRUE),
+         geometry=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
+         interpret_data=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
 
-
+#rename a few key variables up front
+teacher_assessment_dta<- teacher_assessment_dta %>%
+  mutate(g4_teacher_name=m5sb_troster  ,
+         g4_teacher_number=m5sb_tnum   )
 
 
 #calculate % correct for literacy, math, and total

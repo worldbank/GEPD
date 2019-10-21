@@ -38,6 +38,7 @@ library(rpart)
 library(rpart.plot)
 library(ipred)
 library(caret)
+library(glmnet)
 #Load the data
 #read in school level file
 
@@ -339,7 +340,7 @@ bscols(widths=c(3,NA),
 #Create list of key indicators
 ind_list<-c('student_knowledge', 
             'absence_rate', 'school_absence_rate', 'student_attendance',
-            #'content_knowledge', 
+            'content_knowledge', 
             'ecd_student_knowledge',  
             'inputs', 
             'infrastructure',
@@ -361,10 +362,11 @@ logit.1 <- glm(student_knowledge ~ ., data=school_dta_indicators, family=binomia
 logit.1 <- coeftest(logit.1, vcov = vcovHC(logit.1, type="HC1"))
 
 
+
 ```
 
 ```{r, results='asis'}
-stargazer(linear.1, logit.1, title="Linear/Logit Model of Student Learning on Indicators - Coefficients", type="html")
+stargazer(linear.1, logit.1,  title="Linear/Logit Model of Student Learning on Indicators - Coefficients", type="html")
 
 ```
 
@@ -376,6 +378,7 @@ completeData <- complete(imputed_Data,2)
 ```
 
 ## Machine Learning Models to Predict Learning Based on Indicators
+
 
 ```{r ml_train, echo=FALSE}
 
@@ -401,7 +404,7 @@ bagged_m1
 
 
 # Specify 10-fold cross validation
-ctrl <- trainControl(method = "cv",  number = 10) 
+ctrl <- trainControl(method = "cv",  number = 5) 
 
 # CV bagged model
 bagged_cv <- train(
@@ -417,11 +420,13 @@ bagged_cv <- train(
 bagged_cv
 
 #nueral network
-#Model average neural network
+#Bayesian Regularized Neural Networks
+
+
 neural_cv <- train(
   student_knowledge ~ .,
   data = completeData,
-  method = "avNNet",
+  method = "brnn",
   trControl = ctrl,
   importance = TRUE,
   na.action=na.omit
@@ -430,18 +435,18 @@ neural_cv <- train(
 # assess results
 neural_cv
 
-# CV boosted model
-boosted_cv <- train(
-  student_knowledge ~ .,
-  data = completeData,
-  method = "glmboost",
-  trControl = ctrl,
-  importance = TRUE,
-  na.action=na.omit
-  )
+# # CV boosted model
+# boosted_cv <- train(
+#   student_knowledge ~ .,
+#   data = completeData,
+#   method = "blackboost",
+#   trControl = ctrl,
+#   importance = TRUE,
+#   na.action=na.omit
+#   )
 
 # assess results
-boosted_cv 
+# boosted_cv 
 
 #Linear
 linear.1 <- lm(student_knowledge ~ ., data=completeData)
@@ -450,31 +455,46 @@ linear.1 <- lm(student_knowledge ~ ., data=completeData)
 
 logit.1 <- glm(student_knowledge ~ ., data=completeData, family=binomial())
 
+#lasso
+lambda <- 10^seq(10, -2, length = 100)
+x<-model.matrix(student_knowledge ~ ., completeData)
+
+y<-completeData$student_knowledge
+
+
+cvfit = cv.glmnet(x, y, type.measure = "mse", nfolds = 5)
+coef(cvfit, s = "lambda.min")
+
+bestlam <- cvfit$lambda.min
+lasso.1 <- glmnet(x,y, family="gaussian", alpha=1, lambda=bestlam)
 
 
 #predictions
 school_dta_indicators_pred<- completeData %>%
   modelr::add_predictions(neural_cv, var="pred_neural") %>%
   modelr::add_predictions(bagged_cv, var="pred_bagged") %>%
-  modelr::add_predictions(boosted_cv, var="pred_boosted") %>%
+  # modelr::add_predictions(boosted_cv, var="pred_boosted") %>%
   modelr::add_predictions(linear.1, var="pred_linear") %>%
   modelr::add_predictions(logit.1, var="pred_logit", type="response") %>%
-  select(student_knowledge, pred_neural, pred_bagged, pred_boosted, pred_linear, pred_logit, everything())
+  mutate(pred_lasso=predict(cvfit, newx=x, s = "lambda.min")) %>%
+  select(student_knowledge, pred_neural, pred_bagged, pred_linear, pred_logit, pred_lasso, everything())
 
 #plot
 pred_plot_dta <- school_dta_indicators_pred %>%
-  select(student_knowledge, pred_neural, pred_bagged, pred_linear, pred_logit) %>%
+  select(student_knowledge, pred_neural, pred_bagged, pred_linear, pred_logit, pred_lasso) %>%
   pivot_longer(
-    cols=c('pred_neural' , 'pred_bagged', 'pred_boosted', 'pred_linear', 'pred_logit'), 
+    cols=c('pred_neural' , 'pred_bagged', 'pred_linear', 'pred_logit', 'pred_lasso'), 
     names_to = "type",
     values_to="predictions"
   )
 
-ggplot(pred_plot_dta, aes(y=student_knowledge, x=predictions, colour=type)) +
-  geom_point() +
-  geom_smooth(method="lm") +
-  expand_limits(x = 0, y = 0) +
-  expand_limits(x = 1, y = 1)
+plot_ly(pred_plot_dta, type="scatter", y=~student_knowledge, x=~predictions, color=~type)   %>%
+  layout(hovermode = 'compare')  %>%
+        layout(
+          yaxis = list(rangemode = "tozero"),
+          xaxis = list(rangemode = "tozero"))
+
+
 
 
 #save regression output
@@ -504,6 +524,9 @@ fit <- pred_plot_dta %>%
 
 # plot most important variables
 plot(varImp(bagged_cv), 20)  
+
+
+fit
 
 
 ```
