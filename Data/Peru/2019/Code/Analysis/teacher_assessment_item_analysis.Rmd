@@ -165,6 +165,12 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
          geometry=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
          interpret_data=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
 
+#pull apart dataset with just domains
+domains <- teacher_assessment_dta %>%
+  dplyr::select(typetest, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage,
+                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data
+                )
+
 
 language <-teacher_assessment_dta %>%
   select(typetest, lit_items) %>%
@@ -175,6 +181,16 @@ math <- teacher_assessment_dta %>%
   select(typetest, math_items) %>%
   filter(typetest==1) %>%
   select(-typetest)
+
+
+
+write_dta(language, path="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_lang_assessment.dta")
+
+write_dta(math, path="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_math_assessment.dta")
+
+write_dta(domains, path="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_domains.dta")
+
+save(language, math, domains, teacher_metadata, file="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_teacher_assessment_data.RData")
 
 ```
 
