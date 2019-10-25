@@ -39,6 +39,19 @@ df<-indicators %>%
   left_join(subquestions) %>%
   select(Series, indicator_tag, Indicator.Name, starts_with('Column_'), starts_with('Sub'))
 
+df_defacto_dejure <- df %>%
+  filter(grepl("Policy Lever", Indicator.Name )) %>%
+  select(Series, Indicator.Name ) %>%
+  mutate('De Facto' = "DF",
+         'De Jure' = "DJ") %>%
+  pivot_longer(cols=c('De Facto', 'De Jure'),
+               names_to="type",
+               values_to="type_val") %>%
+  mutate(Series=paste(Series, type_val, sep="."),
+         Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
+  select(Series, Indicator.Name)
+  
+
 #Pivot longer
 df_longer<-df %>%
   pivot_longer(cols=c('Column_2', 'Column_3', 'Column_4', 'Column_5', 'Column_6',
@@ -68,8 +81,11 @@ api_final<-df_longer %>%
     (type=="Column" & num!="1") ~ paste(Indicator.Name, short_desc, sep=" - "),
     (type=="Subquestion" & num!="1") ~ short_desc,
     TRUE ~ Indicator.Name  )) %>%
-  select(-Column_1, -type, -num, -indicator_tag)
+  select(-Column_1, -type, -num, -indicator_tag) %>%
+  bind_rows(df_defacto_dejure) %>%
+  arrange(Series) %>%
+  select(Series, Indicator.Name)
 
-write_csv(api_final, 'GEPD_Indicators_API_Info.csv')
+write_excel_csv(api_final, 'GEPD_Indicators_API_Info.csv')
 
 

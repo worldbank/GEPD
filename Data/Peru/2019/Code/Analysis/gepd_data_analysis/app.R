@@ -44,7 +44,8 @@ ui <- fluidPage(
                         choices=NULL),
             selectizeInput("subgroup", "Subgroup:",
                         choices=NULL),
-
+            h2("Scoring Metadata on Indicator"),
+            htmlOutput('metadata' )
 
         ),
 
@@ -69,7 +70,7 @@ ui <- fluidPage(
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  downloadButton("downloadregplot", "Download"),
-                                 plotOutput("regplot", height=800)
+                                 plotOutput("regplot", height=1400)
                                  ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
                                  selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
@@ -208,13 +209,8 @@ server <- function(input, output, session) {
                           indicator_labels=as.character(indicator_labels))
     
     indicators<- indicators %>%
-        filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR" & 
-                 indicator_tag!="BIMP" & indicator_tag!="BMAC" & indicator_tag!="BNLG" & indicator_tag!="BFIN") %>%
-#keep just one Bureaucracy indicator, because all with show in one
-      mutate(indicator_tag=case_when(
-        indicator_tag=='BQBR' ~ "QB",
-        TRUE ~ indicator_tag)) %>%
-      mutate(Indicator.Name=if_else(indicator_tag=="QB", 'Politics and Bureaucratic Capacity', Indicator.Name))
+        filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR" ) 
+
         
        #fix a few issues with Survey of Public Officials naming
     
@@ -239,11 +235,11 @@ server <- function(input, output, session) {
 
     
     observe({ 
-      if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+      if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         
         updateSelectizeInput(session, 'subgroup', choices = c('All', 'Urban', 'Rural'))
         
-      } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+      } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
         
         choice<-unique(as.character(public_officials_dta_clean$govt_tier))
         choice<-append('All',choice)
@@ -259,7 +255,7 @@ server <- function(input, output, session) {
     #Produce dataset based on indicator selected
     ##########################
     dat <- reactive({
-      if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+      if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
         
         
@@ -276,9 +272,9 @@ server <- function(input, output, session) {
           df<- df %>%
             filter(rural==FALSE)  
         }
-        } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+        } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
           
-          df<-public_officials_dta_clean 
+          df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
           
           
           if (input$subgroup!="All") {
@@ -298,9 +294,9 @@ server <- function(input, output, session) {
     # #Update list of subindicators
     # 
     # subind_dat <- reactive({
-    #   if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+    #   if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
     #     df_subindicators<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
-    #     } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+    #     } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
     #     
     #     df_subindicators<-public_officials_dta_clean 
     # 
@@ -357,9 +353,11 @@ server <- function(input, output, session) {
     
     output$metadata<-renderUI({
       
-    HTML(paste(get_meta()[1]))
+      HTML(paste(get_meta()[1]))
       
     })
+    
+    
     
 
         
@@ -467,7 +465,7 @@ server <- function(input, output, session) {
     #########################
     output$tableset <- DT::renderDataTable({
 
-      if (!(str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+      if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m1s?q?|m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
         metadata<-metadta
         
@@ -478,30 +476,25 @@ server <- function(input, output, session) {
         
         sch_ipw<-weights$school_ipw 
         
+        #add function to produce weighted summary stats
+        skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                   sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                   p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                   p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                   p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                   complete_count= ~ sum(!is.na(.))))
         
-      } else if ((str_sub(get_tag()[1],1,2) %in% c('QB', 'ID', 'AC', 'NL'))) {
+      } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="gender|DEM|NLG|ACM|QB|ORG")])
         metadata<-public_officials_metadata
         
-        weights <- dat() %>%
-          mutate(school_ipw=1)
-        
-        sch_ipw<-weights$school_ipw 
+        #add function to produce weighted summary stats
+        skim_with_defaults()
       
       }
       
         sumstats <- dat() %>%
           select(one_of(ind_list), one_of(sum_items) ) 
-        
-
-
-        #add function to produce weighted summary stats
-         skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                                             complete_count= ~ sum(!is.na(.))))
         
         
         
@@ -599,6 +592,9 @@ server <- function(input, output, session) {
     
     dat_reg <- reactive({
       #create database with just learning outcomes
+      
+      if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
+        
       df_reg<-school_dta_short
       
       df_reg<- df_reg %>%
@@ -619,7 +615,23 @@ server <- function(input, output, session) {
         select(school_code, as.character(get_tag_reg()[1]), weights ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
-    })
+      
+      } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
+      
+        df_reg<-public_officials_dta_clean 
+        
+        if (input$subgroup!="All") {
+          df_reg <- df_reg %>%
+            filter(govt_tier==input$subgroup)
+        }
+        #keep just school code and learning outcome
+        df_reg %>%
+          select(interview__id, as.character(get_tag_reg()[1])) %>%
+          rename(y=2) %>%
+          mutate(school_ipw=1)
+
+        }
+      })
     
     ########################################
     #Regression Analysis of key indicators
@@ -628,19 +640,30 @@ server <- function(input, output, session) {
     
     regp<- reactive({
       
-      df_reg_plot <- dat() %>%
-        select(one_of(ind_list), school_code) %>%
-        rowid_to_column("ID") %>%
-        pivot_longer(cols=one_of(ind_list),
+      if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
+        df_reg_plot <- dat() %>%
+          select(one_of(ind_list), school_code) %>%
+          rowid_to_column("ID") %>%
+          pivot_longer(cols=one_of(ind_list),
                      names_to='indicators', values_to='values') %>%
-        left_join(dat_reg()) %>%
-        left_join(labels_df) 
-      
+          left_join(dat_reg()) %>%
+          left_join(labels_df) 
+        
+      } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
+        df_reg_plot <- dat() %>%
+          select(one_of(ind_list), interview__id) %>%
+          rowid_to_column("ID") %>%
+          pivot_longer(cols=one_of(ind_list),
+                       names_to='indicators', values_to='values') %>%
+          left_join(dat_reg()) %>%
+          left_join(labels_df) 
+      }
+
       
       regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=y, group=indicator_labels, colour=indicator_labels)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes(weight = school_ipw)) +
-        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10)), nrow = 3) +
+        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10)), nrow = 5) +
         theme_classic() + 
         theme(
           text = element_text(size = 16),
@@ -651,7 +674,7 @@ server <- function(input, output, session) {
         labs(colour = "Indicator") +
         ylab(input$reg_choices) +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.15,
+                     label.x.npc = "right", label.y.npc = 0.2,
                      formula = 'y~x', parse = TRUE, size = 5)
       
       

@@ -122,7 +122,6 @@ var_rev_list<-c('QB2q2',  'QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4
 public_officials_dta <- public_officials_dta %>%
   mutate_at(var_rev_list, attitude_fun_rev)
 
-
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
   mutate(avg_class_size_guess=QB1q2,
@@ -177,14 +176,17 @@ preamble_info <- c('interview__id', 'region_code', 'district_code', 'district', 
                    'education','gender', 'director_hr')
 
 
-
+#include list of constructed variables
+constr_list <- c('avg_class_size_guess', 'avg_absence_guess', 'motivation_relative_start', 'proportion_reported_underperformance', 
+                 'proportion_broke_rules', 'proportion_contracts_political', 'proportion_producement_political'
+)
 
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
 #This will make the information for each indicator contained in an independent database
 #Will need to join the school level information with teacher level questionnaire information for some indicators.  This will be done later.
 
 public_officials_dta_clean <-public_officials_dta %>%
-  dplyr::select(preamble_info, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
+  dplyr::select(preamble_info,constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
   dplyr::select(-starts_with("enumerators_preload"))
 
 #filter out the director of HR, which isn't specifically asked about indicator questions
@@ -255,10 +257,10 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
 bureau_ind<-c( 'national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making')
 
 public_officials_dta_clean <-public_officials_dta_clean %>%
-  dplyr::select(preamble_info, bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
+  dplyr::select(preamble_info, bureau_ind, constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
 
 public_officials_dta_short <-public_officials_dta_clean %>%
-  dplyr::select(preamble_info, bureau_ind, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+  dplyr::select(preamble_info, bureau_ind, constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
@@ -270,7 +272,7 @@ write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_offi
 write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
-keep_info <- c('region_code', 'district_code', 'district', 'province','location', 'govt_tier',
+keep_info <- c('interview__id','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 
@@ -284,8 +286,21 @@ public_officials_office_level<- public_officials_dta_clean %>%
   mutate(count=n() )%>% 
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
   
-  
+#convert variables to factor
+public_officials_dta_clean<- public_officials_dta_clean %>%
+  left_join(public_officials_metadata)
+  mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), factor(., labels=vallables) ) 
 
+label_df<-public_officials_metadata %>%
+  filter(grepl('NLG|ACM|QB|IDM', name))
+
+#now add labels
+for (row in 1:nrow(label_df)) {
+  var <- label_df[row, "name"]
+  lab <- label_df[row, "vallabel"]
+  
+  public_officials_dta_clean$var[1] <- 1
+}
 ################################
 #Store Key Created Datasets
 ################################
@@ -304,15 +319,25 @@ indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
 
 ind_dta_list<-c()
 
+
+
 for (i in indicator_names ) {
+  
+  j <- case_when(
+    i=="NLG" ~ "BNLG",
+    i=="ACM" ~ "BMAC",
+    i=="QB" ~ "BQBR",
+    i=="IDM" ~ "BIMP"
+  )
+  
   temp_df<-public_officials_dta_clean %>%
     select( contains(i))
   if (ncol(temp_df) > 0) {
     temp_df<-public_officials_dta_clean %>%
       select(keep_info,bureau_ind, starts_with('DEM'), starts_with(i))
-    assign(paste("final_indicator_data_",i, sep=""), temp_df )
+    assign(paste("final_indicator_data_",j, sep=""), temp_df )
     
-    ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",i, sep=""))
+    ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
     
   }
 }
