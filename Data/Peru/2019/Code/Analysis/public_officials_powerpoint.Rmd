@@ -16,6 +16,7 @@ library(kableExtra)
 library(skimr)
 library(flextable)
 library(ggridges)
+library(scales)
 ```
 
 ##
@@ -131,7 +132,7 @@ infr_urban_rural
 
 ## Do public officials know the National Learning Goals?
 
-```{r nlg, include=FALSE}
+```{r nlg, echo=FALSE}
 
 cat_data <- public_officials_dta_clean %>%
   mutate(NLG1q1_cat_1=bin_var(NLG1q1,1),
@@ -144,9 +145,28 @@ cat_data <- public_officials_dta_clean %>%
                               labels=c("The organization does not have defined targets",
                                        "The organization has only loosely-defined targets",
                                        "The organization has clearly-defined targets at the organization-level only but these are only loosely related to national learning goals and are not clearly quantifiable",
-                                       "There are clearly-defined, quantifiable targets for the organization, as well as for some units/individuals within the organization; these are closely related to national learning goals",,
+                                       "There are clearly-defined, quantifiable targets for the organization, as well as for some units/individuals within the organization; these are closely related to national learning goals",
                                        "There are clearly-defined, quantifiable targets for the organization, units and individual staff members within the organization, all closely related to national learning goals",
-                                       "Don't Know"))
+                                       "Don't Know"))) 
+
+cat_data %>%
+  count(NLG1q1_factor = NLG1q1_factor) %>% 
+  mutate(pct = prop.table(n)) %>%
+  ggplot( aes(x=NLG1q1_factor, y=pct)) + #now plot the output in a bar graph
+    geom_col(aes(fill='darkblue')) +
+    geom_label(aes(label=scales::percent(pct)), size = 3) +
+    scale_y_continuous(labels=percent) +
+    scale_x_discrete(labels = str_wrap(c("The organization does not have defined targets",
+                                       "The organization has only loosely-defined targets",
+                                       "The organization has clearly-defined targets at the organization-level only but these are only loosely related to national learning goals and are not clearly quantifiable",
+                                       "There are clearly-defined, quantifiable targets for the organization, as well as for some units/individuals within the organization; these are closely related to national learning goals",
+                                       "There are clearly-defined, quantifiable targets for the organization, units and individual staff members within the organization, all closely related to national learning goals",
+                                       "Don't Know"), width = 25)) + 
+  xlab(str_wrap("Does your organization have a clear set of performance indicators? Are targets aligned with and contribute to achieving learning goals at the national level?", width=75))+
+  ylab("Percent") +
+  ggtitle(str_wrap("Public Officials Opinions on Whether Performance Indicators Aligned with National Learning Goals", width=75)) +
+  theme_bw() +
+    theme(legend.position = "none") 
 
 ```
 

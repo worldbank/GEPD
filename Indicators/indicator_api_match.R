@@ -27,6 +27,22 @@ indicator_names <- sapply(indicator_names, tolower)
 names(indicators)<-make.names(names(indicators), unique=TRUE)
 
 
+#get metadata on indicators
+#Read in list of indicators
+indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
+indicator_choices <- indicator_choices %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+
+indicator_choices <- indicator_choices %>%
+  select(-c('X1', 'X6')) %>%
+  rename("Source Note"="How is the indicator scored?" ) 
+
+
+names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
+
+
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag
 
@@ -37,7 +53,9 @@ subquestions<-read_excel('GEPD_Indicators_Info_v4.xlsx', sheet='SubQuestions')
 
 df<-indicators %>%
   left_join(subquestions) %>%
-  select(Series, indicator_tag, Indicator.Name, starts_with('Column_'), starts_with('Sub'))
+  select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
+
+
 
 df_defacto_dejure <- df %>%
   filter(grepl("Policy Lever", Indicator.Name )) %>%
@@ -86,6 +104,205 @@ api_final<-df_longer %>%
   arrange(Series) %>%
   select(Series, Indicator.Name)
 
+#add extra metadata
+api_final <- api_final %>%
+  mutate(Source="Global Education Policy Dashboard",
+         'Source Organization'="World Bank") %>%
+  left_join(indicator_choices) %>%
+  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
+  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
+  rename('Source Note'=Source.Note,
+         'Indicator Name'=Indicator.Name) %>%
+  select(-c(indicator_tag, Value))
+
+
+#export Indicators_metatdata section
 write_excel_csv(api_final, 'GEPD_Indicators_API_Info.csv')
 
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD"
 
+
+#Peru
+#populate dummy data
+api_dummy_p_Peru <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 100, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=50 ~ "Needs Improvement",
+      value >50 & value<=80 ~ "Caution",
+      value >80 ~ "On Target"
+    ))
+
+api_dummy_c_Peru <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 5, 0.7)) %>%
+  mutate(
+         value_metadata=case_when(
+           value <=2 ~ "Needs Improvement",
+           value >2 & value<=3 ~ "Caution",
+           value >=4 ~ "On Target"
+         ))
+
+Peru_dummy_data <- api_dummy_p_Peru %>%
+  bind_rows(api_dummy_c_Peru) %>%
+  arrange(Series) %>%
+  mutate(year=2019,
+         cty_or_agg="cty",
+         countrycode="PER")
+
+#Jordan
+#populate dummy data
+api_dummy_p_Jordan <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 100, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=50 ~ "Needs Improvement",
+      value >50 & value<=80 ~ "Caution",
+      value >80 ~ "On Target"
+    ))
+
+api_dummy_c_Jordan <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 5, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=2 ~ "Needs Improvement",
+      value >2 & value<=3 ~ "Caution",
+      value >=4 ~ "On Target"
+    ))
+
+Jordan_dummy_data <- api_dummy_p_Jordan %>%
+  bind_rows(api_dummy_c_Jordan) %>%
+  arrange(Series) %>%
+  mutate(year=2019,
+         cty_or_agg="cty",
+         countrycode="JOR")
+
+#Rwanda
+#populate dummy data
+api_dummy_p_Rwanda <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 100, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=50 ~ "Needs Improvement",
+      value >50 & value<=80 ~ "Caution",
+      value >80 ~ "On Target"
+    ))
+
+api_dummy_c_Rwanda <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 5, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=2 ~ "Needs Improvement",
+      value >2 & value<=3 ~ "Caution",
+      value >=4 ~ "On Target"
+    ))
+
+Rwanda_dummy_data <- api_dummy_p_Rwanda %>%
+  bind_rows(api_dummy_c_Rwanda) %>%
+  arrange(Series) %>%
+  mutate(year=2019,
+         cty_or_agg="cty",
+         countrycode="RWA")
+
+#Pakistan - Punjab
+#populate dummy data
+api_dummy_p_Punjab <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 100, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=50 ~ "Needs Improvement",
+      value >50 & value<=80 ~ "Caution",
+      value >80 ~ "On Target"
+    ))
+
+api_dummy_c_Punjab <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 5, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=2 ~ "Needs Improvement",
+      value >2 & value<=3 ~ "Caution",
+      value >=4 ~ "On Target"
+    ))
+
+Punjab_dummy_data <- api_dummy_p_Punjab %>%
+  bind_rows(api_dummy_c_Punjab) %>%
+  arrange(Series) %>%
+  mutate(year=2019,
+         cty_or_agg="cty",
+         countrycode="PAK")
+
+#Ethiopia
+#populate dummy data
+api_dummy_p_Ethiopia <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 100, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=50 ~ "Needs Improvement",
+      value >50 & value<=80 ~ "Caution",
+      value >80 ~ "On Target"
+    ))
+
+api_dummy_c_Ethiopia <- api_final %>%
+  rename(Indicator.Name='Indicator Name') %>%
+  filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+  rename(  'Indicator Name'=Indicator.Name) %>%
+  select(Series, 'Indicator Name') %>%
+  mutate(value=rbinom(n(), 5, 0.7)) %>%
+  mutate(
+    value_metadata=case_when(
+      value <=2 ~ "Needs Improvement",
+      value >2 & value<=3 ~ "Caution",
+      value >=4 ~ "On Target"
+    ))
+
+Ethiopia_dummy_data <- api_dummy_p_Ethiopia %>%
+  bind_rows(api_dummy_c_Ethiopia) %>%
+  arrange(Series) %>%
+  mutate(year=2019,
+         cty_or_agg="cty",
+         countrycode="ETH")
+
+
+
+country_dummy_data <- Peru_dummy_data %>%
+  bind_rows(Jordan_dummy_data) %>%
+  bind_rows(Rwanda_dummy_data) %>%
+  bind_rows(Ethiopia_dummy_data) 
+
+write_excel_csv(country_dummy_data, 'GEPD_Indicators_dummy.csv')

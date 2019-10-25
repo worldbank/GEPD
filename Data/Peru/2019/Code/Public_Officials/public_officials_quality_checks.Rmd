@@ -276,7 +276,8 @@ sumstats_df<-skim(sumstats) %>%
   mutate(variable=factor(variable, levels=c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making'),
                          labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making')))
 
-
+#export Indicators sumstats
+write_excel_csv(sumstats_df, paste(save_folder,'GEPD_Public_Officials_Indicators.csv',sep=""))
 ```
 
 

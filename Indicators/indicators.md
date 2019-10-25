@@ -1,21 +1,25 @@
 | Series | Indicator Name | Short Definition | Topic | Related Indicators| Value |
 |---|---|---|---|---|---|
 |SE.PRM.PROE  | Proficiency by Grade 2/3 | This outcome indicator measures whether students are learning, by reporting data from well-designed student assessments.  | Outcome | Learning | 0-100 |
-|SE.PRM.PROP  | Proficiency by End of Primary | This outcome indicator measures whether students are learning, by reporting data from well-designed student assessments.  | Outcome | Learning | 0-100 |
+|SE.LPV.PRIM  | Proficiency by End of Primary | This outcome indicator measures whether students are learning, by reporting data from well-designed student assessments.  | Outcome | Learning | 0-100 |
 |SE.PRM.LERN | Proficiency on GEPD Assessment | Percentage of children in urban schools achieving basic proficiency in math and language on the GEPD assessment.   | Outcome | Learning | 0-100 |
+|SE.LPV.PRIM | Learning poverty: Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%) | This indicator brings together schooling and learning. It starts with the share of  children who haven’t achieved minimum reading proficiency and adjusts it by the proportion of children who are out of school. The data used to calculate Learning Poverty has been made possible thanks to the work of the Global Alliance to Monitor Learning led by the UNESCO Institute for Statistics (UIS), which established Minimum Proficiency Levels (MPLs) that enable countries to benchmark learning across different cross-national and national assessments. For more information please see [CITE WORKING PAPER]. | Outcome | Learning | 0-100 |
 |SE.PRM.TENR | Net Adjusted Enrollment Rate  |This indicator will summarize school participation by reporting the adjusted net enrollment rate among primary-age children. |Outcome | Participation| 0-100 |
-|SE.PRM.EFFT |Teacher Effort|---|Teaching|Teacher Effort|0-100  |
-|SE.PRM.CONT |Teacher Content Knowledge|---|Teaching|Teachers' Skills|0-100  |
-|SE.PRM.PEDG |Teacher Pedagogical Skills|---|Teaching|Teachers' Skills|1-5 |
-|SE.PRM.INPT |Basic Inputs|---|Inputs & Infrastructure|Inputs & Infrastructure|1-5 |
-|SE.PRM.INFR |Basic Infrastructure|---|Inputs & Infrastructure|Inputs & Infrastructure|1-5 |
-|SE.PRM.LCAP |Capacity for Learning|---|Prepared Learners|Prepared Learners|0-100 |
-|SE.PRM.ATTD |Student Attendance |Percent of students in urban schools who are present during an unnounced visit |Outcome | Participation |0-100 |
-|SE.PRM.OPMN |Operational Management|---|School Management|Core School Functions|1-5 |
-|SE.PRM.ILDR |Instructional Leadership|---|School Management|Core School Functions|1-5 |
+|SE.PRM.EFFT |Teacher Effort| School survey. Percent of teachers absent. Teacher is coded absent if they are not in school, or in school but absent from the class.|Teaching|Teacher Effort|0-100  |
+|SE.PRM.CONT |Teacher Content Knowledge| School survey. Fraction correct on teacher assessment. |Teaching|Teachers' Skills|0-100  |
+|SE.PRM.PEDG |Teacher Pedagogical Skills| School survey. Based on TEACH ratings from classroom observations
+|Teaching|Teachers' Skills|1-5 |
+|SE.PRM.INPT |Basic Inputs|School survey. Total score is the sum of whether a school has Functional blackboard, Pens, pencils, exercise books, Textbooks, Fraction of students in class with a desk, Used ICT in class and have access to ICT in the school. |Inputs & Infrastructure|Inputs & Infrastructure|1-5 |
+|SE.PRM.INFR |Basic Infrastructure|School survey. Total score starts at 1 and points added are the sum of whether a school has: , Access to adequate drinking water ,Functional toilets that are separate for boys/girls, private, useable, accessible, and have hand washing facilities , Electricity and Visibility in the classroom , School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)|Inputs & Infrastructure|Inputs & Infrastructure|1-5 |
+|SE.PRM.LCAP |Capacity for Learning|School survey. Fraction correct on the Early Childhood Assessment given to students in school.
+|Prepared Learners|Prepared Learners|0-100 |
+|SE.PRM.ATTD |Student Attendance |Percent of students in urban schools who are present during an unannounced visit |Outcome | Participation |0-100 |
+|SE.PRM.OPMN |Operational Management| School Survey. Principals/head teachers are given two vignettes:  One on solving the problem of a hypothetical leaky roof, and one on solving a problem of inadequate numbers of textbooks. Each vignette is worth 2 points. The indicator will measure two things: presence of functions and quality of functions. In each vignette:  0.5 points are awarded for someone specific having the responsibility to fix , 0.5 point is awarded if the school can fully fund the repair, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community , 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved. |School Management|Core School Functions|1-5 |
+|SE.PRM.ILDR |Instructional Leadership|	School survey. Total score starts at 1 and points added are the sum of whether a teacher has:  Had a classroom observation in past year, Had a discussion based on that observation that lasted longer than 10 min, Received actionable feedback from that observation, Teacher had a lesson plan and discussed it with another person | School Management|Core School Functions|1-5 |
 |SE.PRM.PKNW |Principal School Knowledge|---|School Management|Managerial Skills|1-5 |
-|SE.PRM.PMAN |Principal Management Skills|---|School Management|Managerial Skills|1-5 |
-|SE.PRM.TATT |Policy Lever (Teaching) - Attraction|---|Teaching| Teachers' Skills|1-5 |
+|SE.PRM.PMAN |Principal Management Skills|Score of 1-5 based on sum of following: 1 Point. School Goals Exists
+- 1 Point. School goals are clear to school director, teachers, students, parents, and other members of community (partial credit available).  1 Point. Specific goals related to improving student achievement ( improving test scores, improving pass rates, reducing drop out, reducing absenteeism, improving pedagogy, more resources for infrastructure, more resources for inputs), 1 Point. School has defined system to measure goals (partial credit available)|School Management|Managerial Skills|1-5 |
+|SE.PRM.TATT |Policy Lever (Teaching) - Attraction|In the school survey, a number of De Facto questions on teacher attraction are asked. 0.8 points is awarded for each of the following:  0.8 Points. Teacher satisfied with job 0.8 Points. Teacher satisfied with status in community  0.8 Points. Would better teachers be promoted faster?  0.8 Points. Do teachers receive bonuses?  0.8 Points. One minus the fraction of months in past year with a salary delay.|Teaching| Teachers' Skills|1-5 |
 |SE.PRM.TSDP |Policy Lever (Teaching) - Selection & Deployment|---|Teaching|Teachers' Skills|1-5 |
 |SE.PRM.TSUP |Policy Lever (Teaching) - Support|---|Teaching|Teachers' Skills|1-5 |
 |SE.PRM.TEVL |Policy Lever (Teaching) - Evaluation|---|Teaching|Teachers' Skills|1-5 |

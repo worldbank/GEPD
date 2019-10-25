@@ -216,6 +216,21 @@ for (i in indicator_names ) {
 # - in school but absent from the class 
 # - in the class but not teaching.
 
+
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+
+bin_var_2 <- function(var, val) {
+  if_else(var==val, 
+          as.numeric(1),
+          as.numeric(var))
+}
+
 #read in teacher absence file
 teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
@@ -288,15 +303,14 @@ preamble_info_absence <- c('interview__id', 'questionnaire_selected__id', 'teach
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(school_absence_rate=case_when(
     m2sbq6_efft==6 | teacher_available==2 ~ 1,
-    
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absence_rate=case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 | m2sbq6_efft==2 | teacher_available==2 ~ 1,
-    m2sbq6_efft==1 | m2sbq6_efft==3 |  m2sbq6_efft==4  ~ 0,
+    m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
+    m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
 #create indicator for whether each principal was absent from school
@@ -330,6 +344,7 @@ final_indicator_data_ATTD<- school_data_INPT %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq12_inpt )  %>%
   mutate(student_attendance=m4scq4_inpt/m4scq12_inpt) %>%
   mutate(student_attendance=if_else(m4scq4_inpt>m4scq12_inpt, m4scq12_inpt/m4scq4_inpt,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.)) %>%
@@ -374,9 +389,14 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
 teacher_assessment_dta <- teacher_assessment_dta %>% 
   select(-ends_with("mistake"))
 
+#drop the correct the letter
+teacher_assessment_dta <- teacher_assessment_dta %>% 
+  select(-starts_with("m5s1q3"))
+
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 teacher_assessment_dta<- teacher_assessment_dta %>%
-  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
+  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var_2(.,2)  ) %>%
+mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
 
 
 #create indicator for % correct on teacher assessment
@@ -687,8 +707,11 @@ school_data_INPT <- school_data_INPT %>%
   mutate(share_pencil=(m4scq6_inpt)/(m4scq4_inpt)) %>%
   mutate(share_exbook=(m4scq7_inpt)/(m4scq4_inpt)) %>%
   mutate(pens_etc=case_when(
-    share_textbook>=0.9 & share_pencil>=0.9 & share_exbook>=0.9  ~ 1,
-    share_textbook<0.9 | share_pencil<0.9 | share_exbook<0.9 ~ 0)) 
+    share_pencil>=0.9 & share_exbook>=0.9  ~ 1,
+     share_pencil<0.9 | share_exbook<0.9 ~ 0),
+    textbooks=case_when(
+      share_textbook>=0.9   ~ 1,
+      share_textbook<0.9  ~ 0)) 
 
 #basic classroom furniture
 school_data_INPT <- school_data_INPT %>%
@@ -717,7 +740,7 @@ school_data_INPT <- school_data_INPT %>%
 
 
 
-inpt_list<-c('blackboard_functional', 'pens_etc', 'share_desk',  'used_ict', 'access_ict')
+inpt_list<-c('blackboard_functional', 'pens_etc', 'textbooks', 'share_desk',  'used_ict', 'access_ict')
 
 final_indicator_data_INPT <- school_data_INPT %>%
   left_join(school_teacher_questionnaire_INPT) %>%
@@ -726,7 +749,7 @@ final_indicator_data_INPT <- school_data_INPT %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_INPT=n_miss_row(.)) %>%
-  mutate(inputs=1+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
+  mutate(inputs=textbooks+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
   
@@ -1568,7 +1591,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'absence_rate', 'school_absence_rate', 'student_attendance',
             'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
-            'inputs', 'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
+            'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
             'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
