@@ -270,7 +270,7 @@ sumstats<-school_dta_short %>%
 
 #impute missing weights with median
 school_dta_short <- school_dta_short %>%
-  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw))
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th)
 
 school_ipw<-school_dta_short$school_ipw 
 

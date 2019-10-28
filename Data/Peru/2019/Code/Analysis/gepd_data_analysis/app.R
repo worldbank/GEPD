@@ -472,7 +472,7 @@ server <- function(input, output, session) {
         weights <- dat() %>%
           mutate(codigo.modular=as.numeric(school_code)) %>%
           left_join(data_set_updated) %>%
-          mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
+          mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
         
         sch_ipw<-weights$school_ipw 
         
@@ -614,7 +614,7 @@ server <- function(input, output, session) {
       df_reg %>%
         select(school_code, as.character(get_tag_reg()[1]), weights ) %>%
         rename(y=2) %>%
-        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
+        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
       
       } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
       
@@ -760,7 +760,7 @@ server <- function(input, output, session) {
       df_sub_reg %>%
         select(school_code, as.character(get_tag_sub_reg()[1]), weights ) %>%
         rename(y=2) %>%
-        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights))
+        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
     })
     
 

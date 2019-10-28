@@ -370,6 +370,7 @@ school_data_preamble_21<- school_dta_21 %>%
   select(interview__key, preamble_info_21)
 
 teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
+teacher_metadata <- makeVlist(teacher_assessment_dta_21)
 
 #Add school preamble info
 teacher_assessment_dta <- teacher_assessment_dta_21 %>%
@@ -436,6 +437,29 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
 teacher_assessment_dta<- teacher_assessment_dta %>%
   mutate(g4_teacher_name=m5sb_troster  ,
          g4_teacher_number=m5sb_tnum   )
+
+
+#pull apart dataset with just domains
+teacher_assessment_domains <- teacher_assessment_dta %>%
+  dplyr::select(typetest, school_code, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage,
+                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data
+  )
+
+
+teacher_assessment_language <-teacher_assessment_dta %>%
+  select(typetest, school_code, m5sb_tnum, lit_items) %>%
+  filter(typetest==2) %>%
+  select(-typetest)
+
+teacher_assessment_math <- teacher_assessment_dta %>%
+  select(typetest, school_code, m5sb_tnum, math_items) %>%
+  filter(typetest==1) %>%
+  select(-typetest)
+
+
+
+save(teacher_assessment_language, teacher_assessment_math, teacher_assessment_domains, teacher_metadata, 
+     file = file.path(save_folder, "dashboard_teacher_assessment_data.RData"))
 
 
 #calculate % correct for literacy, math, and total

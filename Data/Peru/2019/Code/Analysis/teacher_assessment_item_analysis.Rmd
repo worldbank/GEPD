@@ -105,6 +105,12 @@ teacher_assessment_dta <- read_dta("C:/Users/wb469649/WBG/Ezequiel Molina - Dash
 
 teacher_metadata <- makeVlist(teacher_assessment_dta)
 
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
 #function to create zero/one variables  
 bin_var <- function(var, val) {
   case_when(
@@ -112,7 +118,11 @@ bin_var <- function(var, val) {
     var!=val   ~ 0,
     is.na(var) ~ as.numeric(NA))
 }
-
+bin_var_2 <- function(var, val) {
+  if_else(var==val, 
+          as.numeric(1),
+          as.numeric(var))
+}
 #create function to make titles in figures nice
 wrapper <- function(x, ...) 
 {
@@ -129,6 +139,7 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
 
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 teacher_assessment_dta<- teacher_assessment_dta %>%
+  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var_2(.,2)  ) %>%
   mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
 
 
