@@ -44,6 +44,8 @@ ui <- fluidPage(
                         choices=NULL),
             selectizeInput("subgroup", "Subgroup:",
                         choices=NULL),
+            selectizeInput("gender", "Gender:",
+                           choices=NULL),
             h2("Scoring Metadata on Indicator"),
             htmlOutput('metadata' )
 
@@ -94,8 +96,8 @@ server <- function(input, output, session) {
     
     load(paste("school_sample_2019_07_22.RData"))
     
-    
-
+    indicators <- indicators %>%
+      filter(!(indicator_tag=="PROE" | indicator_tag=="PRIM" | indicator_tag=="TENR"))
     
     names(indicators)<-make.names(names(indicators), unique=TRUE)
   
@@ -233,7 +235,7 @@ server <- function(input, output, session) {
     })
     
 
-    
+    #update subgroup selector
     observe({ 
       if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         
@@ -250,15 +252,45 @@ server <- function(input, output, session) {
       }
       
     })  
+    #update gender selector
+    gender_available <- c("ATTD",  "CONT", "EFFT", "LCAP", "LERN")
+    
+    observe({ 
       
+      
+      if (!(get_tag()[1] %in% gender_available)) {
+        
+        updateSelectizeInput(session, 'gender', choices = c('All'))
+        
+      } else if (get_tag()[1] %in% gender_available) {
+        
+        updateSelectizeInput(session, 'gender', choices = c('All', 'Female', 'Male'))
+        
+        
+      }
+      
+    })
+    
     ##########################
     #Produce dataset based on indicator selected
     ##########################
     dat <- reactive({
       if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
-        df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
         
         
+        if (input$gender=="All") {
+          
+          df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
+          
+        } else if (input$gender=="Female") {
+          
+          df<-get(paste("final_indicator_data_",get_tag()[1], "_F", sep=""))
+          
+        } else if (input$gender=="Male") {
+          
+          df<-get(paste("final_indicator_data_",get_tag()[1], "_M", sep=""))
+          
+        }
 
         df<- df %>%
           mutate(codigo.modular=as.numeric(school_code)) %>%
@@ -612,7 +644,7 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_reg %>%
-        select(school_code, as.character(get_tag_reg()[1]), weights ) %>%
+        select(school_code, as.character(get_tag_reg()[1]), weights, total_4th ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
       
@@ -758,7 +790,7 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_sub_reg %>%
-        select(school_code, as.character(get_tag_sub_reg()[1]), weights ) %>%
+        select(school_code, as.character(get_tag_sub_reg()[1]), weights, total_4th ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
     })

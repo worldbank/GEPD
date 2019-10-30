@@ -333,6 +333,18 @@ final_indicator_data_EFFT <- teacher_absence_dta %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
 
+#Breakdowns by Male/Female
+final_indicator_data_EFFT_M <- teacher_absence_dta %>%
+  filter(teacher_male==1) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))
+
+final_indicator_data_EFFT_F <- teacher_absence_dta %>%
+  filter(teacher_male==0) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))
 
 #############################################
 ##### Student Attendance ###########
@@ -344,6 +356,33 @@ final_indicator_data_ATTD<- school_data_INPT %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq12_inpt )  %>%
   mutate(student_attendance=m4scq4_inpt/m4scq12_inpt) %>%
   mutate(student_attendance=if_else(m4scq4_inpt>m4scq12_inpt, m4scq12_inpt/m4scq4_inpt,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_SSLD=n_miss_row(.)) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))
+
+
+
+#Breakdowns by Male/Female
+
+num_boys <- school_dta %>%
+  select(interview__id, m4scq4n_girls, m4scq13_girls )
+
+final_indicator_data_ATTD_M<- school_data_INPT %>%
+  left_join(num_boys) %>%
+  select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
+  mutate(student_attendance=m4scq4n_girls/m4scq13_girls) %>%
+  mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_SSLD=n_miss_row(.)) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))
+
+final_indicator_data_ATTD_F<- school_data_INPT %>%
+  left_join(num_boys) %>%
+  select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
+  mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-m4scq13_girls)) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -473,6 +512,32 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
+#Breakdown by Male/Female
+final_indicator_data_CONT_M <- teacher_assessment_dta %>%
+  mutate(questionnaire_selected__id=g4_teacher_number) %>%
+  left_join(teacher_absence_dta, by=c('school_code', 'questionnaire_selected__id')) %>%
+  filter(m2saq3==1) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  mutate(content_knowledge=case_when(
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
+    is.na(math_content_knowledge)  ~ literacy_content_knowledge,
+    is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
+         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+
+final_indicator_data_CONT_F <- teacher_assessment_dta %>%
+  mutate(questionnaire_selected__id=g4_teacher_number) %>%
+  left_join(teacher_absence_dta, by=c('school_code', 'questionnaire_selected__id')) %>%
+  filter(m2saq3==2) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  mutate(content_knowledge=case_when(
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
+    is.na(math_content_knowledge)  ~ literacy_content_knowledge,
+    is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
+         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
 
 #############################################
@@ -560,6 +625,22 @@ final_indicator_data_LERN <- assess_4th_grade_dta %>%
   select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
 
 
+#Breakdowns by Male/Female
+final_indicator_data_LERN_M <- assess_4th_grade_dta %>%
+  left_join(school_dta[,c('interview__id', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  filter(m8s1q3==1) %>%
+  group_by(school_code) %>%
+  mutate(n_students=n()) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
+
+final_indicator_data_LERN_F <- assess_4th_grade_dta %>%
+  left_join(school_dta[,c('interview__id', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  filter(m8s1q3==2) %>%
+  group_by(school_code) %>%
+  mutate(n_students=n()) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
 
 
 #############################################
@@ -703,6 +784,21 @@ ecd_dta <- ecd_dta %>%
 #calculate % correct for literacy, math, and total
 final_indicator_data_LCAP <- ecd_dta %>%
   left_join(school_dta[,c('interview__id', 'm6_teacher_name', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
+
+#Breakdowns of Male/Female
+final_indicator_data_LCAP_M <- ecd_dta %>%
+  left_join(school_dta[,c('interview__id', 'm6_teacher_name', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
+  filter(m6s1q3==1) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
+
+final_indicator_data_LCAP_F <- ecd_dta %>%
+  left_join(school_dta[,c('interview__id', 'm6_teacher_name', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
+  filter(m6s1q3==2) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
@@ -1609,6 +1705,13 @@ for (i in indicator_names ) {
     }
   }
 }
+
+#add male/female breakdowns to ind_data_list
+
+ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", "final_indicator_data_CONT_M", 
+                                "final_indicator_data_CONT_F", "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F",
+                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+
 
 #Create list of key indicators
 ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',

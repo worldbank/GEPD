@@ -17,6 +17,7 @@ library(skimr)
 library(flextable)
 library(ggridges)
 library(scales)
+library(spatstat)
 ```
 
 ##
@@ -80,7 +81,10 @@ school_dta_short <- school_dta_short %>%
   mutate(latitude=as.character(latitude)) %>%
   mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
          lon=if_else(is.na(lon), as.numeric(longitude), lon),
-         school_ipw=weights)
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+
 
 #Create a function which will generate new binary variable using case_when, but 
 #if value is misisng it will generate binary variable to be missing
@@ -96,6 +100,49 @@ bin_var <- function(var, val) {
     is.na(var) ~ as.numeric(NA))
 }
 
+#create function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+```
+## Overall Learning
+
+```{r learning}
+
+
+
+
+learning_data_plot <- final_indicator_data_LERN %>%
+  bind_rows(final_indicator_data_LERN_F, .id="Female") %>%
+  bind_rows(final_indicator_data_LERN_M, .id="Male") %>%
+  mutate(Gender=case_when(
+    Female==1 ~ "Either Male or Female",
+    Female==2 ~ "Female",
+    Male==2 ~ "Male",
+    TRUE ~ as.character(NA)
+    )) %>%
+  select(-Female, -Male) %>%
+  left_join(school_dta_short, by="school_code") %>%
+  select(school_code, rural, Gender, student_knowledge.x, school_ipw ) %>%
+  mutate(student_knowledge=student_knowledge.x) %>%
+  select(-student_knowledge.x) %>%
+    mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+  filter(!is.na(rural))
+
+learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(weighted.median(student_knowledge, school_ipw, na.rm=T),2))
+
+  ggplot(learning_data_plot, aes(x=Type, y=student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+    geom_boxplot(aes(weight=school_ipw), position="dodge") +
+    geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, vjust = -0.65) +
+  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Student Learning by Gender and Urban/Rural", width=75)) +
+  scale_fill_discrete(name="Gender") +
+  theme_bw() +
+    theme(legend.position = "bottom") 
 
 ```
 
@@ -117,8 +164,11 @@ infr_urban_rural <-ggplot(urban_rural, aes(x=infrastructure, y=Type, fill=Type))
 infr_urban_rural
 
 infr_urban_rural <- urban_rural %>%
-  ggplot(aes(x=infrastructure, fill=Type))  +
-    geom_density( alpha=0.4) +
+  group_by(Type) %>%
+  mutate(weight=school_ipw/sum(school_ipw)) %>%
+  ungroup() %>%
+  ggplot(aes(x=infrastructure))  +
+    geom_density(aes(fill=Type , weight=weight), alpha=0.4) +
     theme_bw() +
   labs(x='Infrastructure Index')+
   ggtitle("Infrastructure Across Urban/Rural")
@@ -128,7 +178,83 @@ infr_urban_rural
 ```
 
 
+## Do principals know their schools?
 
+- Adequate Textbooks:
+  * Principals asked, "In the selected 4th grade classroom, how many of the pupils have the relevant textbooks?"
+  * We can compare answer to average calculated in our school survey
+  
+- Content Knowledge:
+  * Public officials asked, "Out of these X teachers, how many do you think would be able to correctly add triple digit numbers (i.e. 343+215+127)?"
+  * We can compare answer to average calculated in our school survey
+
+## Public officials class size answers
+
+```{r echo=FALSE}
+
+
+
+textbooks <- final_indicator_data_PKNW %>%
+  left_join(final_indicator_data_INPT) %>%
+  left_join(school_dta_short, by="school_code") %>%
+  mutate(share_textbook=(m4scq5_inpt)/(m4scq4_inpt)) %>%
+  mutate(share_textbook_guess=(m7sfq10_pknw)/(m4scq4_inpt)) %>%
+  mutate(gap_textbooks=(m7sfq10_pknw-m4scq5_inpt)) %>%
+  mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+  filter(!is.na(Type))
+
+
+
+ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
+  geom_point() +
+  annotate("text", label=wrapper(paste("Principals over-estimate by ", round(mean(textbooks$gap_textbooks, na.rm=T),1)," pupils on average"),15), x = 5, y = 40) +
+  geom_line(aes(x=m4scq5_inpt, y=m4scq5_inpt, color="45 Degree Line")) +
+  theme_bw() +
+  labs(x='Actual # of Pupils with Textbook',
+       y='Difference between Actual & # Guessed by Principal') +
+  ggtitle("How well Principals Know # of Students with Textbooks")
+
+
+
+```
+
+
+
+## Overall performance
+
+```{r overall, echo=FALSE}
+
+
+data_plot <- public_officials_dta_clean %>%
+  mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
+  mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
+    mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
+  group_by(govt_tier) %>%
+  select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy,
+         impartial_decision_making) %>%
+  pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
+                      "quality_bureaucracy", "impartial_decision_making"),
+               names_to = "indicators",
+               values_to = "indicator_values") 
+
+dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(median(indicator_values),1))
+
+  ggplot(data_plot, aes(x=indicators, y=indicator_values, fill=govt_tier)) + #now plot the output in a bar graph
+    geom_boxplot(position="dodge") +
+    geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
+    scale_x_discrete(labels = str_wrap(c("National Learning Goals",
+                                         "Mandates & Accountability",
+                                         "Quality of the Bureaucracy",
+                                         "Impartial Decision Making"), width = 25)) + 
+  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
+  scale_fill_discrete(name="Government Level") +
+  theme_bw() +
+    theme(legend.position = "bottom") 
+
+```
 
 ## Do public officials know the National Learning Goals?
 
@@ -150,11 +276,16 @@ cat_data <- public_officials_dta_clean %>%
                                        "Don't Know"))) 
 
 cat_data %>%
+  mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
+  mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
+    mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
+  group_by(govt_tier) %>%
   count(NLG1q1_factor = NLG1q1_factor) %>% 
   mutate(pct = prop.table(n)) %>%
-  ggplot( aes(x=NLG1q1_factor, y=pct)) + #now plot the output in a bar graph
-    geom_col(aes(fill='darkblue')) +
-    geom_label(aes(label=scales::percent(pct)), size = 3) +
+  ggplot( aes(x=NLG1q1_factor, y=pct, fill=govt_tier)) + #now plot the output in a bar graph
+    geom_col(position="dodge") +
+    geom_label(aes(label=scales::percent(pct)), size = 3,
+               position = position_dodge(width = 1)) +
     scale_y_continuous(labels=percent) +
     scale_x_discrete(labels = str_wrap(c("The organization does not have defined targets",
                                        "The organization has only loosely-defined targets",
@@ -164,9 +295,10 @@ cat_data %>%
                                        "Don't Know"), width = 25)) + 
   xlab(str_wrap("Does your organization have a clear set of performance indicators? Are targets aligned with and contribute to achieving learning goals at the national level?", width=75))+
   ylab("Percent") +
-  ggtitle(str_wrap("Public Officials Opinions on Whether Performance Indicators Aligned with National Learning Goals", width=75)) +
+  ggtitle(str_wrap("Whether Performance Indicators Aligned with National Learning Goals", width=75)) +
+  scale_fill_discrete(name="Government Level") +
   theme_bw() +
-    theme(legend.position = "none") 
+    theme(legend.position = "bottom") 
 
 ```
 
