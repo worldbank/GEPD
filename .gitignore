@@ -78,8 +78,6 @@
 # csv files
 
 #Powerpoint files
-!/**/**/*.ppt
-!/**/**/*.pptx
 
 
 #######################
