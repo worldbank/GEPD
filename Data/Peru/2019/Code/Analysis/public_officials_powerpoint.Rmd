@@ -118,7 +118,7 @@ learning_data_plot <- final_indicator_data_LERN %>%
   bind_rows(final_indicator_data_LERN_F, .id="Female") %>%
   bind_rows(final_indicator_data_LERN_M, .id="Male") %>%
   mutate(Gender=case_when(
-    Female==1 ~ "Either Male or Female",
+    Female==1 ~ "All Students",
     Female==2 ~ "Female",
     Male==2 ~ "Male",
     TRUE ~ as.character(NA)
@@ -137,9 +137,9 @@ learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD
     geom_boxplot(aes(weight=school_ipw), position="dodge") +
     geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = -0.65) +
-  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
-  ylab("Scale (1-5)") +
-  ggtitle(str_wrap("Boxplot of Student Learning by Gender and Urban/Rural", width=75)) +
+  xlab(str_wrap("Urban/Rural Status", width=75))+
+  ylab("Fraction Correct on 4th Grade Assessment") +
+  ggtitle(str_wrap("Boxplot of Student Math and Language Learning by Gender and Urban/Rural", width=75)) +
   scale_fill_discrete(name="Gender") +
   theme_bw() +
     theme(legend.position = "bottom") 
