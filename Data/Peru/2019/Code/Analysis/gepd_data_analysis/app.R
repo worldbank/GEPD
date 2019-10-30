@@ -10,6 +10,7 @@
 
 
 library(shiny)
+
 library(shinyjs)
 library(tidyverse)
 library(plotly)
@@ -31,7 +32,185 @@ library(Hmisc)
 
 
 # Define UI for application that examines GEPD data
-ui <- fluidPage(
+ui <- navbarPage("Global Education Policy Dashboard",
+  tabPanel("Dashboard",
+           
+           # Output: infobox ----
+           box(h2("Learning Outcomes"), width=10    ),
+           #Outcome - Learning
+           box(infoBoxOutput("achievement", width=10),
+               width=10),      
+           box(h2("Service Delivery Indicators"), width=10    ),
+           #Practices - Teacher Effort
+           box(  infoBoxOutput("absence", width=10),
+                 width=10),      
+           #Practices - Teacher Content Knowledge
+           box(infoBoxOutput("knowledge", width=10),
+               width=10),     
+           
+           #Practices - Teacher Pedagogical Skills
+           box(
+             infoBoxOutput("pedagogy", width=10),
+             checkboxInput("pedagogy_checkbox", "Check for drilldown"),
+             conditionalPanel(condition="input.pedagogy_checkbox==1",infoBoxOutput("pedagogy_culture", width=10)),
+             conditionalPanel(condition="input.pedagogy_checkbox==1",infoBoxOutput("pedagogy_instruction", width=10)),
+             conditionalPanel(condition="input.pedagogy_checkbox==1",infoBoxOutput("pedagogy_socioemotional", width=10))
+             , width=10),
+           
+           #Practices - Basic Inputs
+           box(infoBoxOutput("basic_inputs", width=10),
+               width=10), 
+           #Practices - Basic Infrastructure
+           box(
+             infoBoxOutput("basic_infrastructure", width=10),
+             checkboxInput("basic_infrastructure_checkbox", "Check for drilldown"),
+             conditionalPanel(condition="input.basic_infrastructure_checkbox==1",infoBoxOutput("basic_infrastructure_water", width=10)),
+             conditionalPanel(condition="input.basic_infrastructure_checkbox==1",infoBoxOutput("basic_infrastructure_toilets", width=10)),
+             conditionalPanel(condition="input.basic_infrastructure_checkbox==1",infoBoxOutput("basic_infrastructure_visibility", width=10)),
+             conditionalPanel(condition="input.basic_infrastructure_checkbox==1",infoBoxOutput("basic_infrastructure_electricity", width=10)),
+             conditionalPanel(condition="input.basic_infrastructure_checkbox==1",infoBoxOutput("basic_infrastructure_disabilities", width=10))
+             , width=10),  
+           
+           #Practices - Capacity for Learning  
+           box(infoBoxOutput("prepared_learners", width=10),
+               width=10), 
+           
+           #Practices - Operational Functions
+           box(infoBoxOutput("operational_functions", width=10),
+               width=10), 
+           
+           #Practices - Instructional Leadership
+           box(infoBoxOutput("instructional_leadership", width=10),
+               width=10), 
+           
+           #Practices - Principal School Knowledge
+           box(infoBoxOutput("principal_school_knowledge", width=10),
+               width=10), 
+           
+           #Practices - Principal Management Skills
+           box(infoBoxOutput("principal_management_skills", width=10),
+               width=10), 
+           
+           box(h2("Policy Levers"), width=10    ),
+           #Policy Lever (Teaching) - Attraction
+           box(
+             infoBoxOutput("attraction", width=10),
+             checkboxInput("attraction_checkbox", "Check for drilldown"),
+             conditionalPanel(condition="input.attraction_checkbox==1",infoBoxOutput("attraction_dejure1", width=10)),
+             conditionalPanel(condition="input.attraction_checkbox==1",infoBoxOutput("attraction_dejure2", width=10)),
+             conditionalPanel(condition="input.attraction_checkbox==1",infoBoxOutput("attraction_dejure3", width=10)),
+             conditionalPanel(condition="input.attraction_checkbox==1",infoBoxOutput("attraction_defacto1", width=10)),
+             conditionalPanel(condition="input.attraction_checkbox==1",infoBoxOutput("attraction_defacto2", width=10)),
+             conditionalPanel(condition="input.attraction_checkbox==1",infoBoxOutput("attraction_defacto3", width=10))
+             , width=10),  
+           #Policy Lever (Teaching) - Selection & Deployment
+           box(
+             infoBoxOutput("teaching_selection_deployment", width=10),
+             checkboxInput("teaching_selection_deployment_checkbox", "Check for drilldown"),
+             conditionalPanel(condition="input.teaching_selection_deployment_checkbox==1",infoBoxOutput("teaching_selection_deployment_dejure1", width=10)),
+             conditionalPanel(condition="input.teaching_selection_deployment_checkbox==1",infoBoxOutput("teaching_selection_deployment_dejure2", width=10)),
+             conditionalPanel(condition="input.teaching_selection_deployment_checkbox==1",infoBoxOutput("teaching_selection_deployment_dejure3", width=10)),
+             conditionalPanel(condition="input.teaching_selection_deployment_checkbox==1",infoBoxOutput("teaching_selection_deployment_defacto1", width=10)),
+             conditionalPanel(condition="input.teaching_selection_deployment_checkbox==1",infoBoxOutput("teaching_selection_deployment_defacto2", width=10))
+             , width=10),     
+           #Policy Lever (Teaching) - Support
+           box(infoBoxOutput("support", width=10),
+               width=10), 
+           
+           #Policy Lever (Teaching) - Evaluation
+           box(infoBoxOutput("evaluation", width=10),
+               width=10), 
+           
+           #Policy Lever (Teaching) - Monitoring & Accountability
+           box(
+             infoBoxOutput("teaching_monitoring_accountability", width=10),
+             checkboxInput("teaching_monitoring_accountability_checkbox", "Check for drilldown"),
+             conditionalPanel(condition="input.teaching_monitoring_accountability_checkbox==1",infoBoxOutput("teaching_monitoring_accountability_dejure1", width=10)),
+             conditionalPanel(condition="input.teaching_monitoring_accountability_checkbox==1",infoBoxOutput("teaching_monitoring_accountability_dejure2", width=10)),
+             conditionalPanel(condition="input.teaching_monitoring_accountability_checkbox==1",infoBoxOutput("teaching_monitoring_accountability_defacto1", width=10)),
+             conditionalPanel(condition="input.teaching_monitoring_accountability_checkbox==1",infoBoxOutput("teaching_monitoring_accountability_defacto2", width=10))
+             , width=10),  
+           
+           #Policy Lever (Teaching) - Intrinsic Motivation
+           box(infoBoxOutput("intrinsic_motivation", width=10),
+               width=10), 
+           
+           #Policy Lever (Inputs & Infrastructure) - Standards
+           box(infoBoxOutput("standards", width=10),
+               width=10), 
+           
+           #Policy Lever (Inputs & Infrastructure) - Monitoring
+           box(infoBoxOutput("monitoring", width=10),
+               width=10), 
+           
+           #Policy Lever (Learners) - Nutrition Programs
+           box(infoBoxOutput("nutrition_programs", width=10),
+               width=10), 
+           
+           #Policy Lever (Learners) - Health Programs
+           box(infoBoxOutput("health_programs", width=10),
+               width=10), 
+           
+           #Policy Lever (Learners) - Center-Based Care
+           box(infoBoxOutput("center_based_care", width=10),
+               width=10), 
+           
+           #Policy Lever (Learners) - Caregiver Capacity
+           box(infoBoxOutput("caregiver_capacity", width=10),
+               width=10), 
+           
+           #Policy Lever (School Management) - Clarity of Functions
+           box(infoBoxOutput("clarity_functions", width=10),
+               width=10), 
+           
+           #Policy Lever (School Management) - Supervision
+           box(infoBoxOutput("supervision", width=10),
+               width=10), 
+           
+           #Policy Lever (School Management) - Attraction
+           box(infoBoxOutput("management_attraction", width=10),
+               width=10), 
+           
+           #Policy Lever (School Management) - Selection & Deployment
+           box(infoBoxOutput("management_selection_deployment", width=10),
+               width=10), 
+           
+           #Policy Lever (School Management) - Support
+           box(infoBoxOutput("management_support", width=10),
+               width=10), 
+           
+           #Policy Lever (School Management) - Evaluation
+           box(infoBoxOutput("management_evaluation", width=10),
+               width=10), 
+           
+           box(h2("Politics & Bureaucratic Capacity"), width=10    ),    
+           #Politics & Bureaucratic Capacity - Quality of Bureaucracy
+           box(infoBoxOutput("quality_bureaucracy", width=10),
+               width=10),     
+           #Politics & Bureaucratic Capacity - Impartial Decision-Making
+           box(infoBoxOutput("impartial_decision", width=10),
+               width=10), 
+           
+           #Politics & Bureaucratic Capacity - Mandates & Accountability
+           box(
+             infoBoxOutput("mandates_accountability", width=10),
+             checkboxInput("mandates_checkbox", "Check for drilldown"),
+             conditionalPanel(condition="input.mandates_checkbox==1",infoBoxOutput("mandates_accountability_clarity", width=5)),
+             conditionalPanel(condition="input.mandates_checkbox==1",infoBoxOutput("mandates_accountability_coherence", width=5)),
+             conditionalPanel(condition="input.mandates_checkbox==1",infoBoxOutput("mandates_accountability_transparency", width=5)),
+             conditionalPanel(condition="input.mandates_checkbox==1",infoBoxOutput("mandates_accountability_accountability", width=5))
+             , width=10),
+           
+           #Politics & Bureaucratic Capacity - National Learning Goals    
+           box(infoBoxOutput("national_learning_goals", width=10),
+               width=10),     
+           #Politics & Bureaucratic Capacity - Financing    
+           box(infoBoxOutput("financing", width=10),
+               width=10)      
+
+           ),
+  tabPanel("GEPD Data Explorer",
+    fluidPage(
 
     # Application title
     titlePanel("GEPD Data Explorer"),
@@ -83,7 +262,8 @@ ui <- fluidPage(
             )        )
     )
 )
-
+)
+)
 # Define server logic required to produce output
 server <- function(input, output, session) {
 
@@ -105,7 +285,7 @@ server <- function(input, output, session) {
     #Create list of key indicators
     #Create list of key indicators
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
-                'absence_rate', 'school_absence_rate', 'student_attendance',
+                'student_attendance', 'absence_rate', 'school_absence_rate', 
                 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze', 'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
@@ -127,7 +307,7 @@ server <- function(input, output, session) {
     )
     
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
-                'absence_rate', 'school_absence_rate', 'student_attendance',
+                'student_attendance', 'absence_rate', 'school_absence_rate', 
                 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
