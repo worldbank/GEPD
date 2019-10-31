@@ -355,7 +355,7 @@ server <- function(input, output, session) {
     ##########################
     #Diplay name of variable
     ##########################
-    output$var_name<-renderText({paste(input$indicators, input$subgroup, sep=" - ")})
+    output$var_name<-renderText({paste(input$indicators, input$subgroup, input$gender, sep=" - ")})
 
     
     ##########################
@@ -1008,10 +1008,76 @@ output$indicators_table <- DT::renderDataTable({
       left_join(metadata) %>%
       left_join(labels_df) %>%
       mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
-      select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+      select(varlabel, mean, sd)
     
+    #Now do breakdown by Urban/Rural
+    #urban
+    sumstats_school_urban <- school_dta_short %>%
+      mutate(codigo.modular=as.numeric(school_code)) %>%
+      left_join(data_set_updated) %>%
+      filter(rural==FALSE) %>%
+      mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+    
+    sch_ipw<-sumstats_school_urban$school_ipw 
+    
+    sumstats_school_urban <- sumstats_school_urban %>%
+      select(one_of(indicators_list)) 
+    
+    
+    
+    sumstats_school_urban_df<-skim(sumstats_school_urban) %>%
+      select(-level, -type, -value) %>%
+      spread(stat, formatted) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+    
+    
+    #add variable label
+    sumstats_school_urban_df <- sumstats_school_urban_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      left_join(labels_df) %>%
+      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
+      mutate(mean_urban=mean,
+             sd_urban=sd) %>%
+      select(varlabel, mean_urban, sd_urban)
+    
+    #rural
+      sumstats_school_rural <- school_dta_short %>%
+        mutate(codigo.modular=as.numeric(school_code)) %>%
+        left_join(data_set_updated) %>%
+        filter(rural==TRUE) 
+        
+        sch_ipw<-sumstats_school_rural$school_ipw 
+      
+        sumstats_school_rural <- sumstats_school_rural %>%
+        select(one_of(indicators_list)) 
+      
 
-
+    sumstats_school_rural_df<-skim(sumstats_school_rural) %>%
+      select(-level, -type, -value) %>%
+      spread(stat, formatted) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+    
+    
+    #add variable label
+    sumstats_school_rural_df <- sumstats_school_rural_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      left_join(labels_df) %>%
+      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
+      mutate(mean_rural=mean,
+             sd_rural=sd) %>%
+      select(varlabel, mean_rural, sd_rural)
+    
+    #now bind urban/rural with the main results
+    sumstats_school_df <- sumstats_school_df %>%
+      left_join(sumstats_school_urban_df) %>%
+      left_join(sumstats_school_rural_df)
+    
+      
+    
   #Survey of Public Officials
     metadata<-public_officials_metadata
     
@@ -1038,22 +1104,44 @@ output$indicators_table <- DT::renderDataTable({
     left_join(metadata) %>%
     left_join(labels_df) %>%
     mutate(varlabel=if_else((is.na(varlabel) | as.character(varlabel)=="NULL"),as.character(indicator_labels),as.character(varlabel))) %>%
-    select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+    mutate(mean_urban=as.numeric(NA),
+           sd_urban=as.numeric(NA),
+           mean_rural=as.numeric(NA),
+           sd_rural=as.numeric(NA)) %>%
+    select(varlabel, mean, sd, mean_urban, sd_urban, mean_rural, sd_rural)
   
   
   sumstats_df <- sumstats_school_df %>%
     bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels))
   
+  
+  #add in custom column sub-headers
+  sketch = htmltools::withTags(table(
+    class = 'display',
+    thead(
+      tr(
+        th( rowspan = 2, 'Indicator'),
+        th(colspan = 2, 'Overall'),
+        th(colspan = 2, 'Urban'),
+        th(colspan = 2, 'Rural')
+        
+      ),
+      tr(
+        lapply(rep(c('Mean', 'Std Dev'), 3), th)
+      )
+    )
+  ))
+  
   DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators",
-                colnames=c("Indicator", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "Number of Schools/Public Officials", "Histogram"),
+                container = sketch, rownames=FALSE,
+                class='cell-border stripe',
                 extensions = 'Buttons', options=list(
                   dom = 'Bfrtip',
                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
                   pageLength = 60,
                   ordering=F)) %>%
-    formatRound(columns = c('mean', 'sd', 'p0', 
-                            'p25', 'p50', 'p75', 'p100'),
+    formatRound(columns = c('mean', 'sd', 'mean_urban', 'sd_urban', 'mean_rural', 'sd_rural' ),
                 digits=2)
   
   

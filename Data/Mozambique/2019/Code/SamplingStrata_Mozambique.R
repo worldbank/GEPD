@@ -379,7 +379,7 @@ prov_list<- sample_final %>%
 
 province_office_sample <- prov_list 
 
-dist_list_alt2<- sample_final %>%
+dist_list_alt3<- sample_final %>%
   filter(province %in% as.vector(province_office_sample$province)) %>%
   group_by(district) %>%
   summarise_all(first) %>%

@@ -883,9 +883,9 @@ final_indicator_data_INPT <- school_data_INPT %>%
 
 # School survey. Total score starts at 1 and points added are the sum of whether a school has: 
 #   - Access to adequate drinking water 
-# -Functional toilets that are separate for boys/girls, private, useable, accessible, and have hand washing facilities 
+# -Functional toilets that are separate for boys/girls, private, useable,  and have hand washing facilities 
 # - Electricity and Visibility in the classroom 
-# - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
+# - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
 
 #drinking water
 school_data_INFR <- school_data_INFR %>%
@@ -896,9 +896,9 @@ school_data_INFR <- school_data_INFR %>%
 school_data_INFR <- school_data_INFR %>%
   mutate(functioning_toilet=case_when(
     # exist, separate for boys/girls, clean, private, useable, accessible, handwashing available
-    m1sbq1_infr!=7 & m1sbq2_infr==1 & m1sbq3_infr!=3 & m1sbq4_infr==1 & m1sbq5_infr==1 & m1sbq6_infr==1 & m1sbq7_infr==1 & m1sbq8_infr==1 ~ 1,
+    m1sbq1_infr!=7 & m1sbq2_infr==1 & m1sbq3_infr!=3 & m1sbq4_infr==1 & m1sbq5_infr==1  & m1sbq7_infr==1 & m1sbq8_infr==1 ~ 1,
     m1sbq1_infr==7  ~ 0,
-    m1sbq1_infr!=7 & ( m1sbq2_infr==0 | m1sbq3_infr==3 | m1sbq4_infr!=1 | m1sbq4_infr!=1 | m1sbq6_infr==0 | m1sbq7_infr==0 | m1sbq8_infr==0) ~ 0)) 
+    m1sbq1_infr!=7 & ( m1sbq2_infr==0 | m1sbq3_infr==3 | m1sbq4_infr!=1 | m1sbq4_infr!=1 | m1sbq7_infr==0 | m1sbq8_infr==0) ~ 0)) 
 
 #visibility
 school_data_INFR <- school_data_INFR %>%
@@ -933,7 +933,9 @@ final_indicator_data_INFR <- school_data_INFR %>%
     disab_screening=rowMeans(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE),
     #sum up all components for overall disability accessibility score
     disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
-                                disab_class_ramp+disab_class_entr+disab_screening)/6
+                                disab_class_ramp+disab_class_entr+
+                                if_else(m1sbq1_infr==7,0,m1sbq6_infr)+
+                                disab_screening)/7
   )
 
 
@@ -942,7 +944,7 @@ infr_list<-c('drinking_water', 'functioning_toilet', 'visibility',  'class_elect
 final_indicator_data_INFR <- final_indicator_data_INFR %>%
   select(preamble_info, infr_list, contains('INFR'), contains('disab')) %>%
   mutate(n_mssing_INFR=n_miss_row(.)) %>%
-  mutate(infrastructure=1+rowSums(select(.,drinking_water, functioning_toilet, visibility,  class_electricity, disability_accessibility), na.rm=TRUE)) %>%
+  mutate(infrastructure=rowSums(select(.,drinking_water, functioning_toilet, visibility,  class_electricity, disability_accessibility), na.rm=TRUE)) %>%
   select(preamble_info, infrastructure, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
