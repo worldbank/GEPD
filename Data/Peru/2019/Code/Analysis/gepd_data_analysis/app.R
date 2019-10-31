@@ -11,6 +11,7 @@
 
 library(shiny)
 library(shinythemes)
+library(shinyBS)
 library(shinyjs)
 library(tidyverse)
 library(plotly)
@@ -40,6 +41,8 @@ ui <- navbarPage("Global Education Policy Dashboard",
            fluidPage(theme = shinytheme("cerulean"),
              includeMarkdown("header.md"),            
              DT::dataTableOutput("indicators_table"),
+             h2("How are the Indicators Scored?"),
+             DT::dataTableOutput("indicators_choices"),
              includeMarkdown("footer.md")
            )
       ),
@@ -861,12 +864,12 @@ public_officials_dta_collapsed <- public_officials_dta_clean %>%
 
 indicators_list<-c('student_knowledge',
             'student_attendance', 
+            'absence_rate',
             'content_knowledge', 
             'ecd_student_knowledge', 
             'inputs', 
             'infrastructure',
             'operational_management', 
-            'intrinsic_motivation', 
             'instructional_leadership',
             'principal_management', 
             'teacher_attraction', 
@@ -874,6 +877,7 @@ indicators_list<-c('student_knowledge',
             'teacher_support', 
             'teaching_evaluation', 
             'teacher_monitoring',
+            'intrinsic_motivation', 
             'school_monitoring', 
             'school_management_attraction', 
             'school_selection_deployment', 
@@ -934,38 +938,63 @@ indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "
 )
 
 #create subset with just main indicators
-main_indicator_labels<-c("4th Grade Student Knowledge", 
-                         "Student Attendance Rate",
-                         "Teacher Classroom Absence Rate", 
+main_indicator_labels<-c("Proficiency on GEPD Assessment", 
+                         "Student Attendance",
+                         "Teacher Effort", 
                          "Teacher Content Knowledge", 
-                         "1st Grade Assessment Score", 
-                         "Inputs", 
-                         "Infrastructure", 
+                         "Capacity for Learning", 
+                         "Basic Inputs", 
+                         "Basic Infrastructure", 
                          "Operational Management", 
-                         "Teacher Intrinsic Motivation", 
                          "Instructional Leadership", 
                          'Principal Management Skills', 
-                         'Teacher Attraction (De Facto)',
-                         'Teacher Selection & Deployment (De Facto)',
-                         'Teacher Support (De Facto)', 
-                         'Teacher Evaluation (De Facto)', 
-                         'Teacher Monitoring & Accountability (De Facto)', 
-                         "Inputs and Infrastructure Monitoring", 
-                         "School Management Attraction", 
-                         "School Management Selection & Deployment",
-                         "School Management Support", 
-                         "School Management Evaluation", 
-                         "National Learning Goals",
-                         "Mandates and Accountability",
-                         "Quality of Bureaucracy",
-                         "Impartial Decision Making"
+                         'Policy Lever (Teaching) - Attraction',
+                         'Policy Lever (Teaching) - Selection & Deployment',
+                         'Policy Lever (Teaching) - Support', 
+                         'Policy Lever (Teaching) - Evaluation', 
+                         'Policy Lever (Teaching) - Monitoring & Accountability', 
+                         "Policy Lever (Teaching) - Intrinsic Motivation", 
+                         "Policy Lever (Inputs & Infrastructure) - Monitoring", 
+                         "Policy Lever (School Management) - Attraction", 
+                         "Policy Lever (School Management) - Selection & Deployment",
+                         "Policy Lever (School Management) - Support", 
+                         "Policy Lever (School Management) - Evaluation", 
+                         "Politics & Bureaucratic Capacity - National Learning Goals",
+                         "Politics & Bureaucratic Capacity - Mandates & Accountability",
+                         "Politics & Bureaucratic Capacity - Quality of Bureaucracy",
+                         "Politics & Bureaucratic Capacity - Impartial Decision-Making"
 ) 
 
+
+labels_df_2<-data.frame(indicators=as.character(indicators_list),
+                      indicator_labels=as.character(main_indicator_labels))
 ##########################
 #summary statistics table
 #########################
 
-
+output$indicators_choices <- DT::renderDataTable({
+  
+  indicator_choices_table<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
+  
+  #Display metadata for indicator
+  indicator_choices_table <- indicator_choices_table %>%
+    dplyr::select(-X1, -X6) %>%
+    dplyr::filter(Series!="---") %>%
+    dplyr::select(-Series, -Value)
+  
+  DT::datatable(indicator_choices_table, caption="Indicator Scoring",
+                rownames=FALSE,
+                class='cell-border stripe',
+                escape = FALSE,
+                extensions = c ('Buttons', 'FixedHeader'), options=list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  pageLength = 60,
+                  scrollX = TRUE, 
+                  paging=FALSE,
+                  ordering=F)) 
+  
+  })
 
 
 output$indicators_table <- DT::renderDataTable({
@@ -1005,10 +1034,12 @@ output$indicators_table <- DT::renderDataTable({
     sumstats_school_df <- sumstats_school_df %>%
       mutate(name=variable,
              indicators=variable) %>%
-      left_join(metadata) %>%
-      left_join(labels_df) %>%
-      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
-      select(varlabel, mean, sd)
+      left_join(labels_df_2) %>%
+      mutate(varlabel=indicator_labels) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      select(varlabel, mean, ci)
     
     #Now do breakdown by Urban/Rural
     #urban
@@ -1035,12 +1066,14 @@ output$indicators_table <- DT::renderDataTable({
     sumstats_school_urban_df <- sumstats_school_urban_df %>%
       mutate(name=variable,
              indicators=variable) %>%
-      left_join(metadata) %>%
-      left_join(labels_df) %>%
-      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
+      left_join(labels_df_2) %>%
+      mutate(varlabel=indicator_labels) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
       mutate(mean_urban=mean,
-             sd_urban=sd) %>%
-      select(varlabel, mean_urban, sd_urban)
+             ci_urban=ci) %>%
+      select(varlabel, mean_urban, ci_urban)
     
     #rural
       sumstats_school_rural <- school_dta_short %>%
@@ -1064,12 +1097,14 @@ output$indicators_table <- DT::renderDataTable({
     sumstats_school_rural_df <- sumstats_school_rural_df %>%
       mutate(name=variable,
              indicators=variable) %>%
-      left_join(metadata) %>%
-      left_join(labels_df) %>%
-      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
+      left_join(labels_df_2) %>%
+      mutate(varlabel=indicator_labels) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
       mutate(mean_rural=mean,
-             sd_rural=sd) %>%
-      select(varlabel, mean_rural, sd_rural)
+             ci_rural=ci) %>%
+      select(varlabel, mean_rural, ci_rural)
     
     #now bind urban/rural with the main results
     sumstats_school_df <- sumstats_school_df %>%
@@ -1101,21 +1136,28 @@ output$indicators_table <- DT::renderDataTable({
   sumstats_public_officials_df <- sumstats_public_officials_df %>%
     mutate(name=variable,
            indicators=variable) %>%
-    left_join(metadata) %>%
-    left_join(labels_df) %>%
-    mutate(varlabel=if_else((is.na(varlabel) | as.character(varlabel)=="NULL"),as.character(indicator_labels),as.character(varlabel))) %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
     mutate(mean_urban=as.numeric(NA),
-           sd_urban=as.numeric(NA),
+           ci_urban=as.numeric(NA),
            mean_rural=as.numeric(NA),
-           sd_rural=as.numeric(NA)) %>%
-    select(varlabel, mean, sd, mean_urban, sd_urban, mean_rural, sd_rural)
+           ci_rural=as.numeric(NA)) %>%
+    select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
   
   
   sumstats_df <- sumstats_school_df %>%
     bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels))
   
-  
+   sumstats_df <- sumstats_df %>%
+     left_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
+   
+   sumstats_df <- sumstats_df %>%
+     select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+   
   #add in custom column sub-headers
   sketch = htmltools::withTags(table(
     class = 'display',
@@ -1128,20 +1170,23 @@ output$indicators_table <- DT::renderDataTable({
         
       ),
       tr(
-        lapply(rep(c('Mean', 'Std Dev'), 3), th)
+        lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
       )
     )
   ))
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators",
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Peru 2019",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
-                extensions = 'Buttons', options=list(
+                escape = FALSE,
+                extensions = c ('Buttons', 'FixedHeader'), options=list(
                   dom = 'Bfrtip',
                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
                   pageLength = 60,
+                  scrollX = TRUE, 
+                  paging=FALSE,
                   ordering=F)) %>%
-    formatRound(columns = c('mean', 'sd', 'mean_urban', 'sd_urban', 'mean_rural', 'sd_rural' ),
+    formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural' ),
                 digits=2)
   
   

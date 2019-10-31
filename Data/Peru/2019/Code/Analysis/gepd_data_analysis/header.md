@@ -1,4 +1,4 @@
-# GEPD
+# GEPD - Peru 2019
 
 ![gepd_logo](gepd_logo.png)
 
@@ -13,6 +13,8 @@ Policymakers in low- and middle-income countries who are working to improve stud
 The World Bank, with support from the Bill and Melinda Gates Foundation and the UK’s Department for International Development, has designed a Global Education Policy Dashboard, which measures the drivers of learning outcomes in basic education around the world. In doing so, it highlight gaps between current practice and  what the evidence suggests would be most effective in promoting learning, and it gives governments a way to set priorities and track progress as they work to close those gaps. This collaboration advances the goals of the Human Capital Project, a global effort to accelerate more and better investments in people for greater equity and economic growth.
 
 ## How to use this tool
-In the table below, you will find our primary indicators - the practices, policies, and politics - that we think are driving learning outcomes.  For a deeper dive, click on the GEPD Data Explorer tab in the top navigation bar of this page.
+In the table below, you will find our primary indicators - the practices, policies, and politics - that we think are driving learning outcomes.  The data below come from our Dashboard survey in the country of Peru in 2019. Our survey took place in over 200 schools and interviewed 140 public officials in District and Regional offices across the country and 60 public officials in the central Ministry of Education. For a deeper dive, click on the GEPD Data Explorer tab in the top navigation bar of this page.
+
+Please consult our project Github repository for more details on how our indicators are constructed and how our sampling is done.  https://github.com/worldbank/GEPD
 
 Please contact our team at educationdashboard@worldbank.org with any questions.
