@@ -10,6 +10,7 @@
 
 
 library(shiny)
+library(shinythemes)
 library(shinyjs)
 library(tidyverse)
 library(plotly)
@@ -31,7 +32,23 @@ library(Hmisc)
 
 
 # Define UI for application that examines GEPD data
-ui <- fluidPage(
+ui <- navbarPage("Global Education Policy Dashboard",
+  #####################################################
+  # Dashboard Section
+  ####################################################
+  tabPanel("Dashboard",
+           fluidPage(theme = shinytheme("cerulean"),
+             includeMarkdown("header.md"),            
+             DT::dataTableOutput("indicators_table"),
+             includeMarkdown("footer.md")
+           )
+      ),
+  
+  #############################################
+  # Data Explorer Section
+  #############################################
+  tabPanel("GEPD Data Explorer",
+    fluidPage(
 
     # Application title
     titlePanel("GEPD Data Explorer"),
@@ -83,7 +100,8 @@ ui <- fluidPage(
             )        )
     )
 )
-
+)
+)
 # Define server logic required to produce output
 server <- function(input, output, session) {
 
@@ -104,30 +122,10 @@ server <- function(input, output, session) {
     
     #Create list of key indicators
     #Create list of key indicators
-    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
-                'absence_rate', 'school_absence_rate', 'student_attendance',
-                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze', 'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
-                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
-                'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
-                'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-                'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-                'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
-                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
-                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
-                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
-                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                'school_management_attraction', 'principal_satisfaction',
-                'school_selection_deployment', 
-                'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
-    )
+
     
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
-                'absence_rate', 'school_absence_rate', 'student_attendance',
+                'student_attendance', 'absence_rate', 'school_absence_rate', 
                 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
@@ -213,7 +211,9 @@ server <- function(input, output, session) {
     indicators<- indicators %>%
         filter(indicator_tag!="PROE" & indicator_tag!="PROP" & indicator_tag!="TENR" ) 
 
-        
+    ################################################################################################################
+    # Data Explorer Section
+    ################################################################################################################     
        #fix a few issues with Survey of Public Officials naming
     
     #update indicator choices for session and for regression tables
@@ -846,6 +846,219 @@ output$downloadscoring <- downloadHandler(
     
       }
 )
+
+
+
+################################################################################################################     
+# Dashboard Section
+################################################################################################################     
+
+school_dta_collapsed <- school_dta_short %>%
+  summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+public_officials_dta_collapsed <- public_officials_dta_clean %>%
+  summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+indicators_list<-c('student_knowledge',
+            'student_attendance', 
+            'content_knowledge', 
+            'ecd_student_knowledge', 
+            'inputs', 
+            'infrastructure',
+            'operational_management', 
+            'intrinsic_motivation', 
+            'instructional_leadership',
+            'principal_management', 
+            'teacher_attraction', 
+            'teacher_selection_deployment', 
+            'teacher_support', 
+            'teaching_evaluation', 
+            'teacher_monitoring',
+            'school_monitoring', 
+            'school_management_attraction', 
+            'school_selection_deployment', 
+            'school_support', 
+            'principal_evaluation', 
+            "national_learning_goals",
+            "mandates_accountability",
+            "quality_bureaucracy",
+            "impartial_decision_making"
+)
+
+drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
+                        'school_absence_rate', 'student_attendance',
+                        'math_content_knowledge', 'literacy_content_knowledge',
+                        'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                        'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
+                        'drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+                        'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                        'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                        'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                        'teacher_selection','teacher_deployment',
+                        'pre_service','practicum','in_service','opportunities_teachers_share',
+                        'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences', 
+                        'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                        'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        'principal_satisfaction',
+                        'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+)
+
+indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge",
+                    "Student Attendance Rate",
+                    "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                    "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                    "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                    "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
+                    "Infrastructure", "Clean Drinking Water", "Functioning/Accessible Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
+                    "Operational Management", "Operational Management - Vignette 1", 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', "Operational Management - Vignette 2",'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                    "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                    "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                    'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                    'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                    'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                    'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                    'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                    'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                    "Inputs and Infrastructure Monitoring", 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                    "School Management Attraction", 'principal_satisfaction',
+                    "School Management Selection & Deployment",
+                    "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                    "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                    "National Learning Goals",
+                    "Mandates and Accountability",
+                    "Quality of Bureaucracy",
+                    "Impartial Decision Making"
+)
+
+#create subset with just main indicators
+main_indicator_labels<-c("4th Grade Student Knowledge", 
+                         "Student Attendance Rate",
+                         "Teacher Classroom Absence Rate", 
+                         "Teacher Content Knowledge", 
+                         "1st Grade Assessment Score", 
+                         "Inputs", 
+                         "Infrastructure", 
+                         "Operational Management", 
+                         "Teacher Intrinsic Motivation", 
+                         "Instructional Leadership", 
+                         'Principal Management Skills', 
+                         'Teacher Attraction (De Facto)',
+                         'Teacher Selection & Deployment (De Facto)',
+                         'Teacher Support (De Facto)', 
+                         'Teacher Evaluation (De Facto)', 
+                         'Teacher Monitoring & Accountability (De Facto)', 
+                         "Inputs and Infrastructure Monitoring", 
+                         "School Management Attraction", 
+                         "School Management Selection & Deployment",
+                         "School Management Support", 
+                         "School Management Evaluation", 
+                         "National Learning Goals",
+                         "Mandates and Accountability",
+                         "Quality of Bureaucracy",
+                         "Impartial Decision Making"
+) 
+
+##########################
+#summary statistics table
+#########################
+
+
+
+
+output$indicators_table <- DT::renderDataTable({
+  
+# School Survey
+    metadata<-metadta
+    
+    weights <- school_dta_short %>%
+      mutate(codigo.modular=as.numeric(school_code)) %>%
+      left_join(data_set_updated) %>%
+      mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+    
+    sch_ipw<-weights$school_ipw 
+    
+    #add function to produce weighted summary stats
+    skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                               complete_count= ~ sum(!is.na(.))))
+    
+ 
+  
+    sumstats_school <- school_dta_short %>%
+      select(one_of(indicators_list) ) 
+    
+    
+    
+    sumstats_school_df<-skim(sumstats_school) %>%
+      select(-level, -type, -value) %>%
+      spread(stat, formatted) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+    
+    
+    #add variable label
+    sumstats_school_df <- sumstats_school_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      left_join(labels_df) %>%
+      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
+      select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+    
+
+
+  #Survey of Public Officials
+    metadata<-public_officials_metadata
+    
+    #add function to produce weighted summary stats
+    skim_with_defaults()
+    
+  
+  
+  sumstats_public_officials <- public_officials_dta_clean %>%
+    select(one_of(indicators_list) ) 
+  
+  
+  
+  sumstats_public_officials_df<-skim(sumstats_public_officials) %>%
+    select(-level, -type, -value) %>%
+    spread(stat, formatted) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+  
+  
+  #add variable label
+  sumstats_public_officials_df <- sumstats_public_officials_df %>%
+    mutate(name=variable,
+           indicators=variable) %>%
+    left_join(metadata) %>%
+    left_join(labels_df) %>%
+    mutate(varlabel=if_else((is.na(varlabel) | as.character(varlabel)=="NULL"),as.character(indicator_labels),as.character(varlabel))) %>%
+    select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+  
+  
+  sumstats_df <- sumstats_school_df %>%
+    bind_rows(sumstats_public_officials_df) %>%
+    arrange(factor(varlabel, levels=main_indicator_labels))
+  
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators",
+                colnames=c("Indicator", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "Number of Schools/Public Officials", "Histogram"),
+                extensions = 'Buttons', options=list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  pageLength = 60,
+                  ordering=F)) %>%
+    formatRound(columns = c('mean', 'sd', 'p0', 
+                            'p25', 'p50', 'p75', 'p100'),
+                digits=2)
+  
+  
+})
+
 
 
 }

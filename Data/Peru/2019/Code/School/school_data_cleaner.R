@@ -384,6 +384,7 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
   mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-m4scq13_girls)) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance<0, 0,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.)) %>%
