@@ -37,8 +37,10 @@ ui <- navbarPage("Global Education Policy Dashboard",
   # Dashboard Section
   ####################################################
   tabPanel("Dashboard",
-           fluidPage(    theme = shinytheme("sandstone")    ,
-             DT::dataTableOutput("indicators_table")
+           fluidPage(theme = shinytheme("cerulean"),
+             includeMarkdown("header.md"),            
+             DT::dataTableOutput("indicators_table"),
+             includeMarkdown("footer.md")
            )
       ),
   
@@ -1006,7 +1008,7 @@ output$indicators_table <- DT::renderDataTable({
       left_join(metadata) %>%
       left_join(labels_df) %>%
       mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
-      select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+      select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
     
 
 
@@ -1036,7 +1038,7 @@ output$indicators_table <- DT::renderDataTable({
     left_join(metadata) %>%
     left_join(labels_df) %>%
     mutate(varlabel=if_else((is.na(varlabel) | as.character(varlabel)=="NULL"),as.character(indicator_labels),as.character(varlabel))) %>%
-    select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+    select(varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
   
   
   sumstats_df <- sumstats_school_df %>%
@@ -1044,7 +1046,7 @@ output$indicators_table <- DT::renderDataTable({
     arrange(factor(varlabel, levels=main_indicator_labels))
   
   DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators",
-                colnames=c("Indicator", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"),
+                colnames=c("Indicator", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "Number of Schools/Public Officials", "Histogram"),
                 extensions = 'Buttons', options=list(
                   dom = 'Bfrtip',
                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
