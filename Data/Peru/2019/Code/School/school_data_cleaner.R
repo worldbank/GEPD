@@ -48,7 +48,8 @@ school_dta<- school_dta %>%
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code))
+         school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
+         m7_teach_count_pknw=m7_teach_count #this variable was mistakenly not tagged as pknw
   )
 
 #create school metadata frame
@@ -505,12 +506,15 @@ save(teacher_assessment_language, teacher_assessment_math, teacher_assessment_do
 #calculate % correct for literacy, math, and total
 final_indicator_data_CONT <- teacher_assessment_dta %>%
   group_by(school_code) %>%
+  add_count(school_code,name='m5_teach_count') %>%
+  add_count(typetest==1,name='m5_teach_count_math') %>%
+  mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
-  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
+  select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
 #Breakdown by Male/Female
@@ -519,6 +523,7 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
   left_join(teacher_absence_dta, by=c('school_code', 'questionnaire_selected__id')) %>%
   filter(m2saq3==1) %>%
   group_by(school_code) %>%
+  add_count(school_code,name='m5_teach_count') %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
@@ -532,6 +537,7 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
   left_join(teacher_absence_dta, by=c('school_code', 'questionnaire_selected__id')) %>%
   filter(m2saq3==2) %>%
   group_by(school_code) %>%
+  add_count(school_code,name='m5_teach_count') %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
@@ -1056,14 +1062,80 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
 #############################################
 ##### School Principal School Knowledge ###########
 #############################################
+# The aim of this indicator is to measure the extent to which principals have the knowledge about their own schools that is necessary for them to be effective managers. A score from 1 to 5 capturing the extent to which the principal is familiar with certain key aspects of the day-to-day workings of the school (in schools that have principals). Principal receives points in the following way: 
+#   - 5 points. Principal gets all 90-100% of questions within accuracy bounds (defined below). 
+# - 4 points. Principal gets 80-90% of question within accuracy bounds. 
+# - 3 points. Principal gets 70-80% of question within accuracy bounds. 
+# - 2 points. Principal gets 60-70% of question within accuracy bounds. 
+# - 1 points. Principal gets under 60% of question within accuracy bounds. 
+# 
+# Accuracy bounds for each question. 
+# Within 1 teacher/student for each of the following: 
+#   - Out of these XX teachers, how many do you think would be able to correctly add triple digit numbers (i.e. 343+215+127)? 
+#   - Out of these XX teachers, how many do you think would be able to correctly to multiply double digit numbers (i.e. 37 x 13)? 
+#   - Out of these XX teachers, how many do you think would be able to complete sentences with the correct world (i.e. The accident _____ (see, saw, had seen, was seen) by three people)? 
+#   - Any of these XX teachers have less than 3 years of experience? 
+#   - Out of these XX teachers, which ones have less than 3 years of experience as a teacher? 
+# Within 3 teacher/student for each of the following: 
+#   - In the selected 4th grade classroom, how many of the pupils have the relevant textbooks? 
+#   Must identify whether or not blackboard was working in a selected 4th grade classroom.
 
 
+
+
+  #first create a database containing actual values for each question for the principal
+pknw_actual_cont <- final_indicator_data_CONT %>%
+  select(school_code, m5_teach_count, m5_teach_count_math, m5s2q1c_number, m5s2q1e_number, m5s1q1f_grammer ) 
+
+pknw_actual_exper <- teacher_questionnaire %>%
+  select(school_code, m3sb_tnumber, m3sb_troster,m3saq5, m3saq6 ) %>%
+  mutate(experience=(2019-m3saq5)) %>%
+  filter(experience <3) %>% 
+  group_by(school_code) %>%
+  summarise(teacher_count_experience_less3=n())
+
+pknw_actual_school_inpts <- final_indicator_data_INPT %>%
+  select(school_code, blackboard_functional, m4scq5_inpt)
+
+pknw_actual_combined <- pknw_actual_school_inpts %>%
+  left_join(pknw_actual_cont) %>%
+  left_join(pknw_actual_exper) %>%
+  mutate(teacher_count_experience_less3=if_else(is.na(teacher_count_experience_less3), as.numeric(0), as.numeric(teacher_count_experience_less3)),
+         m5s2q1c_number=m5s2q1c_number*m5_teach_count,
+         m5s2q1e_number=m5s2q1e_number*m5_teach_count,
+         m5s1q1f_grammer=m5s1q1f_grammer*m5_teach_count)
+  
+
+#create function to compare principal responses to actual
+# if principal is within 1 student/teacher, then score as 1, 0 otherwise
+principal_scorer <- function(var_guess, var_actual, margin) {
+  if_else(
+    abs(var_guess-var_actual)<=as.numeric(margin),
+    1,
+    0)
+}
 
 final_indicator_data_PKNW <- school_data_PKNW %>%
   group_by(school_code) %>%
+  select(school_code, m7sfq5_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PKNW=n_miss_row(.))  %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))  
+  select( -starts_with('interview'), -starts_with('enumerator'))  %>%
+  left_join(pknw_actual_combined) %>%
+  mutate(add_triple_digit_pknw=principal_scorer(m7sfq5_pknw, m5s2q1c_number,1),
+         multiply_double_digit_pknw=principal_scorer(m7sfq6_pknw, m5s2q1e_number,1),
+         complete_sentence_pknw=principal_scorer(m7sfq7_pknw, m5s1q1f_grammer,1),
+         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3,1),
+         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt,3),
+         blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
+  mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
+  mutate(principal_knowledge_score=case_when(
+    principal_knowledge_avg >0.9 ~ 5,
+    (principal_knowledge_avg >0.8 & principal_knowledge_avg<=0.9) ~ 4,
+    (principal_knowledge_avg >0.7 & principal_knowledge_avg<=0.8) ~ 3,
+    (principal_knowledge_avg >0.6 & principal_knowledge_avg<=0.7) ~ 2,
+    (principal_knowledge_avg <=0.6 ) ~ 1
+  ))
   
 
 #############################################
@@ -1672,7 +1744,7 @@ keep_info <-       c('school_code',
 
 if (exists('final_school_data')) {
   rm('final_school_data')
-  }
+}
 
 ind_dta_list<-c()
 
@@ -1684,12 +1756,11 @@ for (i in indicator_names ) {
     #add element to list
     ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",i, sep=""))
     
-
+    
     print(i)
     #Merge this to overall final_school_data frame
     if (!exists('final_school_data')) {
       final_school_data<-temp
-      stop
       print(i)
       write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
       if (backup_onedrive=="yes") {
@@ -1709,6 +1780,7 @@ for (i in indicator_names ) {
   }
 }
 
+
 #add male/female breakdowns to ind_data_list
 
 ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", "final_indicator_data_CONT_M", 
@@ -1726,6 +1798,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
             'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
             'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+            'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
             'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
             'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
             'teacher_selection_deployment', 'teacher_selection','teacher_deployment',

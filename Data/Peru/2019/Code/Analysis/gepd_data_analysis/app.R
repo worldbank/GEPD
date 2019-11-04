@@ -39,9 +39,10 @@ ui <- navbarPage("Global Education Policy Dashboard",
   ####################################################
   tabPanel("Dashboard",
            fluidPage(theme = shinytheme("cerulean"),
-             includeMarkdown("header.md"),            
+             includeMarkdown("header.md"),          
+             h2("What are the results?"),
              DT::dataTableOutput("indicators_table"),
-             h2("How are the Indicators Scored?"),
+             h2("How are the indicators scored?"),
              DT::dataTableOutput("indicators_choices"),
              includeMarkdown("footer.md")
            )
@@ -136,6 +137,7 @@ server <- function(input, output, session) {
                 'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
                 'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
                 'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
                 'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
                 'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
                 'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
@@ -163,6 +165,7 @@ server <- function(input, output, session) {
                         "Operational Management", "Operational Management - Vignette 1", 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', "Operational Management - Vignette 2",'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
                         "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
                         "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
                         'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
                         'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
                         'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
@@ -191,6 +194,7 @@ server <- function(input, output, session) {
                         "Operational Management", 
                         "Teacher Intrinsic Motivation", 
                         "Instructional Leadership", 
+                        'Principal Knowledge of School',
                         'Principal Management Skills', 
                         'Teacher Attraction (De Facto)',
                         'Teacher Selection & Deployment (De Facto)',
@@ -747,6 +751,7 @@ server <- function(input, output, session) {
                           'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
                           'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
                           'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                          'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
                           'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
                           'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
                           'teacher_selection','teacher_deployment',
@@ -871,6 +876,7 @@ indicators_list<-c('student_knowledge',
             'infrastructure',
             'operational_management', 
             'instructional_leadership',
+            'principal_knowledge_score',
             'principal_management', 
             'teacher_attraction', 
             'teacher_selection_deployment', 
@@ -898,6 +904,7 @@ drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
                         'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
                         'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
                         'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
                         'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
                         'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
                         'teacher_selection','teacher_deployment',
@@ -920,6 +927,7 @@ indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "
                     "Operational Management", "Operational Management - Vignette 1", 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', "Operational Management - Vignette 2",'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
                     "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
                     "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                    'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
                     'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
                     'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
                     'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
@@ -938,6 +946,8 @@ indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "
 )
 
 #create subset with just main indicators
+
+ 
 main_indicator_labels<-c("Proficiency on GEPD Assessment", 
                          "Student Attendance",
                          "Teacher Effort", 
@@ -947,6 +957,7 @@ main_indicator_labels<-c("Proficiency on GEPD Assessment",
                          "Basic Infrastructure", 
                          "Operational Management", 
                          "Instructional Leadership", 
+                         'Principal Knowledge of School',
                          'Principal Management Skills', 
                          'Policy Lever (Teaching) - Attraction',
                          'Policy Lever (Teaching) - Selection & Deployment',
@@ -954,15 +965,15 @@ main_indicator_labels<-c("Proficiency on GEPD Assessment",
                          'Policy Lever (Teaching) - Evaluation', 
                          'Policy Lever (Teaching) - Monitoring & Accountability', 
                          "Policy Lever (Teaching) - Intrinsic Motivation", 
-                         "Policy Lever (Inputs & Infrastructure) - Monitoring", 
-                         "Policy Lever (School Management) - Attraction", 
-                         "Policy Lever (School Management) - Selection & Deployment",
-                         "Policy Lever (School Management) - Support", 
-                         "Policy Lever (School Management) - Evaluation", 
-                         "Politics & Bureaucratic Capacity - National Learning Goals",
-                         "Politics & Bureaucratic Capacity - Mandates & Accountability",
-                         "Politics & Bureaucratic Capacity - Quality of Bureaucracy",
-                         "Politics & Bureaucratic Capacity - Impartial Decision-Making"
+                         "Policy Lever (Inputs & Infrastructure) - Monitoring",
+                         "Policy Lever (School Management) - Attraction" ,                   
+                         "Policy Lever (School Management) - Selection & Deployment"  ,      
+                         "Policy Lever (School Management) - Support" ,                      
+                         "Policy Lever (School Management) - Evaluation"    , 
+                         "Politics & Bureaucratic Capacity - Quality of Bureaucracy"    ,    
+                         "Politics & Bureaucratic Capacity - Impartial Decision-Making"  ,   
+                         "Politics & Bureaucratic Capacity - Mandates & Accountability"   ,  
+                         "Politics & Bureaucratic Capacity - National Learning Goals" 
 ) 
 
 
@@ -972,29 +983,6 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 #summary statistics table
 #########################
 
-output$indicators_choices <- DT::renderDataTable({
-  
-  indicator_choices_table<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
-  
-  #Display metadata for indicator
-  indicator_choices_table <- indicator_choices_table %>%
-    dplyr::select(-X1, -X6) %>%
-    dplyr::filter(Series!="---") %>%
-    dplyr::select(-Series, -Value)
-  
-  DT::datatable(indicator_choices_table, caption="Indicator Scoring",
-                rownames=FALSE,
-                class='cell-border stripe',
-                escape = FALSE,
-                extensions = c ('Buttons', 'FixedHeader'), options=list(
-                  dom = 'Bfrtip',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-                  pageLength = 60,
-                  scrollX = TRUE, 
-                  paging=FALSE,
-                  ordering=F)) 
-  
-  })
 
 
 output$indicators_table <- DT::renderDataTable({
@@ -1189,6 +1177,71 @@ output$indicators_table <- DT::renderDataTable({
     formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural' ),
                 digits=2)
   
+  
+})
+
+
+
+
+output$indicators_choices <- DT::renderDataTable({
+  
+  indicator_choices_table<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
+  main_indicator_labels<-c("Proficiency on GEPD Assessment", 
+                           "Student Attendance",
+                           "Teacher Effort", 
+                           "Teacher Content Knowledge", 
+                           "Capacity for Learning", 
+                           "Basic Inputs", 
+                           "Basic Infrastructure", 
+                           "Operational Management", 
+                           "Instructional Leadership", 
+                           'Principal Knowledge of School',
+                           'Principal Management Skills', 
+                           'Policy Lever (Teaching) - Attraction',
+                           'Policy Lever (Teaching) - Selection & Deployment',
+                           'Policy Lever (Teaching) - Support', 
+                           'Policy Lever (Teaching) - Evaluation', 
+                           'Policy Lever (Teaching) - Monitoring & Accountability', 
+                           "Policy Lever (Teaching) - Intrinsic Motivation", 
+                           "Policy Lever (Inputs & Infrastructure) - Monitoring",
+                           "Policy Lever (School Management) - Attraction" ,                   
+                           "Policy Lever (School Management) - Selection & Deployment"  ,      
+                           "Policy Lever (School Management) - Support" ,                      
+                           "Policy Lever (School Management) - Evaluation"    , 
+                           "Politics & Bureaucratic Capacity - Quality of Bureaucracy"    ,    
+                           "Politics & Bureaucratic Capacity - Impartial Decision-Making"  ,   
+                           "Politics & Bureaucratic Capacity - Mandates & Accountability"   ,  
+                           "Politics & Bureaucratic Capacity - National Learning Goals" 
+  ) 
+  
+
+  #Display metadata for indicator
+  indicator_choices_table <- indicator_choices_table %>%
+    dplyr::select(-X1, -X6) %>%
+    dplyr::filter(Series!="---") %>%
+    dplyr::select(-Series, -Value) 
+    # rename(name='Indicator Name' ) %>%
+    # dplyr::filter(name %in% main_indicator_labels) %>%
+    # arrange(factor(name, levels=main_indicator_labels)) %>%
+    # rename('Indicator Name'=name ) 
+  
+    
+  
+  s <- input$indicators_table_rows_selected
+  if (length(s)) {
+    indicator_choices_table <- indicator_choices_table[s,]
+  }
+  DT::datatable(indicator_choices_table, caption="Indicator Scoring",
+                rownames=FALSE,
+                class='cell-border stripe',
+                escape = FALSE,
+                extensions = c ('Buttons', 'FixedHeader'), options=list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  pageLength = 60,
+                  scrollX = TRUE, 
+                  paging=FALSE,
+                  ordering=F)) 
   
 })
 

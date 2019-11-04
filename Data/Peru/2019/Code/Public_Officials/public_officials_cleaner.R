@@ -189,11 +189,6 @@ public_officials_dta_clean <-public_officials_dta %>%
   dplyr::select(preamble_info,constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
   dplyr::select(-starts_with("enumerators_preload"))
 
-#filter out the director of HR, which isn't specifically asked about indicator questions
-
-public_officials_dta_clean <- public_officials_dta_clean %>%
-  filter(director_hr==0)
-
 
 #######################################
 # Score Public Officials Data
@@ -262,6 +257,15 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
 public_officials_dta_short <-public_officials_dta_clean %>%
   dplyr::select(preamble_info, bureau_ind, constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
+
+#filter out the director of HR, which isn't specifically asked about indicator questions
+
+public_officials_dta_hr <- public_officials_dta_clean %>%
+  filter(director_hr==1)
+
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  filter(director_hr==0)
+
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
   write_dta(public_officials_dta_clean, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
@@ -283,24 +287,41 @@ keep_info <- c('interview__id','region_code', 'district_code', 'district', 'prov
 public_officials_office_level<- public_officials_dta_clean %>%
   group_by(region_code, district_code, govt_tier) %>%
   select(keep_info,bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
-  mutate(count=n() )%>% 
+  mutate(count=n() ) %>% 
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
   
 #convert variables to factor
-public_officials_dta_clean<- public_officials_dta_clean %>%
-  left_join(public_officials_metadata)
-  mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), factor(., labels=vallables) ) 
+# public_officials_dta_clean<- public_officials_dta_clean %>%
+#   left_join(public_officials_metadata)
+#   mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), factor(., labels=vallables) ) 
 
-label_df<-public_officials_metadata %>%
-  filter(grepl('NLG|ACM|QB|IDM', name))
+# label_df<-public_officials_metadata %>%
+#   filter(grepl('NLG|ACM|QB|IDM', name))
+# 
+# #add in value labels to questions using apply
+# 
+# #  factor function to create factor variable with value labels attached
+# ff = function(x){ 
+#   
+#   #get string containing value labels
+#   rownum<-which(grepl(x, label_df$name))
+#   lab <- as.character(label_df[rownum,3])
+#   #access column of same name as unit in the apply loop
+#   public_officials_dta_clean[,x] <-    factor(public_officials_dta_clean$x,labels=lab)
+# 
+# }
+# 
+# 
+# public_officials_dta_clean2 <- data.frame(sapply(label_df$name, ff))
 
-#now add labels
-for (row in 1:nrow(label_df)) {
-  var <- label_df[row, "name"]
-  lab <- label_df[row, "vallabel"]
-  
-  public_officials_dta_clean$var[1] <- 1
-}
+
+# #now add labels
+# for (row in 1:nrow(label_df)) {
+#   var <- label_df[row, "name"]
+#   lab <- label_df[row, "vallabel"]
+#   
+#   public_officials_dta_clean$var[1] <- 1
+# }
 ################################
 #Store Key Created Datasets
 ################################
@@ -327,19 +348,33 @@ for (i in indicator_names ) {
     i=="NLG" ~ "BNLG",
     i=="ACM" ~ "BMAC",
     i=="QB" ~ "BQBR",
-    i=="IDM" ~ "BIMP"
+    i=="IDM" ~ "BIMP",
+    TRUE ~ i
   )
   
-  temp_df<-public_officials_dta_clean %>%
-    select( contains(i))
-  if (ncol(temp_df) > 0) {
-    temp_df<-public_officials_dta_clean %>%
-      select(keep_info,bureau_ind, starts_with('DEM'), starts_with(i))
-    assign(paste("final_indicator_data_",j, sep=""), temp_df )
+  if (i!="ORG") {
+  temp_df<-public_officials_dta_clean 
+    if (ncol(temp_df) > 0) {
+      temp_df<-temp_df %>%
+        select(keep_info,bureau_ind, starts_with('DEM'), starts_with(i))
+     assign(paste("final_indicator_data_",j, sep=""), temp_df )
+     
+     ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
     
-    ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
-    
+    }
+  } else if (i=="ORG") {
+    temp_df<-public_officials_dta_hr
+    if (ncol(temp_df) > 0) {
+      temp_df<-temp_df %>%
+        select(keep_info, starts_with('DEM'), starts_with(i))
+      assign(paste("final_indicator_data_",j, sep=""), temp_df )
+      
+      ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
+      
+    }
   }
+  
+
 }
 
 save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
