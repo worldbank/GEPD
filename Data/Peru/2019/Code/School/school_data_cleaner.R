@@ -507,7 +507,7 @@ save(teacher_assessment_language, teacher_assessment_math, teacher_assessment_do
 final_indicator_data_CONT <- teacher_assessment_dta %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
-  add_count(typetest==1,name='m5_teach_count_math') %>%
+  add_count(typetest,name='m5_teach_count_math') %>%
   mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
@@ -1095,7 +1095,7 @@ pknw_actual_exper <- teacher_questionnaire %>%
   summarise(teacher_count_experience_less3=n())
 
 pknw_actual_school_inpts <- final_indicator_data_INPT %>%
-  select(school_code, blackboard_functional, m4scq5_inpt)
+  select(school_code, blackboard_functional, m4scq5_inpt, m4scq4_inpt)
 
 pknw_actual_combined <- pknw_actual_school_inpts %>%
   left_join(pknw_actual_cont) %>%
@@ -1108,25 +1108,25 @@ pknw_actual_combined <- pknw_actual_school_inpts %>%
 
 #create function to compare principal responses to actual
 # if principal is within 1 student/teacher, then score as 1, 0 otherwise
-principal_scorer <- function(var_guess, var_actual, margin) {
+principal_scorer <- function(var_guess, var_actual, var_total, margin1, margin2) {
   if_else(
-    abs(var_guess-var_actual)<=as.numeric(margin),
+    ((1-abs(var_guess-var_actual)/var_total>= as.numeric(margin1)) | (var_guess-var_actual <= as.numeric(margin2))),
     1,
     0)
 }
 
 final_indicator_data_PKNW <- school_data_PKNW %>%
   group_by(school_code) %>%
-  select(school_code, m7sfq5_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw) %>%
+  select(school_code, m7sfq5_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, m7_teach_count_pknw) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PKNW=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  %>%
   left_join(pknw_actual_combined) %>%
-  mutate(add_triple_digit_pknw=principal_scorer(m7sfq5_pknw, m5s2q1c_number,1),
-         multiply_double_digit_pknw=principal_scorer(m7sfq6_pknw, m5s2q1e_number,1),
-         complete_sentence_pknw=principal_scorer(m7sfq7_pknw, m5s1q1f_grammer,1),
-         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3,1),
-         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt,3),
+  mutate(add_triple_digit_pknw=principal_scorer(m7sfq5_pknw, m5s2q1c_number, m7_teach_count_pknw,0.8,1),
+         multiply_double_digit_pknw=principal_scorer(m7sfq6_pknw, m5s2q1e_number, m7_teach_count_pknw,0.8,1),
+         complete_sentence_pknw=principal_scorer(m7sfq7_pknw, m5s1q1f_grammer, m7_teach_count_pknw,0.8,1),
+         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, m7_teach_count_pknw,0.8,1),
+         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt, m4scq4_inpt,0.8,3),
          blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
   mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
   mutate(principal_knowledge_score=case_when(
@@ -1134,8 +1134,12 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
     (principal_knowledge_avg >0.8 & principal_knowledge_avg<=0.9) ~ 4,
     (principal_knowledge_avg >0.7 & principal_knowledge_avg<=0.8) ~ 3,
     (principal_knowledge_avg >0.6 & principal_knowledge_avg<=0.7) ~ 2,
-    (principal_knowledge_avg <=0.6 ) ~ 1
-  ))
+    (principal_knowledge_avg <=0.6 ) ~ 1  )
+    ) %>%
+  select(school_code, m7sfq5_pknw,m5s2q1c_number, m7sfq6_pknw, m5s2q1e_number, m7sfq7_pknw, m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
+         multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw) %>%
+  select(school_code, m7sfq5_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
+         multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw)
   
 
 #############################################

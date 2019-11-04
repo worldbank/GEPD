@@ -278,7 +278,7 @@ school_ipw<-school_dta_short$school_ipw
 
 
 #add function to produce weighted summary stats
-skim_with( numeric = list( mean = ~ weighted.mean(.,  w=school_ipw, na.rm=TRUE),
+skim_with( numeric = list( mean = ~ wtd.mean(.,  w=school_ipw, na.rm=TRUE),
                                      sd = ~ sqrt(wtd.var(.,  weights=school_ipw, na.rm=TRUE)),
                                      p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=school_ipw, na.rm=TRUE)),
                                      p50 = ~ (wtd.quantile(., probs=c(0.5), weights=school_ipw, na.rm=TRUE)),
