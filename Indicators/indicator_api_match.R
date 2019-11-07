@@ -49,7 +49,7 @@ indicator_names <- indicators$indicator_tag
 
 
 #Read in Sergio's excel
-subquestions<-read_excel('GEPD_Indicators_Info_v4.xlsx', sheet='SubQuestions') 
+subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
 
 df<-indicators %>%
   left_join(subquestions) %>%
@@ -72,7 +72,7 @@ df_defacto_dejure <- df %>%
 
 #Pivot longer
 df_longer<-df %>%
-  pivot_longer(cols=c('Column_2', 'Column_3', 'Column_4', 'Column_5', 'Column_6',
+  pivot_longer(cols=c(
                       'Subquestion_1', 'Subquestion_2', 'Subquestion_3',
                       'Subquestion_4', 'Subquestion_5', 'Subquestion_6',
                       'Subquestion_7', 'Subquestion_8','Subquestion_9',
@@ -82,24 +82,37 @@ df_longer<-df %>%
                       'Subquestion_19', 'Subquestion_20'),
                values_to='short_desc') %>%
   filter(short_desc!="") %>%
-  filter(short_desc!="Overall") 
+  filter(short_desc!="Overall") %>%
+  pivot_longer(cols=c(    "Column_2", "Column_3", "Column_4","Column_5", "Column_6"),
+    values_to='urban_rural_gender',
+    names_to = 'urban_rural_gender_name')  %>%
+  select(-urban_rural_gender_name) %>%
+  filter(urban_rural_gender!="") 
 
 #break up name into two components
+# (type=="Column" & num!="1") ~ paste(Series, substr(short_desc,1,1), sep="."),
+# (type=="Column" & num!="1") ~ paste(Indicator.Name, short_desc, sep=" - "),
 
 #now modify API IDs
 api_final<-df_longer %>%
   separate(name, c("type", "num"), "_") %>%
-  mutate(Series=case_when(
-    (type=="Subquestion" & num=="1") ~ Series,
-    (type=="Column" & num!="1") ~ paste(Series, substr(short_desc,1,1), sep="."),
-    (type=="Subquestion" & num!="1") ~ paste(Series, num, sep="."),
+  mutate(Series=case_when( #add tag for subindicators
+    ( num=="1") ~ Series,
+    ( num!="1") ~ paste(Series, num, sep="."),
     TRUE ~ Series  )) %>%
-  mutate(Indicator.Name=case_when(
-    (type=="Subquestion" & num=="1") ~ Indicator.Name,
-    (type=="Column" & num!="1") ~ paste(Indicator.Name, short_desc, sep=" - "),
-    (type=="Subquestion" & num!="1") ~ short_desc,
+  mutate(Series=case_when( #add tag for urban/rural gender
+    ( urban_rural_gender=="Overall") ~ Series,
+    ( urban_rural_gender!="Overall") ~ paste(Series, substr(urban_rural_gender,1,1), sep="."),
+    TRUE ~ Series  )) %>%
+  mutate(Indicator.Name=case_when( #add tag for subindicator for indicator name
+    (num=="1") ~ Indicator.Name,
+    (num!="1") ~ short_desc,
     TRUE ~ Indicator.Name  )) %>%
-  select(-Column_1, -type, -num, -indicator_tag) %>%
+  mutate(Indicator.Name=case_when( #add tag for urban/rural gender for indicator name
+    (urban_rural_gender=="Overall") ~ Indicator.Name,
+    (urban_rural_gender!="Overall") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
+    TRUE ~ Indicator.Name  )) %>%
+  select(-Column_1, -type, -num, -indicator_tag, -urban_rural_gender) %>%
   bind_rows(df_defacto_dejure) %>%
   arrange(Series) %>%
   select(Series, Indicator.Name)

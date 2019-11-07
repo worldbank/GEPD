@@ -128,7 +128,7 @@ server <- function(input, output, session) {
     #Create list of key indicators
 
     
-    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
+    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
                 'student_attendance', 'absence_rate', 'school_absence_rate', 
                 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
@@ -155,13 +155,13 @@ server <- function(input, output, session) {
                 "impartial_decision_making"
     )
     
-    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge",
+    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency",
                         "Student Attendance Rate",
                         "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
                         "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
-                        "Infrastructure", "Clean Drinking Water", "Functioning/Accessible Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
+                        "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
                         "Operational Management", "Operational Management - Vignette 1", 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', "Operational Management - Vignette 2",'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
                         "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
                         "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
@@ -867,7 +867,7 @@ school_dta_collapsed <- school_dta_short %>%
 public_officials_dta_collapsed <- public_officials_dta_clean %>%
   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
-indicators_list<-c('student_knowledge',
+indicators_list<-c('student_proficient',
             'student_attendance', 
             'absence_rate',
             'content_knowledge', 
@@ -889,10 +889,10 @@ indicators_list<-c('student_knowledge',
             'school_selection_deployment', 
             'school_support', 
             'principal_evaluation', 
-            "national_learning_goals",
-            "mandates_accountability",
-            "quality_bureaucracy",
-            "impartial_decision_making"
+            'national_learning_goals',
+            'mandates_accountability',
+            'quality_bureaucracy',
+            'impartial_decision_making'
 )
 
 drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
@@ -917,16 +917,16 @@ drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
                         'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
 )
 
-indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge",
-                    "Student Attendance Rate",
-                    "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
-                    "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
-                    "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
-                    "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
-                    "Infrastructure", "Clean Drinking Water", "Functioning/Accessible Toilets", "Classroom Visibility", "Electricity", "Disability Accessibility", "Disability Road Access", "School Ramps", "Disability School Entrance", "Classroom Ramps", "Disability Classroom Entrance", "Disability Screening",
-                    "Operational Management", "Operational Management - Vignette 1", 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', "Operational Management - Vignette 2",'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                    "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                    "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+indicator_labels<-c('4th Grade Student Knowledge', '4th Grade Math Knowledge', '4th Grade Literacy Knowledge',
+                    'Student Attendance Rate',
+                    'Teacher Classroom Absence Rate', 'Teacher School Absence Rate', 
+                    'Teacher Content Knowledge', 'Teacher Math Content Knowledge', 'Teacher Literacy Content Knowledge', 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                    '1st Grade Assessment Score', '1st Grade Numeracy Score', '1st Grade Literacy Score', '1st Grade Executive Functioning Score', '1st Grade Socio-Emotional Score',
+                    'Inputs', 'Functioning Blackboard', 'Classroom Materials', 'Textbooks', 'Desks', 'ICT Usage', 'ICT Access',
+                    'Infrastructure', 'Clean Drinking Water', 'Functioning Toilets', 'Classroom Visibility', 'Electricity', 'Disability Accessibility', 'Disability Road Access', 'School Ramps', 'Disability School Entrance', 'Classroom Ramps', 'Disability Classroom Entrance', 'Disability Screening',
+                    'Operational Management', 'Operational Management - Vignette 1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'Operational Management - Vignette 2','vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                    'Teacher Intrinsic Motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                    'Instructional Leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
                     'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
                     'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
                     'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
@@ -934,29 +934,29 @@ indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "
                     'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
                     'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
                     'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                    "Inputs and Infrastructure Monitoring", 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                    "School Management Attraction", 'principal_satisfaction',
-                    "School Management Selection & Deployment",
-                    "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                    "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
-                    "National Learning Goals",
-                    "Mandates and Accountability",
-                    "Quality of Bureaucracy",
-                    "Impartial Decision Making"
+                    'Inputs and Infrastructure Monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                    'School Management Attraction', 'principal_satisfaction',
+                    'School Management Selection & Deployment',
+                    'School Management Support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                    'School Management Evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                    'National Learning Goals',
+                    'Mandates and Accountability',
+                    'Quality of Bureaucracy',
+                    'Impartial Decision Making'
 )
 
 #create subset with just main indicators
 
  
-main_indicator_labels<-c("Proficiency on GEPD Assessment", 
-                         "Student Attendance",
-                         "Teacher Effort", 
-                         "Teacher Content Knowledge", 
-                         "Capacity for Learning", 
-                         "Basic Inputs", 
-                         "Basic Infrastructure", 
-                         "Operational Management", 
-                         "Instructional Leadership", 
+main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
+                         'Student Attendance',
+                         'Teacher Effort', 
+                         'Teacher Content Knowledge', 
+                         'Capacity for Learning', 
+                         'Basic Inputs', 
+                         'Basic Infrastructure', 
+                         'Operational Management', 
+                         'Instructional Leadership', 
                          'Principal Knowledge of School',
                          'Principal Management Skills', 
                          'Policy Lever (Teaching) - Attraction',
@@ -964,21 +964,21 @@ main_indicator_labels<-c("Proficiency on GEPD Assessment",
                          'Policy Lever (Teaching) - Support', 
                          'Policy Lever (Teaching) - Evaluation', 
                          'Policy Lever (Teaching) - Monitoring & Accountability', 
-                         "Policy Lever (Teaching) - Intrinsic Motivation", 
-                         "Policy Lever (Inputs & Infrastructure) - Monitoring",
-                         "Policy Lever (School Management) - Attraction" ,                   
-                         "Policy Lever (School Management) - Selection & Deployment"  ,      
-                         "Policy Lever (School Management) - Support" ,                      
-                         "Policy Lever (School Management) - Evaluation"    , 
-                         "Politics & Bureaucratic Capacity - Quality of Bureaucracy"    ,    
-                         "Politics & Bureaucratic Capacity - Impartial Decision-Making"  ,   
-                         "Politics & Bureaucratic Capacity - Mandates & Accountability"   ,  
-                         "Politics & Bureaucratic Capacity - National Learning Goals" 
+                         'Policy Lever (Teaching) - Intrinsic Motivation', 
+                         'Policy Lever (Inputs & Infrastructure) - Monitoring',
+                         'Policy Lever (School Management) - Attraction' ,                   
+                         'Policy Lever (School Management) - Selection & Deployment'  ,      
+                         'Policy Lever (School Management) - Support' ,                      
+                         'Policy Lever (School Management) - Evaluation'    , 
+                         'Politics & Bureaucratic Capacity - Quality of Bureaucracy'    ,    
+                         'Politics & Bureaucratic Capacity - Impartial Decision-Making'  ,   
+                         'Politics & Bureaucratic Capacity - Mandates & Accountability'   ,  
+                         'Politics & Bureaucratic Capacity - National Learning Goals' 
 ) 
 
 
 labels_df_2<-data.frame(indicators=as.character(indicators_list),
-                      indicator_labels=as.character(main_indicator_labels))
+                      indicator_labels=as.character(main_indicator_labels2))
 ##########################
 #summary statistics table
 #########################
@@ -1138,13 +1138,13 @@ output$indicators_table <- DT::renderDataTable({
   
   sumstats_df <- sumstats_school_df %>%
     bind_rows(sumstats_public_officials_df) %>%
-    arrange(factor(varlabel, levels=main_indicator_labels))
+    arrange(factor(varlabel, levels=main_indicator_labels2))
   
    sumstats_df <- sumstats_df %>%
-     left_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
+     inner_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
    
    sumstats_df <- sumstats_df %>%
-     select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+     select(varlabel, Value, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
    
   #add in custom column sub-headers
   sketch = htmltools::withTags(table(
@@ -1152,6 +1152,7 @@ output$indicators_table <- DT::renderDataTable({
     thead(
       tr(
         th( rowspan = 2, 'Indicator'),
+        th( rowspan = 2, 'Value Range'),
         th(colspan = 2, 'Overall'),
         th(colspan = 2, 'Urban'),
         th(colspan = 2, 'Rural')
@@ -1186,44 +1187,18 @@ output$indicators_table <- DT::renderDataTable({
 output$indicators_choices <- DT::renderDataTable({
   
   indicator_choices_table<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
-  main_indicator_labels<-c("Proficiency on GEPD Assessment", 
-                           "Student Attendance",
-                           "Teacher Effort", 
-                           "Teacher Content Knowledge", 
-                           "Capacity for Learning", 
-                           "Basic Inputs", 
-                           "Basic Infrastructure", 
-                           "Operational Management", 
-                           "Instructional Leadership", 
-                           'Principal Knowledge of School',
-                           'Principal Management Skills', 
-                           'Policy Lever (Teaching) - Attraction',
-                           'Policy Lever (Teaching) - Selection & Deployment',
-                           'Policy Lever (Teaching) - Support', 
-                           'Policy Lever (Teaching) - Evaluation', 
-                           'Policy Lever (Teaching) - Monitoring & Accountability', 
-                           "Policy Lever (Teaching) - Intrinsic Motivation", 
-                           "Policy Lever (Inputs & Infrastructure) - Monitoring",
-                           "Policy Lever (School Management) - Attraction" ,                   
-                           "Policy Lever (School Management) - Selection & Deployment"  ,      
-                           "Policy Lever (School Management) - Support" ,                      
-                           "Policy Lever (School Management) - Evaluation"    , 
-                           "Politics & Bureaucratic Capacity - Quality of Bureaucracy"    ,    
-                           "Politics & Bureaucratic Capacity - Impartial Decision-Making"  ,   
-                           "Politics & Bureaucratic Capacity - Mandates & Accountability"   ,  
-                           "Politics & Bureaucratic Capacity - National Learning Goals" 
-  ) 
+
   
 
   #Display metadata for indicator
   indicator_choices_table <- indicator_choices_table %>%
     dplyr::select(-X1, -X6) %>%
     dplyr::filter(Series!="---") %>%
-    dplyr::select(-Series, -Value) 
-    # rename(name='Indicator Name' ) %>%
-    # dplyr::filter(name %in% main_indicator_labels) %>%
-    # arrange(factor(name, levels=main_indicator_labels)) %>%
-    # rename('Indicator Name'=name ) 
+    dplyr::select(-Series) %>%
+    rename(name='Indicator Name' ) %>%
+    dplyr::filter(name %in% main_indicator_labels2) %>%
+    arrange(factor(name, levels=main_indicator_labels2)) %>%
+    rename('Indicator Name'=name ) 
   
     
   

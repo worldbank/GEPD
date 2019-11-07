@@ -620,7 +620,25 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 ####Total score####
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(student_knowledge=(math_student_knowledge*math_length+literacy_student_knowledge*literacy_length)/(literacy_length+math_length))
+  mutate(student_knowledge=(math_student_knowledge*math_length+literacy_student_knowledge*literacy_length)/(literacy_length+math_length)) %>%
+  mutate(student_proficient=100*as.numeric(student_knowledge>=0.7))
+
+
+#save  4th grade data at student level anonymized
+assess_4th_grade_anon <- assess_4th_grade_dta %>%
+  select(school_code, student_number, student_age, student_male, 
+         student_knowledge, math_student_knowledge, literacy_student_knowledge,
+         math_items, lit_items)
+
+
+assess_4th_grade_metadata <- makeVlist(teacher_assessment_dta_21)
+
+
+save(assess_4th_grade_anon, assess_4th_grade_metadata, 
+     file = file.path(save_folder, "dashboard_4th_grade_assessment_data.RData"))
+
+
+
 
 
 #calculate % correct for literacy, math, and total
@@ -659,6 +677,10 @@ final_indicator_data_LERN_F <- assess_4th_grade_dta %>%
 
 #read in ecd level file
 ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+
+ecd_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "ecd_assessment.dta"))
+
+ecd_dta_metadata <- makeVlist(ecd_dta_17)
 
 
 #Add school preamble info
@@ -786,7 +808,15 @@ ecd_dta <- ecd_dta %>%
   mutate(ecd_student_knowledge=(ecd_math_student_knowledge*math_length+ecd_literacy_student_knowledge*literacy_length+
                                   ecd_exec_student_knowledge*exec_length + ecd_soc_student_knowledge*soc_length)/(literacy_length+math_length+
                                                                                              exec_length+soc_length))
+#save ecd data at student level anonymized
+ecd_dta_anon <- ecd_dta %>%
+  select(school_code, ecd_student_number, ecd_student_age, ecd_student_male, 
+         ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
+         math_items, lit_items, soc_items, exec_items)
 
+
+save(ecd_dta_anon, ecd_dta_metadata, 
+     file = file.path(save_folder, "dashboard_ecd_data.RData"))
 
 #calculate % correct for literacy, math, and total
 final_indicator_data_LCAP <- ecd_dta %>%
@@ -860,9 +890,10 @@ school_data_INPT <- school_data_INPT %>%
 #access to ICT
 school_data_INPT <- school_data_INPT %>%
   mutate(access_ict=case_when(
-                  m1sbq12_inpt==0 | m1sbq13_inpt==0 | m1sbq15_inpt<2 ~ 0,
+                  m1sbq12_inpt==0 | m1sbq13_inpt==0 | m1sbq15_inpt==0 ~ 0,
                   (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==2) ~ 1,
-                  (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) | is.na(m1sbq15_inpt<2)) ~ as.numeric(NA)
+                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==1) ~ 0.5, #Internet didn't work when tested
+                  (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) | is.na(m1sbq15_inpt)) ~ as.numeric(NA)
                   ))
 
 
@@ -876,7 +907,7 @@ final_indicator_data_INPT <- school_data_INPT %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_INPT=n_miss_row(.)) %>%
-  mutate(inputs=textbooks+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
+  mutate(inputs=0.3333*textbooks+blackboard_functional + 0.6667*pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
   
@@ -889,7 +920,7 @@ final_indicator_data_INPT <- school_data_INPT %>%
 
 # School survey. Total score starts at 1 and points added are the sum of whether a school has: 
 #   - Access to adequate drinking water 
-# -Functional toilets that are separate for boys/girls, private, useable,  and have hand washing facilities 
+# -Functional toilets.  Extra points available if are separate for boys/girls, private, useable, and have hand washing facilities 
 # - Electricity and Visibility in the classroom 
 # - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
 
@@ -900,22 +931,29 @@ school_data_INFR <- school_data_INFR %>%
 
 #functioning toilets
 school_data_INFR <- school_data_INFR %>%
+  mutate(toilet_exists=if_else(m1sbq1_infr==7 ,0,1),
+         toilet_separate=if_else((m1sbq2_infr==1 | m1sbq2_infr==3),1,0),
+         toilet_private=m1sbq4_infr,
+         toilet_usable=m1sbq5_infr,
+         toilet_handwashing=m1sbq7_infr,
+         toilet_soap=m1sbq8_infr) %>%
   mutate(functioning_toilet=case_when(
-    # exist, separate for boys/girls, clean, private, useable, accessible, handwashing available
-    m1sbq1_infr!=7 & m1sbq2_infr==1 & m1sbq3_infr!=3 & m1sbq4_infr==1 & m1sbq5_infr==1  & m1sbq7_infr==1 & m1sbq8_infr==1 ~ 1,
-    m1sbq1_infr==7  ~ 0,
-    m1sbq1_infr!=7 & ( m1sbq2_infr==0 | m1sbq3_infr==3 | m1sbq4_infr!=1 | m1sbq4_infr!=1 | m1sbq7_infr==0 | m1sbq8_infr==0) ~ 0)) 
+    # exist, separate for boys/girls, clean, private, useable,  handwashing available
+    toilet_exists==0  ~ 0,
+    toilet_exists==1 & toilet_usable==0 ~ 0.25,
+    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing + toilet_soap)/4
+    )) 
 
 #visibility
 school_data_INFR <- school_data_INFR %>%
   left_join(select(school_data_INPT, interview__id, m4scq8_inpt, m4scq9_inpt, m4scq10_inpt )) %>%
   mutate(visibility=case_when(
-    m4scq10_inpt==1 &  m4scq8_inpt==1  ~ 0.5,
+    m4scq10_inpt==1 &  m4scq8_inpt==1  ~ 1,
     m4scq10_inpt==0 & m4scq8_inpt==1 ~ 0)) 
 
 #electricity
 school_data_INFR <- school_data_INFR %>%
-  mutate(class_electricity=if_else(m1sbq11_infr==1,0.5,0)) 
+  mutate(class_electricity=if_else(m1sbq11_infr==1,1,0)) 
 
 
 #accessibility for people with disabilities
@@ -950,7 +988,7 @@ infr_list<-c('drinking_water', 'functioning_toilet', 'visibility',  'class_elect
 final_indicator_data_INFR <- final_indicator_data_INFR %>%
   select(preamble_info, infr_list, contains('INFR'), contains('disab')) %>%
   mutate(n_mssing_INFR=n_miss_row(.)) %>%
-  mutate(infrastructure=rowSums(select(.,drinking_water, functioning_toilet, visibility,  class_electricity, disability_accessibility), na.rm=TRUE)) %>%
+  mutate(infrastructure=(drinking_water+ functioning_toilet+ visibility+  class_electricity+ disability_accessibility)) %>%
   select(preamble_info, infrastructure, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
@@ -1793,7 +1831,7 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 #Create list of key indicators
-ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge',
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
             'absence_rate', 'school_absence_rate', 'student_attendance',
             'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
