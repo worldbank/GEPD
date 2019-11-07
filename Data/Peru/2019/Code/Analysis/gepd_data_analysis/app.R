@@ -524,7 +524,7 @@ server <- function(input, output, session) {
                                    complete_count= ~ sum(!is.na(.))))
         
       } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
-        sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="gender|DEM|NLG|ACM|QB|ORG")])
+        sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="gender|DEM|IDM|NLG|ACM|QB|ORG")])
         metadata<-public_officials_metadata
         
         #add function to produce weighted summary stats
@@ -867,7 +867,7 @@ school_dta_collapsed <- school_dta_short %>%
 public_officials_dta_collapsed <- public_officials_dta_clean %>%
   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
-indicators_list<-c('student_proficient',
+indicators_list<-c('student_knowledge',
             'student_attendance', 
             'absence_rate',
             'content_knowledge', 
@@ -970,10 +970,12 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Policy Lever (School Management) - Selection & Deployment'  ,      
                          'Policy Lever (School Management) - Support' ,                      
                          'Policy Lever (School Management) - Evaluation'    , 
-                         'Politics & Bureaucratic Capacity - Quality of Bureaucracy'    ,    
-                         'Politics & Bureaucratic Capacity - Impartial Decision-Making'  ,   
+                         'Politics & Bureaucratic Capacity - National Learning Goals' ,
                          'Politics & Bureaucratic Capacity - Mandates & Accountability'   ,  
-                         'Politics & Bureaucratic Capacity - National Learning Goals' 
+                         'Politics & Bureaucratic Capacity - Quality of Bureaucracy'    ,    
+                         'Politics & Bureaucratic Capacity - Impartial Decision-Making'    
+                         
+                         
 ) 
 
 

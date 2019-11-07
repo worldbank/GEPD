@@ -57,6 +57,10 @@ df<-indicators %>%
 
 
 
+df_overall <- df %>%
+  select(Series, Indicator.Name ) 
+  
+
 df_defacto_dejure <- df %>%
   filter(grepl("Policy Lever", Indicator.Name )) %>%
   select(Series, Indicator.Name ) %>%
@@ -94,26 +98,23 @@ df_longer<-df %>%
 # (type=="Column" & num!="1") ~ paste(Indicator.Name, short_desc, sep=" - "),
 
 #now modify API IDs
-api_final<-df_longer %>%
+df_sub<-df_longer %>%
   separate(name, c("type", "num"), "_") %>%
-  mutate(Series=case_when( #add tag for subindicators
-    ( num=="1") ~ Series,
-    ( num!="1") ~ paste(Series, num, sep="."),
-    TRUE ~ Series  )) %>%
+  mutate(Series=paste(Series, num, sep="."))  %>% #add tag for subindicators
   mutate(Series=case_when( #add tag for urban/rural gender
     ( urban_rural_gender=="Overall") ~ Series,
     ( urban_rural_gender!="Overall") ~ paste(Series, substr(urban_rural_gender,1,1), sep="."),
     TRUE ~ Series  )) %>%
-  mutate(Indicator.Name=case_when( #add tag for subindicator for indicator name
-    (num=="1") ~ Indicator.Name,
-    (num!="1") ~ short_desc,
-    TRUE ~ Indicator.Name  )) %>%
+  mutate(Indicator.Name= short_desc) %>%
   mutate(Indicator.Name=case_when( #add tag for urban/rural gender for indicator name
     (urban_rural_gender=="Overall") ~ Indicator.Name,
     (urban_rural_gender!="Overall") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
     TRUE ~ Indicator.Name  )) %>%
-  select(-Column_1, -type, -num, -indicator_tag, -urban_rural_gender) %>%
+  select(-Column_1, -type, -num, -indicator_tag, -urban_rural_gender) 
+  
+api_final  <- df_overall %>%
   bind_rows(df_defacto_dejure) %>%
+  bind_rows(df_sub) %>%
   arrange(Series) %>%
   select(Series, Indicator.Name)
 

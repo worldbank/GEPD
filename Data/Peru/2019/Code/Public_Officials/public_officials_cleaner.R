@@ -7,6 +7,7 @@ library(haven)
 library(stringr)
 library(Hmisc)
 library(skimr)
+library(spatstat)
 
 library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
@@ -98,6 +99,45 @@ public_officials_dta<- public_officials_dta %>%
                   )
 
 
+###############################
+# Read in School Data for comparison to public officials answers
+###############################
+
+school_folder <- file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
+
+load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
+
+currentDate<-c("2019-07-22")
+sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/sampling/school_sample_",currentDate,".RData", sep=""))
+
+load(sample_frame_name)
+
+#compare data collected to original sample
+school_dta_short <- school_dta_short %>%
+  mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+  left_join(data_set_updated) %>%
+  mutate(longitude=as.character(longitude)) %>%
+  mutate(latitude=as.character(latitude)) %>%
+  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+         lon=if_else(is.na(lon), as.numeric(longitude), lon),
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+
+weights<-school_dta_short %>%
+  group_by(school_code) %>%
+  summarise(school_ipw=mean(school_ipw))
+
+final_indicator_data_INPT <- final_indicator_data_INPT %>%
+  left_join(weights) %>%
+  filter(!is.na(school_ipw))
+
+class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indicator_data_INPT$school_ipw, na.rm=TRUE)
+
+school_absence <- school_dta_short %>%
+  filter(!is.na(school_ipw))
+
+absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE)
 ############################
 #Clean up idiosyncratic variables
 #############################
@@ -131,8 +171,8 @@ public_officials_dta <- public_officials_dta %>%
          proportion_broke_rules=IDM3q1,
          proportion_contracts_political=IDM3q2,
          proportion_producement_political=IDM3q3,) %>%
-  mutate(QB1q2= if_else(abs(QB1q2-16)<=4, 5-abs(QB1q2-16), 1),
-         QB1q1= if_else(abs(QB1q1-13)<=4, 5-abs(QB1q1-13), 1),
+  mutate(QB1q2= if_else(abs(QB1q2-class_size)<=4, 5-abs(QB1q2-class_size), 1),
+         QB1q1= if_else(abs(QB1q1-absence)<=4, 5-abs(QB1q1-absence), 1),
          QB4q2= case_when(
            QB4q2>=120 ~ 5,
            QB4q2>=110 ~ 4,

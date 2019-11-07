@@ -1408,7 +1408,7 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(pre_service=pre_training_exists+pre_training_useful,
          practicum=pre_training_practicum+pre_training_practicum_lngth,
          in_service=0.5*in_service_exists+0.25*in_servce_lngth+0.25*in_service_classroom) %>%
-  mutate(teacher_support=pre_service+practicum+in_service+opportunities_teachers_share) 
+  mutate(teacher_support=1+pre_service+practicum+in_service+opportunities_teachers_share) 
 
 
 
@@ -1568,7 +1568,7 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
            (m3scq15_tinm__3!=1 & (m3scq15_tinm__1>=1 | m3scq15_tinm__2>=1 | m3scq15_tinm__4>=1 & m3scq15_tinm__5>=1)) ~ 1,
            TRUE ~ as.numeric(NA)
            )) %>%
-  mutate(intrinsic_motivation=0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching) %>%
+  mutate(intrinsic_motivation=1+0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching) %>%
   filter(intrinsic_motivation!=0) %>% #screens out missing values
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1610,7 +1610,7 @@ school_data_IMON <- school_data_IMON %>%
                                    0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
-  mutate(school_monitoring=standards_monitoring+monitoring_inputs+monitoring_infrastructure+parents_involved)
+  mutate(school_monitoring=1+standards_monitoring+monitoring_inputs+monitoring_infrastructure+parents_involved)
   
 
 
