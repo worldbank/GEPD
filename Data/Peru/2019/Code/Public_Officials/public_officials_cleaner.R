@@ -170,7 +170,8 @@ public_officials_dta <- public_officials_dta %>%
          proportion_reported_underperformance=IDM1q3,
          proportion_broke_rules=IDM3q1,
          proportion_contracts_political=IDM3q2,
-         proportion_producement_political=IDM3q3,) %>%
+         proportion_producement_political=IDM3q3,
+         DEM1q13=as.numeric(DEM1q13)) %>%
   mutate(QB1q2= if_else(abs(QB1q2-class_size)<=4, 5-abs(QB1q2-class_size), 1),
          QB1q1= if_else(abs(QB1q1-absence)<=4, 5-abs(QB1q1-absence), 1),
          QB4q2= case_when(
@@ -252,7 +253,11 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length))
+  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
+         targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
+         monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
+         incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
+         community_engagement=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG4")], na.rm=T))
 
 
 ########
@@ -263,7 +268,10 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length))
+  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
+         coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
+         transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
+         accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
 
 
 ########
@@ -274,7 +282,11 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length))
+  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
+         knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
+         work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
+         merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
+         motivation_attitudes=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB4")], na.rm=T))
 
 
 ########
@@ -285,17 +297,27 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length))
+  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
+         politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
+         politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
+         politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
+         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4")], na.rm=T))
 
 
 #list of Bureaucracy indicators
-bureau_ind<-c( 'national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making')
+bureau_ind_nlg  <-c( 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement')
+bureau_ind_acm  <-c('mandates_accountability' , 'coherence', 'transparency', 'accountability') 
+bureau_ind_qb   <-c('quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes')
+bureau_ind_idm  <-c('impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators')
+
 
 public_officials_dta_clean <-public_officials_dta_clean %>%
-  dplyr::select(preamble_info, bureau_ind, constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
+  dplyr::select(preamble_info, bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm,
+                constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
 
 public_officials_dta_short <-public_officials_dta_clean %>%
-  dplyr::select(preamble_info, bureau_ind, constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+  dplyr::select(preamble_info, bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm
+                , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
 
 #filter out the director of HR, which isn't specifically asked about indicator questions
@@ -326,7 +348,8 @@ keep_info <- c('interview__id','region_code', 'district_code', 'district', 'prov
 
 public_officials_office_level<- public_officials_dta_clean %>%
   group_by(region_code, district_code, govt_tier) %>%
-  select(keep_info,bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
+  select(keep_info,bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm, 
+         starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
   mutate(count=n() ) %>% 
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
   
@@ -396,7 +419,7 @@ for (i in indicator_names ) {
   temp_df<-public_officials_dta_clean 
     if (ncol(temp_df) > 0) {
       temp_df<-temp_df %>%
-        select(keep_info,bureau_ind, starts_with('DEM'), starts_with(i))
+        select(keep_info, get(paste('bureau_ind', tolower(i), sep="_")), starts_with('DEM'), starts_with(i))
      assign(paste("final_indicator_data_",j, sep=""), temp_df )
      
      ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))

@@ -9,6 +9,7 @@ library(Hmisc)
 library(skimr)
 library(naniar)
 library(vtable)
+library(digest)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
 
@@ -118,6 +119,8 @@ for (i in indicator_names ) {
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 
+
+
 #Add school preamble info
 teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
@@ -146,6 +149,7 @@ bin_var <- function(var, val) {
 }
 
 
+
 #rename a few key variables up front
 teacher_questionnaire<- teacher_questionnaire %>%
   mutate(teacher_name=m3sb_troster  ,
@@ -171,6 +175,7 @@ teacher_questionnaire<- teacher_questionnaire %>%
   mutate(multigrade=case_when(temp > 1 ~ 1,
                               TRUE ~ 0)) %>% #this variable is equal to 1 if there are several grades and zero otherwise
   select(-temp)
+
 
 #  We create a unique grade variable
 teacher_questionnaire <- teacher_questionnaire %>%
@@ -224,6 +229,7 @@ bin_var <- function(var, val) {
     var!=val   ~ 0,
     is.na(var) ~ as.numeric(NA))
 }
+
 
 
 bin_var_2 <- function(var, val) {
@@ -302,21 +308,21 @@ preamble_info_absence <- c('interview__id', 'questionnaire_selected__id', 'teach
 
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
-  mutate(school_absence_rate=case_when(
+  mutate(school_absence_rate=100*case_when(
     m2sbq6_efft==6 | teacher_available==2 ~ 1,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
-  mutate(absence_rate=case_when(
+  mutate(absence_rate=100*case_when(
     m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
     m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
 #create indicator for whether each principal was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
-  mutate(principal_absence=case_when(
+  mutate(principal_absence=100*case_when(
     m2sbq3_efft==8  ~ 1,
     m2sbq3_efft!=8   ~ 0,
     is.na(m2sbq3_efft) ~ as.numeric(NA)))
@@ -358,6 +364,7 @@ final_indicator_data_ATTD<- school_data_INPT %>%
   mutate(student_attendance=m4scq4_inpt/m4scq12_inpt) %>%
   mutate(student_attendance=if_else(m4scq4_inpt>m4scq12_inpt, m4scq12_inpt/m4scq4_inpt,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.)) %>%
@@ -375,6 +382,7 @@ final_indicator_data_ATTD_M<- school_data_INPT %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
   mutate(student_attendance=m4scq4n_girls/m4scq13_girls) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.)) %>%
@@ -386,6 +394,7 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
   mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-m4scq13_girls)) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=if_else(student_attendance<0, 0,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.)) %>%
@@ -455,11 +464,11 @@ lit_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_d
 
 #calculate teachers lit items correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(literacy_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE),
-         correct_letter=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q3")], na.rm=TRUE),
-         cloze=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q2")], na.rm=TRUE),
-         grammar=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q1")], na.rm=TRUE),
-         read_passage=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q4")], na.rm=TRUE))
+  mutate(literacy_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE),
+         correct_letter=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q3")], na.rm=TRUE),
+         cloze=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q2")], na.rm=TRUE),
+         grammar=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q1")], na.rm=TRUE),
+         read_passage=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q4")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -469,10 +478,10 @@ math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_
 
 #calculate teachers math items correct
 teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(math_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE),
-         arithmetic_number_relations=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="number")], na.rm=TRUE),
-         geometry=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
-         interpret_data=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
+  mutate(math_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE),
+         arithmetic_number_relations=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="number")], na.rm=TRUE),
+         geometry=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
+         interpret_data=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
 
 #rename a few key variables up front
 teacher_assessment_dta<- teacher_assessment_dta %>%
@@ -604,7 +613,7 @@ lit_items<-colnames(assess_4th_grade_dta[,grep(x=colnames(assess_4th_grade_dta),
 
 #calculate students lit items correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(literacy_student_knowledge=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq")], na.rm=TRUE))
+  mutate(literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -615,13 +624,13 @@ math_items<-colnames(assess_4th_grade_dta[,grep(x=colnames(assess_4th_grade_dta)
 
 #calculate students math items correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(math_student_knowledge=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq")], na.rm=TRUE))
+  mutate(math_student_knowledge=100*rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq")], na.rm=TRUE))
 
 ####Total score####
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge*math_length+literacy_student_knowledge*literacy_length)/(literacy_length+math_length)) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=0.7))
+  mutate(student_proficient=100*as.numeric(student_knowledge>=70))
 
 
 #save  4th grade data at student level anonymized
@@ -754,7 +763,7 @@ ecd_dta$literacy_length<-length(lit_items)
 
 #calculate students lit items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_literacy_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
                                                    pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
 
 ####Math####
@@ -768,7 +777,7 @@ ecd_dta$math_length<-length(math_items)
 
 #calculate students math items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_math_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_math_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
                                                pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
 
 ####Executive Functioning####
@@ -782,7 +791,7 @@ ecd_dta$exec_length<-length(exec_items)
 
 #calculate students excec items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_exec_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_exec_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
                                                pattern="backward_digit|head_shoulders")], na.rm=TRUE))
 
 ####Socio-Emotional####
@@ -798,7 +807,7 @@ ecd_dta$soc_length<-length(soc_items)
 
 #calculate students excec items correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_soc_student_knowledge=rowMeans(.[grep(x=colnames(ecd_dta), 
+  mutate(ecd_soc_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
                                               pattern="perspective$|conflict_resol$")], na.rm=TRUE))
 
 
@@ -890,10 +899,10 @@ school_data_INPT <- school_data_INPT %>%
 #access to ICT
 school_data_INPT <- school_data_INPT %>%
   mutate(access_ict=case_when(
-                  m1sbq12_inpt==0 | m1sbq13_inpt==0 | m1sbq15_inpt==0 ~ 0,
-                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==2) ~ 1,
-                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 & m1sbq15_inpt==1) ~ 0.5, #Internet didn't work when tested
-                  (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) | is.na(m1sbq15_inpt)) ~ as.numeric(NA)
+                  m1sbq12_inpt==0 | m1sbq13_inpt==0 ~ 0,
+                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 1,
+                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 0.5, #Internet didn't work when tested
+                  (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) ) ~ as.numeric(NA)
                   ))
 
 
@@ -921,7 +930,8 @@ final_indicator_data_INPT <- school_data_INPT %>%
 # School survey. Total score starts at 1 and points added are the sum of whether a school has: 
 #   - Access to adequate drinking water 
 # -Functional toilets.  Extra points available if are separate for boys/girls, private, useable, and have hand washing facilities 
-# - Electricity and Visibility in the classroom 
+# - Electricity  in the classroom 
+# - Internet
 # - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
 
 #drinking water
@@ -946,7 +956,7 @@ school_data_INFR <- school_data_INFR %>%
 
 #visibility
 school_data_INFR <- school_data_INFR %>%
-  left_join(select(school_data_INPT, interview__id, m4scq8_inpt, m4scq9_inpt, m4scq10_inpt )) %>%
+  left_join(select(school_data_INPT, interview__id, m4scq8_inpt, m4scq9_inpt, m4scq10_inpt, m1sbq15_inpt )) %>%
   mutate(visibility=case_when(
     m4scq10_inpt==1 &  m4scq8_inpt==1  ~ 1,
     m4scq10_inpt==0 & m4scq8_inpt==1 ~ 0)) 
@@ -980,15 +990,20 @@ final_indicator_data_INFR <- school_data_INFR %>%
                                 disab_class_ramp+disab_class_entr+
                                 if_else(m1sbq1_infr==7,0,m1sbq6_infr)+
                                 disab_screening)/7
-  )
+  ) %>%
+  mutate(internet=case_when(
+    m1sbq15_inpt==2  ~ 1,
+    m1sbq15_inpt==1  ~ 0.5,
+    m1sbq15_inpt==0   ~ 0,
+    is.na(m1sbq15_inpt) ~ 0) ) # 1 point if internet working, 0.5 if doesn't work well, 0 if not at all
 
 
-infr_list<-c('drinking_water', 'functioning_toilet', 'visibility',  'class_electricity', 'disability_accessibility')
+infr_list<-c('drinking_water', 'functioning_toilet', 'internet',  'class_electricity', 'disability_accessibility')
 
 final_indicator_data_INFR <- final_indicator_data_INFR %>%
   select(preamble_info, infr_list, contains('INFR'), contains('disab')) %>%
   mutate(n_mssing_INFR=n_miss_row(.)) %>%
-  mutate(infrastructure=(drinking_water+ functioning_toilet+ visibility+  class_electricity+ disability_accessibility)) %>%
+  mutate(infrastructure=(drinking_water+ functioning_toilet+ internet + class_electricity+ disability_accessibility)) %>%
   select(preamble_info, infrastructure, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
@@ -1836,7 +1851,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
-            'infrastructure','drinking_water', 'functioning_toilet', 'visibility', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
             'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
             'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
