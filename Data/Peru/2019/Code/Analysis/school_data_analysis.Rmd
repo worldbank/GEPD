@@ -39,6 +39,8 @@ library(rpart.plot)
 library(ipred)
 library(caret)
 library(glmnet)
+library(raster)
+library(rgdal)
 #Load the data
 #read in school level file
 
@@ -260,9 +262,35 @@ icons <- awesomeIcons(
 )
 
 
+#Add in GDP Info
+######################
+# Read in Data
+######################
+
+#file directory
+download_dir <- "C:/Users/wb469649/Documents/Github/GDP_satellite_maps/Data"
+
+
+#basic info on tiff file
+GDALinfo(paste(download_dir, "GDP.tif", sep="/"))
+
+#open the raster
+gdp_raster <- raster(paste(download_dir, "GDP.tif", sep="/"))
+
+#color palette
+values(gdp_raster)[values(gdp_raster)<=0]=NA
+
+#create a pallete with specified bins
+pal_raster <- colorBin("RdYlBu", domain = c(0,100000), bins=c(0,5,10,20,30,40,50,100,10000000), 
+                    na.color = "transparent")
+#####################
+# Do the plotting
+#####################
+
 
 map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
-  addTiles()  %>%
+  addTiles()  %>%  
+  addRasterImage(gdp_raster, colors=pal_raster, opacity=0.8) %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
                     popup = paste("Name: ", school_map$school_name_preload, " <br>",
                                   "Province: ", school_map$school_province_preload, " <br>",
@@ -333,6 +361,69 @@ bscols(widths=c(3,NA),
 )
 ```
 
+```{r gdp_reg}
+library(purrr)
+library(broom)
+#map of linear model of each indicator on GDP
+
+#add GDP to database
+coordinates(school_map) <- c("lon","lat")
+school_map$GDP <- extract(gdp_raster, school_map, 
+                           buffer=1000, # 1000m radius
+                           fun=mean,na.rm=T,
+                           method='simple')
+  
+
+school_map <- as.data.frame(school_map) %>%
+  mutate(GDP=as.numeric(GDP))
+
+    indicators_list<-c('student_knowledge',
+            'student_attendance', 
+            'absence_rate',
+            'content_knowledge', 
+            'ecd_student_knowledge', 
+            'inputs', 
+            'infrastructure',
+            'operational_management', 
+            'instructional_leadership',
+            'principal_knowledge_score',
+            'principal_management', 
+            'teacher_attraction', 
+            'teacher_selection_deployment', 
+            'teacher_support', 
+            'teaching_evaluation', 
+            'teacher_monitoring',
+            'intrinsic_motivation', 
+            'school_monitoring', 
+            'school_management_attraction', 
+            'school_selection_deployment', 
+            'school_support', 
+            'principal_evaluation'
+
+)
+
+y <-  school_map$GDP   
+    
+r2s <- school_map %>%
+  dplyr::select(indicators_list) %>% # just keep indicators for regression on GDP
+  purrr::map(~lm(.x ~ log(school_map$GDP) , data = school_map)) %>%
+  purrr::map(summary) %>%
+  map_dbl("r.squared") %>% 
+  tidy %>% 
+  dplyr::arrange(desc(x)) %>% 
+  rename(r.squared = x) -> r2s
+
+kable(r2s)
+
+ggplot(r2s, aes(x = reorder(names, r.squared), y = r.squared)) + 
+  geom_point(size = 5, color = "red") +
+  ylab(expression(R^{2})) +
+  xlab("predictors") +
+  coord_flip() +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain the Variance our Indicators?",width=50))
+```
+
+
 ## Linear Model of Learning on Indicators
 
 ```{r linear_model, include=FALSE}
@@ -357,16 +448,16 @@ linear.1 <- lm(student_knowledge ~ ., data=school_dta_indicators)
 
 linear.1 <- coeftest(linear.1, vcov = vcovHC(linear.1, type="HC1"))
 
-logit.1 <- glm(student_knowledge ~ ., data=school_dta_indicators, family=binomial())
+#logit.1 <- glm(student_knowledge ~ ., data=school_dta_indicators, family=binomial())
 
-logit.1 <- coeftest(logit.1, vcov = vcovHC(logit.1, type="HC1"))
+#logit.1 <- coeftest(logit.1, vcov = vcovHC(logit.1, type="HC1"))
 
 
 
 ```
 
 ```{r, results='asis'}
-stargazer(linear.1, logit.1,  title="Linear/Logit Model of Student Learning on Indicators - Coefficients", type="html")
+stargazer(linear.1,   title="Linear/Logit Model of Student Learning on Indicators - Coefficients", type="html")
 
 ```
 
@@ -453,7 +544,7 @@ linear.1 <- lm(student_knowledge ~ ., data=completeData)
 
 #Logit
 
-logit.1 <- glm(student_knowledge ~ ., data=completeData, family=binomial())
+#logit.1 <- glm(student_knowledge ~ ., data=completeData, family=binomial())
 
 #lasso
 lambda <- 10^seq(10, -2, length = 100)
@@ -475,15 +566,15 @@ school_dta_indicators_pred<- completeData %>%
   modelr::add_predictions(bagged_cv, var="pred_bagged") %>%
   # modelr::add_predictions(boosted_cv, var="pred_boosted") %>%
   modelr::add_predictions(linear.1, var="pred_linear") %>%
-  modelr::add_predictions(logit.1, var="pred_logit", type="response") %>%
+  #modelr::add_predictions(logit.1, var="pred_logit", type="response") %>%
   mutate(pred_lasso=predict(cvfit, newx=x, s = "lambda.min")) %>%
-  select(student_knowledge, pred_neural, pred_bagged, pred_linear, pred_logit, pred_lasso, everything())
+  select(student_knowledge, pred_neural, pred_bagged, pred_linear,  pred_lasso, everything())
 
 #plot
 pred_plot_dta <- school_dta_indicators_pred %>%
-  select(student_knowledge, pred_neural, pred_bagged, pred_linear, pred_logit, pred_lasso) %>%
+  select(student_knowledge, pred_neural, pred_bagged, pred_linear,  pred_lasso) %>%
   pivot_longer(
-    cols=c('pred_neural' , 'pred_bagged', 'pred_linear', 'pred_logit', 'pred_lasso'), 
+    cols=c('pred_neural' , 'pred_bagged', 'pred_linear',  'pred_lasso'), 
     names_to = "type",
     values_to="predictions"
   )
