@@ -98,6 +98,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
            fluidPage(theme = shinytheme("cerulean"),
              includeMarkdown("header.md"),          
              h2("What are the results?"),
+             selectInput('table_weights', "Use Survey Weights?", choices=c("Yes", "No"), selected="Yes"),
              DT::dataTableOutput("indicators_table"),
              h2("How are the indicators scored?"),
              DT::dataTableOutput("indicators_choices"),
@@ -124,6 +125,8 @@ ui <- navbarPage("Global Education Policy Dashboard",
                         choices=NULL),
             selectizeInput("gender", "Gender:",
                            choices=NULL),
+            selectInput('explorer_weights', "Use Survey Weights?", choices=c("Yes", "No"), selected="Yes"),
+            
             h2("Scoring Metadata on Indicator"),
             htmlOutput('metadata' )
 
@@ -358,7 +361,18 @@ server <- function(input, output, session) {
 
         df<- df %>%
           mutate(codigo.modular=as.numeric(school_code)) %>%
-          left_join(data_set_updated)
+          left_join(data_set_updated) %>%
+          mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+        
+        
+        if (input$explorer_weights=="No") {
+          #add function to produce weighted summary stats
+          df <- df %>%
+            mutate(school_ipw=1)
+          
+        }
+        
+        
 
         
        if (input$subgroup=="Rural") {
@@ -464,7 +478,7 @@ server <- function(input, output, session) {
     histo <- reactive ({
       
       df_plot <- dat() %>%
-        select(one_of(ind_list)) %>%
+        select(one_of(ind_list), school_ipw) %>%
         rowid_to_column("ID") %>%
         pivot_longer(cols=one_of(ind_list),
                      names_to='indicators', values_to='values') %>%
@@ -472,7 +486,9 @@ server <- function(input, output, session) {
       
       
       
-      p<- ggplot(data=na.omit(df_plot), aes(x=values, group=indicator_labels, 
+      p<- ggplot(data=na.omit(df_plot), aes(x=values, y=..density.., 
+                                            weight=school_ipw,
+                                            group=indicator_labels, 
                                             fill=if_else((indicator_labels %in% main_indicator_labels), 
                                                          '#ff0000', '#d4d4d4'   ))) +
         geom_histogram() +
@@ -516,14 +532,16 @@ server <- function(input, output, session) {
     boxp <- reactive({
       
       df_plot <- dat() %>%
-        select(one_of(ind_list)) %>%
+        select(one_of(ind_list), school_ipw) %>%
         rowid_to_column("ID") %>%
         pivot_longer(cols=one_of(ind_list),
                      names_to='indicators', values_to='values') %>%
         left_join(labels_df)
       
       
-      q<- ggplot(data=na.omit(df_plot), aes(y=values, x=indicator_labels, fill=if_else((indicator_labels %in% main_indicator_labels), 
+      q<- ggplot(data=na.omit(df_plot), aes(y=values, x=indicator_labels, 
+                                            weight=school_ipw,
+                                            fill=if_else((indicator_labels %in% main_indicator_labels), 
                                                                                        '#ff0000', '#d4d4d4'   ))) +
         geom_boxplot(line='goldernrod2') +
         scale_fill_manual(labels = c("Sub-Indicator", "Primary Indicator"),  values= c("#d4d4d4", "#ff0000")) +
@@ -577,14 +595,19 @@ server <- function(input, output, session) {
         
         sch_ipw<-weights$school_ipw 
         
-        #add function to produce weighted summary stats
-        skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                                   sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                                   p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                                   p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                                   p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                                   complete_count= ~ sum(!is.na(.))))
+        if (input$explorer_weights=="Yes") {
+          #add function to produce weighted summary stats
+          skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                     sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                     p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                     p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                     p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                     complete_count= ~ sum(!is.na(.))))
+        } else {
+          skim_with_defaults()
+        }
         
+
       } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="gender|DEM|IDM|NLG|ACM|QB|ORG")])
         metadata<-public_officials_metadata
@@ -713,10 +736,20 @@ server <- function(input, output, session) {
       }
       
       #keep just school code and learning outcome
-      df_reg %>%
+      df_reg <- df_reg %>%
         select(school_code, as.character(get_tag_reg()[1]), weights, total_4th ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+      
+      
+        if (input$explorer_weights=="No") {
+          #add function to produce weighted summary stats
+          df_reg <- df_reg %>%
+            mutate(school_ipw=1)
+          
+            }
+        
+      df_reg
       
       } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
       
@@ -860,11 +893,22 @@ server <- function(input, output, session) {
       }
       
       #keep just school code and learning outcome
-      df_sub_reg %>%
+      df_sub_reg <- df_sub_reg %>%
         select(school_code, as.character(get_tag_sub_reg()[1]), weights, total_4th ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+      
+      if (input$explorer_weights=="No") {
+        #add function to produce weighted summary stats
+        df_sub_reg <- df_sub_reg %>%
+          mutate(school_ipw=1)
+        
+      }
+      
+      df_sub_reg
+      
     })
+    
     
 
 score<-reactive({
@@ -1062,6 +1106,7 @@ output$indicators_table <- DT::renderDataTable({
     
     sch_ipw<-weights$school_ipw 
     
+    if (input$table_weights=="Yes") {
     #add function to produce weighted summary stats
     skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
                                sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
@@ -1069,7 +1114,9 @@ output$indicators_table <- DT::renderDataTable({
                                p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
                                p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
                                complete_count= ~ sum(!is.na(.))))
-    
+    } else {
+      skim_with_defaults()
+    }
  
   
     sumstats_school <- school_dta_short %>%

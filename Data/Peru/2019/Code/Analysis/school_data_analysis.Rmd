@@ -405,7 +405,11 @@ school_map <- as.data.frame(school_map) %>%
 y <-  school_map$GDP   
     
 r2s <- school_map %>%
-  dplyr::select(indicators_list) %>% # just keep indicators for regression on GDP
+  dplyr::select(-c('school_code', 'school_name_preload', 'school_address_preload',
+                   'm1s0q2_emis', 'm1s0q2_code',
+                   'school_province_preload', 'school_district_preload', 'school_code_preload',
+                   'school_emis_preload', 'school_info_correct', 'm1s0q2_name', 
+                   'lat', 'lon', 'survey_time', 'total_missing', 'missings', 'GDP')) %>% # just keep indicators for regression on GDP
   purrr::map(~lm(.x ~ log(school_map$GDP) , data = school_map)) %>%
   purrr::map(summary) %>%
   map_dbl("r.squared") %>% 
@@ -415,12 +419,38 @@ r2s <- school_map %>%
 
 kable(r2s)
 
-ggplot(r2s, aes(x = reorder(names, r.squared), y = r.squared)) + 
+r2s_plot <- r2s %>%
+  dplyr::filter(names %in% indicators_list)
+
+ggplot(r2s_plot, aes(x = reorder(names, r.squared), y = r.squared)) + 
   geom_point(size = 5, color = "red") +
   ylab(expression(R^{2})) +
   xlab("predictors") +
   coord_flip() +
   ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain the Variance our Indicators?",width=50))
+
+ggplot(school_map, aes(y = infrastructure, x = log(GDP))) + 
+  geom_point( color = "red") +
+  geom_smooth(method='lm') +
+  xlab("Log GDP per Sq km") +
+  ylab("Infrastructure") +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Infrastructure in our School?",width=50))
+
+
+ggplot(school_map, aes(y = student_knowledge, x = log(GDP))) + 
+  geom_point( color = "red") +
+  geom_smooth(method='lm') +
+  xlab("Log GDP per Sq km") +
+  ylab("Student 4th Grade Assessment Scores") +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Learning in our School?",width=50))
+
+ggplot(school_map, aes(y = ecd_student_knowledge, x = log(GDP))) + 
+  geom_point( color = "red") +
+  geom_smooth(method='lm') +
+  xlab("Log GDP per Sq km") +
+  ylab("Student 1st Grade ECD Assessment Scores") +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Learning in our School?",width=50))
+
 ```
 
 
