@@ -12,7 +12,6 @@ library(shiny)
 library(shinythemes)
 library(shinyBS)
 library(shinyjs)
-library(tidyverse)
 library(plotly)
 library(glue)
 library(DT)
@@ -27,6 +26,9 @@ library(scales)
 library(ggpmisc)
 library(skimr)
 library(Hmisc)
+library(quantreg)
+
+library(tidyverse)
 
 #library(wbgcharts)
 
@@ -150,12 +152,48 @@ ui <- navbarPage("Global Education Policy Dashboard",
                         tabPanel("Correlations", value=4, 
                                  downloadButton("downloadcorr", "Download"),
                                  plotlyOutput("corrPlot", height=1000)),
-                        tabPanel("Regression Analysis", value=5, 
+                        tabPanel("Bivariate Regression Analysis", value=5, 
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  downloadButton("downloadregplot", "Download"),
                                  plotOutput("regplot", height=1400)
                                  ),
+                        tabPanel("Multivariate Regression Tool", value=7, 
+                                 selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
+                                                choices=NULL)   ,
+                                 
+                                 selectizeInput("control_choices", "Choose Control Variables to Partial Out in Regressions", 
+                                                choices=c(
+                                                          "Student Attendance Rate",
+                                                          "Teacher Classroom Absence Rate", 
+                                                          "Teacher Content Knowledge", 
+                                                          "1st Grade Assessment Score", 
+                                                          "Inputs", 
+                                                          "Infrastructure", 
+                                                          "Operational Management", 
+                                                          "Teacher Intrinsic Motivation", 
+                                                          "Instructional Leadership", 
+                                                          'Principal Knowledge of School',
+                                                          'Principal Management Skills', 
+                                                          'Teacher Attraction (De Facto)',
+                                                          'Teacher Selection & Deployment (De Facto)',
+                                                          'Teacher Support (De Facto)', 
+                                                          'Teacher Evaluation (De Facto)', 
+                                                          'Teacher Monitoring & Accountability (De Facto)', 
+                                                          "Inputs and Infrastructure Monitoring", 
+                                                          "School Management Attraction", 
+                                                          "School Management Selection & Deployment",
+                                                          "School Management Support", 
+                                                          "School Management Evaluation", 
+                                                          "Log GDP per Sq km"
+                                                )  , 
+                                                selected=c( 'Teacher Classroom Absence Rate', 'Teacher Content Knowledge', '1st Grade Assessment Score', 'Inputs', 'Infrastructure',
+                                                           'Operational Management', 'Teacher Intrinsic Motivation', 'Instructional Leadership', 'Instructional Leadership',
+                                                           'Principal Management Skills', 'Log GDP per Sq km'),
+                                                multiple=TRUE),
+                                 downloadButton("downloadmultireg", "Download"),
+                                 htmlOutput("multivariate_regs", height=1400)
+                        ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
                                  selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
@@ -288,8 +326,11 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, 'indicators', choices = indicators$Indicator.Name, server = TRUE)
     
     updateSelectizeInput(session, 'reg_choices', choices = indicator_labels, server = TRUE)
+    updateSelectizeInput(session, 'multi_reg_choices', choices = indicator_labels, server = TRUE)
     
     updateSelectizeInput(session, 'sub_reg_choices', choices = main_indicator_labels, server = TRUE)
+    
+    updateSelectizeInput(session, 'multi_reg_choices', choices = main_indicator_labels, server = TRUE)
     
 
     get_tag <- reactive({
@@ -467,7 +508,6 @@ server <- function(input, output, session) {
       HTML(paste(get_meta()[1]))
       
     })
-    
     
     
 
@@ -707,17 +747,18 @@ server <- function(input, output, session) {
     # Create database with just learning outcomes for regressions
     ##############################
     
-    
+
     get_tag_reg <- reactive({
       
       get_tag_reg_df<-labels_df %>%
         filter(indicator_labels==input$reg_choices)
       
       
-      get_tag_reg_df[,'indicators']
+      as.character(get_tag_reg_df[,'indicators'])
       
     })
     
+
     
     dat_reg <- reactive({
       #create database with just learning outcomes
@@ -740,12 +781,14 @@ server <- function(input, output, session) {
       }
       
       #keep just school code and learning outcome
+
       df_reg <- df_reg %>%
         select(school_code, as.character(get_tag_reg()[1]), weights, total_4th ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
-      
-      
+
+        
+
         if (input$explorer_weights=="No") {
           #add function to produce weighted summary stats
           df_reg <- df_reg %>%
@@ -764,10 +807,13 @@ server <- function(input, output, session) {
             filter(govt_tier==input$subgroup)
         }
         #keep just school code and learning outcome
+
         df_reg %>%
           select(interview__id, as.character(get_tag_reg()[1])) %>%
           rename(y=2) %>%
           mutate(school_ipw=1)
+          
+         
 
         }
       })
@@ -838,6 +884,131 @@ server <- function(input, output, session) {
     )
     
 
+    
+    
+    
+#####################################################
+    # Multivariate Regressions
+#####################################################
+
+    # get tags for indicators selected for regressions
+    get_tag_mult_cov <- reactive({
+      
+      labels_gdp <- data.frame(
+        indicators="GDP",
+        indicator_labels="Log GDP per Sq km"
+      )
+      
+      get_tag_df_cov<-labels_df %>%
+        bind_rows(labels_gdp) %>%
+        filter(indicator_labels %in% input$control_choices)
+
+      
+      as.character(get_tag_df_cov[,'indicators'])
+      
+    })
+    
+    get_tag_outcome <- reactive({
+      
+      get_tag_outcome_df<-labels_df %>%
+        filter(indicator_labels==input$multi_reg_choices)
+      
+      
+      as.character(get_tag_outcome_df[,'indicators'])
+      
+    })
+    ########################################
+    #multivariate-indicator Regressions
+    #########################################
+    
+
+    
+    dat_mult_reg <- reactive({
+      #create database with just learning outcomes
+      df_mult_reg<-school_dta_short %>%
+        mutate(codigo.modular=as.numeric(school_code)) %>%
+        left_join(data_set_updated) 
+      
+      
+      if (input$subgroup=="Rural") {
+        df_mult_reg<- df_mult_reg %>%
+          filter(rural==TRUE)
+      } else if (input$subgroup=="Urban") {
+        df_mult_reg<- df_mult_reg %>%
+          filter(rural==FALSE)  
+      }
+      
+      #keep just school code and learning outcome
+      df_mult_reg <- df_mult_reg %>%
+        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th ) %>%
+        rename(y=2) %>%
+        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+      
+      if (input$explorer_weights=="No") {
+        #add function to produce weighted summary stats
+        df_mult_reg <- df_mult_reg %>%
+          mutate(school_ipw=1)
+        
+      }
+      
+      df_mult_reg
+      
+    })
+    
+    
+    
+    mult_regs<-reactive({
+      
+      gdp <- school_gdp %>%
+        select(school_code, GDP) %>%
+        mutate(GDP=if_else(GDP>0,log(GDP),as.numeric(NA)))
+      
+      df_multi_reg <- school_dta_short %>%
+        left_join(gdp) %>%
+        select(one_of(get_tag_mult_cov()), school_code) %>%
+        left_join(dat_mult_reg()) %>%
+        select(-school_code,-weights, -school_ipw, -total_4th) 
+      
+      multi_reg<-lm(y~., df_multi_reg, weights = dat_mult_reg()$school_ipw)
+      
+      # Adjust standard errors
+      cov1_multi         <- vcovHC(multi_reg, type = "HC3")
+      robust_multi_se    <- sqrt(diag(cov1_multi))
+      
+      stargazer( multi_reg, type = "html",
+                 se        = list(robust_multi_se),
+                 title = "Regressions of Indicator variables on Set of Sub-Indicators",
+                 column.labels = input$multi_reg_choices,
+                 covariate.labels = input$control_choices
+      )
+      
+    })        
+    
+    output$multivariate_regs<-renderUI({
+      
+      
+      HTML(paste(mult_regs()     
+        ))    
+        
+    })
+    
+    
+    
+    
+    # Downloadable html of selected regressions ----
+    output$downloadmultireg <- downloadHandler(
+      
+      
+      filename = function() {
+        paste('Multivariate Regressions - '," - ",input$subgroup, ".html", sep = "")
+      },
+      content = function(file) {
+        
+        writeLines(paste(mult_regs()), file)
+        
+      }
+    )
+    
     #Create list of key sub-indicators
 
     
@@ -870,6 +1041,7 @@ server <- function(input, output, session) {
     
     get_tag_sub_reg <- reactive({
       
+
       get_tag_sub_reg_df<-labels_df %>%
         filter(indicator_labels==input$sub_reg_choices)
       
@@ -881,9 +1053,7 @@ server <- function(input, output, session) {
     
     dat_sub_reg <- reactive({
       #create database with just learning outcomes
-      df_sub_reg<-school_dta_short
-      
-      df_sub_reg<- df_sub_reg %>%
+      df_sub_reg<-school_dta_short %>%
         mutate(codigo.modular=as.numeric(school_code)) %>%
         left_join(data_set_updated)
       
@@ -920,12 +1090,12 @@ score<-reactive({
   df_scoring_reg <- dat() %>%
     select(one_of(sub_ind_list), school_code) %>%
     left_join(dat_sub_reg()) %>%
-    select(-school_code,-weights, -school_ipw)
+    select(-school_code,-weights, -school_ipw, -total_4th)
   
   scoring_reg<-lm(y~., df_scoring_reg, weights = dat()$school_ipw)
   
   # Adjust standard errors
-  cov1         <- vcovHC(scoring_reg, type = "HC1")
+  cov1         <- vcovHC(scoring_reg, type = "HC3")
   robust_se    <- sqrt(diag(cov1))
   
   stargazer( scoring_reg, type = "html",

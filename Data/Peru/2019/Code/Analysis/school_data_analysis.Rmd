@@ -406,11 +406,7 @@ school_map <- as.data.frame(school_map) %>%
 y <-  school_map$GDP   
     
 r2s <- school_map %>%
-  dplyr::select(-c('school_code', 'school_name_preload', 'school_address_preload',
-                   'm1s0q2_emis', 'm1s0q2_code',
-                   'school_province_preload', 'school_district_preload', 'school_code_preload',
-                   'school_emis_preload', 'school_info_correct', 'm1s0q2_name', 
-                   'lat', 'lon', 'survey_time', 'total_missing', 'missings', 'GDP')) %>% # just keep indicators for regression on GDP
+  dplyr::select(indicators_list) %>% # just keep indicators for regression on GDP
   purrr::map(~lm(.x ~ log(school_map$GDP) , data = school_map)) %>%
   purrr::map(summary) %>%
   map_dbl("r.squared") %>% 

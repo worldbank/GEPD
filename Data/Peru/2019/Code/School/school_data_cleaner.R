@@ -2,14 +2,15 @@
 #Written by Brian Stacy 6/14/2019
 
 #load relevant libraries
-library(tidyverse)
-library(haven)
-library(stringr)
-library(Hmisc)
+
 library(skimr)
 library(naniar)
 library(vtable)
 library(digest)
+library(tidyverse)
+library(haven)
+library(stringr)
+library(Hmisc)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
 
@@ -362,8 +363,8 @@ final_indicator_data_EFFT_F <- teacher_absence_dta %>%
 final_indicator_data_ATTD<- school_data_INPT %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq12_inpt )  %>%
   mutate(student_attendance=m4scq4_inpt/m4scq12_inpt) %>%
-  mutate(student_attendance=if_else(m4scq4_inpt>m4scq12_inpt, m4scq12_inpt/m4scq4_inpt,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
-  mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(m4scq4_inpt>m4scq12_inpt, m4scq12_inpt/m4scq4_inpt,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance>1, 1, as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -381,7 +382,7 @@ final_indicator_data_ATTD_M<- school_data_INPT %>%
   left_join(num_boys) %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
   mutate(student_attendance=m4scq4n_girls/m4scq13_girls) %>%
-  mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance>1, 1,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -392,8 +393,8 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
   left_join(num_boys) %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
   mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-m4scq13_girls)) %>%
-  mutate(student_attendance=if_else(student_attendance>1, 1,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
-  mutate(student_attendance=if_else(student_attendance<0, 0,student_attendance))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance>1, 1,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
+  mutate(student_attendance=if_else(student_attendance<0, 0,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -943,15 +944,16 @@ school_data_INFR <- school_data_INFR %>%
 school_data_INFR <- school_data_INFR %>%
   mutate(toilet_exists=if_else(m1sbq1_infr==7 ,0,1),
          toilet_separate=if_else((m1sbq2_infr==1 | m1sbq2_infr==3),1,0),
-         toilet_private=m1sbq4_infr,
-         toilet_usable=m1sbq5_infr,
-         toilet_handwashing=m1sbq7_infr,
-         toilet_soap=m1sbq8_infr) %>%
+         toilet_private=as.numeric(m1sbq4_infr),
+         toilet_usable=as.numeric(m1sbq5_infr),
+         toilet_handwashing=as.numeric(m1sbq7_infr),
+         toilet_soap=as.numeric(m1sbq8_infr)) %>%
   mutate(functioning_toilet=case_when(
     # exist, separate for boys/girls, clean, private, useable,  handwashing available
     toilet_exists==0  ~ 0,
     toilet_exists==1 & toilet_usable==0 ~ 0.25,
-    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing + toilet_soap)/4
+    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing + toilet_soap)/4,
+    TRUE ~ 0
     )) 
 
 #visibility
@@ -988,14 +990,15 @@ final_indicator_data_INFR <- school_data_INFR %>%
     #sum up all components for overall disability accessibility score
     disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
                                 disab_class_ramp+disab_class_entr+
-                                if_else(m1sbq1_infr==7,0,m1sbq6_infr)+
+                                if_else(m1sbq1_infr==7,0,as.numeric(m1sbq6_infr))+
                                 disab_screening)/7
   ) %>%
   mutate(internet=case_when(
     m1sbq15_inpt==2  ~ 1,
     m1sbq15_inpt==1  ~ 0.5,
     m1sbq15_inpt==0   ~ 0,
-    is.na(m1sbq15_inpt) ~ 0) ) # 1 point if internet working, 0.5 if doesn't work well, 0 if not at all
+    is.na(as.numeric(m1sbq15_inpt)) ~ 0,
+    TRUE ~ 0) ) # 1 point if internet working, 0.5 if doesn't work well, 0 if not at all
 
 
 infr_list<-c('drinking_water', 'functioning_toilet', 'internet',  'class_electricity', 'disability_accessibility')
@@ -1915,6 +1918,65 @@ if (backup_onedrive=="yes") {
   write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
+
+#################################
+# Read in Satellite Data on GDP
+#################################
+#Data downloaded from Here:
+#https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
+#https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
+# In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
+# 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
+# The method also distinguishes between rural and urban population, assuming the latter to have a higher 
+# GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
+# product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
+# Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
+# LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
+# extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
+# constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
+# is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
+# suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
+# Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
+# extrapolation UNEP/GRID-Geneva.
+
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_folder <- paste(project_folder,country_name,year,"Data/sampling/", sep="/")
+sample_frame_name <- paste(sample_folder,"school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+
+#open the raster
+raster_folder <- file.path(paste(project_folder,country_name,year,"Data/Maps/GDP_PERU/", sep="/"))
+
+gdp_raster <- raster::raster(paste(raster_folder, "GDP.tif", sep="/"))
+
+#add GDP to database
+school_gdp <- school_dta_short %>%
+  mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+  left_join(data_set_updated) %>%
+  mutate(longitude=as.character(longitude)) %>%
+  mutate(latitude=as.character(latitude)) %>%
+  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+         lon=if_else(is.na(lon), as.numeric(longitude), lon)) %>%
+  filter(!is.na(lat) & !is.na(lon)) %>%
+  dplyr::select(school_code, lon, lat)
+
+
+coordinates(school_gdp) <- c("lon","lat")
+school_gdp$GDP <- raster::extract(gdp_raster, school_gdp, 
+                                  buffer=1000, # 1000m radius
+                                  fun=mean,na.rm=T,
+                                  method='simple')
+
+
+school_gdp <- as.data.frame(school_gdp) %>%
+  mutate(GDP=as.numeric(GDP))
+
+
+
+
 ################################
 #Store Key Created Datasets
 ################################
@@ -1925,62 +1987,9 @@ data_list <- c('school_dta', 'school_dta_short',  'school_data_preamble', 'final
 
 save(list=data_list, file = file.path(save_folder, "school_survey_data.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", "indicators", 'metadta' ), file = file.path(save_folder, "school_indicators_data.RData"))
+save(list=c(ind_dta_list,"school_dta_short", "indicators", 'metadta', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
 
 
 if (backup_onedrive=="yes") {
   save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
 }
-
-#loop and produce list of data tables
-# 
-# teacher_roster_list<-teacher_roster %>%
-#   left_join(school_data_preamble) %>%
-#   select(preamble_info,  teacher_number, teacher_name) 
-# 
-# 
-# orphans_number_questionnaire <- teacher_questionnaire %>%
-#   select(keep_info, teacher_name, teacher_number) %>%
-#   anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) 
-# 
-# orphans_name_questionnaire <- teacher_questionnaire %>%
-#   anti_join(teacher_roster) %>%
-#   select(interview__id, teacher_name, teacher_number) %>%
-#   datatable()
-# 
-# 
-# orphans_number_assess <- teacher_questionnaire %>%
-#   anti_join(teacher_roster) %>%
-#   select(interview__id, teacher_name, teacher_number) %>%
-#   datatable()
-# 
-# 
-# orphans_name_assess <- teacher_questionnaire %>%
-#   anti_join(teacher_roster) %>%
-#   select(interview__id, teacher_name, teacher_number) %>%
-#   datatable()
-# 
-# # 
-# # 
-# # for (i in indicator_names ) {
-# #   if (exists(paste("final_indicator_data_",i, sep=""))) {
-# #     temp<-get(paste("final_indicator_data_",i, sep="")) 
-# #     skim(temp) %>%
-# #       DT::datatable()
-# #   }
-# # }
-# # 
-# # 
-# # for (i in indicator_names ) {
-# #   if (exists(paste("final_indicator_data_",i, sep=""))) {
-# #     temp<-get(paste("final_indicator_data_",i, sep="")) 
-# #     skim(temp) %>%
-# #       skimr::kable()
-# #   }
-# # }
-# # 
-# # skim(final_indicator_data_INFR) %>%
-# #   skimr::kable()
-# # 
-# # skim(sumstats) %>%
-# #   skimr::kable()
