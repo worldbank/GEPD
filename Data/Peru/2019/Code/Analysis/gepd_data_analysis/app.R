@@ -7,6 +7,7 @@
 #    http://shiny.rstudio.com/
 #
 
+
 library(shiny)
 library(shinythemes)
 library(shinyBS)
@@ -539,11 +540,12 @@ server <- function(input, output, session) {
         left_join(labels_df)
       
       
-      q<- ggplot(data=na.omit(df_plot), aes(y=values, x=indicator_labels, 
-                                            weight=school_ipw,
+      
+      q<- ggplot(data=df_plot, aes(y=values, x=indicator_labels,
                                             fill=if_else((indicator_labels %in% main_indicator_labels), 
                                                                                        '#ff0000', '#d4d4d4'   ))) +
-        geom_boxplot(line='goldernrod2') +
+        geom_boxplot(line='goldernrod2',
+                     aes(weight=school_ipw)) +
         scale_fill_manual(labels = c("Sub-Indicator", "Primary Indicator"),  values= c("#d4d4d4", "#ff0000")) +
         bbc_style() + 
         theme(
@@ -557,6 +559,8 @@ server <- function(input, output, session) {
       q
       
     })
+    
+
     
     output$boxPlot<-renderPlot({
       

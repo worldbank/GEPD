@@ -33,6 +33,7 @@ library(knitr)
 library(kableExtra)
 
 library(sandwich)
+library(estimatr)
 library(lmtest)
 library(rpart)
 library(rpart.plot)
@@ -156,19 +157,19 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     )
 
 sumstats<-school_dta_short %>%
-  select(indicator_list) 
+  dplyr::select(indicator_list) 
 
 
 sumstats_df<-skim(sumstats) %>%
-  select(-level, -type, -value) %>%
+  dplyr::select(-level, -type, -value) %>%
   spread(stat, formatted) %>%
-  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   mutate(variable=factor(variable, levels=indicator_list,
                          labels=indicator_labels)) %>%
   mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
          ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
   mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-  select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  dplyr::select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   arrange(match(variable, indicator_labels))
 
 ```
@@ -268,7 +269,7 @@ icons <- awesomeIcons(
 ######################
 
 #file directory
-download_dir <- "C:/Users/wb469649/Documents/Github/GDP_satellite_maps/Data"
+download_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/Maps/GDP_PERU"
 
 
 #basic info on tiff file
@@ -415,7 +416,7 @@ r2s <- school_map %>%
   map_dbl("r.squared") %>% 
   tidy %>% 
   dplyr::arrange(desc(x)) %>% 
-  rename(r.squared = x) -> r2s
+  rename(r.squared = x) 
 
 kable(r2s)
 
@@ -452,6 +453,111 @@ ggplot(school_map, aes(y = ecd_student_knowledge, x = log(GDP))) +
   ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Learning in our School?",width=50))
 
 ```
+
+
+```{r gdp_reg_2}
+
+mod_fun <- function(df) {
+  lm_robust(student_knowledge ~ .x + log(school_map$GDP) , data = school_map, se_type='HC3')
+}
+
+partial_regression <- school_map %>%
+  dplyr::select(indicators_list) %>% # just keep indicators for regression on GDP
+  purrr::map(~lm_robust(student_knowledge ~ .x + log(school_map$GDP) , data = school_map, se_type='HC3')) %>%
+  purrr::map(coef) %>%
+  map_dbl(".x") %>% 
+  tidy %>% 
+  dplyr::arrange(desc(x)) %>% 
+  rename(.x = x) 
+
+kable(partial_regression)
+
+
+reg_plot_df <- school_map %>%
+  dplyr::select(indicators_list, GDP) %>% # just keep indicators for regression on GDP
+  pivot_longer(
+    cols=c(
+            'student_attendance', 
+            'absence_rate',
+            'content_knowledge', 
+            'ecd_student_knowledge', 
+            'inputs', 
+            'infrastructure',
+            'operational_management', 
+            'instructional_leadership',
+            'principal_knowledge_score',
+            'principal_management', 
+            'teacher_attraction', 
+            'teacher_selection_deployment', 
+            'teacher_support', 
+            'teaching_evaluation', 
+            'teacher_monitoring',
+            'intrinsic_motivation', 
+            'school_monitoring', 
+            'school_management_attraction', 
+            'school_selection_deployment', 
+            'school_support', 
+            'principal_evaluation'
+
+), 
+    names_to = "type",
+    values_to="indicators"
+  )
+
+
+mod_fun <- function(df) {      
+  lm_robust(student_knowledge ~ indicators  , data = df, se_type='HC3') 
+}
+
+mod_fun_gdp <- function(df) {      
+  lm_robust(student_knowledge ~ indicators + log(school_map$GDP) , data = df, se_type='HC3') 
+}
+
+b_fun <- function(mod)   {   
+  coef(summary(mod))[2,1] 
+}
+
+se_fun <- function(mod)   {   
+  coef(summary(mod))[2,2] 
+}
+
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+knowledge_regs <- reg_plot_df %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(model_gdp=purrr::map(data, mod_fun_gdp)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            se = map_dbl(model, se_fun),
+            r2 = map_dbl(model, r2_fun),
+            beta_gdp = map_dbl(model_gdp, b_fun),
+            se_gdp = map_dbl(model_gdp, se_fun),
+            r2_gdp = map_dbl(model_gdp, r2_fun)) %>%
+  dplyr::select(type, beta, beta_gdp, se, r2,  se_gdp, r2_gdp, everything())
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs, aes(x=type, y=beta)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta-1.96*se),
+                    ymax=(beta+1.96*se))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Regression Without GDP Satellite Controls", 60))
+
+#plot of coefficient plots with GDP
+ggplot(data=knowledge_regs, aes(x=type, y=beta_gdp)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta_gdp-1.96*se_gdp),
+                    ymax=(beta_gdp+1.96*se_gdp))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Regression With GDP Satellite Controls", 60))
+```
+
 
 
 ## Linear Model of Learning on Indicators
