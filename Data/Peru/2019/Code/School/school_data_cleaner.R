@@ -523,7 +523,7 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
   mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
-    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
   select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
@@ -538,7 +538,7 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
   add_count(school_code,name='m5_teach_count') %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
-    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
@@ -552,7 +552,7 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
   add_count(school_code,name='m5_teach_count') %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
-    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge*math_length+literacy_content_knowledge*literacy_length)/(literacy_length+math_length),
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
@@ -632,7 +632,7 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 ####Total score####
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
-  mutate(student_knowledge=(math_student_knowledge*math_length+literacy_student_knowledge*literacy_length)/(literacy_length+math_length)) %>%
+  mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
   mutate(student_proficient=100*as.numeric(student_knowledge>=70))
 
 
@@ -817,9 +817,8 @@ ecd_dta <- ecd_dta %>%
 ####Total score####
 #calculate students percent correct
 ecd_dta <- ecd_dta %>%
-  mutate(ecd_student_knowledge=(ecd_math_student_knowledge*math_length+ecd_literacy_student_knowledge*literacy_length+
-                                  ecd_exec_student_knowledge*exec_length + ecd_soc_student_knowledge*soc_length)/(literacy_length+math_length+
-                                                                                             exec_length+soc_length))
+  mutate(ecd_student_knowledge=(ecd_math_student_knowledge+ecd_literacy_student_knowledge+
+                                  ecd_exec_student_knowledge + ecd_soc_student_knowledge)/4)
 #save ecd data at student level anonymized
 ecd_dta_anon <- ecd_dta %>%
   select(school_code, ecd_student_number, ecd_student_age, ecd_student_male, 
@@ -1102,6 +1101,7 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
          feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
+  mutate(feedback_observation=if_else(m3sdq15_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
   group_by(interview__id) %>%

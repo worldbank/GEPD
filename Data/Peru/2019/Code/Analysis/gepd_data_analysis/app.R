@@ -460,10 +460,13 @@ server <- function(input, output, session) {
           
           df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
           
-          
+          df<- df %>%
+            mutate(school_ipw=1)
           if (input$subgroup!="All") {
             df<- df %>%
-              filter(govt_tier==input$subgroup)
+              filter(govt_tier==input$subgroup) 
+            
+              
           }
           
         }
@@ -600,11 +603,8 @@ server <- function(input, output, session) {
                                             group=indicator_labels, 
                                             fill=if_else((indicator_labels %in% main_indicator_labels), 
                                                          "#d4d4d4" ,"#ff0000"  ))) 
-        if (length(unique(plt_data$values))>100) {
           p<-p + geom_density() 
-        } else {
-          p<-p + geom_histogram() 
-        }
+
       p<-p+facet_wrap(indicator_labels ~ ., scales='free' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
         scale_fill_manual(labels = c( "Primary Indicator", "Sub-Indicator"),  values= c( "#ff0000", "#d4d4d4")) +
         bbc_style() +
