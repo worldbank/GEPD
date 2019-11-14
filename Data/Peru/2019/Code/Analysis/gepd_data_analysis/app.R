@@ -142,7 +142,8 @@ ui <- navbarPage("Global Education Policy Dashboard",
             # Output: Tabset w/ plot, summary, and table ----
             tabsetPanel(type = "tabs",
                         id='tabset',
-                        tabPanel("Histogram Plot", value=1, 
+                        tabPanel("Distribution Plot", value=1, 
+                                 uiOutput("hist_choices"), 
                                  downloadButton("downloadhist", "Download"),
                                  plotOutput("distPlot", height=600)),
                         tabPanel("BoxPlot", value=2, 
@@ -162,7 +163,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  
-                                 selectizeInput("control_choices", "Choose Control Variables to Partial Out in Regressions", 
+                                 selectizeInput("control_choices", "Choose Control Variables to Include in Regressions", 
                                                 choices=c(
                                                           "Student Attendance Rate",
                                                           "Teacher Classroom Absence Rate", 
@@ -191,6 +192,9 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                                            'Operational Management', 'Teacher Intrinsic Motivation', 'Instructional Leadership', 'Instructional Leadership',
                                                            'Principal Management Skills', 'Log GDP per Sq km'),
                                                 multiple=TRUE),
+                                 selectizeInput("province_dummies", "Include Province Fixed Effects in Regresion?", 
+                                                choices=c("No", "Yes"),
+                                                selected="No")   ,
                                  downloadButton("downloadmultireg", "Download"),
                                  htmlOutput("multivariate_regs", height=1400)
                         ),
@@ -310,6 +314,34 @@ server <- function(input, output, session) {
                         "Quality of Bureaucracy",
                         "Impartial Decision Making"
     )  
+    
+    indicators_list<-c('student_knowledge',
+                       'student_attendance', 
+                       'absence_rate',
+                       'content_knowledge', 
+                       'ecd_student_knowledge', 
+                       'inputs', 
+                       'infrastructure',
+                       'operational_management', 
+                       'instructional_leadership',
+                       'principal_knowledge_score',
+                       'principal_management', 
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                       'intrinsic_motivation', 
+                       'school_monitoring', 
+                       'school_management_attraction', 
+                       'school_selection_deployment', 
+                       'school_support', 
+                       'principal_evaluation', 
+                       'national_learning_goals',
+                       'mandates_accountability',
+                       'quality_bureaucracy',
+                       'impartial_decision_making'
+    )
       
     labels_df<-data.frame(indicators=as.character(ind_list),
                           indicator_labels=as.character(indicator_labels))
@@ -515,33 +547,73 @@ server <- function(input, output, session) {
     ###################################
     #Output histogram of key indicators
     ##################################
-    
-    histo <- reactive ({
+  
+
+
+    histod <- reactive ({
       
-      df_plot <- dat() %>%
+       dat() %>%
         select(one_of(ind_list), school_ipw) %>%
         rowid_to_column("ID") %>%
         pivot_longer(cols=one_of(ind_list),
                      names_to='indicators', values_to='values') %>%
         left_join(labels_df)
       
+    })
+    
+    
+    #Allow user to select choices of indicator to show histograms
+    histo_choices <- reactive({
+      
+      return(as.character(unique(histod()$indicator_labels)))
+      
+    })
+    
+    #Make default one of our main indicators
+    histo_selected <- reactive({
       
       
-      p<- ggplot(data=na.omit(df_plot), aes(x=values, y=..density.., 
+      temp_hist <- histod() %>%
+        filter(indicator_labels %in% main_indicator_labels)
+      
+      return(as.character(unique(temp_hist$indicator_labels)))
+      
+    })
+    
+    #update select input list with these values
+    output$hist_choices = renderUI({
+      
+        
+     selectizeInput('hist_choose',"Choose Additional Histograms to plot",  choices = histo_choices(),
+                           selected=histo_selected(), 
+                           multiple = TRUE)
+      
+    })
+    
+    histo <- reactive ({   
+      plt_data <- histod() %>%
+        filter(indicator_labels %in% input$hist_choose)
+      
+      
+      p<- ggplot(data=na.omit(plt_data), aes(x=values, y=..density.., 
                                             weight=school_ipw,
                                             group=indicator_labels, 
                                             fill=if_else((indicator_labels %in% main_indicator_labels), 
-                                                         '#ff0000', '#d4d4d4'   ))) +
-        geom_histogram() +
-        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
-        scale_fill_manual(labels = c("Sub-Indicator", "Primary Indicator"),  values= c("#d4d4d4", "#ff0000")) +
+                                                         "#d4d4d4" ,"#ff0000"  ))) 
+        if (length(unique(plt_data$values))>100) {
+          p<-p + geom_density() 
+        } else {
+          p<-p + geom_histogram() 
+        }
+      p<-p+facet_wrap(indicator_labels ~ ., scales='free' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
+        scale_fill_manual(labels = c( "Primary Indicator", "Sub-Indicator"),  values= c( "#ff0000", "#d4d4d4")) +
         bbc_style() +
         theme(
           text = element_text(size = 16),
           
         ) +
         expand_limits(x = 0, y = 0) +
-        ggtitle("Histograms of Dashboard Indicators") +
+        ggtitle("Distributions of Dashboard Indicators") +
         labs(colour = "Indicator")
       
       p
@@ -940,7 +1012,7 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_mult_reg <- df_mult_reg %>%
-        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th ) %>%
+        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th, departamento ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
       
@@ -963,23 +1035,46 @@ server <- function(input, output, session) {
         select(school_code, GDP) %>%
         mutate(GDP=if_else(GDP>0,log(GDP),as.numeric(NA)))
       
-      df_multi_reg <- school_dta_short %>%
-        left_join(gdp) %>%
-        select(one_of(get_tag_mult_cov()), school_code) %>%
-        left_join(dat_mult_reg()) %>%
-        select(-school_code,-weights, -school_ipw, -total_4th) 
+      if (input$province_dummies=="No") {
+        df_multi_reg <- school_dta_short %>%
+          left_join(gdp) %>%
+          select(one_of(get_tag_mult_cov()), school_code) %>%
+          left_join(dat_mult_reg()) %>%
+          select(-school_code,-weights, -school_ipw, -total_4th, -departamento) 
       
-      multi_reg<-lm(y~., df_multi_reg, weights = dat_mult_reg()$school_ipw)
       
-      # Adjust standard errors
-      cov1_multi         <- vcovHC(multi_reg, type = "HC3")
-      robust_multi_se    <- sqrt(diag(cov1_multi))
+        multi_reg<-lm(y~., df_multi_reg, weights = dat_mult_reg()$school_ipw)
+        # Adjust standard errors
+        cov1_multi         <- vcovHC(multi_reg, type = "HC1")
+        robust_multi_se    <- sqrt(diag(cov1_multi))
+        
+      } else if (input$province_dummies=="Yes") {
+        df_multi_reg <- school_dta_short %>%
+          left_join(gdp) %>%
+          select(one_of(get_tag_mult_cov()), school_code) %>%
+          left_join(dat_mult_reg()) %>%
+          select(-school_code,-weights, -school_ipw, -total_4th) 
+        
+        my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(departamento)', sep=""))
+        multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$school_ipw)     
+        # Adjust standard errors
+        cov1_multi         <- vcovHC(multi_reg, type = "HC1")
+        robust_multi_se    <- sqrt(diag(cov1_multi))
+      }
+      
+
       
       stargazer( multi_reg, type = "html",
                  se        = list(robust_multi_se),
-                 title = "Regressions of Indicator variables on Set of Sub-Indicators",
+                 title = "Multivariate OLS Regression using School Level GEPD Data",
                  column.labels = input$multi_reg_choices,
-                 covariate.labels = input$control_choices
+                 covariate.labels = input$control_choices,
+                 style='aer',
+                 notes= c('Observations weighted using sampling weights.',
+                          'Heteroskedasticity robust standard errors in parenthesis.', 
+                          'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
+                          'GDP measures were produced by researchers at the World Bank DECRG using satellite data.',  
+                          'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
       )
       
     })        
@@ -1148,33 +1243,7 @@ school_dta_collapsed <- school_dta_short %>%
 public_officials_dta_collapsed <- public_officials_dta_clean %>%
   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
-indicators_list<-c('student_knowledge',
-            'student_attendance', 
-            'absence_rate',
-            'content_knowledge', 
-            'ecd_student_knowledge', 
-            'inputs', 
-            'infrastructure',
-            'operational_management', 
-            'instructional_leadership',
-            'principal_knowledge_score',
-            'principal_management', 
-            'teacher_attraction', 
-            'teacher_selection_deployment', 
-            'teacher_support', 
-            'teaching_evaluation', 
-            'teacher_monitoring',
-            'intrinsic_motivation', 
-            'school_monitoring', 
-            'school_management_attraction', 
-            'school_selection_deployment', 
-            'school_support', 
-            'principal_evaluation', 
-            'national_learning_goals',
-            'mandates_accountability',
-            'quality_bureaucracy',
-            'impartial_decision_making'
-)
+
 
 drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
                         'school_absence_rate', 'student_attendance',

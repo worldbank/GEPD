@@ -326,7 +326,9 @@ teacher_absence_dta <- teacher_absence_dta %>%
   mutate(principal_absence=100*case_when(
     m2sbq3_efft==8  ~ 1,
     m2sbq3_efft!=8   ~ 0,
-    is.na(m2sbq3_efft) ~ as.numeric(NA)))
+    is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
+  mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
+         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ))
 
 
 teacher_absence_final<- teacher_absence_dta %>%
@@ -339,20 +341,20 @@ teacher_absence_final<- teacher_absence_dta %>%
 final_indicator_data_EFFT <- teacher_absence_dta %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))
+  select( -starts_with('interview'), -starts_with('enumerator'), -c('teacher_name', 'm2saq2'))
 
 #Breakdowns by Male/Female
 final_indicator_data_EFFT_M <- teacher_absence_dta %>%
   filter(teacher_male==1) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))
+  select( -starts_with('interview'), -starts_with('enumerator'), -c('teacher_name', 'm2saq2'))
 
 final_indicator_data_EFFT_F <- teacher_absence_dta %>%
   filter(teacher_male==0) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))
+  select( -starts_with('interview'), -starts_with('enumerator'), -c('teacher_name', 'm2saq2'))
 
 #############################################
 ##### Student Attendance ###########
@@ -1102,7 +1104,6 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
-  filter(!is.na(instructional_leadership)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1309,7 +1310,6 @@ teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
 
 final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
   mutate(n_mssing_TATT=n_miss_row(.)) %>%
-  filter(!is.na(teacher_attraction)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1357,7 +1357,6 @@ teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
 
 final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%  
   mutate(n_mssing_TSDP=n_miss_row(.)) %>%
-  filter(!is.na(teacher_selection_deployment)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1435,7 +1434,6 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
 
 final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(n_mssing_TSUP=n_miss_row(.)) %>%
-  filter(!is.na(teacher_support)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1485,7 +1483,6 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
 
 final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
   mutate(n_mssing_TEVL=n_miss_row(.)) %>%
-  filter(!is.na(teaching_evaluation)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1545,7 +1542,6 @@ teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
 
 final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
   mutate(n_mssing_TMNA=n_miss_row(.)) %>%
-  filter(!is.na(teacher_monitoring)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
@@ -1587,7 +1583,6 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
            TRUE ~ as.numeric(NA)
            )) %>%
   mutate(intrinsic_motivation=1+0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching) %>%
-  filter(intrinsic_motivation!=0) %>% #screens out missing values
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-drop_teacher_info)  %>%
@@ -1622,7 +1617,7 @@ school_data_IMON <- school_data_IMON %>%
                                    rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
                                    0),
-         monitoring_infrastructure=if_else(m1scq1_imon==1,
+         monitoring_infrastructure=if_else(m1scq7_imon==1,
                                            rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq9_imon__")], na.rm=TRUE),
                                    0),
@@ -1633,7 +1628,6 @@ school_data_IMON <- school_data_IMON %>%
 
 
 final_indicator_data_IMON <- school_data_IMON %>%
-  filter(!is.na(school_monitoring)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_IMON=n_miss_row(.))  %>%
@@ -1661,7 +1655,6 @@ school_data_SATT <- school_data_SATT %>%
   mutate(school_management_attraction=principal_satisfaction)
   
 final_indicator_data_SATT <- school_data_SATT %>%
-  filter(!is.na(school_management_attraction)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SATT=n_miss_row(.))  %>%
@@ -1696,7 +1689,6 @@ school_data_SSLD <- school_data_SSLD %>%
     )
 
 final_indicator_data_SSLD <- school_data_SSLD %>%
-  filter(!is.na(school_selection_deployment)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.))  %>%
@@ -1734,7 +1726,6 @@ school_data_SSUP <- school_data_SSUP %>%
   mutate(school_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
 
 final_indicator_data_SSUP <- school_data_SSUP %>%
-  filter(!is.na(school_support)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSUP=n_miss_row(.))  %>%
@@ -1773,7 +1764,6 @@ school_data_SEVL<- school_data_SEVL %>%
   mutate(principal_evaluation=1+principal_formally_evaluated+principal_evaluation_multiple+principal_negative_consequences+principal_positive_consequences)
 
 final_indicator_data_SEVL <- school_data_SEVL %>%
-  filter(!is.na(principal_evaluation)) %>% #clean up teachers where we weren't able to compute indicator
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SEVL=n_miss_row(.))  %>%
@@ -1964,7 +1954,7 @@ school_gdp <- school_dta_short %>%
   dplyr::select(school_code, lon, lat)
 
 
-coordinates(school_gdp) <- c("lon","lat")
+sp::coordinates(school_gdp) <- c("lon","lat")
 school_gdp$GDP <- raster::extract(gdp_raster, school_gdp, 
                                   buffer=1000, # 1000m radius
                                   fun=mean,na.rm=T,
