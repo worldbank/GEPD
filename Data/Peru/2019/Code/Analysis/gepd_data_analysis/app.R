@@ -615,13 +615,16 @@ server <- function(input, output, session) {
 
       p<-p+facet_wrap(indicator_labels ~ ., scales='free' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
         scale_fill_manual(labels = c( "Primary Indicator", "Sub-Indicator"),  values= c( "#ff0000", "#d4d4d4")) +
+        theme(axis.title.y=element_blank(),
+              axis.text.y=element_blank(), 
+              axis.ticks.y=element_blank()) +
         bbc_style() +
         theme(
           text = element_text(size = 16),
           
         ) +
         expand_limits(x = 0, y = 0) +
-        ggtitle("Distributions of Dashboard Indicators") +
+        ggtitle("Probability Density Functions of Dashboard Indicators") +
         labs(colour = "Indicator")
       
       p
