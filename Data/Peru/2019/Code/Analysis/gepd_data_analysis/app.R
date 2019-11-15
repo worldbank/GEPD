@@ -186,13 +186,17 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                                           "School Management Selection & Deployment",
                                                           "School Management Support", 
                                                           "School Management Evaluation", 
-                                                          "Log GDP per Sq km"
+                                                          "Log GDP per Sq km", 
+                                                          "Rural"
                                                 )  , 
                                                 selected=c( 'Teacher Classroom Absence Rate', 'Teacher Content Knowledge', '1st Grade Assessment Score', 'Inputs', 'Infrastructure',
-                                                           'Operational Management', 'Teacher Intrinsic Motivation', 'Instructional Leadership', 'Instructional Leadership',
-                                                           'Principal Management Skills', 'Log GDP per Sq km'),
+                                                           'Operational Management', 'Instructional Leadership', 'Instructional Leadership',
+                                                           'Principal Management Skills', 'Log GDP per Sq km', 'Rural'),
                                                 multiple=TRUE),
                                  selectizeInput("province_dummies", "Include Province Fixed Effects in Regresion?", 
+                                                choices=c("No", "Yes"),
+                                                selected="No")   ,
+                                 selectizeInput("imputed", "Use Dataset that uses imputation for missing values, rather than raw dataset?", 
                                                 choices=c("No", "Yes"),
                                                 selected="No")   ,
                                  downloadButton("downloadmultireg", "Download"),
@@ -204,6 +208,10 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  downloadButton("downloadscoring", "Download"),
                                  htmlOutput('scoring')
                                  )
+                        # tabPanel("Principal Components Analysis", value=4, 
+                        #          downloadButton("downloadpca", "Download"),
+                        #          
+                        #          plotlyOutput("pcaPlot", height=1000))
             )        )
     )
 )
@@ -967,8 +975,8 @@ server <- function(input, output, session) {
     get_tag_mult_cov <- reactive({
       
       labels_gdp <- data.frame(
-        indicators="GDP",
-        indicator_labels="Log GDP per Sq km"
+        indicators=c("GDP",'rural'),
+        indicator_labels=c("Log GDP per Sq km", "Rural")
       )
       
       get_tag_df_cov<-labels_df %>%
@@ -993,11 +1001,22 @@ server <- function(input, output, session) {
     #multivariate-indicator Regressions
     #########################################
     
+    
+    #select either dataset that is imputed or raw, unimputed, dataset
+    dat_for_regs <- reactive({
+      
+      if (input$imputed=="Yes") {
+        school_dta_short_imp
+      } else if (input$imputed=="No") {
+        school_dta_short
+      }
+      
+    })
 
     
     dat_mult_reg <- reactive({
       #create database with just learning outcomes
-      df_mult_reg<-school_dta_short %>%
+      df_mult_reg<-dat_for_regs() %>%
         mutate(codigo.modular=as.numeric(school_code)) %>%
         left_join(data_set_updated) 
       
@@ -1012,7 +1031,7 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_mult_reg <- df_mult_reg %>%
-        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th, departamento ) %>%
+        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th, departamento, rural ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
       
@@ -1033,23 +1052,24 @@ server <- function(input, output, session) {
       
       gdp <- school_gdp %>%
         select(school_code, GDP) %>%
-        mutate(GDP=if_else(GDP>0,log(GDP),as.numeric(NA)))
+        mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
       
       if (input$province_dummies=="No") {
-        df_multi_reg <- school_dta_short %>%
+        df_multi_reg <- dat_for_regs() %>%
           left_join(gdp) %>%
           select(one_of(get_tag_mult_cov()), school_code) %>%
           left_join(dat_mult_reg()) %>%
           select(-school_code,-weights, -school_ipw, -total_4th, -departamento) 
       
       
-        multi_reg<-lm(y~., df_multi_reg, weights = dat_mult_reg()$school_ipw)
+        my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), sep=""))
+        multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$school_ipw)   
         # Adjust standard errors
         cov1_multi         <- vcovHC(multi_reg, type = "HC1")
         robust_multi_se    <- sqrt(diag(cov1_multi))
         
       } else if (input$province_dummies=="Yes") {
-        df_multi_reg <- school_dta_short %>%
+        df_multi_reg <- dat_for_regs() %>%
           left_join(gdp) %>%
           select(one_of(get_tag_mult_cov()), school_code) %>%
           left_join(dat_mult_reg()) %>%

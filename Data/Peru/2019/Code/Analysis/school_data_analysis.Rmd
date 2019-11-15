@@ -18,7 +18,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #load relevant libraries
-library(tidyverse)
 library(haven)
 library(plotly)
 library(naniar)
@@ -42,11 +41,20 @@ library(caret)
 library(glmnet)
 library(raster)
 library(rgdal)
+library(stats)
+library(psych)
+library(purrr)
+library(broom)
+library(tidyverse)
+
 #Load the data
 #read in school level file
 
 
 load(paste(open_folder, "school_survey_data.RData", sep="/"))
+
+load(paste(open_folder, "school_indicators_data.RData", sep="/"))
+
 
 ```
 
@@ -362,22 +370,35 @@ bscols(widths=c(3,NA),
 )
 ```
 
-```{r gdp_reg}
-library(purrr)
-library(broom)
-#map of linear model of each indicator on GDP
-
-#add GDP to database
-coordinates(school_map) <- c("lon","lat")
-school_map$GDP <- extract(gdp_raster, school_map, 
-                           buffer=1000, # 1000m radius
-                           fun=mean,na.rm=T,
-                           method='simple')
-  
-
-school_map <- as.data.frame(school_map) %>%
-  mutate(GDP=as.numeric(GDP))
-
+# Factor Analysis
+```{r fa}
+   ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
+                'student_attendance', 'absence_rate', 'school_absence_rate', 
+                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+                'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'school_management_attraction', 'principal_satisfaction',
+                'school_selection_deployment', 
+                'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+    
     indicators_list<-c('student_knowledge',
             'student_attendance', 
             'absence_rate',
@@ -402,6 +423,41 @@ school_map <- as.data.frame(school_map) %>%
             'principal_evaluation'
 
 )
+
+fa_df <- final_indicator_data_TATT %>%
+  dplyr::select(one_of(ind_list)) %>%
+  dplyr::select(-one_of(indicators_list))
+
+fa_cor <- cor(fa_df,  use='complete.obs')
+
+fa <- prcomp(na.omit(fa_df), center=T, scale=T, rank=1)
+
+summary(fa)
+fa
+
+final_indicator_data_TATT$factor=-predict(fa, fa_df)
+
+cor(x=final_indicator_data_TATT$teacher_attraction, final_indicator_data_TATT$factor,  use='complete.obs')
+
+```
+
+# Multivariate Regression
+```{r gdp_reg}
+
+#map of linear model of each indicator on GDP
+
+#add GDP to database
+coordinates(school_map) <- c("lon","lat")
+school_map$GDP <- extract(gdp_raster, school_map, 
+                           buffer=1000, # 1000m radius
+                           fun=mean,na.rm=T,
+                           method='simple')
+  
+
+school_map <- as.data.frame(school_map) %>%
+  mutate(GDP=as.numeric(GDP))
+
+
 
 y <-  school_map$GDP   
     

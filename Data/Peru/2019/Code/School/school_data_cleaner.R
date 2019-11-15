@@ -52,7 +52,9 @@ school_dta<- school_dta %>%
          lon=m1s0q9__Longitude,
          school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count #this variable was mistakenly not tagged as pknw
-  )
+  ) %>%
+  mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
+  mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
@@ -1101,15 +1103,14 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
          feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
-  mutate(feedback_observation=if_else(m3sdq15_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
+  mutate(feedback_observation=if_else(m3sdq15_ildr==1 & m3sdq19_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
   group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(-preamble_info_teacher
-  )  %>%
+  select(-preamble_info_teacher  )  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
 
@@ -1798,6 +1799,14 @@ if (exists('final_school_data')) {
 
 ind_dta_list<-c()
 
+school_data_preamble_short<-school_data_preamble %>%
+  group_by(school_code) %>%
+  select(keep_info) %>%
+  summarise_all(~first(na.omit(.)))
+
+final_school_data <- school_data_preamble_short
+
+
 for (i in indicator_names ) {
   if (exists(paste("final_indicator_data_",i, sep=""))) {
     #form temp data frame with each schools data
@@ -1863,10 +1872,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
 )
 
 
-school_data_preamble_short<-school_data_preamble %>%
-  group_by(school_code) %>%
-  select(-starts_with('interview')) %>%
-  summarise_all(~first(na.omit(.)))
+
                 
 
 final_school_data <- final_school_data %>%
@@ -1962,22 +1968,31 @@ school_gdp$GDP <- raster::extract(gdp_raster, school_gdp,
 
 
 school_gdp <- as.data.frame(school_gdp) %>%
-  mutate(GDP=as.numeric(GDP))
+  mutate(GDP=as.numeric(GDP)) %>%
+  select(school_code, GDP)
 
+####################################
+# Multiple Imputation of missing values
+###################################
 
+#use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
+#https://academic.oup.com/aje/article/179/6/764/107562
+impdata<-mice::mice(school_dta_short, m=5,
+           method='rf',
+           maxit = 50, seed = 500)
 
-
+school_dta_short_imp <- mice::complete(impdata, 1)
 ################################
 #Store Key Created Datasets
 ################################
 
 #saves the following in R and stata format
 
-data_list <- c('school_dta', 'school_dta_short',  'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster')
+data_list <- c('school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster')
 
 save(list=data_list, file = file.path(save_folder, "school_survey_data.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", "indicators", 'metadta', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
+save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
 
 
 if (backup_onedrive=="yes") {
