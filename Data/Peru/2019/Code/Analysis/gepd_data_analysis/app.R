@@ -27,7 +27,7 @@ library(ggpmisc)
 library(skimr)
 library(Hmisc)
 library(quantreg)
-
+library(psych)
 library(tidyverse)
 
 #library(wbgcharts)
@@ -154,16 +154,25 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  downloadButton("downloadcorr", "Download"),
                                  plotlyOutput("corrPlot", height=1000)),
                         tabPanel("Bivariate Regression Analysis", value=5, 
+                                 p('This tool generates scatter plots between any two indicators, and shows the regression line and coefficients from 
+                                   a simple bivariate OLS regression of the first indicator on the second.'),
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  downloadButton("downloadregplot", "Download"),
                                  plotOutput("regplot", height=1400)
                                  ),
                         tabPanel("Multivariate Regression Tool", value=7, 
+                                 p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
+                                   the set of X variables in the regression.  This tool can give some information on whether relationships between variables
+                                   persist after controlling for other covariates.  These estimates, even though they control for some other covariates, are not 
+                                   necessarily causal.  The X variables include our Dashboard indicators, as well as the option to include
+                                   the rural status of the school, as well as GDP per square kilometer within one square kilometer of the school.  GDP per square kilometer data 
+                                   is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  Additionally, 
+                                   the user has the option to include regional fixed effects.  In the case of Peru, these are Peruvian Department fixed effects.'),
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  
-                                 selectizeInput("control_choices", "Choose Control Variables to Include in Regressions", 
+                                 selectizeInput("control_choices", "Choose X Variables to Include in Regressions", 
                                                 choices=c(
                                                           "Student Attendance Rate",
                                                           "Teacher Classroom Absence Rate", 
@@ -203,15 +212,22 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  htmlOutput("multivariate_regs", height=1400)
                         ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
+                                 p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
+                                   the set of sub-indicators in the regression.  This is meant to provide information on how each sub-indicator relates
+                                   to certain outcomes.'),
                                  selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  downloadButton("downloadscoring", "Download"),
                                  htmlOutput('scoring')
-                                 )
-                        # tabPanel("Principal Components Analysis", value=4, 
-                        #          downloadButton("downloadpca", "Download"),
-                        #          
-                        #          plotlyOutput("pcaPlot", height=1000))
+                                 ),
+                         tabPanel("Factor Analysis of Sub-Indicators", value=4, 
+                                  downloadButton("downloadfa", "Download"),
+                                  p( 'In this analysis we use factor analysis to produce a single factor, which maximizes the variation explained 
+                                     in our sub-indicators.  This factor is then compared to our indicator to check whether scoring based on our approach versus 
+                                     factor analysis produces similar results.'
+                                  ),
+                                  verbatimTextOutput('fa_summary'),
+                                  plotOutput("fa_plot",  height=800))
             )        )
     )
 )
@@ -350,6 +366,33 @@ server <- function(input, output, session) {
                        'quality_bureaucracy',
                        'impartial_decision_making'
     )
+    
+    #Create list of key sub-indicators
+    
+    
+    
+    sub_ind_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
+                          'school_absence_rate', 'student_attendance',
+                          'math_content_knowledge', 'literacy_content_knowledge',
+                          'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                          'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
+                          'drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                           'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address',  'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                          'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                          'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                          'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                          'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                          'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                          'teacher_selection','teacher_deployment',
+                          'pre_service','practicum','in_service','opportunities_teachers_share',
+                          'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences', 
+                          'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                          'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                          'principal_satisfaction',
+                          'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                          'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+    )
+    
       
     labels_df<-data.frame(indicators=as.character(ind_list),
                           indicator_labels=as.character(indicator_labels))
@@ -1096,7 +1139,7 @@ server <- function(input, output, session) {
                  notes= c('Observations weighted using sampling weights.',
                           'Heteroskedasticity robust standard errors in parenthesis.', 
                           'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
-                          'GDP measures were produced by researchers at the World Bank DECRG using satellite data.',  
+                          'GDP measures were produced by researchers at the World Bank DECRG.',  
                           'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
       )
       
@@ -1127,31 +1170,6 @@ server <- function(input, output, session) {
       }
     )
     
-    #Create list of key sub-indicators
-
-    
-
-    sub_ind_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
-                          'school_absence_rate', 'student_attendance',
-                          'math_content_knowledge', 'literacy_content_knowledge',
-                          'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
-                          'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
-                          'drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-                          'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                          'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                          'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-                          'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
-                          'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
-                          'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-                          'teacher_selection','teacher_deployment',
-                          'pre_service','practicum','in_service','opportunities_teachers_share',
-                          'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences', 
-                          'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                          'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                          'principal_satisfaction',
-                          'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                          'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
-    )
 
 ########################################
 #Sub-indicator Regressions
@@ -1252,6 +1270,109 @@ output$downloadscoring <- downloadHandler(
     writeLines(paste(score()), file)
     
       }
+)
+
+
+
+########################################
+#Factor Analysis
+#########################################
+
+
+#print fa output
+fa_out<-reactive({
+  
+  df_fa <- dat() %>%
+    select(one_of(sub_ind_list))
+  
+  #drop columns with zero variance
+  no_variance <- caret::nearZeroVar(df_fa, names=T)
+  
+  df_fa <- df_fa %>%
+    dplyr::select(-no_variance)
+  
+  print(fa(na.omit(df_fa), nfactors = 1))
+  
+  
+  
+})        
+
+output$fa_summary<-renderPrint({
+  
+  fa_out()  
+  
+  
+})  
+
+
+#plot fa against scored indicator
+fa_plot<-reactive({
+  
+  
+  df_fa_dat <- dat() %>%
+    select(one_of(sub_ind_list))
+  
+  #drop columns with zero variance
+  no_variance <- caret::nearZeroVar(df_fa_dat, names=T)
+  
+  df_fa_dat <- df_fa_dat %>%
+    dplyr::select(-no_variance)
+  
+  model_fa <- fa(na.omit(df_fa_dat), nfactors = 1)
+  
+  #create dataset with fa included
+  df_fa_plot <- dat() 
+  
+  df_fa_plot$fa_pred = predict(model_fa, df_fa_dat)
+  
+
+  df_fa_plot <- df_fa_plot %>%
+    dplyr::select(school_code, fa_pred) %>%
+    left_join(dat()) %>%
+    dplyr::select(one_of(indicators_list), fa_pred) %>%
+    rename(outcome=1) 
+    
+  
+  ggplot(data=df_fa_plot, aes(x=outcome, y=fa_pred)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    theme_bw() +
+    theme(
+      plot.title = element_text( family='Helvetica',
+      size=28,
+      face="bold",
+      color="#222222"),
+      axis.title.x = element_text(family='Helvetica', size=20 ),
+      axis.title.y = element_text(family='Helvetica',  size=20),
+      axis.text = ggplot2::element_text(family='Helvetica',
+                                        size=18,
+                                        color="#222222")
+    ) +
+    xlab(input$indicators) +
+    ylab('First Factor Score') +
+    ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on First Factor for ", input$indicators)),45) +
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                 label.x.npc = "right", label.y.npc = 0.2,
+                 formula = 'y~x', parse = TRUE, size = 5) 
+  
+})        
+
+output$fa_plot<-renderPlot({
+  
+  fa_plot()  
+  
+  
+}) 
+
+
+# Downloadable png of selected dataset ----
+output$downloadfa <- downloadHandler(
+  filename = function() {
+    paste('Factor Score Plot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+  },
+  content = function(file) {
+    ggsave(file, plot = fa_plot(), device = "png", width=16, height=12)
+  }
 )
 
 

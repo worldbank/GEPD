@@ -424,20 +424,81 @@ bscols(widths=c(3,NA),
 
 )
 
-fa_df <- final_indicator_data_TATT %>%
+fa_df <- final_indicator_data_OPMN %>%
   dplyr::select(one_of(ind_list)) %>%
   dplyr::select(-one_of(indicators_list))
 
 fa_cor <- cor(fa_df,  use='complete.obs')
 
-fa <- prcomp(na.omit(fa_df), center=T, scale=T, rank=1)
+#drop columns with zero variance
+no_variance <- caret::nearZeroVar(fa_df, names=T)
 
+fa_df <- fa_df %>%
+  dplyr::select(-no_variance)
+
+fa <-psych::fa(na.omit(fa_df), nfactors=1)
+summary(psych::fa(na.omit(fa_df), nfactors=1))
 summary(fa)
-fa
+#fa
 
-final_indicator_data_TATT$factor=-predict(fa, fa_df)
+final_indicator_data_OPMN$pca=predict(fa, fa_df)
 
-cor(x=final_indicator_data_TATT$teacher_attraction, final_indicator_data_TATT$factor,  use='complete.obs')
+cor(x=final_indicator_data_OPMN$operational_management, final_indicator_data_OPMN$pca,  use='complete.obs')
+
+ggplot(data=final_indicator_data_OPMN, aes(x=operational_management, y=pca, color='red')) +
+  geom_point() +
+  geom_smooth(method='lm') 
+  
+
+
+
+
+  df_fa_dat <- final_indicator_data_OPMN %>%
+    select(one_of(sub_ind_list))
+  
+  #drop columns with zero variance
+  no_variance <- caret::nearZeroVar(df_fa_dat, names=T)
+  
+  df_fa_dat <- df_fa_dat %>%
+    dplyr::select(-no_variance)
+  
+  model_fa <- fa(na.omit(df_fa_dat), nfactors = 1)
+  
+  #create dataset with fa included
+  df_fa_plot <- final_indicator_data_OPMN
+  
+  df_fa_plot$fa_pred = factor.scores(df_fa_dat, model_fa)
+  
+
+  df_fa_plot <- df_fa_plot %>%
+    dplyr::select(school_code, fa_pred) %>%
+    left_join(dat()) %>%
+    dplyr::select(one_of(indicators_list), fa_pred) %>%
+    rename(outcome=1) 
+    
+  
+  ggplot(data=df_fa_plot, aes(x=outcome, y=fa_pred)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    theme_bw() +
+    theme(
+      plot.title = element_text( family='Helvetica',
+      size=28,
+      face="bold",
+      color="#222222"),
+      axis.title.x = element_text(family='Helvetica', size=20 ),
+      axis.title.y = element_text(family='Helvetica',  size=20),
+      axis.text = ggplot2::element_text(family='Helvetica',
+                                        size=18,
+                                        color="#222222")
+    ) +
+    xlab(input$indicators) +
+    ylab('First Principal Component') +
+    ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on First Factor for ", input$reg_choices)),60) +
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                 label.x.npc = "right", label.y.npc = 0.2,
+                 formula = 'y~x', parse = TRUE, size = 5) 
+
 
 ```
 
