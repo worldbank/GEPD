@@ -223,7 +223,6 @@ for (i in indicator_names ) {
 # School survey. Percent of teachers absent. Teacher is coded absent if they are: 
 #   - not in school 
 # - in school but absent from the class 
-# - in the class but not teaching.
 
 
 bin_var <- function(var, val) {
@@ -330,7 +329,8 @@ teacher_absence_dta <- teacher_absence_dta %>%
     m2sbq3_efft!=8   ~ 0,
     is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
   mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
-         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ))
+         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ),
+         presence_rate=100-absence_rate)
 
 
 teacher_absence_final<- teacher_absence_dta %>%
@@ -523,11 +523,13 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
   add_count(school_code,name='m5_teach_count') %>%
   add_count(typetest,name='m5_teach_count_math') %>%
   mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+
   select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
@@ -538,11 +540,13 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
   filter(m2saq3==1) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
@@ -552,11 +556,13 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
   filter(m2saq3==2) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
@@ -635,7 +641,7 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=70))
+  mutate(student_proficient=100*as.numeric(student_knowledge>=80))
 
 
 #save  4th grade data at student level anonymized
@@ -1849,8 +1855,8 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 #Create list of key indicators
 ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
-            'absence_rate', 'school_absence_rate', 'student_attendance',
-            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
+            'presence_rate','absence_rate', 'school_absence_rate', 'student_attendance',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'content_proficiency',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',

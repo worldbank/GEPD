@@ -175,8 +175,8 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  selectizeInput("control_choices", "Choose X Variables to Include in Regressions", 
                                                 choices=c(
                                                           "Student Attendance Rate",
-                                                          "Teacher Classroom Absence Rate", 
-                                                          "Teacher Content Knowledge", 
+                                                          "Teacher Classroom Presence Rate", 
+                                                          "Teacher Content Proficiency", 
                                                           "1st Grade Assessment Score", 
                                                           "Inputs", 
                                                           "Infrastructure", 
@@ -244,6 +244,13 @@ server <- function(input, output, session) {
     
     
     load(paste("school_sample_2019_07_22.RData"))
+    #correct a few missing values in weights with departamento average
+    #because stratification was at the departamento level, this is accurate correction.
+    data_set_updated <- data_set_updated %>%
+      group_by(departamento) %>%
+      mutate_each(funs(replace(., which(is.na(.)),
+                               mean(., na.rm=TRUE))))
+    
     
     indicators <- indicators %>%
       filter(!(indicator_tag=="PROE" | indicator_tag=="PRIM" | indicator_tag=="TENR"))
@@ -256,8 +263,8 @@ server <- function(input, output, session) {
 
     
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
-                'student_attendance', 'absence_rate', 'school_absence_rate', 
-                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'student_attendance','presence_rate',  'absence_rate', 'school_absence_rate', 
+                'content_proficiency','content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
@@ -284,8 +291,8 @@ server <- function(input, output, session) {
     
     indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency",
                         "Student Attendance Rate",
-                        "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
-                        "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Proficiency", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
                         "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
@@ -311,10 +318,10 @@ server <- function(input, output, session) {
                         )
   
     #create subset with just main indicators
-    main_indicator_labels<-c("4th Grade Student Knowledge", 
+    main_indicator_labels<-c("4th Grade Student Proficiency", 
                         "Student Attendance Rate",
-                        "Teacher Classroom Absence Rate", 
-                        "Teacher Content Knowledge", 
+                        "Teacher Classroom Presence Rate", 
+                        "Teacher Content Proficiency", 
                         "1st Grade Assessment Score", 
                         "Inputs", 
                         "Infrastructure", 
@@ -339,10 +346,10 @@ server <- function(input, output, session) {
                         "Impartial Decision Making"
     )  
     
-    indicators_list<-c('student_knowledge',
+    indicators_list<-c('student_proficient',
                        'student_attendance', 
-                       'absence_rate',
-                       'content_knowledge', 
+                       'presence_rate',
+                       'content_proficiency', 
                        'ecd_student_knowledge', 
                        'inputs', 
                        'infrastructure',
@@ -372,7 +379,7 @@ server <- function(input, output, session) {
     
     
     sub_ind_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
-                          'school_absence_rate', 'student_attendance',
+                          'absence_rate','school_absence_rate', 'student_attendance',
                           'math_content_knowledge', 'literacy_content_knowledge',
                           'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                           'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
@@ -1390,7 +1397,7 @@ public_officials_dta_collapsed <- public_officials_dta_clean %>%
 
 
 drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
-                        'school_absence_rate', 'student_attendance',
+                        'absence_rate','school_absence_rate', 'student_attendance',
                         'math_content_knowledge', 'literacy_content_knowledge',
                         'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                         'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
@@ -1411,10 +1418,10 @@ drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
                         'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
 )
 
-indicator_labels<-c('4th Grade Student Knowledge', '4th Grade Math Knowledge', '4th Grade Literacy Knowledge',
+indicator_labels<-c('4th Grade Student Proficiency', '4th Grade Math Knowledge', '4th Grade Literacy Knowledge',
                     'Student Attendance Rate',
-                    'Teacher Classroom Absence Rate', 'Teacher School Absence Rate', 
-                    'Teacher Content Knowledge', 'Teacher Math Content Knowledge', 'Teacher Literacy Content Knowledge', 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                    "Teacher Classroom Presence Rate",'Teacher Classroom Absence Rate', 'Teacher School Absence Rate', 
+                    "Teacher Content Proficiency", 'Teacher Content Knowledge', 'Teacher Math Content Knowledge', 'Teacher Literacy Content Knowledge', 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
                     '1st Grade Assessment Score', '1st Grade Numeracy Score', '1st Grade Literacy Score', '1st Grade Executive Functioning Score', '1st Grade Socio-Emotional Score',
                     'Inputs', 'Functioning Blackboard', 'Classroom Materials', 'Textbooks', 'Desks', 'ICT Usage', 'ICT Access',
                     'Infrastructure', 'Clean Drinking Water', 'Functioning Toilets', 'Internet', 'Electricity', 'Disability Accessibility', 'Disability Road Access', 'School Ramps', 'Disability School Entrance', 'Classroom Ramps', 'Disability Classroom Entrance', 'Disability Screening',
@@ -1445,7 +1452,7 @@ indicator_labels<-c('4th Grade Student Knowledge', '4th Grade Math Knowledge', '
 main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
                          'Student Attendance',
                          'Teacher Effort', 
-                         'Teacher Content Knowledge', 
+                         "Teacher Content Proficiency", 
                          'Capacity for Learning', 
                          'Basic Inputs', 
                          'Basic Infrastructure', 

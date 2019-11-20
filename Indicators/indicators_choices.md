@@ -1,11 +1,11 @@
 | Series | Indicator Name |  Value | How is the indicator scored? |
 |---|---|---|---|
-|SE.PRM.LERN | Proficiency on GEPD Assessment | 0-100 | The average of the fraction correct on 4th grade math and language student assessment.   |
+|SE.PRM.LERN | Proficiency on GEPD Assessment | 0-100 | The fraction of students scoring at least 70% on 4th grade math and language student assessment.   |
 |SE.PRM.PART |Participation | 0-100 | Based on adjusted net enrollment data.  Not based on survey data|
-|SE.PRM.EFFT |Teacher Effort|0-100  | School survey.  Percent of teachers absent.  Teacher is coded absent if they are: <br/> - not in school <br/> - in school but absent from the class.
-|SE.PRM.CONT |Teacher Content Knowledge| 0-100  | School survey.  Fraction correct on teacher assessment.  In the future, we will align with SDG criteria for minimum proficiency.  We have dropped the "correct the letter" exercise from the teacher assessment, due to cross-country comparability issues.  |
+|SE.PRM.EFFT |Teacher Effort|0-100  | School survey.  Percent of teachers present.  Teacher is coded absent if they are: <br/> - not in school <br/> - in school but absent from the class.
+|SE.PRM.CONT |Teacher Content Knowledge| 0-100  | School survey.  The fraction of teachers scoring at least 70% on the teacher content knowledge exam on mathematics and language.    |
 |SE.PRM.PEDG |Teacher Pedagogical Skills|1-5 | School survey.  Based on TEACH ratings from classroom observations |
-|SE.PRM.INPT |Basic Inputs|0-4 | School survey.  Total score is the sum of whether a school has: <br/> - Functional blackboard  <br/> - Pens, pencils, exercise books </br> - Textbooks <br/> - Fraction of students in class with a desk  <br/> - Used ICT in class and have access to ICT in the school.|
+|SE.PRM.INPT |Basic Inputs|0-4 | School survey.  Total score is the sum of whether a school has: <br/> - Functional blackboard  <br/> - Pens, pencils, exercise books, and Textbooks <br/> - Fraction of students in class with a desk  <br/> - Used ICT in class and have access to ICT in the school.|
 |SE.PRM.INFR |Basic Infrastructure|0-5 |School survey.  Total score is the sum  of whether a school has: <br/> - Access to adequate drinking water <br/> -Functional toilets that are separate for boys/girls, private, useable, and have hand washing facilities <br/> - Electricity <br/> - Internet <br/> - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)|
 |SE.PRM.LCAP |Capacity for Learning| 0-100 | School survey.  The average of Fraction correct on the literacy, numeracy, socio-emotional, and executive functioning components of the  early childhood assessment given to students in school.|
 |SE.PRM.ATTD |	Student Attendance | 0-100 | School Survey.  Percent of 4th grade students who are present during an unannounced visit. |
