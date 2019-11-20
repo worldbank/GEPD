@@ -48,7 +48,19 @@ use "${wrk_dir}/questionnaire_roster.dta"
 cap frame create teacher_assessment
 frame change teacher_assessment
 *Load the teacher_assessment data
-use "${wrk_dir}/teacher_assessment_answers.dta"
+use "${wrk_dir}/version_21/teacher_assessment_answers.dta"
+
+*Load the teacher_assessment data to school code
+*Cant link by interview__id, because assessment graded separately from other data entry
+cap frame create teacher_assessment_school
+frame change teacher_assessment_school
+use "${wrk_dir}/version_21/EPDash.dta"
+gen school_code=school_code_preload
+replace school_code = m1s0q2_code if missing(school_code_preload) // replace school code with enumerator manually entered school code if missing 
+destring school_code, replace
+*fix a few mistakenly entered school codes
+replace school_code=328328 if school_code==0
+replace school_code=558163 if school_code==62181
 
 ************
 *4th grade assessment
@@ -80,7 +92,7 @@ destring weights, replace force
     *because stratification was at the departamento level, this is accurate correction.
 egen weight_dept = mean(weights), by(departamento)
 
-replace weights=weight_dept if missing(weights)
+*replace weights=weight_dept if missing(weights)
 
 gen school_ipw=weights*total_4th
 egen school_ipw_imp= median(school_ipw)
@@ -129,8 +141,8 @@ frget weights rural total_1st total_4th departamento school_ipw, from(sample)
 *teacher assessment
 *****
 frame change teacher_assessment
-frlink m:1 interview__id, frame(school)
-frget school_code, from(school)
+frlink m:1 interview__id, frame(teacher_assessment_school)
+frget school_code, from(teacher_assessment_school)
 
 frlink m:1 school_code, frame(sample)
 frget weights rural total_1st total_4th departamento school_ipw, from(sample)
@@ -210,8 +222,122 @@ replace absence_rate = principal_absence if missing(absence_rate)
 frame put *, into(final_teacher_absence)
 frame change final_teacher_absence
 
-collapse school_absence_rate absence_rate school_ipw, by(school_code)
-su absence_rate [aw=school_ipw]
+collapse school_absence_rate absence_rate school_ipw (first) departamento, by(school_code)
+svyset [pw=school_ipw]
+svy: mean absence_rate 
+
+
+
+*********************************************
+***** Student Attendance ***********
+*********************************************
+
+*Percent of 4th grade students who are present during an unannounced visit.
+frame change school
+
+gen student_attendance=m4scq4_inpt/m4scq12_inpt
+replace student_attendance=m4scq12_inpt/m4scq4_inpt if m4scq4_inpt>m4scq12_inpt  //fix an issue where sometimes enumerators will get these two questions mixed up.
+replace student_attendance=1 if student_attendance>1 & !missing(student_attendance)
+replace student_attendance=100*student_attendance
+
+frame put *, into(final_student_attendance)
+frame change final_student_attendance
+
+collapse student_attendance school_ipw (first) departamento, by(school_code)
+svyset [pw=school_ipw]
+svy: mean student_attendance 
+
+**********************************************************
+* Teacher Content Knowledge
+**********************************************************
+
+frame change teacher_assessment
+
+
+*drop the correct the letter
+drop m5s1q3*
+
+*recode assessment variables to be 1 if student got it correct and zero otherwise
+de m5s1q* m5s2q* m5s1q* m5s2q*, varlist
+
+foreach var in `r(varlist)' {
+replace `var'=1 if `var'==2 & !missing(`var')
+replace `var'=0 if `var'==99 & !missing(`var')
+
+}
+
+
+*create indicator for % correct on teacher assessment
+
+****Literacy****
+*calculate # of literacy items
+
+
+
+*calculate teachers lit items correct
+egen literacy_content_knowledge=rowmean(m5s1q*)
+egen cloze=rowmean(m5s1q2)
+egen grammar=rowmean(m5s1q1)
+egen read_passage=rowmean(m5s1q4)
+
+####Math####
+#calculate # of math items
+teacher_assessment_dta$math_length<-length(grep(x=colnames(teacher_assessment_dta), pattern="m5s2q"))
+
+math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")])
+
+#calculate teachers math items correct
+teacher_assessment_dta <- teacher_assessment_dta %>%
+  mutate(math_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE),
+         arithmetic_number_relations=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="number")], na.rm=TRUE),
+         geometry=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
+         interpret_data=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
+
+#rename a few key variables up front
+teacher_assessment_dta<- teacher_assessment_dta %>%
+  mutate(g4_teacher_name=m5sb_troster  ,
+         g4_teacher_number=m5sb_tnum   )
+
+
+#pull apart dataset with just domains
+teacher_assessment_domains <- teacher_assessment_dta %>%
+  dplyr::select(typetest, school_code, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage,
+                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data
+  )
+
+
+teacher_assessment_language <-teacher_assessment_dta %>%
+  select(typetest, school_code, m5sb_tnum, lit_items) %>%
+  filter(typetest==2) %>%
+  select(-typetest)
+
+teacher_assessment_math <- teacher_assessment_dta %>%
+  select(typetest, school_code, m5sb_tnum, math_items) %>%
+  filter(typetest==1) %>%
+  select(-typetest)
+
+
+
+save(teacher_assessment_language, teacher_assessment_math, teacher_assessment_domains, teacher_metadata, 
+     file = file.path(save_folder, "dashboard_teacher_assessment_data.RData"))
+
+
+#calculate % correct for literacy, math, and total
+final_indicator_data_CONT <- teacher_assessment_dta %>%
+  group_by(school_code) %>%
+  add_count(school_code,name='m5_teach_count') %>%
+  add_count(typetest,name='m5_teach_count_math') %>%
+  mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
+  mutate(content_knowledge=case_when(
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
+    is.na(math_content_knowledge)  ~ literacy_content_knowledge,
+    is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+
+  select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
+         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+
 
 **********************************************************
 * Teacher Questionnaire
