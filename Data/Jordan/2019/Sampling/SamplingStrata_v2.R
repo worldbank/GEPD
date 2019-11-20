@@ -507,14 +507,46 @@ date_frame <- "2019-10-11"
     group_by(governorate) %>%
     left_join(prov_list) %>%
     sample_n(n_schools) %>%
-    select(governorate, directorate , n_schools_directorate)
+    dplyr::select(governorate, directorate , n_schools_directorate)
   
   #save as csv
   dist_frame_name <- paste(dir_frame,"/district_sample_",Sys.Date(),".csv", sep="")
   
   write_excel_csv(dist_list_alt3,dist_frame_name) 
   
-
+# create a list of public officials to be interviewed in each office
+  list_public_officials_directorate <- dist_list_alt3 %>%
+    mutate(official1='Director General of Field Directorate',
+           official2='Administrative and financial affairs director',
+           official3='Education Affairs Director',
+           official4='Personnel affairs section',
+           official5='Random Official 1',
+           official6='Random Official 2'
+           ) 
+  
+  titles <- c('Education Planning section', 'School textbooks and requirements section', 'Public Education and students affairs section',
+              'Education supervision section', 'Exams and Tests section', 'Private education section', 'Buildings and maintenance section')
+  title_sample <- matrix(sample(titles), nrow(dist_list_alt3),2)
+  
+  #now replace official 5 and 6 with random selection
+  list_public_officials_directorate$official5=title_sample[,1]
+  list_public_officials_directorate$official6=title_sample[,2]
+  
+  list_public_officials_directorate <- list_public_officials_directorate %>%
+    pivot_longer(
+      cols=c('official1', 'official2', 'official3', 'official4', 'official5', 'official6'),
+      names_to = 'type',
+      values_to = 'Official'
+    ) %>%
+    arrange(-n_schools_directorate) %>%
+    filter(!(type=='official6' & (n_schools_directorate==1 | directorate=='??????????')))
+  
+  #save as csv
+  public_officials_frame_name <- paste(dir_frame,"/public_officials_sample_",Sys.Date(),".csv", sep="")
+  
+  write_excel_csv(list_public_officials_directorate,public_officials_frame_name) 
+  
+  
   # 
   # #Run an iteration where we choose 10 provinces (UGEL) linked to schools and link up to regions
   # #columns to keep
