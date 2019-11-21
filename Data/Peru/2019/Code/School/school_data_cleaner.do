@@ -276,69 +276,42 @@ replace `var'=0 if `var'==99 & !missing(`var')
 
 *calculate teachers lit items correct
 egen literacy_content_knowledge=rowmean(m5s1q*)
-egen cloze=rowmean(m5s1q2)
-egen grammar=rowmean(m5s1q1)
-egen read_passage=rowmean(m5s1q4)
+egen cloze=rowmean(m5s1q2*)
+egen grammar=rowmean(m5s1q1*)
+egen read_passage=rowmean(m5s1q4*)
 
-####Math####
-#calculate # of math items
-teacher_assessment_dta$math_length<-length(grep(x=colnames(teacher_assessment_dta), pattern="m5s2q"))
-
-math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")])
-
-#calculate teachers math items correct
-teacher_assessment_dta <- teacher_assessment_dta %>%
-  mutate(math_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE),
-         arithmetic_number_relations=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="number")], na.rm=TRUE),
-         geometry=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
-         interpret_data=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
-
-#rename a few key variables up front
-teacher_assessment_dta<- teacher_assessment_dta %>%
-  mutate(g4_teacher_name=m5sb_troster  ,
-         g4_teacher_number=m5sb_tnum   )
+****Math****
+*calculate # of math items
 
 
-#pull apart dataset with just domains
-teacher_assessment_domains <- teacher_assessment_dta %>%
-  dplyr::select(typetest, school_code, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage,
-                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data
-  )
+egen math_content_knowledge=rowmean(m5s2q*)
+egen arithmetic_number_relations=rowmean(*number)
+egen geometry=rowmean(*geometric)
+egen interpret_data=rowmean(*data)
 
 
-teacher_assessment_language <-teacher_assessment_dta %>%
-  select(typetest, school_code, m5sb_tnum, lit_items) %>%
-  filter(typetest==2) %>%
-  select(-typetest)
+*calculate % correct for literacy, math, and total
+gen content_knowledge=math_content_knowledge+literacy_content_knowledge if !missing(math_content_knowledge) & !missing(literacy_content_knowledge)
+replace content_knowledge=math_content_knowledge if missing(literacy_content_knowledge)
+replace content_knowledge=literacy_content_knowledge if missing(math_content_knowledge)
 
-teacher_assessment_math <- teacher_assessment_dta %>%
-  select(typetest, school_code, m5sb_tnum, math_items) %>%
-  filter(typetest==1) %>%
-  select(-typetest)
+gen content_proficiency=(content_knowledge>=.80) if !missing(content_knowledge)
 
+foreach var in content_knowledge content_proficiency math_content_knowledge arithmetic_number_relations geometry interpret_data literacy_content_knowledge cloze grammar read_passage {
+replace `var' = `var'*100
+}
 
+frame put *, into(final_teacher_assessment)
+frame change final_teacher_assessment
 
-save(teacher_assessment_language, teacher_assessment_math, teacher_assessment_domains, teacher_metadata, 
-     file = file.path(save_folder, "dashboard_teacher_assessment_data.RData"))
-
-
-#calculate % correct for literacy, math, and total
-final_indicator_data_CONT <- teacher_assessment_dta %>%
-  group_by(school_code) %>%
-  add_count(school_code,name='m5_teach_count') %>%
-  add_count(typetest,name='m5_teach_count_math') %>%
-  mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
-  mutate(content_knowledge=case_when(
-    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
-    is.na(math_content_knowledge)  ~ literacy_content_knowledge,
-    is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
-  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-
-  select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
-         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+collapse content_knowledge content_proficiency math_content_knowledge arithmetic_number_relations geometry interpret_data literacy_content_knowledge cloze grammar read_passage school_ipw (first) departamento, by(school_code)
+svyset [pw=school_ipw]
 
 
+foreach var in content_knowledge content_proficiency math_content_knowledge arithmetic_number_relations geometry interpret_data literacy_content_knowledge cloze grammar read_passage {
+svy: mean `var'
+}
+stop
 **********************************************************
 * Teacher Questionnaire
 **********************************************************

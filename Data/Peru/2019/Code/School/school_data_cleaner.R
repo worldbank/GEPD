@@ -527,7 +527,9 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
-  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
 
   select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
@@ -544,7 +546,9 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
-  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
 
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
@@ -560,7 +564,9 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
-  mutate(content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
 
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
@@ -641,7 +647,9 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=80))
+  mutate(student_proficient=100*as.numeric(student_knowledge>=80),
+         student_proficient_70=100*as.numeric(student_knowledge>=70),
+         student_proficient_75=100*as.numeric(student_knowledge>=75))
 
 
 #save  4th grade data at student level anonymized
@@ -1854,9 +1862,9 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 #Create list of key indicators
-ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient', 'student_proficient_70', 'student_proficient_75',
             'presence_rate','absence_rate', 'school_absence_rate', 'student_attendance',
-            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'content_proficiency',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
