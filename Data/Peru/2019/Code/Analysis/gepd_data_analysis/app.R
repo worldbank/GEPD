@@ -173,34 +173,8 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                                 choices=NULL)   ,
                                  
                                  selectizeInput("control_choices", "Choose X Variables to Include in Regressions", 
-                                                choices=c(
-                                                          "Student Attendance Rate",
-                                                          "Teacher Classroom Presence Rate", 
-                                                          "Teacher Content Proficiency", 
-                                                          "1st Grade Assessment Score", 
-                                                          "Inputs", 
-                                                          "Infrastructure", 
-                                                          "Operational Management", 
-                                                          "Teacher Intrinsic Motivation", 
-                                                          "Instructional Leadership", 
-                                                          'Principal Knowledge of School',
-                                                          'Principal Management Skills', 
-                                                          'Teacher Attraction (De Facto)',
-                                                          'Teacher Selection & Deployment (De Facto)',
-                                                          'Teacher Support (De Facto)', 
-                                                          'Teacher Evaluation (De Facto)', 
-                                                          'Teacher Monitoring & Accountability (De Facto)', 
-                                                          "Inputs and Infrastructure Monitoring", 
-                                                          "School Management Attraction", 
-                                                          "School Management Selection & Deployment",
-                                                          "School Management Support", 
-                                                          "School Management Evaluation", 
-                                                          "Log GDP per Sq km", 
-                                                          "Rural"
-                                                )  , 
-                                                selected=c( 'Teacher Classroom Absence Rate', 'Teacher Content Knowledge', '1st Grade Assessment Score', 'Inputs', 'Infrastructure',
-                                                           'Operational Management', 'Instructional Leadership', 'Instructional Leadership',
-                                                           'Principal Management Skills', 'Log GDP per Sq km', 'Rural'),
+                                                choices=NULL  , 
+                                                selected=NULL,
                                                 multiple=TRUE),
                                  selectizeInput("province_dummies", "Include Province Fixed Effects in Regresion?", 
                                                 choices=c("No", "Yes"),
@@ -248,8 +222,11 @@ server <- function(input, output, session) {
     #because stratification was at the departamento level, this is accurate correction.
     data_set_updated <- data_set_updated %>%
       group_by(departamento) %>%
-      mutate_each(funs(replace(., which(is.na(.)),
-                               mean(., na.rm=TRUE))))
+      mutate(weights=replace(weights, which(is.na(weights)),
+                               mean(weights, na.rm=TRUE)),
+             total_4th=replace(total_4th, which(is.na(total_4th)),
+                                mean(total_4th, na.rm=TRUE))
+             )
     
     
     indicators <- indicators %>%
@@ -262,9 +239,9 @@ server <- function(input, output, session) {
     #Create list of key indicators
 
     
-    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',  'student_proficient_70',  'student_proficient_75',
+    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
                 'student_attendance','presence_rate',  'absence_rate', 'school_absence_rate', 
-                'content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
@@ -289,10 +266,10 @@ server <- function(input, output, session) {
                 'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
     )
     
-    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", "4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
+    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
                         "Student Attendance Rate",
                         "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
-                        "Teacher Content Proficiency", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
                         "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
@@ -416,11 +393,15 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, 'indicators', choices = indicators$Indicator.Name, server = TRUE)
     
     updateSelectizeInput(session, 'reg_choices', choices = indicator_labels, server = TRUE)
-    updateSelectizeInput(session, 'multi_reg_choices', choices = indicator_labels, server = TRUE)
+    updateSelectizeInput(session, 'multi_reg_choices', choices = indicator_labels, selected='4th Grade Student Knowledge', server = TRUE)
+    updateSelectizeInput(session, 'control_choices', choices = append(indicator_labels, c('Log GDP per Sq km', 'Rural')), 
+                         selected=c( 'Teacher Classroom Absence Rate', 'Teacher Content Knowledge', '1st Grade Assessment Score', 'Inputs', 'Infrastructure',
+                                                                                    'Operational Management', 'Instructional Leadership', 'Instructional Leadership',
+                                                                                    'Principal Management Skills', 'Log GDP per Sq km', 'Rural'), server = TRUE)
     
     updateSelectizeInput(session, 'sub_reg_choices', choices = main_indicator_labels, server = TRUE)
     
-    updateSelectizeInput(session, 'multi_reg_choices', choices = main_indicator_labels, server = TRUE)
+    #updateSelectizeInput(session, 'multi_reg_choices', choices = main_indicator_labels, server = TRUE)
     
 
     get_tag <- reactive({
@@ -645,7 +626,7 @@ server <- function(input, output, session) {
     output$hist_choices = renderUI({
       
         
-     selectizeInput('hist_choose',"Choose Additional Histograms to plot",  choices = histo_choices(),
+     selectizeInput('hist_choose',"Choose Additional Sub-Indicators to plot",  choices = histo_choices(),
                            selected=histo_selected(), 
                            multiple = TRUE)
       
@@ -1496,8 +1477,8 @@ output$indicators_table <- DT::renderDataTable({
     weights <- school_dta_short %>%
       mutate(codigo.modular=as.numeric(school_code)) %>%
       left_join(data_set_updated) %>%
-      mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
-    
+      mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th) 
+
     sch_ipw<-weights$school_ipw 
     
     if (input$table_weights=="Yes") {
@@ -1573,7 +1554,9 @@ output$indicators_table <- DT::renderDataTable({
       sumstats_school_rural <- school_dta_short %>%
         mutate(codigo.modular=as.numeric(school_code)) %>%
         left_join(data_set_updated) %>%
-        filter(rural==TRUE) 
+        filter(rural==TRUE) %>%
+        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+      
         
         sch_ipw<-sumstats_school_rural$school_ipw 
       

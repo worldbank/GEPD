@@ -529,7 +529,13 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
   mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
          content_proficiency_70=100*as.numeric(content_knowledge>=70),
-         content_proficiency_75=100*as.numeric(content_knowledge>=75)) %>%
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75)
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
 
   select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
@@ -548,7 +554,13 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
   mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
          content_proficiency_70=100*as.numeric(content_knowledge>=70),
-         content_proficiency_75=100*as.numeric(content_knowledge>=75)) %>%
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75)
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
 
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
@@ -566,7 +578,13 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
   mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
          content_proficiency_70=100*as.numeric(content_knowledge>=70),
-         content_proficiency_75=100*as.numeric(content_knowledge>=75)) %>%
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75)
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
 
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
@@ -602,6 +620,16 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          student_male=bin_var(m8s1q3,1),
   )
 
+# create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
+# This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
+# In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
+# Score this so that if there is a deviation from what 80% of the class says, then it is wrong.
+call_out_scorer <- function(var, pctl) {
+  1-abs(var - quantile(var, pctl, na.rm=T))
+  
+}
+
+
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 assess_4th_grade_dta<- assess_4th_grade_dta %>%
   mutate_at(vars(starts_with("m8saq5"), 
@@ -612,11 +640,15 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq5"),
                  starts_with("m8sbq6"),
                  ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
-         m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
-         m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
+  group_by(school_code) %>%
+  mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
+            ~call_out_scorer(.,0.8)) %>%
+  ungroup() %>%
+  mutate(m8saq2_id=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")]),
+         m8saq3_id=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])) %>%
+  mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-         m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE))         %>%
+         m8sbq1_number_sense=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")]))         %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 
@@ -649,7 +681,13 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
   mutate(student_proficient=100*as.numeric(student_knowledge>=80),
          student_proficient_70=100*as.numeric(student_knowledge>=70),
-         student_proficient_75=100*as.numeric(student_knowledge>=75))
+         student_proficient_75=100*as.numeric(student_knowledge>=75),
+         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=80),
+         literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
+         literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
+         math_student_proficient=100*as.numeric(math_student_knowledge>=80),
+         math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
+         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
 
 
 #save  4th grade data at student level anonymized
@@ -1862,9 +1900,15 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 #Create list of key indicators
-ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient', 'student_proficient_70', 'student_proficient_75',
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+            'student_proficient', 'student_proficient_70', 'student_proficient_75',
+            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
             'presence_rate','absence_rate', 'school_absence_rate', 'student_attendance',
-            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
+            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
@@ -1991,7 +2035,7 @@ school_gdp <- as.data.frame(school_gdp) %>%
 
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
-impdata<-mice::mice(school_dta_short, m=5,
+impdata<-mice::mice(school_dta_short, m=1,
            method='rf',
            maxit = 50, seed = 500)
 
