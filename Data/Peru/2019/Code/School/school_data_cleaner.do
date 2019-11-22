@@ -300,7 +300,7 @@ gen content_proficiency=(content_knowledge>=.80) if !missing(content_knowledge)
 foreach var in content_knowledge content_proficiency math_content_knowledge arithmetic_number_relations geometry interpret_data literacy_content_knowledge cloze grammar read_passage {
 replace `var' = `var'*100
 }
-
+stop
 frame put *, into(final_teacher_assessment)
 frame change final_teacher_assessment
 
@@ -311,7 +311,7 @@ svyset [pw=school_ipw]
 foreach var in content_knowledge content_proficiency math_content_knowledge arithmetic_number_relations geometry interpret_data literacy_content_knowledge cloze grammar read_passage {
 svy: mean `var'
 }
-stop
+
 **********************************************************
 * Teacher Questionnaire
 **********************************************************

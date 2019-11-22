@@ -625,10 +625,14 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
 # In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
 # Score this so that if there is a deviation from what 80% of the class says, then it is wrong.
 call_out_scorer <- function(var, pctl) {
-  1-abs(var - quantile(var, pctl, na.rm=T))
-  
+        1-abs(var - quantile(var, pctl, na.rm=T))
 }
-
+# #old scoring code:
+# mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
+#        m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
+#        m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
+#        m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
+#        m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)) 
 
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 assess_4th_grade_dta<- assess_4th_grade_dta %>%
@@ -640,15 +644,16 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq5"),
                  starts_with("m8sbq6"),
                  ), ~bin_var(.,1)  ) %>% #now handle the special cases
+  mutate(m8saq4_id=if_else(m8saq4_id==5,4,m8saq4_id)) %>% #fix case where some enumerators recorded the pre-filled answer.
   group_by(school_code) %>%
   mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
             ~call_out_scorer(.,0.8)) %>%
   ungroup() %>%
-  mutate(m8saq2_id=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")]),
-         m8saq3_id=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])) %>%
-  mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
+  mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
+         m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
+  mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-         m8sbq1_number_sense=rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")]))         %>%
+         m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 

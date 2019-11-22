@@ -10,6 +10,7 @@
 
 library(shiny)
 library(shinythemes)
+library(shinycssloaders)
 library(shinyBS)
 library(shinyjs)
 library(plotly)
@@ -102,7 +103,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
              includeMarkdown("header.md"),          
              h2("What are the results?"),
              selectInput('table_weights', "Use Survey Weights?", choices=c("Yes", "No"), selected="Yes"),
-             DT::dataTableOutput("indicators_table"),
+             withSpinner(DT::dataTableOutput("indicators_table")),
              h2("How are the indicators scored?"),
              DT::dataTableOutput("indicators_choices"),
              includeMarkdown("footer.md")
@@ -143,9 +144,9 @@ ui <- navbarPage("Global Education Policy Dashboard",
             tabsetPanel(type = "tabs",
                         id='tabset',
                         tabPanel("Distribution Plot", value=1, 
-                                 uiOutput("hist_choices"), 
-                                 downloadButton("downloadhist", "Download"),
-                                 plotOutput("distPlot", height=600)),
+                                 uiOutput("hist_choices")  %>% withSpinner(), 
+                                 downloadButton("downloadhist", "Download") ,
+                                 plotOutput("distPlot", height=600)  %>% withSpinner()),
                         tabPanel("BoxPlot", value=2, 
                                  downloadButton("downloadboxplot", "Download"),
                                  plotOutput("boxPlot", height=600)),
@@ -1644,8 +1645,8 @@ output$indicators_table <- DT::renderDataTable({
         th( rowspan = 2, 'Value Range'),
         th(colspan = 2, 'Overall'),
         th(colspan = 2, 'Urban'),
-        th(colspan = 2, 'Rural')
-        
+        th(colspan = 2, 'Rural'),
+        th(rowspan = 2, str_wrap('Ratio of Rural to Urban',10))
       ),
       tr(
         lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
@@ -1653,19 +1654,30 @@ output$indicators_table <- DT::renderDataTable({
     )
   ))
   
+  # create 19 breaks and 20 rgb color values ranging from white to red
+  
+  sumstats_df <- sumstats_df %>%
+    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+  
+  brks <- seq(0, max(sumstats_df$ratio, na.rm=T), length.out = 19)
+  clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
+    {paste0("rgb(255,", ., ",", ., ")")}
+  
   DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Peru 2019",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
                 escape = FALSE,
-                extensions = c ('Buttons', 'FixedHeader'), options=list(
+                extensions = c ('Buttons', 'FixedHeader'), 
+                options=list(
                   dom = 'Bfrtip',
                   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
                   pageLength = 60,
                   scrollX = TRUE, 
                   paging=FALSE,
                   ordering=F)) %>%
-    formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural' ),
-                digits=2)
+    formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural', 'ratio' ),
+                digits=2)  %>% 
+    formatStyle('ratio', backgroundColor = styleInterval(brks, clrs))
   
   
 })
