@@ -532,7 +532,7 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
          content_proficiency_75=100*as.numeric(content_knowledge>=75),
          literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
          literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
-         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75)
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
          math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
          math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
          math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
@@ -557,7 +557,7 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
          content_proficiency_75=100*as.numeric(content_knowledge>=75),
          literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
          literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
-         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75)
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
          math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
          math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
          math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
@@ -581,7 +581,7 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
          content_proficiency_75=100*as.numeric(content_knowledge>=75),
          literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
          literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
-         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75)
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
          math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
          math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
          math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%

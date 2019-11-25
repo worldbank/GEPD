@@ -16,7 +16,6 @@ library(Hmisc)
 
 
 #Create function to save metadata for each question in each module
-#The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
   varlabels <- sapply(dta, function(x) attr(x,"label"))
   vallabels <- sapply(dta, function(x) attr(x,"labels"))
@@ -34,9 +33,9 @@ makeVlist <- function(dta) {
 #read in teacher roster file
 ############################
 
-teacher_roster<-read_dta(file.path(download_folder, "questionnaire_selected.dta")) %>%
+teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
   mutate(teacher_name=m2saq2,
-         teacher_number=questionnaire_selected__id)
+         teacher_number=TEACHERS__id)
 
 ###########################
 #read in school level file
@@ -242,7 +241,7 @@ bin_var_2 <- function(var, val) {
 }
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
 
 #Add school preamble info
@@ -259,7 +258,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
 #rename a few key variables up front
 teacher_absence_dta<- teacher_absence_dta %>%
   mutate(teacher_name=m2saq2  ,
-         teacher_number=questionnaireteachcode ,
+         teacher_number=TEACHERS__id ,
          teacher_position=m2saq4,
          teacher_permanent=bin_var(m2saq5,1),
          teacher_contract=bin_var(m2saq5,2),
@@ -304,7 +303,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
 label(teacher_absence_dta$grade) <- "Grade"
 
 #list additional info that will be useful to keep in each indicator dataframe
-preamble_info_absence <- c('interview__id', 'questionnaire_selected__id', 'teacher_name', 'teacher_number',
+preamble_info_absence <- c('interview__id', 'TEACHERS__id', 'teacher_name', 'teacher_number',
                    'teacher_position', 'teacher_permanent', 'teacher_contract', 'teacher_temporary', 'teacher_volunteer', 'teacher_ngo', 'teacher_other',
                    'teacher_fulltime', 'teacher_male', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5', 'grade',
                    'teacher_language', 'teacher_math', 'teacher_both_subj', 'teacher_other_subj', 'subject_joined', 'm2sbq6_efft')
@@ -409,9 +408,13 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
 ##### Teacher Knowledge ###########
 #############################################
 
-
+graded_data <- "no"
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
+if (graded_data!='yes') {
+teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+
+} else if (graded_data=='yes') {
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
 school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "EPDash.dta"))
 
@@ -431,7 +434,7 @@ teacher_metadata <- makeVlist(teacher_assessment_dta_21)
 teacher_assessment_dta <- teacher_assessment_dta_21 %>%
   left_join(school_data_preamble_21) %>%
   select(preamble_info_21, everything()) 
-
+}
 
 #number missing
 teacher_assessment_dta <- teacher_assessment_dta %>%
@@ -452,7 +455,7 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 teacher_assessment_dta<- teacher_assessment_dta %>%
   mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var_2(.,2)  ) %>%
-mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
+  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
 
 
 #create indicator for % correct on teacher assessment
@@ -523,11 +526,21 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
   add_count(school_code,name='m5_teach_count') %>%
   add_count(typetest,name='m5_teach_count_math') %>%
   mutate(m5_teach_count_math= if_else(typetest==1, as.numeric(m5_teach_count_math), as.numeric(NA))) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  
   select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
@@ -538,11 +551,21 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
   filter(m2saq3==1) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
@@ -552,13 +575,84 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
   filter(m2saq3==2) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   mutate(content_knowledge=case_when(
     (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
     is.na(math_content_knowledge)  ~ literacy_content_knowledge,
     is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+
+
+
+#############################################
+### Teacher Pedagogy ###
+#############################################
+
+teacher_pedagogy <- school_dta %>%
+  select(preamble_info, starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+
+# Generate useful variables
+
+# One observation per segment
+
+segment2 <- teacher_pedagogy %>%
+  select(-starts_with('s1'))
+
+segment1 <- teacher_pedagogy %>%
+  select(-starts_with('s2'))
+
+names(segment1) <- str_replace(names(segment1), "s1", "s")
+names(segment2) <- str_replace(names(segment2), "s2", "s")
+
+teacher_pedagogy_segments <- bind_rows(segment1, segment2)
+
+
+# Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
+# Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
+# We are only taking into account teachers for which we have at least 2 snapshots observed
+
+teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+  mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
+  mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
+
+#een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
+#replace tt_yes=tt_yes*100
+#egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
+#replace tt_no=tt_no*100
+
+# Time on task - Second measure
+# Proportion of classes where a low number of students are on task, a medium number of students are on task
+teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+  mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
+         tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
+         tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
+
+# We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
+
+# For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
+# We are only taking into account teachers for which we have at least 2 snapshots observed
+
+teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+  mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
+         tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
+         tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
+         tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
+
+
+
+
+
 
 
 #############################################
@@ -572,7 +666,7 @@ assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessme
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
-  
+
 
 #number missing
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
@@ -590,6 +684,20 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          student_male=bin_var(m8s1q3,1),
   )
 
+# create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
+# This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
+# In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
+# Score this so that if there is a deviation from what 80% of the class says, then it is wrong.
+call_out_scorer <- function(var, pctl) {
+  1-abs(var - quantile(var, pctl, na.rm=T))
+}
+# #old scoring code:
+# mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
+#        m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
+#        m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
+#        m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
+#        m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)) 
+
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 assess_4th_grade_dta<- assess_4th_grade_dta %>%
   mutate_at(vars(starts_with("m8saq5"), 
@@ -599,12 +707,17 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq4"),
                  starts_with("m8sbq5"),
                  starts_with("m8sbq6"),
-                 ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
-         m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
-         m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
+  ), ~bin_var(.,1)  ) %>% #now handle the special cases
+  mutate(m8saq4_id=if_else(m8saq4_id==5,4,m8saq4_id)) %>% #fix case where some enumerators recorded the pre-filled answer.
+  group_by(school_code) %>%
+  mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
+            ~call_out_scorer(.,0.8)) %>%
+  ungroup() %>%
+  mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
+         m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
+  mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-         m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE))         %>%
+         m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 
@@ -635,7 +748,15 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=70))
+  mutate(student_proficient=100*as.numeric(student_knowledge>=80),
+         student_proficient_70=100*as.numeric(student_knowledge>=70),
+         student_proficient_75=100*as.numeric(student_knowledge>=75),
+         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=80),
+         literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
+         literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
+         math_student_proficient=100*as.numeric(math_student_knowledge>=80),
+         math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
+         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
 
 
 #save  4th grade data at student level anonymized
@@ -680,7 +801,6 @@ final_indicator_data_LERN_F <- assess_4th_grade_dta %>%
   mutate(n_students=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
-
 
 #############################################
 ##### ECD Assessment ###########

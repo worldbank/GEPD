@@ -209,7 +209,7 @@ teacher_questionnaire %>%
 
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
 
 #Add in absemce metadata
 teacher_absence_metadta<-makeVlist(teacher_absence_dta) %>%
@@ -232,7 +232,7 @@ label(teacher_absence_dta) = as.list(as.character(teacher_absence_metadta$varlab
 
 
 teacher_absence_dta %>%
-  write_dta(file.path(download_folder, "questionnaire_selected.dta"))
+  write_dta(file.path(download_folder, "TEACHERS.dta"))
 
 
 

@@ -130,7 +130,8 @@ ui <- navbarPage("Global Education Policy Dashboard",
             selectizeInput("gender", "Gender:",
                            choices=NULL),
             selectInput('explorer_weights', "Use Survey Weights?", choices=c("Yes", "No"), selected="Yes"),
-            
+            h1('Details'),
+            p('Statistics are based on data aggregated to the School level or Public Official level in all cases.'),
             h2("Scoring Metadata on Indicator"),
             htmlOutput('metadata' )
 
