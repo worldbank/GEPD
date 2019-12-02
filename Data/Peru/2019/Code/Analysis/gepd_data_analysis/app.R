@@ -145,6 +145,9 @@ ui <- navbarPage("Global Education Policy Dashboard",
             tabsetPanel(type = "tabs",
                         id='tabset',
                         tabPanel("Distribution Plot", value=1, 
+                                 selectInput("stud_level", "Use Student Level Data?",
+                                             choices=c('No', 'Yes'),
+                                             selected='No'),
                                  uiOutput("hist_choices")  %>% withSpinner(), 
                                  downloadButton("downloadhist", "Download") ,
                                  plotOutput("distPlot", height=600)  %>% withSpinner()),
@@ -459,6 +462,7 @@ server <- function(input, output, session) {
     dat <- reactive({
       if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         
+        if (input$stud_level=="No") {
         
         if (input$gender=="All") {
           
@@ -497,6 +501,49 @@ server <- function(input, output, session) {
           df<- df %>%
             filter(rural==FALSE)  
         }
+        
+        } else if (input$stud_level=="Yes") {
+          if (input$gender=="All") {
+            
+            df<-assess_4th_grade_anon
+            
+          } else if (input$gender=="Female") {
+            
+            df<-assess_4th_grade_anon %>%
+              filter(student_male==0)
+            
+          } else if (input$gender=="Male") {
+            
+            df<-assess_4th_grade_anon %>%
+              filter(student_male==1)          
+          }
+          
+          df<- df %>%
+            mutate(codigo.modular=as.numeric(school_code)) %>%
+            left_join(data_set_updated) %>%
+            mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+          
+          
+          if (input$explorer_weights=="No") {
+            #add function to produce weighted summary stats
+            df <- df %>%
+              mutate(school_ipw=1)
+            
+          }
+          
+          
+          
+          
+          if (input$subgroup=="Rural") {
+            df<- df %>%
+              filter(rural==TRUE)
+          } else if (input$subgroup=="Urban") {
+            df<- df %>%
+              filter(rural==FALSE)  
+          }
+          
+        }
+        
         } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
           
           df<-get(paste("final_indicator_data_",get_tag()[1], sep=""))
@@ -511,6 +558,7 @@ server <- function(input, output, session) {
           }
           
         }
+      
         df
         
         
@@ -597,7 +645,7 @@ server <- function(input, output, session) {
     histod <- reactive ({
       
        dat() %>%
-        select(one_of(ind_list), school_ipw) %>%
+        dplyr::select(one_of(ind_list), school_ipw) %>%
         rowid_to_column("ID") %>%
         pivot_longer(cols=one_of(ind_list),
                      names_to='indicators', values_to='values') %>%
