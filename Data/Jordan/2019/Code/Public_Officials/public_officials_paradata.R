@@ -97,7 +97,10 @@ unzip(file.path(download_folder, tounzip), exdir=download_folder)
 #########################################
 
 #read in data
-para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+para_df_7<-read.delim(paste(paste(download_folder,"version_7", sep="/"), "paradata.tab", sep="/"), sep="\t")
+
+para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t") %>%
+  bind_rows(para_df_7)
 
 #label variables
 var.labels=c(
@@ -156,9 +159,7 @@ makeVlist <- function(dta) {
          varlabel = varlabels, vallabel = vallabels) 
 }
 
-#read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta"))
-public_officials_metadata<-makeVlist(public_officials_dta)
+
 
 metadata <- rbind(public_officials_metadata)
 

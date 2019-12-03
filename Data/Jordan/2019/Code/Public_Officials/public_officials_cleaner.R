@@ -36,11 +36,6 @@ indicators <- indicators %>%
 indicator_names <- indicators$indicator_tag
 
 
-#read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta"))
-public_officials_metadata<-makeVlist(public_officials_dta)
-
-vtable(public_officials_dta)
 
 #Create a function which will generate new binary variable using case_when, but 
 #if value is misisng it will generate binary variable to be missing

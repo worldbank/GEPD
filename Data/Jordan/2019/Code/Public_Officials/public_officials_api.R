@@ -41,7 +41,7 @@ currentDate<-Sys.Date()
 
 tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
 
-approval<-"?Status=ApprovedByHeadquarters"
+approval<-""
 
 ######################################
 # Interactions with API
@@ -94,5 +94,12 @@ makeVlist <- function(dta) {
 
 
 #read in public officials interview file
+public_officials_dta_7<-read_dta(file.path(paste(download_folder,"version_7", sep="/"), "public_officials.dta")) 
+
 public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta")) 
 public_officials_metadata<-makeVlist(public_officials_dta)
+
+public_officials_dta <- public_officials_dta %>%
+  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) %>%
+  bind_rows(public_officials_dta_7)
+

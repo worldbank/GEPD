@@ -27,7 +27,7 @@ library(ggthemes)
 #Load the data
 #read in office level file
 
-
+skim_with_defaults()
 load(file=paste(save_folder, "paradata.RData", sep="/"))
 ```
 
