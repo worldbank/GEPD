@@ -872,13 +872,12 @@ final_indicator_data_INPT <- school_data_INPT %>%
 # - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
 
 #drinking water
-school_data_INFR <- school_data_INFR %>%
-  #
-  mutate(drinking_water=if_else((m1sbq9_infr==1 | m1sbq9_infr==2 | m1sbq9_infr==5 | m1sbq9_infr==6), 1,0, as.numeric(NA) ))
+school_data_INFR <- school_dta %>%
+  mutate(drinking_water=if_else(m3c_q17==0 | (	m2_b10==7 | m2_b10==9 | m2_b10==10 | m2_b10==13 | m2_b10==14), 0,1, as.numeric(NA) ))
 
 #functioning toilets
 school_data_INFR <- school_data_INFR %>%
-  mutate(toilet_exists=if_else(m1sbq1_infr==7 ,0,1),
+  mutate(toilet_exists=if_else(m2_b1==1 ,0,1),
          toilet_separate=if_else((m1sbq2_infr==1 | m1sbq2_infr==3),1,0),
          toilet_private=as.numeric(m1sbq4_infr),
          toilet_usable=as.numeric(m1sbq5_infr),
