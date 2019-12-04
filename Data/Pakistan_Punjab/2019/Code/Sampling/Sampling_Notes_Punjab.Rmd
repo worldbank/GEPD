@@ -1,0 +1,515 @@
+---
+title: "Pakistan-Punjab Early Learning Partnership and Global Education Policy Dashboard Survey Sampling"
+author: "Brian Stacy"
+date: "12/3/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+library(rgdal)
+library(tidyverse)
+library(readxl)
+library(leaflet)
+library(kableExtra)
+library(DT)
+library(skimr)
+library(haven)
+library(crosstalk)
+set.seed(54351324)
+
+#################################
+#Specify Directories, etc
+#################################
+
+#Specify directory where sampling frame located
+dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Pakistan_Punjab/2019/Data/Sampling"
+
+#specify name of sampling frame file.  This needs to be a csv file
+public_file_frame<-"Punjab Public School Sampling Frame.dta"
+private_file_frame<-"PSC Sampling Frame.dta"
+#specify date that sample was created.  This may be useful if you want to access stored results
+#date_frame<-c("2019-07-22")
+
+date_frame<-c("2019-12-03")
+
+#################################
+#read in sampling frame from [XXX]
+#################################
+
+
+public_df=read_stata(paste(dir_frame, public_file_frame, sep="/"))
+private_df=read_stata(paste(dir_frame, private_file_frame, sep="/"))
+
+```
+
+# Introduction
+
+This file outlines the sampling strategy for the Punjab province of Pakistan.
+
+## General Notes on Sampling
+The survey is a combined effort of the Early Learning Partnership project and of the Global Education Policy Dashboard project.  
+
+Overall, we draw a sample of 200 public schools, 200 private schools and 200 public-private partnership (PPP) schools.  We  stratified by urban/rural.  
+
+At this stage it is important to note, that there are certain districts which we may not be able to visit due to security concerns, these are:
+
+* Mianwali
+* Dera Ghazi Khan (DG Khan)
+* Rajan Pur
+* Bhakkar
+
+We have removed these districts from the sampling frame.  
+
+Out of the 200 public schools to be surveyed we would like approximately 100 of these schools to be schools that are meeting ECE quality standards (in the data set this corresponds to public_strata==1).  Out of the remaining public schools to be sampled, 50 schools will be schools that have ECE but do not meet quality standards (public_strata==2) and 50 will be schools that have no ECE at all, and have only have katchi classes (public_strata==3). 
+
+
+
+## Particular Notes
+
+Due to operational constraints, we did not draw a random sample of all schools at province level.  We selected six districts for the survey (out of 32).   The survey team drew a convenience sample of 6 districts that is representative of North, Central and South Punjab, which includes both richer and poorer districts. A convenience sample was appropriate due to security and operational constraints of working in Punjab. The selected districts were:
+
+* Attock
+* Faisalabad
+* Lahore 
+* Muzaffargarh 
+* Rahimyar Khan
+* Sargodha  
+
+In order to deal with potential refusals and closed schools, a set of replacement schools was also drawn. Within the final strata, schools were sampled proportional to size (number of total enrolled children in pre-primary). 
+
+```{r districts, echo=FALSE}
+public_frame_districts <- public_df %>%
+  filter(district!="") %>%
+  group_by(district) %>%
+  summarise(total_stud=sum(enrollment, na.rm=T),
+            n=n(), 
+            total_ece=sum(total_ece_enrollment, na.rm=T),
+            n_ece=sum(as.numeric(katchi_only_school==0)))
+
+datatable(public_frame_districts, caption = 'Sumnary Statistics for Districts on # of Schools and # of ECE students',
+          colnames = c("District", "Total Number of Students", "Total Number of Schools", "Number of ECE Students", "Number of ECE Schools"),
+          fillContainer = FALSE, 
+          options = list(pageLength = 35, 
+                         autoWidth = TRUE,
+                         dom = 'Bfrtip',
+                         buttons = c('copy', 
+                                     'print'), 
+                         scrollY = TRUE, 
+            selection="multiple"
+          )) 
+
+```
+
+
+## Sampling Frame
+
+Our sampling frame then consists of public, private, and PPP schools in these six districts.  Additionally, we restricted the frame to schools with at least 10 children enrolled in pre-primary, have at least 3 students in grade 1, and at least 3 students in grades 3, 4, or 5.  These latter two restrictions ensured that the schools would contain relevant students and teachers for the Global Education Policy Dashboard survey.
+
+
+```{r include=FALSE}
+
+
+
+#########################################################################
+# Public School Frame 
+#########################################################################
+
+######################
+#trim data to six districts
+#these districts were also chosen for SABER SD
+######################
+
+districts_list <- c("ATTOCK", "FAISALABAD", "LAHORE",
+                    "MUZAFFARGARH", "RAHIMYAR", "SARGODHA", "RAHIMYAR KHAN")
+unique(public_df$district)
+
+df_public_final <- public_df %>%
+  dplyr::filter(district %in% districts_list)
+
+unique(df_public_final$district)
+
+#####################
+# Make sure there are at least 3 1st graders
+# at least 3 1st grader
+# at least 3 3rd 4th or 5th grader
+####################
+
+df_public_final <- df_public_final %>%
+  filter((total_cls1_enrollment>=3) & 
+           (eng_cls3_g+eng_cls3_b + eng_cls4_g+eng_cls5_g+eng_cls5_b >=3) ## 4th grade boys variable is missing for some reason, so excluded
+           )
+
+sumstats_df_public <- df_public_final %>%
+  transmute(num_teachers=Teachers,
+            total_enrollment=enrollment,
+            total_katchi_enrollment=total_katchi_enrollment,
+            total_katchi_enrollment_boys=eng_kachi_b,
+            total_katchi_enrollment_girls=eng_kachi_g,
+            total_ece_enrollment=total_ece_enrollment,
+            total_ece_enrollment_boys=ECEBoys,
+            total_ece_enrollment_gils=ECEGirls,
+            total_1st_enrollment=total_cls1_enrollment,
+            total_1st_enrollment_boys=eng_cls1_b,
+            total_1st_enrollment_girls=eng_cls1_g,          
+            rural=if_else(school_location=="Rural", 1,0)) %>%
+  skim() %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100,  hist)
+
+#########################################################################
+# Private School Frame 
+#########################################################################
+
+######################
+#trim data to six districts
+#these districts were also chosen for SABER SD
+######################
+
+
+unique(private_df$DistrictName)
+
+df_private_final <- private_df %>%
+  dplyr::filter(DistrictName %in% districts_list)
+
+unique(df_private_final$DistrictName)
+
+#####################
+# Make sure there are at least 3 1st graders
+# at least 3 1st grader
+# at least 3 3rd 4th or 5th grader
+####################
+
+df_private_final <- df_private_final %>%
+  filter((total_class_1>=3) & 
+           (Enrolment_03_Boys +Enrolment_03_Girls+ Enrolment_04_Boys+ Enrolment_04_Girls+ Enrolment_05_Boys+ Enrolment_05_Girls >=3) 
+           )
+
+sumstats_df_private <- df_private_final %>%
+  transmute(num_teachers=TeachingStaffMale + TeachingStaffFemale,
+            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
+            total_pre_primary_enrollment=total_pre_primary,
+            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
+            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
+            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
+            total_1st_enrollment_boys=Enrolment_01_Boys ,
+            total_1st_enrollment_girls= Enrolment_01_Girls,          
+            rural=if_else(urban_rural==1, 1,0)) %>%
+  skim() %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, hist)
+
+
+
+```
+
+
+
+
+
+## Summary Statistics for Punjab Schools Overall in Sampling Frame
+
+```{r stats_kable, echo=FALSE}
+
+sumstats_df <- sumstats_df_public %>%
+  bind_rows(sumstats_df_private)
+
+kable(sumstats_df, caption="Summary Statistics for Sampling Frame" , ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
+  pack_rows("Public Schools", 1,12) %>%
+  pack_rows("Private Schools", 13,21)
+
+```
+
+
+# Sampling of Schools in Districts
+
+
+Schools (PSUs) will be selected using the Probability Proportional to Size (PPS) sampling method, where size is based on the total pre-primary enrollment of the schools. This method allows schools with larger enrollment of  to have a higher chance of being selected in the sample. It is most useful when the sampling units vary considerably in size because it assures that those in larger sites have the same probability of getting into the sample as those in smaller sites, and vice versa.  
+
+
+## Public Schools
+
+Out of the 200 public schools to be surveyed we would like approximately 100 of these schools to be schools that are meeting ECE quality standards (in the data set this corresponds to public_strata==1).  Out of the remaining public schools to be sampled, 50 schools will be schools that have ECE but do not meet quality standards (public_strata==2) and 50 will be schools that have no ECE at all, and have only have katchi classes (public_strata==3). 
+
+Around 86% of schools in the public school sampling frame are classified as rural.  We do stratification by urban rural status, and over-sample urban schools, so that we have adequate power to detect differences.  This results in a sample of around 64 urban schools and 136 rural schools.  
+
+Units are allocated to our districts proportionate to the size of the pre-primary enrollment in the district.
+
+```{r public_schools, echo=FALSE}
+
+
+sample_public <- df_public_final %>%  #first create a few variables that will be useful for sampling
+  filter(public_strata!=0) %>%
+  mutate(public_strata_number=case_when(
+    public_strata==1 ~ 101,
+    public_strata==2 ~ 50,
+    public_strata==3 ~ 50,
+    TRUE ~ 0),
+    rural_share=case_when(
+      school_location=="Rural" ~ 0.67,
+      school_location=="Urban" ~ 0.33,
+      TRUE ~ 0),
+    total_pre_primary_enrollment=case_when(
+      !(is.na(total_katchi_enrollment) | is.na(total_ece_enrollment)) ~ total_katchi_enrollment+total_ece_enrollment,
+        is.na(total_ece_enrollment) ~ total_katchi_enrollment, 
+        is.na(total_katchi_enrollment) ~ total_ece_enrollment,
+      TRUE ~ 0
+        )) %>%
+  group_by(district) %>%
+  mutate(total_ece=sum(total_pre_primary_enrollment, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(district_share=total_ece/sum(total_pre_primary_enrollment, na.rm=T)) %>%
+  group_by(district, school_location, public_strata) %>%
+  mutate(school_number=round(public_strata_number*district_share*rural_share,0)) %>%
+  sample_n(school_number, weight=total_pre_primary_enrollment) %>%
+  group_by(public_strata) %>% # fix an issue where two extra schools are selected.  Had to do a trick to get exactly 200
+    mutate(public_strata_number=case_when(
+    public_strata==1 ~ 100,
+    public_strata==2 ~ 50,
+    public_strata==3 ~ 50,
+    TRUE ~ 0)) %>%
+  sample_n(public_strata_number, weight=total_pre_primary_enrollment)
+  
+
+#display results in a datatable  
+sample_public_display <- sample_public %>%
+    mutate(num_teachers=Teachers,
+            total_enrollment=enrollment,
+            total_katchi_enrollment=total_katchi_enrollment,
+            total_katchi_enrollment_boys=eng_kachi_b,
+            total_katchi_enrollment_girls=eng_kachi_g,
+            total_ece_enrollment=total_ece_enrollment,
+            total_ece_enrollment_boys=ECEBoys,
+            total_ece_enrollment_gils=ECEGirls,
+            total_1st_enrollment=total_cls1_enrollment,
+            total_1st_enrollment_boys=eng_cls1_b,
+            total_1st_enrollment_girls=eng_cls1_g,          
+            rural=if_else(school_location=="Rural", 1,0)) %>%
+  select(emiscode, school_name, district, tehsil, total_katchi_enrollment, total_ece_enrollment, total_1st_enrollment, rural   )
+
+datatable(sample_public_display, caption = 'List of Public Schools Chosen for Sample') 
+
+write_excel_csv(sample_public, paste(dir_frame, '/sample_public_schools_', Sys.Date(),  '.csv', sep=""))
+
+```
+
+
+
+## Private Schools
+
+Out of the 200 private schools to be surveyed we will stratify by district and by the urban/rural status of the school.  Roughly 50% of the sample will be urban, compared to 47% in the full private sampling frame.
+
+```{r private_schools, echo=FALSE}
+
+
+sample_private <- df_private_final %>%  #first create a few variables that will be useful for sampling
+  mutate(
+    rural_share=case_when(
+      urban_rural==1 ~ 0.5,
+      urban_rural==2 ~ 0.5,
+      TRUE ~ 0)) %>%
+  group_by(DistrictName) %>%
+  mutate(total_ece=sum(total_pre_primary, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(district_share=total_ece/sum(total_pre_primary, na.rm=T)) %>%
+  group_by(DistrictName, urban_rural) %>%
+  mutate(school_number=round(200*district_share*rural_share,0)) %>%
+  sample_n(school_number, weight=total_pre_primary) %>%
+  ungroup() %>% # fix an issue where two extra schools are selected.  Had to do a trick to get exactly 200
+  sample_n(200, weight=total_pre_primary) 
+
+
+
+#display results in a datatable  
+sample_private_display <- sample_private %>%
+    mutate(num_teachers=TeachingStaffMale + TeachingStaffFemale,
+            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
+            total_pre_primary_enrollment=total_pre_primary,
+            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
+            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
+            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
+            total_1st_enrollment_boys=Enrolment_01_Boys ,
+            total_1st_enrollment_girls= Enrolment_01_Girls,          
+            rural=if_else(urban_rural==1, 1,0)) %>% 
+  select( SchoolName, DistrictName, TehsilName, total_pre_primary_enrollment, total_1st_enrollment, rural   )
+
+datatable(sample_private_display, caption = 'List of Private Schools Chosen for Sample') 
+
+write_excel_csv(sample_private, paste(dir_frame, '/sample_private_schools_', Sys.Date(),  '.csv', sep=""))
+
+```
+
+
+# Summary Statistics of Sample
+
+```{r sample_stats, echo=FALSE}
+
+
+#produce summary stats of public and private sample
+
+sumstats_sample_public <- sample_public %>%
+    ungroup() %>%
+    transmute(num_teachers=Teachers,
+            total_enrollment=enrollment,
+            total_katchi_enrollment=total_katchi_enrollment,
+            total_katchi_enrollment_boys=eng_kachi_b,
+            total_katchi_enrollment_girls=eng_kachi_g,
+            total_ece_enrollment=total_ece_enrollment,
+            total_ece_enrollment_boys=ECEBoys,
+            total_ece_enrollment_gils=ECEGirls,
+            total_1st_enrollment=total_cls1_enrollment,
+            total_1st_enrollment_boys=eng_cls1_b,
+            total_1st_enrollment_girls=eng_cls1_g,          
+            rural=if_else(school_location=="Rural", 1,0)) %>%
+  skim() %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+  
+sumstats_sample_private <- sample_private %>%
+  ungroup() %>%
+    transmute(num_teachers=TeachingStaffMale + TeachingStaffFemale,
+            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
+            total_pre_primary_enrollment=total_pre_primary,
+            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
+            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
+            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
+            total_1st_enrollment_boys=Enrolment_01_Boys ,
+            total_1st_enrollment_girls= Enrolment_01_Girls,          
+            rural=if_else(urban_rural==1, 1,0)) %>%
+  skim() %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+
+sumstats_sample <- sumstats_sample_public %>%
+  bind_rows(sumstats_sample_private)
+
+kable(sumstats_sample, caption="Summary Statistics for Sample of Schools" , ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
+  pack_rows("Public Schools", 1,12) %>%
+  pack_rows("Private Schools", 13,21)
+
+```
+
+# Map of Selected Schools
+
+```{r school_map, echo=FALSE, warning=FALSE}
+
+
+map_public <- sample_public %>%
+    mutate(longitude=as.character(school_longitude)) %>%
+    mutate(latitude=as.character(school_latitude)) %>%
+    mutate(longitude=as.numeric(longitude)) %>%
+    mutate(latitude=as.numeric(latitude)) %>%
+      mutate(num_teachers=Teachers,
+            total_enrollment=enrollment,
+            total_katchi_enrollment=total_katchi_enrollment,
+            total_katchi_enrollment_boys=eng_kachi_b,
+            total_katchi_enrollment_girls=eng_kachi_g,
+            total_ece_enrollment=total_ece_enrollment,
+            total_ece_enrollment_boys=ECEBoys,
+            total_ece_enrollment_gils=ECEGirls,
+            total_1st_enrollment=total_cls1_enrollment,
+            total_1st_enrollment_boys=eng_cls1_b,
+            total_1st_enrollment_girls=eng_cls1_g,          
+            rural=if_else(school_location=="Rural", 1,0),
+            total_pre_primary_enrollment=case_when(
+      !(is.na(total_katchi_enrollment) | is.na(total_ece_enrollment)) ~ total_katchi_enrollment+total_ece_enrollment,
+        is.na(total_ece_enrollment) ~ total_katchi_enrollment, 
+        is.na(total_katchi_enrollment) ~ total_ece_enrollment,
+      TRUE ~ 0
+        )) %>%
+    select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_katchi_enrollment, total_ece_enrollment, total_1st_enrollment, rural, public_strata, longitude, latitude   )
+
+map_private <- sample_private %>%
+    mutate(longitude=as.character(GPS_East)) %>%
+    mutate(latitude=as.character(GPS_North)) %>%
+    mutate(longitude=as.numeric(longitude)) %>%
+    mutate(latitude=as.numeric(latitude)) %>%
+      mutate(
+            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
+            total_pre_primary_enrollment=total_pre_primary,
+            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
+            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
+            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
+            total_1st_enrollment_boys=Enrolment_01_Boys ,
+            total_1st_enrollment_girls= Enrolment_01_Girls,          
+            rural=if_else(urban_rural==1, 1,0),
+            school_name=SchoolName, 
+            district=DistrictName, 
+            tehsil=TehsilName,
+            emiscode=as.numeric(NA)) %>%
+    select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_1st_enrollment, rural, longitude, latitude   )
+
+
+
+  sample_map_chosen <- map_public %>%
+    bind_rows(map_private, .id='private') %>%
+    mutate(private=if_else(private==2,"Private","Public"))
+
+   
+   
+   pal <- colorFactor(
+     palette = c("red", "green", "blue"),
+     domain = sample_map_chosen$private
+   )
+   
+   # Make a list of icons (from two different icon libraries).
+# We'll index into it based on name.
+popIcons <- awesomeIconList(
+  Private = makeAwesomeIcon(icon='graduation-cap', library='fa', markerColor = 'blue'),
+  Public = makeAwesomeIcon(icon='graduation-cap', library='fa', markerColor = 'red'))
+   
+map <- function(df_input) {    leaflet(df_input) %>% 
+    addTiles()  %>%
+    addAwesomeMarkers( lng=~longitude,  lat=~latitude, icon = ~popIcons[private] ,
+                popup =  paste("School Code: ", sample_map_chosen$emiscode, " <br>",
+                               "School Name: ", sample_map_chosen$school_name, " <br>",
+                                  "District", sample_map_chosen$district, "<br>",
+                                  "Tehsil: ", sample_map_chosen$tehsil, " <br>",
+                                  "Private School:" ,  sample_map_chosen$private, " <br>",
+                                  "School Type:",  sample_map_chosen$public_strata, " <br>",
+                                  "Total # of 1st Graders", sample_map_chosen$total_1st_enrollment, " <br>",
+                                  "Total # of Pre-Primary", sample_map_chosen$total_pre_primary_enrollment, " <br>",
+                                  "Rural Status", sample_map_chosen$rural, " <br>" )) 
+}
+
+
+map2 <- function(df_input) {    leaflet(df_input) %>% 
+    addTiles()  %>%
+    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(private),
+                popup =  paste("School Code: ", sample_map_chosen$emiscode, " <br>",
+                               "School Name: ", sample_map_chosen$school_name, " <br>",
+                                  "District", sample_map_chosen$district, "<br>",
+                                  "Tehsil: ", sample_map_chosen$tehsil, " <br>",
+                                  "Private School:" ,  sample_map_chosen$private, " <br>",
+                                  "School Type:",  sample_map_chosen$public_strata, " <br>",
+                                  "Total # of 1st Graders", sample_map_chosen$total_1st_enrollment, " <br>",
+                                  "Total # of Pre-Primary", sample_map_chosen$total_pre_primary_enrollment, " <br>",
+                                  "Rural Status", sample_map_chosen$rural, " <br>" )) %>%
+  addLegend(position="bottomright", pal=pal, values=~private, title="School Ownership")
+}    
+
+```
+
+```{r country_map2, echo=FALSE, warning=FALSE}
+linked_df<-SharedData$new(sample_map_chosen)
+
+
+
+bscols(widths=c(3,NA),
+  list(
+  filter_select("school", "School Name", linked_df, ~school_name),
+  filter_select("prov", "District", linked_df, ~district),
+  filter_select("reg", "Tehsil", linked_df, ~tehsil),
+  filter_select("Private", "School Ownership", linked_df, ~private)
+  ),
+  map(linked_df) 
+  )
+  
+```

@@ -1,0 +1,1142 @@
+---
+title: "Item Analysis of GEPD Teacher Knowledge Module - Peru"
+author: Brian Stacy
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: true
+    theme: readable
+
+---
+
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 16px;
+  }
+td {  /* Table  */
+  font-size: 14px;
+}
+caption {  /* Caption  */
+  font-color: black;
+  font-weight: bold;
+  font-size: 20px;
+}
+</style>
+
+
+
+
+# Abstract
+
+Using GEPD data from Peru, this paper examines the psychometric properties of the mathematics portion of the teacher assessment module.  We estimate a two parameter logistic (2PL) item response theory (IRT) model.  We produce item characteristic curves (ICC) and test characteristic curves from this model.  We then compare our results to data from a similar assessment used in the Service Delivery Indicators project in several Sub-Sahara African countries using an item equating approach.
+
+Takeaways:
+
+* Teachers scored around 43% of our language items correct on average and 61% of our math items
+* Our most difficult section was the "correct the letter" sub-task in Language
+* We had very few cases of missing values in our assessment
+* Our test reliability is above 0.9 at the center of the math and language latent subject knowledge  distributions
+  + Test reliability drops off significantly in math in the tails of the latent math knowledge distribution
+  + This is consistent with previous experience using SDI survey
+* Teachers in Peru scored in the middle of the pack compared to SDI countries in Language
+  + Peru scored on average above Morocco, Mozambique, but behind Kenya, Lao PDR, Madagascar, and Tanzania in the language assessment.
+* Teachers in Peru scored in the middle of the pack compared to SDI countries in Math
+  + Peru teachers on average outperformed teachers in Mozambique and Madagascar, but behind teachers in Kenya, Tanzania, Morocco, and Lao PDR in the math assessment.
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#===============
+# LOAD PACKAGES
+#===============
+library(tidyverse)
+library(haven)
+library(mirt)
+library(equateIRT)
+library(skimr)
+library(DT)
+library(knitr)
+library(kableExtra)
+library(captioner)
+library(ggcorrplot)
+library(plotly)
+library(psych)
+library(crosstalk)
+library(RColorBrewer)
+library(data.table)
+library(ggridges)
+#===============
+# GET DATA
+#===============
+
+
+```
+
+# Methodological Approach
+
+We use a model from Item Response Theory (IRT) to examine the functioning of the teacher knowledge test items for Language and Mathematics.  The model used is the Two Parameter Logistic (2PL), which allows for  items with binary responses (Correct/Incorrect)   The model is as follows for item i and person j:
+
+
+$$ P(u_{ij}=1|\theta_j,\omega)=\frac{exp(a_i(\theta_j - b_{i} ))}{1+exp(a_i(\theta_j - b_{i} ))} $$
+
+
+
+```{r, include=FALSE}
+
+#===============
+# GET DATA
+#===============
+
+#Create function to save metadata for each question in each module
+#The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
+makeVlist <- function(dta) { 
+  varlabels <- sapply(dta, function(x) attr(x,"label"))
+  vallabels <- sapply(dta, function(x) attr(x,"labels"))
+  tibble(name = names(varlabels),
+         varlabel = varlabels, vallabel = vallabels) 
+}
+
+teacher_assessment_dta <- read_dta("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/raw/School/version_21/teacher_assessment_answers.dta")
+
+teacher_metadata <- makeVlist(teacher_assessment_dta)
+
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+#function to create zero/one variables  
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+bin_var_2 <- function(var, val) {
+  if_else(var==val, 
+          as.numeric(1),
+          as.numeric(var))
+}
+#create function to make titles in figures nice
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+#produce caption for tables/figures
+  tab_num<-captioner(prefix="Table")
+  fig_num<-captioner(prefix="Figure")
+
+#Drop columns that end in "mistake".  THis is not necessary for computing indicator
+teacher_assessment_dta <- teacher_assessment_dta %>% 
+  dplyr::select(-ends_with("mistake"))
+
+#recode assessment variables to be 1 if student got it correct and zero otherwise
+teacher_assessment_dta<- teacher_assessment_dta %>%
+  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var_2(.,2)  ) %>%
+  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
+
+
+#create indicator for % correct on teacher assessment
+#Note:  in the future we could incorporate irt program like mirt
+
+
+####Literacy####
+#calculate # of literacy items
+#note: grep is a tool for searching text with specified pattern.  In our case, we are looking for m5s1q, which is the prefix of literacy items
+teacher_assessment_dta$literacy_length<-length(grep(x=colnames(teacher_assessment_dta), pattern="m5s1q"))
+
+
+lit_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")])
+
+#calculate teachers lit items correct
+teacher_assessment_dta <- teacher_assessment_dta %>%
+  mutate(literacy_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q")], na.rm=TRUE),
+         correct_letter=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q3")], na.rm=TRUE),
+         cloze=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q2")], na.rm=TRUE),
+         grammar=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q1")], na.rm=TRUE),
+         read_passage=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s1q4")], na.rm=TRUE))
+
+####Math####
+#calculate # of math items
+teacher_assessment_dta$math_length<-length(grep(x=colnames(teacher_assessment_dta), pattern="m5s2q"))
+
+math_items<-colnames(teacher_assessment_dta[,grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")])
+
+#calculate teachers math items correct
+teacher_assessment_dta <- teacher_assessment_dta %>%
+  mutate(math_content_knowledge=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="m5s2q")], na.rm=TRUE),
+         arithmetic_number_relations=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="number")], na.rm=TRUE),
+         geometry=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="geometric")], na.rm=TRUE),
+         interpret_data=rowMeans(.[grep(x=colnames(teacher_assessment_dta), pattern="data")], na.rm=TRUE))
+
+#pull apart dataset with just domains
+domains <- teacher_assessment_dta %>%
+  dplyr::select(typetest, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage,
+                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data
+                )
+
+
+language <-teacher_assessment_dta %>%
+  select(typetest, lit_items) %>%
+  filter(typetest==2) %>%
+  select(-typetest)
+
+math <- teacher_assessment_dta %>%
+  select(typetest, math_items) %>%
+  filter(typetest==1) %>%
+  select(-typetest)
+
+
+
+write_dta(language, path="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_lang_assessment.dta")
+
+write_dta(math, path="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_math_assessment.dta")
+
+write_dta(domains, path="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_domains.dta")
+
+save(language, math, domains, teacher_metadata, file="C:/Users/wb469649/OneDrive - WBG/Teacher Assessment - Dashboard - To Share/dashboard_teacher_assessment_data.RData")
+
+```
+
+# Summary Statistics of Data
+Before estimating the model, we begin by examining summary statistics and missing values in our item response data.  To begin, we will show summary statistics of the fraction correct on the language and math sections of the examination, as well as the fraction correct on broad sub-domains.  
+
+The sub-domains for the language section are:
+
+* Correct the letter: teachers are asked to correct a hypothetical letter written by a student for grammar and punctuation.
+* Cloze task: teachers are asked to grade a hypothetical student's cloze task, where the student fills in an appropriate word in a sentence.
+* Grammar task: teachers are asked to grade a hypothetical student's grammar task, where students are asked to fill in a grammatically correct word into a sentence
+* Read the passage:  teachers are asked to grade a hypothetical student's read the passage task, where students are asked questions about a passage
+
+The sub-domains for the math section are:
+
+* Arithemtic and number relations:  teachers grade a students work in arithemtic, number relations
+* Geometry: teachers grade a students work on geometric problems
+* Interpret Data: teachers grade a students work interpretting a diagram and data
+
+
+
+    
+```{r sumstats_domains, echo=FALSE, warning=FALSE}
+
+language_domains <-teacher_assessment_dta %>%
+  select(typetest, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage) %>%
+  filter(typetest==2) %>%
+  select(-typetest)
+
+math_domains <- teacher_assessment_dta %>%
+  select(typetest, math_content_knowledge, arithmetic_number_relations, geometry, interpret_data) %>%
+  filter(typetest==1) %>%
+  select(-typetest)
+
+
+name<-c('literacy_content_knowledge', 'correct_letter', 'cloze', 'grammar', 'read_passage',
+           'math_content_knowledge', 'arithmetic_number_relations', 'geometry', 'interpret_data')
+varlabel<-c('Fraction correct language', 'Correct the letter', 'Cloze task', 'Grammar task', 'Read the passage',
+            'Fraction correct math', 'Arithmetic and number relations', 'Geometry', 'Interpret Data')
+
+teacher_domain_metadata <- cbind.data.frame(name, varlabel)
+
+
+#language
+ sumstats_lang_domains_df<-skim(language_domains) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_lang_domains_df <- sumstats_lang_domains_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_domain_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  lang_sumstats_domain_cap<-tab_num(name="lang_stats_domain", caption="Summary Statistics of Fraction Correct on Language Assessment Domains for Teachers")
+  
+  #Produce table
+  sumstats_lang_domains_df %>%
+    kable(caption=lang_sumstats_domain_cap,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T,
+                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher language assessment.")
+  
+#math
+ sumstats_math_domains_df<-skim(math_domains) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_math_domains_df <- sumstats_math_domains_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_domain_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  math_sumstats_domain_cap<-tab_num(name="math_stats_domain", caption="Summary Statistics of Fraction Correct on Math Assessment Domains for Teachers")
+  
+  #Produce table
+  sumstats_math_domains_df %>%
+    kable(caption=math_sumstats_domain_cap,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher math assessment.")  
+
+```
+
+## Item Level Summary Statistics
+
+Next, we display summary statistics at the item level for our language and mathematics assessment.  
+
+```{r sumstats, echo=FALSE, message=FALSE, warning=FALSE}
+
+#language
+ sumstats_lang_df<-skim(language) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_lang_df <- sumstats_lang_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  lang_sumstats_cap<-tab_num(name="lang_stats", caption="Summary Statistics of Language Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_lang_df %>%
+    kable(caption=lang_sumstats_cap,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T,
+                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher language assessment.")
+  
+#math
+ sumstats_math_df<-skim(math) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_math_df <- sumstats_math_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  math_sumstats_cap<-tab_num(name="math_stats", caption="Summary Statistics of Math Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_math_df %>%
+    kable(caption=math_sumstats_cap,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher math assessment.")  
+
+```
+
+## Inter-Item Correlations
+
+Next we display inter-item correlations for our language and math teacher assessment.  
+
+```{r iic, echo=FALSE, message=FALSE, warning=FALSE, out.width = "70%"}
+#language
+lang_corr_plot <- round(cor(language , use="complete.obs"), 2)
+      
+        lang_corr_cap<-fig_num(name="lang_corr", caption="Correlation Between Language Items")
+
+      pcorr<- ggcorrplot(lang_corr_plot,
+                         outline.color = "white",
+                         type="full",
+                         ggtheme = theme_bw(),
+                         colors = c("#F8696B", "#FFEB84", "#63BE7B"),
+                         legend.title = "Correlation",
+                         title = lang_corr_cap) + 
+        theme(
+          text = element_text(size = 16),
+        )
+      
+      m <- list(
+         l = 50,
+         r = 50,
+         b = 100,
+         t = 100,
+         pad = 4
+        )
+      ggplotly(pcorr,
+               width = 1000, height = 1000 ) %>%
+          layout(autosize = F,  margin = m)
+#math
+math_corr_plot <- round(cor(math , use="complete.obs"), 2)
+      
+        math_corr_cap<-fig_num(name="math_corr", caption="Correlation Between Math Items")
+
+      pcorr<- ggcorrplot(math_corr_plot,
+                         outline.color = "white",
+                         type="full",
+                         ggtheme = theme_bw(),
+                         colors = c("#F8696B", "#FFEB84", "#63BE7B"),
+                         legend.title = "Correlation",
+                         title = math_corr_cap) + 
+        theme(
+          text = element_text(size = 16),
+        )
+      
+      m <- list(
+         l = 50,
+         r = 50,
+         b = 100,
+         t = 100,
+         pad = 4
+        )
+      ggplotly(pcorr,
+               width = 1000, height = 1000 ) %>%
+          layout(autosize = F,  margin = m)
+
+```
+
+# Scree Plots to Test for Number of Dimensions
+
+A "scree" test based on the Parallel Analysis approach is one of the most common tests for assessing the number of dimensions a set of items cover.  A scree test plots the eigenvalues of the matrix of inter-item correlations.  
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE}
+
+scree_lang<-fig_num(name='fig_scree', caption = "Paraellel Analysis Scree Plots for Language Items")
+parallel_lang<-fa.parallel(language,
+                      fm='ml',
+                      fa='fa',
+                      n.iter=50,
+                      SMC=TRUE,
+                      quant= .95,
+                      main=scree_lang)
+scree_math<-fig_num(name='fig_scree2', caption = "Paraellel Analysis Scree Plots for Math Items")
+
+parallel_math<-fa.parallel(math,
+                      fm='ml',
+                      fa='fa',
+                      n.iter=50,
+                      SMC=TRUE,
+                      quant= .95,
+                      main=scree_math)
+```
+
+```{r irt_model, warning=TRUE, include=FALSE}
+
+#Estimate IRT parameters ignoring missing values
+irt_math_2PL <- mirt(math, 1, itemtype='2PL', SE=FALSE, technical=list(removeEmptyRows=TRUE))
+
+irt_lang_2PL <- mirt(language, 1, itemtype='2PL', SE=FALSE, technical=list(removeEmptyRows=TRUE))
+
+#estimate factor scores from models
+lang_teach_scores<-data.frame(fscores(irt_lang_2PL, method='EAP', response.pattern = language))
+
+math_teach_scores<-data.frame(fscores(irt_math_2PL, method='EAP', response.pattern = math))
+
+#merge scores back onto
+
+```
+
+# Plots of Test Information Function and Test Reliability Function
+
+Below we plot the test information and test reliability functions estimated from our 2PL IRT model.
+
+```{r tif, echo=FALSE, warning=FALSE}
+#########
+#Language
+########
+#use the  plotting tools of mirt, but make them look nicer in ggplot
+plt<-plot(irt_lang_2PL, type='rxx', theta_lim=c(-3,3), main="Test Reliability Language", par.settings=simpleTheme(lty=1:23, lwd=2), auto.key=list(points=FALSE, lines=TRUE, columns=23))
+
+plt_test_info<-plot(irt_lang_2PL, type='info', theta_lim=c(-3,3), main="Test Information Function Language", par.settings=simpleTheme(lty=1:23, lwd=2), auto.key=list(points=FALSE, lines=TRUE, columns=23))
+
+
+#str(plt) #find the data
+#plt$panel.args
+pltdata_lang <- data.frame(lapply(plt$panel.args, function(x) do.call(cbind, x))[[1]]) %>%
+  mutate(test="Language")
+
+pltdata_test_info_lang <- data.frame(lapply(plt_test_info$panel.args, function(x) do.call(cbind, x))[[1]]) %>%
+  mutate(test="Language")
+
+
+#########
+#Math
+########
+#use the  plotting tools of mirt, but make them look nicer in ggplot
+plt_math<-plot(irt_math_2PL, type='rxx', theta_lim=c(-3,3), main="Test Reliability ", par.settings=simpleTheme(lty=1:23, lwd=2), auto.key=list(points=FALSE, lines=TRUE, columns=23))
+
+plt_test_info_math<-plot(irt_math_2PL, type='info', theta_lim=c(-3,3), main="Test Information Function ", par.settings=simpleTheme(lty=1:23, lwd=2), auto.key=list(points=FALSE, lines=TRUE, columns=23))
+
+
+#str(plt) #find the data
+#plt$panel.args
+pltdata_math <- data.frame(lapply(plt_math$panel.args, function(x) do.call(cbind, x))[[1]]) %>%
+  mutate(test="Math")
+
+pltdata_test_info_math <- data.frame(lapply(plt_test_info_math$panel.args, function(x) do.call(cbind, x))[[1]]) %>%
+  mutate(test="Math")
+
+#combine math and language data
+pltdata <- pltdata_lang %>%
+  bind_rows(pltdata_math)
+
+pltdata_test_info <- pltdata_test_info_lang %>%
+  bind_rows(pltdata_test_info_math)
+
+#create graph labels
+test_rel<-fig_num(name='test_rel_math', caption = "Test Reliability Function - Math & Language")
+
+test_info<-fig_num(name='test_info_math', caption = "Test Information Function - Math & Language")
+
+#plot the test information function & test reliability
+plt_r_math<-ggplot(pltdata, aes(x, y, colour=test)) + 
+  geom_line(size=0.75) + 
+  ggtitle(test_rel) +
+  xlab('Teacher Ability') + 
+  ylab('Test Information') + 
+  theme(legend.text=element_text(size=12)) + 
+  expand_limits( y = c(0,1))
+
+ggplotly(plt_r_math)
+
+plt_i_math<-ggplot(pltdata_test_info, aes(x, y, colour=test)) + 
+  geom_line(size=0.75) + 
+  ggtitle(test_info) +
+  xlab('Teacher Ability') + 
+  ylab('Test Reliability') + 
+  theme(legend.text=element_text(size=12)) +
+  expand_limits( y = 0)
+
+ggplotly(plt_i_math)
+
+
+```
+
+
+
+# Item Information Functions
+
+Below is a plot of the item information functions for all of our math and language items.  Specific items can be displayed by using the filters in the sidebars.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+#===============
+# Plot Item Curves 
+#===============
+
+#generate item information data
+
+
+#use the  plotting tools of mirt, but make them look nicer in ggplot
+#Language
+item_plt_lang<-plot(irt_lang_2PL, type='infotrace', facet_items=FALSE, theta_lim=c(-3,3))
+
+
+item_plt_lang_dta <- data.frame(lapply(item_plt_lang$panel.args, function(x) do.call(cbind, x))[[1]]) %>%
+  mutate(test="Language")
+
+item_plt_lang_dta$name <- rep(colnames(language), each = 200)
+
+
+#Math
+item_plt_math<-plot(irt_math_2PL, type='infotrace', facet_items=FALSE, theta_lim=c(-3,3))
+
+
+item_plt_math_dta <- data.frame(lapply(item_plt_math$panel.args, function(x) do.call(cbind, x))[[1]]) %>%
+  mutate(test="Math")
+
+item_plt_math_dta$name <- rep(colnames(math), each = 200)
+
+#Append math and language databases
+item_plt_dta <- item_plt_math_dta %>%
+  bind_rows(item_plt_lang_dta)
+
+#merge on item labels
+item_plt_dta <- item_plt_dta %>%
+  left_join(teacher_metadata)
+
+#set figure name
+icc_fig <- fig_num(name='icc_fig', caption = "Item Characteristic Plots")
+
+
+linked_df<-SharedData$new(item_plt_dta)
+
+# get list of colors
+qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
+
+lngth<-length(colnames(language)) + length(colnames(math))
+pal <- sample(col_vector, lngth)
+
+bscols(widths=c(3,NA),
+  list(
+      filter_select("subject", "Subject", linked_df, ~test),
+      filter_select("item", "Item", linked_df, ~name)
+  ),
+  plot_ly(linked_df, x=~x, y=~y, color=~name, colors = ~pal, type='scatter', mode='lines',
+               width = 800, height = 800,
+          text=~paste("Item:",name, "<br> Label:", varlabel,
+                     "<br> ICC:", y, "<br> Teacher Ability", x)) %>%
+    layout(title=icc_fig,
+           xaxis=list(title="Teacher Ability"),
+           yaxis=list(title="Item Characteristic Curve Value"))
+
+)
+
+
+
+
+```
+
+
+
+
+
+# SDI Comparison 
+
+Next, we examine how teachers in Peru compare to teachers in other countries that have taken a similar examination.  The Service Delivery Indicator survey has been deployed in several countries, mostly in Sub-Saharan Africa.  The teacher assessment used is very similar to the one used in the Peru Dashboard survey.  In fact, the Peru test instrument was taken directly from the SDI instrument, with a few modifications.  A 'read the passage' item was added to our instrument, which differs from most SDI assessments.  Additionally, two arithmetic and number relations math problems on square roots and adding fractions were added to make our math assessment more difficult. 
+
+The list of overlapping items is below.
+
+```{r item_comparison, echo=FALSE}
+#rename SDI items in accordance with Dashboard names
+SDI_lang_names<-c( "m6sa1q2a", "m6sa1q2b", "m6sa1q2c", "m6sa1q2d", "m6sa1q2e", "m6sa1q2f", "m6sa1q3a", "m6sa1q3b", "m6sa1q3c", "m6sa1q3d", "m6sa1q3e", "m6sa1q3f", "m6sa1q3g", "m6sa1q3h", "m6sa1q3i", "m6sa1q3j", "m6sa1q3k")
+
+SDI_Dashboard_lang_names <- c("m5s1q1a_grammer", "m5s1q1b_grammer" ,"m5s1q1c_grammer" ,"m5s1q1d_grammer", "m5s1q1e_grammer", "m5s1q1f_grammer", "m5s1q2a_cloze",   "m5s1q2b_cloze",   "m5s1q2c_cloze",  "m5s1q2d_cloze",   "m5s1q2e_cloze",   "m5s1q2f_cloze",   "m5s1q2g_cloze" ,  "m5s1q2h_cloze",   "m5s1q2i_cloze",   "m5s1q2j_cloze",   "m5s1q2k_cloze")
+
+SDI_math_names <-  c( "m6sa2q1c",  "m6sa2q1d", "m6sa2q1e", "m6sa2q2",   "m6sa2q3",   "m6sa2q4a",  "m6sa2q4b",  "m6sa2q5",   "m6sa2q6",   "m6sa2q7",   "m6sa2q8",   "m6sa2q9a", "m6sa2q9b",  "m6sa2q10a", "m6sa2q10b", "m6sa2q11a", "m6sa2q11b", "m6sa2q11c", "m6sa2q12",  "m6sa2q13a", "m6sa2q13b")
+
+
+SDI_Dashboard_math_names <- c(   "m5s2q1c_number" ,    "m5s2q1d_number" ,    "m5s2q1e_number" ,    "m5s2q2_number",      "m5s2q3_number",      "m5s2q4a_number",  "m5s2q4b_number",     "m5s2q5_number",      "m5s2q6_geometric",   "m5s2q7_geometric",   "m5s2q8_data",        "m5s2q9a_data",       "m5s2q9b_data",       "m5s2q10a_data", "m5s2q10b_data",      "m5s2q11a_number",    "m5s2q11b_number",    "m5s2q11c_number",    "m5s2q12_number",     "m5s2q13a_geometric", "m5s2q13b_geometric")
+
+#print overlapping items
+print("The following items in Language overlapped in SDI and the Dashboard:")
+print(SDI_Dashboard_lang_names)
+
+print("The following items in Math overlapped in SDI and the Dashboard:")
+print(SDI_Dashboard_math_names)
+```
+
+In what follows below, we will compare teacher latent ability scores for Peru using our Dashboard Survey to ability scores from the SDI survey in Kenya, Lao PDR, Madagascar, Morocco, Mozambique, and Tanzania.
+
+## Methodology for item equating
+
+In order to equate the ability scores produced using the different instruments, we use an IRT equating method based on the common set of items.  We use the 'equateIRT' R package to do so.  https://cran.r-project.org/web/packages/equateIRT/equateIRT.pdf.  
+
+The goal of test equating in our case is to place scores from Dashboard survey and the SDI survey on a common scale, so that we can directly compare teacher latent ability across countries.  We use the common set of items, listed above, to do the equating.  A direct equating approach is used based on the Stocking-Lord approach.
+
+## Summary Statistics of Ability Scores 
+
+Below we show the distributions of teacher ability scores based on the IRT model estimates.
+
+```{r sdi, warning=FALSE, include=FALSE}
+
+#bring in scores from SDI
+df <- read_dta("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Teacher Assessment/Databases/Appended databases/Teacher_Assessment_KEN_MOZ_MDG_MAR_TZA_LAO_items_cleaned.dta")
+
+df_metadata<-makeVlist(df)
+
+df2 <- read_dta("C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Teacher Assessment/Databases/Appended databases/Teacher_Assessment_KEN_MOZ_MDG_MAR_TZA_LAO_PAK_items_cleaned_lang.dta")
+df2_metadata<-makeVlist(df2)
+
+
+sdi_lang_items <-df2[, substr(names(df2),1,5) == 'm6sa1']
+sdi_lang_items <- sdi_lang_items %>%
+  dplyr::select(-c(m6sa1q4, m6sa1q4_))
+
+sdi_math_names=substr(names(df),1,5) == 'm6sa2'
+
+sdi_math_items = df[, sdi_math_names]
+
+
+
+
+#rename
+setnames(sdi_lang_items, old = SDI_lang_names, new = SDI_Dashboard_lang_names, skip_absent=TRUE)
+
+setnames(sdi_math_items, old = SDI_math_names, new = SDI_Dashboard_math_names, skip_absent=TRUE)
+
+
+#===============
+# RUN IRT Algorithm
+#===============
+
+
+#Estimate IRT parameters ignoring missing values
+sdi_irt_math_2PL <- mirt(sdi_math_items, 1, itemtype='2PL', SE=FALSE, technical=list(removeEmptyRows=TRUE))
+sdi_irt_lang_2PL <- mirt(sdi_lang_items, 1, itemtype='2PL', SE=FALSE, technical=list(removeEmptyRows=TRUE))
+
+est_sdi_lang<-import.mirt(sdi_irt_lang_2PL)
+est_dash_lang<-import.mirt(irt_lang_2PL)
+
+est_sdi_math<-import.mirt(sdi_irt_math_2PL)
+est_dash_math<-import.mirt(irt_math_2PL)
+
+#bring in coefficients
+estc_math <- list(est_dash_math$coef, est_sdi_math$coef )
+estc_lang <- list(est_dash_lang$coef, est_sdi_lang$coef )
+
+#bring in variance-covariance matrix
+estv_math <- list(est_dash_math$var, est_sdi_math$var )
+estv_lang <- list(est_dash_lang$var, est_sdi_lang$var)
+
+#equate two models math
+mod2pl_irt_math <- modIRT(coef = estc_math, var = estv_math, display = FALSE)
+
+direclist2pl_math <- direc(mods = mod2pl_irt_math, which = c("T1", "T2"), method = "Stocking-Lord")
+ math_peru_scores_convert <- convert(A=direclist2pl_math$A, B=direclist2pl_math$B, coef = coef(mod2pl_irt_math$T1), person.par=math_teach_scores$F1)
+ math_peru_scores_convert <- math_peru_scores_convert$person.par
+math_peru_scores_convert <- data.frame(math_peru_scores_convert)  
+
+
+
+
+#equate two models lang
+mod2pl_irt_lang <- modIRT(coef = estc_lang, var = estv_lang, display = FALSE)
+
+direclist2pl_lang <- direc(mods = mod2pl_irt_lang, which = c("T1", "T2"), method = "Stocking-Lord")
+lang_peru_scores_convert <- convert(A=direclist2pl_lang$A, B=direclist2pl_lang$B, coef = coef(mod2pl_irt_lang$T1), person.par=lang_teach_scores$F1)
+lang_peru_scores_convert <- lang_peru_scores_convert$person.par
+lang_peru_scores_convert <- data.frame(lang_peru_scores_convert) 
+
+#create latent scores for math and language
+sdi_math_scores<-fscores(sdi_irt_math_2PL, method='EAP')
+
+sdi_lang_scores<-fscores(sdi_irt_lang_2PL, method='EAP')
+
+
+
+
+
+```
+
+```{r sdi_plots, echo=FALSE}
+
+
+#bring in GEPD scores
+math_peru_scores_converted <- math_peru_scores_convert %>%
+  transmute(F1=math_peru_scores_convert) %>%
+  mutate(countrycode="PER",
+         countryname="Peru")
+
+lang_peru_scores_converted <- lang_peru_scores_convert %>%
+  transmute(F1=lang_peru_scores_convert) %>%
+  mutate(countrycode="PER",
+         countryname="Peru")
+
+#now bring all the data together
+Assessment_math_scores<-merge(df, sdi_math_scores, by="row.names") %>%
+  dplyr::select(countryname, countrycode, F1) %>%
+  bind_rows(math_peru_scores_converted)
+
+#do ridge plot of density
+p_title_math<-fig_num(name="plotly_countries_math", caption="Distribution of Math Teacher Ability Scores by Country")
+
+p_sdi_math <- ggplot(Assessment_math_scores[Assessment_math_scores$countrycode!="PAK",], aes(x=F1, y=countryname, fill=countryname)) +
+  geom_density_ridges() +
+  labs(x=expression(theta))+
+  ggtitle(p_title_math)
+
+p_sdi_math
+# plot_ly(Assessment_math_scores, alpha = 0.6, color = ~countryname,
+#         autobinx = FALSE, 
+#         autobiny = TRUE, 
+#       xbins = list(
+#         end = 3, 
+#         size = 0.25, 
+#         start = -3)
+#       ) %>%
+#   add_histogram(x=~F1) %>%
+#   layout(barmode = "overlay",
+#          title=p_title_math,
+#            xaxis=list(title="Teacher Ability"))
+
+
+Assessment_math_scores %>%
+  dplyr::select(countryname, F1) %>%
+  group_by(countryname) %>%
+  skim_to_wide() %>%
+  select(-type,-variable, -complete, -missing) %>%
+  kable(caption=tab_num(name="math_stats_countries", caption="Summary Statistics of Math Assessment Scores for Teachers Across Countries")
+        ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+
+#now bring all the data together
+Assessment_lang_scores<-merge(df, sdi_lang_scores, by="row.names") %>%
+  filter(countrycode!="PAK") %>%
+  dplyr::select(countryname, countrycode, F1) %>%
+  bind_rows(lang_peru_scores_converted)
+
+
+#ridge plot
+p_title_lang<-fig_num(name="plotly_countries", caption="Distribution of Language Teacher Ability Scores by Country")
+
+
+p_sdi_lang <-ggplot(Assessment_lang_scores[Assessment_lang_scores$countrycode!="PAK",], aes(x=F1, y=countryname, fill=countryname)) +
+  geom_density_ridges() +
+  labs(x=expression(theta))+
+  ggtitle(p_title_lang)
+
+p_sdi_lang
+
+# plot_ly(Assessment_lang_scores, alpha = 0.6, color = ~countryname,
+#         autobinx = FALSE, 
+#         autobiny = TRUE, 
+#       xbins = list(
+#         end = 3, 
+#         size = 0.25, 
+#         start = -3)
+#       ) %>%
+#   add_histogram(x=~F1) %>%
+#   layout(barmode = "overlay",
+#          title=p_title_lang,
+#            xaxis=list(title="Teacher Ability"))
+  
+  
+Assessment_lang_scores %>%
+  dplyr::select(countryname, F1) %>%
+  group_by(countryname) %>%
+  skim_to_wide() %>%
+  select(-type,-variable, -complete, -missing) %>%
+  kable(caption=tab_num(name="lang_stats_countries", caption="Summary Statistics of Language Assessment Scores for Teachers Across Countries")
+        ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+
+## Summary Statistics SDI - Kenya
+
+```{r sumstats_kenya, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+
+
+#create database with just items from SDI Kenya for comparison
+kenya_lang_items <-df %>%
+  filter(countryname=="Kenya")
+
+kenya_math_items <-df %>%
+  filter(countryname=="Kenya")
+
+kenya_lang_items <-kenya_lang_items[, substr(names(kenya_lang_items),1,5) == 'm6sa1']
+kenya_lang_items <- kenya_lang_items %>%
+  dplyr::select(-c(m6sa1q4, m6sa1q4_))
+
+kenya_math_names=substr(names(kenya_math_items),1,5) == 'm6sa2'
+
+kenya_math_items = kenya_math_items[, kenya_math_names]
+
+#convert to data frame
+kenya_lang_items = data.frame(kenya_lang_items)
+
+kenya_math_items = data.frame(kenya_math_items)
+
+#rename SDI items in accordance with Dashboard names
+SDI_lang_names<-c( "m6sa1q2a", "m6sa1q2b", "m6sa1q2c", "m6sa1q2d", "m6sa1q2e", "m6sa1q2f", "m6sa1q3a", "m6sa1q3b", "m6sa1q3c", "m6sa1q3d", "m6sa1q3e", "m6sa1q3f", "m6sa1q3g", "m6sa1q3h", "m6sa1q3i", "m6sa1q3j", "m6sa1q3k")
+
+SDI_Dashboard_lang_names <- c("m5s1q1a_grammer", "m5s1q1b_grammer" ,"m5s1q1c_grammer" ,"m5s1q1d_grammer", "m5s1q1e_grammer", "m5s1q1f_grammer", "m5s1q2a_cloze",   "m5s1q2b_cloze",   "m5s1q2c_cloze",  "m5s1q2d_cloze",   "m5s1q2e_cloze",   "m5s1q2f_cloze",   "m5s1q2g_cloze" ,  "m5s1q2h_cloze",   "m5s1q2i_cloze",   "m5s1q2j_cloze",   "m5s1q2k_cloze")
+
+SDI_math_names <-  c( "m6sa2q1c",  "m6sa2q1d", "m6sa2q1e", "m6sa2q2",   "m6sa2q3",   "m6sa2q4a",  "m6sa2q4b",  "m6sa2q5",   "m6sa2q6",   "m6sa2q7",   "m6sa2q8",   "m6sa2q9a", "m6sa2q9b",  "m6sa2q10a", "m6sa2q10b", "m6sa2q11a", "m6sa2q11b", "m6sa2q11c", "m6sa2q12",  "m6sa2q13a", "m6sa2q13b")
+
+
+SDI_Dashboard_math_names <- c(   "m5s2q1c_number" ,    "m5s2q1d_number" ,    "m5s2q1e_number" ,    "m5s2q2_number",      "m5s2q3_number",      "m5s2q4a_number",  "m5s2q4b_number",     "m5s2q5_number",      "m5s2q6_geometric",   "m5s2q7_geometric",   "m5s2q8_data",        "m5s2q9a_data",       "m5s2q9b_data",       "m5s2q10a_data", "m5s2q10b_data",      "m5s2q11a_number",    "m5s2q11b_number",    "m5s2q11c_number",    "m5s2q12_number",     "m5s2q13a_geometric", "m5s2q13b_geometric")
+
+#rename
+setnames(kenya_lang_items, old = SDI_lang_names, new = SDI_Dashboard_lang_names, skip_absent=TRUE)
+
+setnames(kenya_math_items, old = SDI_math_names, new = SDI_Dashboard_math_names, skip_absent=TRUE)
+
+#convert to numeric if not
+kenya_lang_items <- data.frame(sapply( kenya_lang_items, as.numeric ))
+
+kenya_math_items <- data.frame(sapply( kenya_math_items, as.numeric ))
+
+
+#language
+ sumstats_kenya_lang_df<-skim(kenya_lang_items) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_kenya_lang_df <- sumstats_kenya_lang_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  lang_sumstats_cap2<-tab_num(name="lang_stats_kenya", caption="Summary Statistics of Kenya Language Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_kenya_lang_df %>%
+    kable(caption=lang_sumstats_cap2,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T,
+                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher language assessment.")
+  
+#math
+ sumstats_kenya_math_df<-skim(kenya_math_items) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_kenya_math_df <- sumstats_kenya_math_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  math_sumstats_cap2<-tab_num(name="math_stats_kenya", caption="Summary Statistics of Kenya Math Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_kenya_math_df %>%
+    kable(caption=math_sumstats_cap2,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher math assessment.")  
+  
+  
+
+```
+
+
+## Summary Statistics SDI - Mozambique
+
+```{r sumstats_Mozambique, echo=FALSE, message=FALSE, warning=FALSE}
+
+#create database with just items from SDI Mozambique for comparison
+Mozambique_lang_items <-df %>%
+  filter(countryname=="Mozambique")
+
+Mozambique_math_items <-df %>%
+  filter(countryname=="Mozambique")
+
+Mozambique_lang_items <-Mozambique_lang_items[, substr(names(Mozambique_lang_items),1,5) == 'm6sa1']
+Mozambique_lang_items <- Mozambique_lang_items %>%
+  dplyr::select(-c(m6sa1q4, m6sa1q4_))
+
+Mozambique_math_names=substr(names(Mozambique_math_items),1,5) == 'm6sa2'
+
+Mozambique_math_items = Mozambique_math_items[, Mozambique_math_names]
+
+#convert to data frame
+Mozambique_lang_items = data.frame(Mozambique_lang_items)
+
+Mozambique_math_items = data.frame(Mozambique_math_items)
+
+#rename SDI items in accordance with Dashboard names
+SDI_lang_names<-c( "m6sa1q2a", "m6sa1q2b", "m6sa1q2c", "m6sa1q2d", "m6sa1q2e", "m6sa1q2f", "m6sa1q3a", "m6sa1q3b", "m6sa1q3c", "m6sa1q3d", "m6sa1q3e", "m6sa1q3f", "m6sa1q3g", "m6sa1q3h", "m6sa1q3i", "m6sa1q3j", "m6sa1q3k")
+
+SDI_Dashboard_lang_names <- c("m5s1q1a_grammer", "m5s1q1b_grammer" ,"m5s1q1c_grammer" ,"m5s1q1d_grammer", "m5s1q1e_grammer", "m5s1q1f_grammer", "m5s1q2a_cloze",   "m5s1q2b_cloze",   "m5s1q2c_cloze",  "m5s1q2d_cloze",   "m5s1q2e_cloze",   "m5s1q2f_cloze",   "m5s1q2g_cloze" ,  "m5s1q2h_cloze",   "m5s1q2i_cloze",   "m5s1q2j_cloze",   "m5s1q2k_cloze")
+
+SDI_math_names <-  c( "m6sa2q1c",  "m6sa2q1d", "m6sa2q1e", "m6sa2q2",   "m6sa2q3",   "m6sa2q4a",  "m6sa2q4b",  "m6sa2q5",   "m6sa2q6",   "m6sa2q7",   "m6sa2q8",   "m6sa2q9a", "m6sa2q9b",  "m6sa2q10a", "m6sa2q10b", "m6sa2q11a", "m6sa2q11b", "m6sa2q11c", "m6sa2q12",  "m6sa2q13a", "m6sa2q13b")
+
+
+SDI_Dashboard_math_names <- c(   "m5s2q1c_number" ,    "m5s2q1d_number" ,    "m5s2q1e_number" ,    "m5s2q2_number",      "m5s2q3_number",      "m5s2q4a_number",  "m5s2q4b_number",     "m5s2q5_number",      "m5s2q6_geometric",   "m5s2q7_geometric",   "m5s2q8_data",        "m5s2q9a_data",       "m5s2q9b_data",       "m5s2q10a_data", "m5s2q10b_data",      "m5s2q11a_number",    "m5s2q11b_number",    "m5s2q11c_number",    "m5s2q12_number",     "m5s2q13a_geometric", "m5s2q13b_geometric")
+
+#rename
+setnames(Mozambique_lang_items, old = SDI_lang_names, new = SDI_Dashboard_lang_names, skip_absent=TRUE)
+
+setnames(Mozambique_math_items, old = SDI_math_names, new = SDI_Dashboard_math_names, skip_absent=TRUE)
+
+#convert to numeric if not
+Mozambique_lang_items <- data.frame(sapply( Mozambique_lang_items, as.numeric ))
+
+Mozambique_math_items <- data.frame(sapply( Mozambique_math_items, as.numeric ))
+
+
+#language
+ sumstats_Mozambique_lang_df<-skim(Mozambique_lang_items) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_Mozambique_lang_df <- sumstats_Mozambique_lang_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  lang_sumstats_cap2<-tab_num(name="lang_stats_Mozambique", caption="Summary Statistics of Mozambique Language Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_Mozambique_lang_df %>%
+    kable(caption=lang_sumstats_cap2,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T,
+                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher language assessment.")
+  
+#math
+ sumstats_Mozambique_math_df<-skim(Mozambique_math_items) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_Mozambique_math_df <- sumstats_Mozambique_math_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  math_sumstats_cap2<-tab_num(name="math_stats_Mozambique", caption="Summary Statistics of Mozambique Math Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_Mozambique_math_df %>%
+    kable(caption=math_sumstats_cap2,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher math assessment.")  
+
+```
+
+
+
+## Summary Statistics SDI - LAO_PDR
+
+```{r sumstats_LAO_PDR, echo=FALSE, message=FALSE, warning=FALSE}
+
+#create database with just items from SDI LAO_PDR for comparison
+LAO_PDR_lang_items <-df %>%
+  filter(countryname=="Lao PDR")
+
+LAO_PDR_math_items <-df %>%
+  filter(countryname=="Lao PDR")
+
+LAO_PDR_lang_items <-LAO_PDR_lang_items[, substr(names(LAO_PDR_lang_items),1,5) == 'm6sa1']
+LAO_PDR_lang_items <- LAO_PDR_lang_items %>%
+  dplyr::select(-c(m6sa1q4, m6sa1q4_))
+
+LAO_PDR_math_names=substr(names(LAO_PDR_math_items),1,5) == 'm6sa2'
+
+LAO_PDR_math_items = LAO_PDR_math_items[, LAO_PDR_math_names]
+
+#convert to data frame
+LAO_PDR_lang_items = data.frame(LAO_PDR_lang_items)
+
+LAO_PDR_math_items = data.frame(LAO_PDR_math_items)
+
+#rename SDI items in accordance with Dashboard names
+SDI_lang_names<-c( "m6sa1q2a", "m6sa1q2b", "m6sa1q2c", "m6sa1q2d", "m6sa1q2e", "m6sa1q2f", "m6sa1q3a", "m6sa1q3b", "m6sa1q3c", "m6sa1q3d", "m6sa1q3e", "m6sa1q3f", "m6sa1q3g", "m6sa1q3h", "m6sa1q3i", "m6sa1q3j", "m6sa1q3k")
+
+SDI_Dashboard_lang_names <- c("m5s1q1a_grammer", "m5s1q1b_grammer" ,"m5s1q1c_grammer" ,"m5s1q1d_grammer", "m5s1q1e_grammer", "m5s1q1f_grammer", "m5s1q2a_cloze",   "m5s1q2b_cloze",   "m5s1q2c_cloze",  "m5s1q2d_cloze",   "m5s1q2e_cloze",   "m5s1q2f_cloze",   "m5s1q2g_cloze" ,  "m5s1q2h_cloze",   "m5s1q2i_cloze",   "m5s1q2j_cloze",   "m5s1q2k_cloze")
+
+SDI_math_names <-  c( "m6sa2q1c",  "m6sa2q1d", "m6sa2q1e", "m6sa2q2",   "m6sa2q3",   "m6sa2q4a",  "m6sa2q4b",  "m6sa2q5",   "m6sa2q6",   "m6sa2q7",   "m6sa2q8",   "m6sa2q9a", "m6sa2q9b",  "m6sa2q10a", "m6sa2q10b", "m6sa2q11a", "m6sa2q11b", "m6sa2q11c", "m6sa2q12",  "m6sa2q13a", "m6sa2q13b")
+
+
+SDI_Dashboard_math_names <- c(   "m5s2q1c_number" ,    "m5s2q1d_number" ,    "m5s2q1e_number" ,    "m5s2q2_number",      "m5s2q3_number",      "m5s2q4a_number",  "m5s2q4b_number",     "m5s2q5_number",      "m5s2q6_geometric",   "m5s2q7_geometric",   "m5s2q8_data",        "m5s2q9a_data",       "m5s2q9b_data",       "m5s2q10a_data", "m5s2q10b_data",      "m5s2q11a_number",    "m5s2q11b_number",    "m5s2q11c_number",    "m5s2q12_number",     "m5s2q13a_geometric", "m5s2q13b_geometric")
+
+#rename
+setnames(LAO_PDR_lang_items, old = SDI_lang_names, new = SDI_Dashboard_lang_names, skip_absent=TRUE)
+
+setnames(LAO_PDR_math_items, old = SDI_math_names, new = SDI_Dashboard_math_names, skip_absent=TRUE)
+
+#convert to numeric if not
+LAO_PDR_lang_items <- data.frame(sapply( LAO_PDR_lang_items, as.numeric ))
+
+LAO_PDR_math_items <- data.frame(sapply( LAO_PDR_math_items, as.numeric ))
+
+
+#language
+ sumstats_LAO_PDR_lang_df<-skim(LAO_PDR_lang_items) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_LAO_PDR_lang_df <- sumstats_LAO_PDR_lang_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  lang_sumstats_cap2<-tab_num(name="lang_stats_LAO_PDR", caption="Summary Statistics of Lao PDR Language Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_LAO_PDR_lang_df %>%
+    kable(caption=lang_sumstats_cap2,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T,
+                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher language assessment.")
+  
+#math
+ sumstats_LAO_PDR_math_df<-skim(LAO_PDR_math_items) %>%
+     dplyr::select(-level, -type, -value) %>%
+     spread(stat, formatted) %>%
+     dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+        
+
+  #add variable label
+  sumstats_LAO_PDR_math_df <- sumstats_LAO_PDR_math_df %>%
+      mutate(name=variable) %>%
+      left_join(teacher_metadata) %>%
+      dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist)
+
+
+  #produce caption for table
+  math_sumstats_cap2<-tab_num(name="math_stats_LAO_PDR", caption="Summary Statistics of Lao PDR Math Assessment Items for Teachers")
+  
+  #Produce table
+  sumstats_LAO_PDR_math_df %>%
+    kable(caption=math_sumstats_cap2,
+          col.names =c("Item", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram")
+) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"),
+                  fixed_thead = T                  ) %>%
+    footnote(general="Summary table shows unweighted summary statistics from teacher math assessment.")  
+
+```

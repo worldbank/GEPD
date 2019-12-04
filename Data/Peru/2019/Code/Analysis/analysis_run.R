@@ -20,7 +20,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'PER'
+country <-'Peru'
 country_name <- "Peru"
 year <- '2019'
 
@@ -34,7 +34,7 @@ backup_onedrive="no"
 
 
 if (Sys.getenv("USERNAME") == "wb469649"){
-  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
   open_folder <-file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
   save_folder <- file.path("C:/Users/wb469649/Documents/Github/GEPD/Data", country_name,year,"Code/School/02_analysis/reports/", sep="/")
   

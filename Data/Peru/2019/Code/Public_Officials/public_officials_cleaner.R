@@ -7,6 +7,7 @@ library(haven)
 library(stringr)
 library(Hmisc)
 library(skimr)
+library(spatstat)
 
 library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
@@ -98,6 +99,45 @@ public_officials_dta<- public_officials_dta %>%
                   )
 
 
+###############################
+# Read in School Data for comparison to public officials answers
+###############################
+
+school_folder <- file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
+
+load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
+
+currentDate<-c("2019-07-22")
+sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/sampling/school_sample_",currentDate,".RData", sep=""))
+
+load(sample_frame_name)
+
+#compare data collected to original sample
+school_dta_short <- school_dta_short %>%
+  mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+  left_join(data_set_updated) %>%
+  mutate(longitude=as.character(longitude)) %>%
+  mutate(latitude=as.character(latitude)) %>%
+  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+         lon=if_else(is.na(lon), as.numeric(longitude), lon),
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+
+weights<-school_dta_short %>%
+  group_by(school_code) %>%
+  summarise(school_ipw=mean(school_ipw))
+
+final_indicator_data_INPT <- final_indicator_data_INPT %>%
+  left_join(weights) %>%
+  filter(!is.na(school_ipw))
+
+class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indicator_data_INPT$school_ipw, na.rm=TRUE)
+
+school_absence <- school_dta_short %>%
+  filter(!is.na(school_ipw))
+
+absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE)
 ############################
 #Clean up idiosyncratic variables
 #############################
@@ -122,7 +162,6 @@ var_rev_list<-c('QB2q2',  'QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4
 public_officials_dta <- public_officials_dta %>%
   mutate_at(var_rev_list, attitude_fun_rev)
 
-
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
   mutate(avg_class_size_guess=QB1q2,
@@ -131,9 +170,10 @@ public_officials_dta <- public_officials_dta %>%
          proportion_reported_underperformance=IDM1q3,
          proportion_broke_rules=IDM3q1,
          proportion_contracts_political=IDM3q2,
-         proportion_producement_political=IDM3q3,) %>%
-  mutate(QB1q2= if_else(abs(QB1q2-16)<=4, 5-abs(QB1q2-16), 1),
-         QB1q1= if_else(abs(QB1q1-13)<=4, 5-abs(QB1q1-13), 1),
+         proportion_producement_political=IDM3q3,
+         DEM1q13=as.numeric(DEM1q13)) %>%
+  mutate(QB1q2= if_else(abs(QB1q2-class_size)<=4, 5-abs(QB1q2-class_size), 1),
+         QB1q1= if_else(abs(QB1q1-absence)<=4, 5-abs(QB1q1-absence), 1),
          QB4q2= case_when(
            QB4q2>=120 ~ 5,
            QB4q2>=110 ~ 4,
@@ -177,20 +217,18 @@ preamble_info <- c('interview__id', 'region_code', 'district_code', 'district', 
                    'education','gender', 'director_hr')
 
 
-
+#include list of constructed variables
+constr_list <- c('avg_class_size_guess', 'avg_absence_guess', 'motivation_relative_start', 'proportion_reported_underperformance', 
+                 'proportion_broke_rules', 'proportion_contracts_political', 'proportion_producement_political'
+)
 
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
 #This will make the information for each indicator contained in an independent database
 #Will need to join the school level information with teacher level questionnaire information for some indicators.  This will be done later.
 
 public_officials_dta_clean <-public_officials_dta %>%
-  dplyr::select(preamble_info, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
+  dplyr::select(preamble_info,constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
   dplyr::select(-starts_with("enumerators_preload"))
-
-#filter out the director of HR, which isn't specifically asked about indicator questions
-
-public_officials_dta_clean <- public_officials_dta_clean %>%
-  filter(director_hr==0)
 
 
 #######################################
@@ -215,7 +253,11 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length))
+  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
+         targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
+         monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
+         incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
+         community_engagement=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG4")], na.rm=T))
 
 
 ########
@@ -226,7 +268,10 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length))
+  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
+         coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
+         transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
+         accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
 
 
 ########
@@ -237,7 +282,11 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length))
+  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
+         knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
+         work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
+         merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
+         motivation_attitudes=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB4")], na.rm=T))
 
 
 ########
@@ -248,17 +297,36 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length))
+  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
+         politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
+         politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
+         politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
+         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4")], na.rm=T))
 
 
 #list of Bureaucracy indicators
-bureau_ind<-c( 'national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making')
+bureau_ind_nlg  <-c( 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement')
+bureau_ind_acm  <-c('mandates_accountability' , 'coherence', 'transparency', 'accountability') 
+bureau_ind_qb   <-c('quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes')
+bureau_ind_idm  <-c('impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators')
+
 
 public_officials_dta_clean <-public_officials_dta_clean %>%
-  dplyr::select(preamble_info, bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
+  dplyr::select(preamble_info, bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm,
+                constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) 
 
 public_officials_dta_short <-public_officials_dta_clean %>%
-  dplyr::select(preamble_info, bureau_ind, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+  dplyr::select(preamble_info, bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm
+                , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+
+
+#filter out the director of HR, which isn't specifically asked about indicator questions
+
+public_officials_dta_hr <- public_officials_dta_clean %>%
+  filter(director_hr==1)
+
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  filter(director_hr==0)
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
@@ -270,7 +338,7 @@ write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_offi
 write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
-keep_info <- c('region_code', 'district_code', 'district', 'province','location', 'govt_tier',
+keep_info <- c('interview__id','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 
@@ -280,12 +348,43 @@ keep_info <- c('region_code', 'district_code', 'district', 'province','location'
 
 public_officials_office_level<- public_officials_dta_clean %>%
   group_by(region_code, district_code, govt_tier) %>%
-  select(keep_info,bureau_ind, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
-  mutate(count=n() )%>% 
+  select(keep_info,bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm, 
+         starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
+  mutate(count=n() ) %>% 
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
   
-  
+#convert variables to factor
+# public_officials_dta_clean<- public_officials_dta_clean %>%
+#   left_join(public_officials_metadata)
+#   mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), factor(., labels=vallables) ) 
 
+# label_df<-public_officials_metadata %>%
+#   filter(grepl('NLG|ACM|QB|IDM', name))
+# 
+# #add in value labels to questions using apply
+# 
+# #  factor function to create factor variable with value labels attached
+# ff = function(x){ 
+#   
+#   #get string containing value labels
+#   rownum<-which(grepl(x, label_df$name))
+#   lab <- as.character(label_df[rownum,3])
+#   #access column of same name as unit in the apply loop
+#   public_officials_dta_clean[,x] <-    factor(public_officials_dta_clean$x,labels=lab)
+# 
+# }
+# 
+# 
+# public_officials_dta_clean2 <- data.frame(sapply(label_df$name, ff))
+
+
+# #now add labels
+# for (row in 1:nrow(label_df)) {
+#   var <- label_df[row, "name"]
+#   lab <- label_df[row, "vallabel"]
+#   
+#   public_officials_dta_clean$var[1] <- 1
+# }
 ################################
 #Store Key Created Datasets
 ################################
@@ -304,17 +403,41 @@ indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
 
 ind_dta_list<-c()
 
+
+
 for (i in indicator_names ) {
-  temp_df<-public_officials_dta_clean %>%
-    select( contains(i))
-  if (ncol(temp_df) > 0) {
-    temp_df<-public_officials_dta_clean %>%
-      select(keep_info,bureau_ind, starts_with('DEM'), starts_with(i))
-    assign(paste("final_indicator_data_",i, sep=""), temp_df )
+  
+  j <- case_when(
+    i=="NLG" ~ "BNLG",
+    i=="ACM" ~ "BMAC",
+    i=="QB" ~ "BQBR",
+    i=="IDM" ~ "BIMP",
+    TRUE ~ i
+  )
+  
+  if (i!="ORG") {
+  temp_df<-public_officials_dta_clean 
+    if (ncol(temp_df) > 0) {
+      temp_df<-temp_df %>%
+        select(keep_info, get(paste('bureau_ind', tolower(i), sep="_")), starts_with('DEM'), starts_with(i))
+     assign(paste("final_indicator_data_",j, sep=""), temp_df )
+     
+     ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
     
-    ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",i, sep=""))
-    
+    }
+  } else if (i=="ORG") {
+    temp_df<-public_officials_dta_hr
+    if (ncol(temp_df) > 0) {
+      temp_df<-temp_df %>%
+        select(keep_info, starts_with('DEM'), starts_with(i))
+      assign(paste("final_indicator_data_",j, sep=""), temp_df )
+      
+      ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
+      
+    }
   }
+  
+
 }
 
 save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(save_folder, "public_officials_indicators_data.RData"))

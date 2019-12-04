@@ -26,6 +26,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
+
 #Country name
 country <-'Peru'
 year <- '2019'
@@ -44,6 +45,17 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   
   backup_onedrive="yes"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru",year,"Data/clean/Public_Officials", sep="/"))
+  
+} else if (Sys.getenv("USERNAME") == "wb550666"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
+  
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/Public_Officials", sep="/"))
+  
+  # This is experimental and not currently in use.
+  backup_onedrive="yes"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/Public_Officials", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")

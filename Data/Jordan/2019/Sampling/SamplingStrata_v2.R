@@ -375,7 +375,7 @@ sample_amman<- data_set_updated %>%
 
 data_set_updated <- data_set_updated %>%
   left_join(sample_amman) %>%
-  mutate(sample_maputo=ifelse(is.na(sample_amman),0,sample_amman)) %>%
+  mutate(sample_amman=ifelse(is.na(sample_amman),0,sample_amman)) %>%
   mutate(sample=case_when(
     sample_dashboard==1  ~ 1,
     sample_replacement1==1 ~ 2,
@@ -476,49 +476,101 @@ leaflet(data=sample_map_chosen) %>%
   ###### Survey of Public Officials Sampling #####
   #################################################
   
+set.seed(54351324)
+
   #This could also be split into a separate file.
-  sample_file_name <- paste(dir_frame,"school_sample_",date_frame,".csv", sep="")
-  load(file=sample_frame_name) 
+date_frame <- "2019-10-11"
+  sample_file_name <- paste(dir_frame,"/school_sample_",date_frame,".xlsx", sep="")
+  sample_schools <- read_excel(sample_file_name) %>%
+    filter(sample_replacement1==0 & sample_replacement2==0 & sample_amman==0)
   
   #Choose district offices to visit randomly among the list of districts we are already visiting for the schools
-  #We will choose 20 of these district offices from the Regional level
-  dist_list<- sample_updated %>%
-    group_by(governorate) %>%
-    summarise( )
+  #We will choose 24 of these district offices from the Regional level
+  prov_list<- sample_schools %>%
+  group_by(governorate) %>%
+    summarise(n=n() ) %>%
+    mutate(n_schools=case_when(
+      governorate=="Jerash" ~ 1,
+      governorate=="Madaba" ~ 1,
+      governorate=="The Capital Amman" ~ 5,
+      governorate=="Irbid" ~ 3,
+      TRUE ~ round(24*n/250)
+    )) #do a tweak to ensure that total adds to 24 and all governorates represented
   
-  district_office_sample <- dist_list %>%
-    sample_n(20)
+  
+  province_office_sample <- prov_list 
+  
+  dist_list_alt3<- sample_schools %>%
+    group_by(directorate) %>%
+    mutate(n_schools_directorate=n()) %>%
+    summarise_all(first) %>%
+    group_by(governorate) %>%
+    left_join(prov_list) %>%
+    sample_n(n_schools) %>%
+    dplyr::select(governorate, directorate , n_schools_directorate)
   
   #save as csv
-  dist_frame_name <- paste(dir_frame,"district_sample_",date_frame,".csv", sep="")
+  dist_frame_name <- paste(dir_frame,"/district_sample_",Sys.Date(),".csv", sep="")
   
-  write.csv(district_office_sample,dist_frame_name) 
+  write_excel_csv(dist_list_alt3,dist_frame_name) 
   
-
+# create a list of public officials to be interviewed in each office
+  list_public_officials_directorate <- dist_list_alt3 %>%
+    mutate(official1='Director General of Field Directorate',
+           official2='Administrative and financial affairs director',
+           official3='Education Affairs Director',
+           official4='Personnel affairs section',
+           official5='Random Official 1',
+           official6='Random Official 2'
+           ) 
   
-  #Run an iteration where we choose 10 provinces (UGEL) linked to schools and link up to regions
-  #columns to keep
-  cols<-c( "district", "dsc.ugel")
+  titles <- c('Education Planning section', 'School textbooks and requirements section', 'Public Education and students affairs section',
+              'Education supervision section', 'Exams and Tests section', 'Private education section', 'Buildings and maintenance section')
+  title_sample <- matrix(sample(titles), nrow(dist_list_alt3),2)
   
-  district_office_sample <- dist_list %>%
-    sample_n(10)
+  #now replace official 5 and 6 with random selection
+  list_public_officials_directorate$official5=title_sample[,1]
+  list_public_officials_directorate$official6=title_sample[,2]
   
-  dist_list_alt2<- sample_updated %>%
-    filter(governorate %in% as.vector(district_office_sample$governorate)) %>%
-    group_by(governorate) %>%
-    sample_n(1) %>%
-    summarise_at(cols, first)
+  list_public_officials_directorate <- list_public_officials_directorate %>%
+    pivot_longer(
+      cols=c('official1', 'official2', 'official3', 'official4', 'official5', 'official6'),
+      names_to = 'type',
+      values_to = 'Official'
+    ) %>%
+    arrange(-n_schools_directorate) %>%
+    filter(!(type=='official6' & (n_schools_directorate==1 | directorate=='??????????')))
   
   #save as csv
-  dist_frame_name <- paste(dir_frame,"district_sample_",date_frame,".csv", sep="")
+  public_officials_frame_name <- paste(dir_frame,"/public_officials_sample_",Sys.Date(),".csv", sep="")
   
-  write.csv(district_office_sample,dist_frame_name) 
+  write_excel_csv(list_public_officials_directorate,public_officials_frame_name) 
+  
+  
+  # 
+  # #Run an iteration where we choose 10 provinces (UGEL) linked to schools and link up to regions
+  # #columns to keep
+  # cols<-c( "district", "dsc.ugel")
+  # 
+  # district_office_sample <- dist_list %>%
+  #   sample_n(10)
+  # 
+  # dist_list_alt2<- sample_updated %>%
+  #   filter(governorate %in% as.vector(district_office_sample$governorate)) %>%
+  #   group_by(governorate) %>%
+  #   sample_n(1) %>%
+  #   summarise_at(cols, first)
+  # 
+  # #save as csv
+  # dist_frame_name <- paste(dir_frame,"district_sample_",date_frame,".csv", sep="")
+  # 
+  # write.csv(district_office_sample,dist_frame_name) 
   
   
   ###save our sample  
   dist_frame_name <- paste(dir_frame,"district_sample_",date_frame,".RData", sep="")
   
-  save(district_office_sample, dist_list_alt1, dist_list_alt2,
+  save(district_office_sample, 
        file=dist_frame_name) 
 
   
