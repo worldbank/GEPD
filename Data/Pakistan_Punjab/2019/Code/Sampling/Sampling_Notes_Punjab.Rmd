@@ -77,7 +77,7 @@ Due to operational constraints, we did not draw a random sample of all schools a
 * Rahimyar Khan
 * Sargodha  
 
-In order to deal with potential refusals and closed schools, a set of replacement schools was also drawn. Within the final strata, schools were sampled proportional to size (number of total enrolled children in grades 1-5, i.e. primary school). 
+In order to deal with potential refusals and closed schools, a set of replacement schools was also drawn. Within the final strata, schools were sampled proportional to size (number of total enrolled children in pre-primary). 
 
 ```{r districts, echo=FALSE}
 public_frame_districts <- public_df %>%
