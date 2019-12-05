@@ -521,14 +521,28 @@ The following table shows teachers in the teacher questionnaire module who could
 
 teacher_roster_list<-teacher_roster %>%
   left_join(school_data_preamble) %>%
-  select(preamble_info,  teacher_number, teacher_name) 
+  filter(!is.na(questionnaireteachcode2)) %>%
+  select( school_code, questionnaireteachcode2,  teacher_number, teacher_name, school_province_preload, school_district_preload, school_name_preload, lat, lon) 
 
-orphans_number_questionnaire <- teacher_questionnaire %>%
-  select(keep_info, teacher_name, teacher_number) %>%
+teacher_questionnaire_list<-teacher_questionnaire %>%
+  select(interview__key, school_code, teacher_name, teacher_number, m3sb_troster, m3sb_tnumber) 
+
+orphans_number_questionnaire <- teacher_questionnaire_list %>%
   anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
-  select(-teacher_name) %>%
-  select(school_code, teacher_number,  everything())
+  select(school_code, teacher_name, teacher_number,  everything()) %>%
+  bind_rows(teacher_roster_list) %>%
+  arrange(school_code) %>%
+  distinct(school_code, teacher_name, teacher_number, .keep_all = T)
 
+non_orphans_number_questionnaire <- teacher_questionnaire_list  %>%
+  left_join(teacher_roster_list) %>%
+  select(school_code, teacher_name, teacher_number,  everything()) %>%
+  bind_rows(teacher_roster_list) %>%
+  arrange(school_code) %>%
+  distinct(school_code, teacher_name, teacher_number, .keep_all = T)
+
+write_excel_csv(orphans_number_questionnaire, path = paste(save_folder, "jordan_orphan_teachers.csv", sep="/")) 
+write_excel_csv(non_orphans_number_questionnaire, path = paste(save_folder, "jordan_non_orphan_teachers_merged.csv", sep="/")) 
 
 ```
 
