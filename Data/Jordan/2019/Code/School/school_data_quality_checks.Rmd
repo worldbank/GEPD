@@ -165,6 +165,26 @@ bscols(widths=c(3,NA),
 To start, the following figures and tables will highlight missing values for a few of our key indicators. 
 
 
+First, we will display the modules with information collected in each school.
+
+```{r school_modules_completed, echo=FALSE}
+
+datatable(school_modules_complete,
+          caption='Modules That Have at Least Some Information for Each School',
+          class='display',
+          extensions = c ('Buttons', 'FixedHeader'), 
+                options=list(
+                  dom = 'Bfrtip',
+                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  pageLength = 60,
+                  scrollX = TRUE, 
+                  paging=FALSE,
+                  ordering=F))
+write_excel_csv(school_modules_complete, path = paste(save_folder, "school_modules_complete.csv", sep="/")) 
+
+```
+
+
 ```{r missings, echo=FALSE, error=FALSE, message=FALSE}
 
 load(paste(save_folder, "school_survey_data.RData", sep="/"))
@@ -524,8 +544,31 @@ teacher_roster_list<-teacher_roster %>%
   filter(!is.na(questionnaireteachcode2)) %>%
   select( school_code, questionnaireteachcode2,  teacher_number, teacher_name, school_province_preload, school_district_preload, school_name_preload, lat, lon) 
 
+
+orphan_fix_list <- readxl::read_xlsx(path=paste(save_folder, 'orphan teachers.xlsx', sep="/"), sheet = 'manually mathched by marta') %>%
+  select(school_code, interview__key, m3sb_tnumber, corrected_code) %>%
+  mutate(teacher_number=corrected_code) %>%
+  left_join(teacher_roster_list) %>%
+  mutate(corrected_name=teacher_name) %>%
+  select(school_code, m3sb_tnumber, corrected_name, corrected_code)
+
+orphan_ok_list <- readxl::read_xlsx(path=paste(save_folder, 'orphan teachers.xlsx', sep="/"), sheet = 'matched ok') %>%
+  select(school_code, interview__key, m3sb_tnumber, questionnaireteachcode2) %>%
+  mutate(teacher_number=questionnaireteachcode2) %>%
+  left_join(teacher_roster_list) %>%
+  mutate(corrected_name=teacher_name,
+         corrected_code=questionnaireteachcode2) %>%
+  select(school_code, m3sb_tnumber, corrected_name, corrected_code)
+
+orphan_fixes <- orphan_fix_list %>%
+  bind_rows(orphan_ok_list) %>%
+  filter(!is.na(corrected_name))
+
 teacher_questionnaire_list<-teacher_questionnaire %>%
-  select(interview__key, school_code, teacher_name, teacher_number, m3sb_troster, m3sb_tnumber) 
+  select(interview__key, school_code, teacher_name, teacher_number, m3sb_troster, m3sb_tnumber) %>%
+  left_join(orphan_fixes) %>%
+  mutate(teacher_number=if_else(!is.na(corrected_code), as.numeric(corrected_code), as.numeric(m3sb_tnumber)),
+         teacher_name=if_else(!is.na(corrected_name), corrected_name, m3sb_troster))
 
 orphans_number_questionnaire <- teacher_questionnaire_list %>%
   anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
