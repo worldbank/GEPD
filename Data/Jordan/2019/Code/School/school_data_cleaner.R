@@ -722,6 +722,17 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq6"),
   ), ~bin_var(.,1)  ) %>% #now handle the special cases
   mutate(m8saq4_id=if_else(m8saq4_id==5,4, as.numeric(m8saq4_id))) %>% #fix case where some enumerators recorded the pre-filled answer.
+  mutate(m8saq7a_gir=bin_var(m8saq7a_gir, 3),
+         m8saq7b_gir=bin_var(m8saq7b_gir, 3),
+         m8saq7c_gir=bin_var(m8saq7c_gir, 2),
+         m8saq7d_gir=bin_var(m8saq7d_gir, 3),
+         m8saq7e_gir=bin_var(m8saq7e_gir, 4),
+         m8saq7f_gir=bin_var(m8saq7f_gir, 1),
+         m8saq7g_gir=bin_var(m8saq7g_gir, 2),
+         m8saq7h_gir=bin_var(m8saq7h_gir, 2),
+         m8saq7i_gir=bin_var(m8saq7i_gir, 4),
+         m8saq7j_gir=bin_var(m8saq7j_gir, 1),
+         m8saq7k_gir=bin_var(m8saq7k_gir, 3)) %>% #grade lonely giraffe question
   group_by(school_code) %>%
   mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
             ~call_out_scorer(.,0.8)) %>%

@@ -692,7 +692,8 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
          literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
          math_student_proficient=100*as.numeric(math_student_knowledge>=80),
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
-         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
+         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
+         math_student_proficient_60=100*as.numeric(math_student_knowledge>=60))
 
 
 #save  4th grade data at student level anonymized
