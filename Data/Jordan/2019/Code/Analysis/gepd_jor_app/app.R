@@ -173,7 +173,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                    necessarily causal.  The X variables include our Dashboard indicators, as well as the option to include
                                    the rural status of the school, as well as GDP per square kilometer within one square kilometer of the school.  GDP per square kilometer data 
                                    is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  Additionally, 
-                                   the user has the option to include regional fixed effects.  In the case of Peru, these are Peruvian Department fixed effects.'),
+                                   the user has the option to include regional fixed effects.  In the case of Jordan, these are Jordan Directorate fixed effects.'),
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  
@@ -222,15 +222,15 @@ server <- function(input, output, session) {
     
     
     
-    load(paste("school_sample_2019_07_22.RData"))
-    #correct a few missing values in weights with departamento average
-    #because stratification was at the departamento level, this is accurate correction.
+    load(paste("school_sample_2019-10-11.RData"))
+    #correct a few missing values in weights with governorate average
+    #because stratification was at the governorate level, this is accurate correction.
     data_set_updated <- data_set_updated %>%
-      group_by(departamento) %>%
+      group_by(governorate, supervisory_authority_factor) %>%
       mutate(weights=replace(weights, which(is.na(weights)),
                                mean(weights, na.rm=TRUE)),
-             total_4th=replace(total_4th, which(is.na(total_4th)),
-                                mean(total_4th, na.rm=TRUE))
+             total_4th=replace(total_students_grade_4, which(is.na(total_students_grade_4)),
+                                mean(total_students_grade_4, na.rm=TRUE))
              )
     
     
@@ -479,7 +479,7 @@ server <- function(input, output, session) {
         }
 
         df<- df %>%
-          mutate(codigo.modular=as.numeric(school_code)) %>%
+          mutate(organization_code=as.numeric(school_code)) %>%
           left_join(data_set_updated) %>%
           mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
         
@@ -519,7 +519,7 @@ server <- function(input, output, session) {
           }
           
           df<- df %>%
-            mutate(codigo.modular=as.numeric(school_code)) %>%
+            mutate(organization_code=as.numeric(school_code)) %>%
             left_join(data_set_updated) %>%
             mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
           
@@ -797,7 +797,7 @@ server <- function(input, output, session) {
         metadata<-metadta
         
         weights <- dat() %>%
-          mutate(codigo.modular=as.numeric(school_code)) %>%
+          mutate(organization_code=as.numeric(school_code)) %>%
           left_join(data_set_updated) %>%
           mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
         
@@ -932,7 +932,7 @@ server <- function(input, output, session) {
       df_reg<-school_dta_short
       
       df_reg<- df_reg %>%
-        mutate(codigo.modular=as.numeric(school_code)) %>%
+        mutate(organization_code=as.numeric(school_code)) %>%
         left_join(data_set_updated)
       
       
@@ -1101,7 +1101,7 @@ server <- function(input, output, session) {
     dat_mult_reg <- reactive({
       #create database with just learning outcomes
       df_mult_reg<-dat_for_regs() %>%
-        mutate(codigo.modular=as.numeric(school_code)) %>%
+        mutate(organization_code=as.numeric(school_code)) %>%
         left_join(data_set_updated) 
       
       
@@ -1115,7 +1115,7 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_mult_reg <- df_mult_reg %>%
-        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th, departamento, rural ) %>%
+        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th, governorate, rural ) %>%
         rename(y=2) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
       
@@ -1134,16 +1134,16 @@ server <- function(input, output, session) {
     
     mult_regs<-reactive({
       
-      gdp <- school_gdp %>%
-        select(school_code, GDP) %>%
-        mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
+      # gdp <- school_gdp %>%
+      #   select(school_code, GDP) %>%
+      #   mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
       
       if (input$province_dummies=="No") {
         df_multi_reg <- dat_for_regs() %>%
-          left_join(gdp) %>%
+          # left_join(gdp) %>%
           select(one_of(get_tag_mult_cov()), school_code) %>%
           left_join(dat_mult_reg()) %>%
-          select(-school_code,-weights, -school_ipw, -total_4th, -departamento) 
+          select(-school_code,-weights, -school_ipw, -total_4th, -governorate) 
       
       
         my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), sep=""))
@@ -1154,12 +1154,12 @@ server <- function(input, output, session) {
         
       } else if (input$province_dummies=="Yes") {
         df_multi_reg <- dat_for_regs() %>%
-          left_join(gdp) %>%
+          # left_join(gdp) %>%
           select(one_of(get_tag_mult_cov()), school_code) %>%
           left_join(dat_mult_reg()) %>%
           select(-school_code,-weights, -school_ipw, -total_4th) 
         
-        my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(departamento)', sep=""))
+        my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(governorate)', sep=""))
         multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$school_ipw)     
         # Adjust standard errors
         cov1_multi         <- vcovHC(multi_reg, type = "HC1")
@@ -1228,7 +1228,7 @@ server <- function(input, output, session) {
     dat_sub_reg <- reactive({
       #create database with just learning outcomes
       df_sub_reg<-school_dta_short %>%
-        mutate(codigo.modular=as.numeric(school_code)) %>%
+        mutate(organization_code=as.numeric(school_code)) %>%
         left_join(data_set_updated)
       
       
@@ -1525,7 +1525,7 @@ output$indicators_table <- DT::renderDataTable({
     metadata<-metadta
     
     weights <- school_dta_short %>%
-      mutate(codigo.modular=as.numeric(school_code)) %>%
+      mutate(organization_code=as.numeric(school_code)) %>%
       left_join(data_set_updated) %>%
       mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th) 
 
@@ -1569,7 +1569,7 @@ output$indicators_table <- DT::renderDataTable({
     #Now do breakdown by Urban/Rural
     #urban
     sumstats_school_urban <- school_dta_short %>%
-      mutate(codigo.modular=as.numeric(school_code)) %>%
+      mutate(organization_code=as.numeric(school_code)) %>%
       left_join(data_set_updated) %>%
       filter(rural==FALSE) %>%
       mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
@@ -1602,7 +1602,7 @@ output$indicators_table <- DT::renderDataTable({
     
     #rural
       sumstats_school_rural <- school_dta_short %>%
-        mutate(codigo.modular=as.numeric(school_code)) %>%
+        mutate(organization_code=as.numeric(school_code)) %>%
         left_join(data_set_updated) %>%
         filter(rural==TRUE) %>%
         mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
@@ -1712,7 +1712,7 @@ output$indicators_table <- DT::renderDataTable({
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Peru 2019",
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
                 escape = FALSE,
