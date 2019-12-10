@@ -161,10 +161,12 @@ ui <- navbarPage("Global Education Policy Dashboard",
                         tabPanel("Bivariate Regression Analysis", value=5, 
                                  p('This tool generates scatter plots between any two indicators, and shows the regression line and coefficients from 
                                    a simple bivariate OLS regression of the first indicator on the second.'),
+                                 
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
+                                 uiOutput("plot_choices")  %>% withSpinner(), 
                                  downloadButton("downloadregplot", "Download"),
-                                 plotOutput("regplot", height=1400)
+                                 plotOutput("regplot", height=600)
                                  ),
                         tabPanel("Multivariate Regression Tool", value=7, 
                                  p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
@@ -986,15 +988,15 @@ server <- function(input, output, session) {
     #Regression Analysis of key indicators
     #########################################
     
-    
-    regp<- reactive({
+    plotod <- reactive ({
+      
       
       if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         df_reg_plot <- dat() %>%
           select(one_of(ind_list), school_code) %>%
           rowid_to_column("ID") %>%
           pivot_longer(cols=one_of(ind_list),
-                     names_to='indicators', values_to='values') %>%
+                       names_to='indicators', values_to='values') %>%
           left_join(dat_reg()) %>%
           left_join(labels_df) 
         
@@ -1007,19 +1009,60 @@ server <- function(input, output, session) {
           left_join(dat_reg()) %>%
           left_join(labels_df) 
       }
+      
+      df_reg_plot
+
+    })
+    
+    
+    #Allow user to select choices of indicator to show histograms
+    ploto_choices <- reactive({
+      
+      return(as.character(unique(plotod()$indicator_labels)))
+      
+    })
+    
+    #Make default one of our main indicators
+    plot_selected <- reactive({
+      
+      
+      temp_plot <- plotod() %>%
+        filter(indicator_labels %in% main_indicator_labels)
+      
+      return(as.character(unique(temp_plot$indicator_labels)))
+      
+    })
+    
+    #update select input list with these values
+    output$plot_choices = renderUI({
+      
+      
+      selectizeInput('plot_choose',"Choose Additional Sub-Indicators to plot",  choices = ploto_choices(),
+                     selected=plot_selected(), 
+                     multiple = TRUE)
+      
+    })
+
+    regp<- reactive({
+      
+      df_reg_plot_dta<-plotod() %>%
+        filter(indicator_labels %in% input$plot_choose)
 
       
-      regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=y, group=indicator_labels, colour=indicator_labels)) +
+      regplots<- ggplot(data=na.omit(df_reg_plot_dta), aes(x=values, y=y, group=indicator_labels, color=
+                                                             if_else((indicator_labels %in% main_indicator_labels), 
+                                                                                                                 "#2C89C4" ,"#ff0000"  ))) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes(weight = school_ipw)) +
         facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
+        scale_color_manual(labels = c( "Primary Indicator", "Sub-Indicator"),  values= c( "#ff0000", "#2C89C4")) +
         bbc_style() +
         theme(
           text = element_text(size = 16),
           
         ) +
         expand_limits(x = 0, y = 0) +
-        ggtitle(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices)) +
+        ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices),50)) +
         labs(colour = "Indicator") +
         ylab(input$reg_choices) +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
@@ -1028,6 +1071,12 @@ server <- function(input, output, session) {
       
       
       regplots
+      
+      
+      
+      
+      
+      
       
     })
     output$regplot<-renderPlot({

@@ -18,6 +18,64 @@ library(flextable)
 library(ggridges)
 library(scales)
 library(spatstat)
+library(ggradar)
+
+# define stle for ggplot based on BBC plotting styles
+bbc_style <- function() {
+  font <- "Helvetica"
+  
+  ggplot2::theme(
+    
+    #Text format:
+    #This sets the font, size, type and colour of text for the chart's title
+    plot.title = ggplot2::element_text(family=font,
+                                       size=28,
+                                       face="bold",
+                                       color="#222222"),
+    #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+    plot.subtitle = ggplot2::element_text(family=font,
+                                          size=22,
+                                          margin=ggplot2::margin(9,0,9,0)),
+    plot.caption = ggplot2::element_blank(),
+    #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+    
+    #Legend format
+    #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+    legend.position = "top",
+    legend.text.align = 0,
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    legend.key = ggplot2::element_blank(),
+    legend.text = ggplot2::element_text(family=font,
+                                        size=18,
+                                        color="#222222"),
+    
+    #Axis format
+    #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_text(family=font,
+                                      size=18,
+                                      color="#222222"),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    
+    #Grid lines
+    #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank(),
+    
+    #Blank background
+    #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+    panel.background = ggplot2::element_blank(),
+    
+    #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+    strip.background = ggplot2::element_rect(fill="white"),
+    strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+
 ```
 
 ##
@@ -131,15 +189,15 @@ learning_data_plot <- final_indicator_data_LERN %>%
     mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
   filter(!is.na(rural))
 
-learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(weighted.median(student_knowledge, school_ipw, na.rm=T),2))
+learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(weighted.median(student_knowledge, school_ipw, na.rm=T),1))
 
   ggplot(learning_data_plot, aes(x=Type, y=student_knowledge, fill=Gender)) + #now plot the output in a bar graph
     geom_boxplot(aes(weight=school_ipw), position="dodge") +
     geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
-              position = position_dodge(width = 0.8), size = 3, vjust = -0.65) +
+              position = position_dodge(width = 0.8), size = 3, vjust = 1) +
   xlab(str_wrap("Urban/Rural Status", width=75))+
   ylab("Fraction Correct on 4th Grade Assessment") +
-  ggtitle(str_wrap("Boxplot of Student Math and Language Learning by Gender and Urban/Rural", width=75)) +
+  ggtitle(str_wrap("Boxplot of Student Learning by Gender and Urban/Rural", width=75)) +
   scale_fill_discrete(name="Gender") +
   theme_bw() +
     theme(legend.position = "bottom") 
@@ -168,7 +226,7 @@ infr_urban_rural <- urban_rural %>%
   mutate(weight=school_ipw/sum(school_ipw)) %>%
   ungroup() %>%
   ggplot(aes(x=infrastructure))  +
-    geom_density(aes(fill=Type , weight=weight), alpha=0.4) +
+    geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
     theme_bw() +
   labs(x='Infrastructure Index')+
   ggtitle("Infrastructure Across Urban/Rural")
@@ -217,7 +275,151 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
 
 
 ```
+## Radar plot
 
+```{r radar}
+#get list of de facto indicators
+main_indicator_labels<-c( 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         'Teaching - Intrinsic Motivation', 
+                         'Inputs & Infrastructure - Monitoring',
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
+
+    )  
+    
+    indicators_list<-c(
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                       'intrinsic_motivation', 
+                       'school_monitoring', 
+                       'school_management_attraction', 
+                       'school_selection_deployment', 
+                       'school_support', 
+                       'principal_evaluation'
+
+    )
+
+    labels_df_radar<-data.frame(indicators=as.character(indicators_list),
+                          indicator_labels=as.character(main_indicator_labels))
+    
+    school_ipw<-school_dta_short$school_ipw
+    
+    #get de facto data
+    data_radar <- school_dta_short %>%
+      select(school_code, indicators_list, school_ipw) %>%
+      #mutate_at(.vars = indicators_list, scales::rescale) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=school_ipw, na.rm=TRUE) %>%
+      mutate(group="De Facto") %>%
+      select(group=group, everything())
+
+
+    data_radar2 <- data_radar %>%
+      mutate_at(.vars=indicators_list, ~as.numeric(sample_n(as_tibble(c(1:5)),1)[1,1])) %>%
+      mutate(group="De Jure") %>%
+      select(group=group, everything())
+
+    
+    data_radar<- data_radar %>%
+      bind_rows(data_radar2)
+    
+    #score expert data (this requires a lot of hard coding and transcribing)
+    expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
+    #read in data
+    
+    #start with teachers
+    expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') 
+    
+    expert_dta_teachers_shaped<-data.frame(t(expert_dta_teachers[-1]))
+    colnames(expert_dta_teachers_shaped) <- expert_dta_teachers$Question..
+    
+    #create indicators
+     expert_dta_teachers_final <- expert_dta_teachers_shaped %>%
+      rownames_to_column() %>%
+      filter(rowname=='Answer') %>%
+      select(-rowname)
+    
+    attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Question
+
+    expert_dta_teachers_final <- expert_dta_teachers_final %>%
+      mutate(initial_teacher_salary=2800.4/6947.3) %>% # based on A4 and GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  Also see https://www.cgdev.org/blog/chart-week-teacher-pay-around-world-beyond-disruption-and-deskilling
+      mutate(incentives_hard_to_staff = as.numeric(NA),
+             career_path_teachers = as.numeric(NA) ) %>%
+      mutate(teacher_attraction=)
+    
+    
+    expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'Inputs')
+    expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'School_Management')
+    expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'Learners')
+    
+
+        
+   #create radar plot
+    ggradar(data_radar,
+            grid.min=1,
+            grid.mid=3,
+            grid.max=5,
+            values.radar=c("1", "3", "5"),
+            axis.label.size=3,
+            axis.label.offset = 1.25,
+            axis.labels= str_wrap(main_indicator_labels,15),
+            plot.extent.x.sf = 1.5, 
+            plot.extent.y.sf = 1.3,
+            legend.text.size = 3
+              ) +
+      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+      theme_minimal()+
+      theme(    axis.title = ggplot2::element_blank(),
+    axis.text.x = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank()
+
+    )
+    
+```
+
+## De-Facto Policy
+
+```{r defacto}
+
+    #get de facto data
+data_defacto <- school_dta_short %>%
+    mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+    filter(!is.na(rural)) %>%
+      select(school_code,Type, indicators_list, school_ipw) %>%
+      pivot_longer(cols=indicators_list,
+               names_to = "indicators",
+               values_to = "indicator_values")
+
+  ggplot(data=data_defacto, aes(x=indicators, y=indicator_values, fill='#ff0000')) + #now plot the output in a bar graph
+    geom_boxplot(position="dodge") +
+    scale_x_discrete(labels = str_wrap(main_indicator_labels, width = 25)) + 
+  xlab(str_wrap("Policy Lever Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Policy Levers", width=75)) +
+  scale_fill_discrete(name="Rural Status") +
+  theme_bw() +
+    theme(legend.position = "none") +
+    coord_flip()
+
+dataMedian <- summarise(group_by(data_defacto, indicators), MD = round(median(indicator_values, na.rm=T),1))
+datafirst <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.25), na.rm=TRUE),1))
+datathird <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE),1))
+
+```
 
 
 ## Overall performance

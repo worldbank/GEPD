@@ -711,6 +711,25 @@ call_out_scorer <- function(var, pctl) {
 #        m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
 #        m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)) 
 
+
+#create a dataset with observations with issues based on enumerator calling out items
+assess_4th_grade_dta_issues <- assess_4th_grade_dta %>%
+  mutate(
+         m8saq2_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])), 
+         m8saq3_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])),
+         m8sbq1_number_sense_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])))   %>%
+  filter(m8saq2_id_tot>3 | m8saq3_id_tot>3 | m8sbq1_number_sense_tot>3) 
+
+assess_4th_grade_dta_issues %>%
+  write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues.csv"))
+
+assess_4th_grade_dta_issues %>%
+  group_by(school_code) %>%
+  summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
+
+
+
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 assess_4th_grade_dta<- assess_4th_grade_dta %>%
   mutate_at(vars(starts_with("m8saq5"), 
@@ -2080,7 +2099,7 @@ if (extra_info=='yes') {
 # extrapolation UNEP/GRID-Geneva.
 
 #Load original sample of schools
-currentDate<-c("2019-07-22")
+currentDate<-c("2019-10-11")
 sample_folder <- paste(project_folder,country_name,year,"Data/sampling/", sep="/")
 sample_frame_name <- paste(sample_folder,"school_sample_",currentDate,".RData", sep="")
 
@@ -2088,13 +2107,13 @@ load(sample_frame_name)
 
 
 #open the raster
-raster_folder <- file.path(paste(project_folder,country_name,year,"Data/Maps/GDP_PERU/", sep="/"))
+raster_folder <- file.path(paste(project_folder,country_name,year,"Data/Maps/GDP_JOR/", sep="/"))
 
 gdp_raster <- raster::raster(paste(raster_folder, "GDP.tif", sep="/"))
 
 #add GDP to database
 school_gdp <- school_dta_short %>%
-  mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+  mutate(organization_code=as.numeric(school_code_preload)) %>%
   left_join(data_set_updated) %>%
   mutate(longitude=as.character(longitude)) %>%
   mutate(latitude=as.character(latitude)) %>%
@@ -2121,7 +2140,7 @@ school_gdp <- as.data.frame(school_gdp) %>%
 
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
-impdata<-mice::mice(school_dta_short, m=5,
+impdata<-mice::mice(school_dta_short, m=1,
            method='rf',
            maxit = 50, seed = 500)
 

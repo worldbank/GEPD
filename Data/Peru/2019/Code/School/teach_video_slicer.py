@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# # TEACH Video Clip Creator
+# 
+# This program will create 15 minute chunks of videos for the TEACH graders to use to evaluate teacher pedagogical skills.
+# 
+# The program will use Python to clip the longer classroom videos into 15 minute chunks.
+
+# In[1]:
+
+
+# Import everything needed to edit video clips
+from moviepy.editor import *
+
+#import tool for dealing with files and paths
+from pathlib import Path, PureWindowsPath
+
+#Allow showing video in python notebook
+from IPython.display import Video
+
+
+#specify file path
+data_folder=Path("C:/Users/wb469649/WBG/Sergio Venegas Marin - Videos_Peru/")
+
+
+# # Test Case
+# 
+# Now I will open a test clip to see how things are working.  This will help us understand how well the program is functioning.
+
+# In[2]:
+
+
+#specify file to open
+file_to_open = data_folder / 'Ruta 1' / 'Video' / '256305-(1) IE18113 Amazonas .mp4'
+
+print(file_to_open)
+
+
+# Now we will create a subclip between 10 and 10:30 minutes of the video.
+
+# In[3]:
+
+
+#Calculate duration of video
+vid=VideoFileClip(str(file_to_open))
+
+vid_duration=vid.duration
+print(vid_duration)    
+
+
+# In[4]:
+
+
+# Load test clip and select the subclip 00:10:00 - 00:10:30
+clip = vid.subclip('00:10:00','00:10:30')
+
+
+
+clip.ipython_display(width=280)
+
+
+
+# Now we will save the clip to the folder.
+
+# In[5]:
+
+
+
+
+#path to saved file
+file_to_write= data_folder / 'Ruta 1' / 'Video_clips' / '256305-(1) IE18113 Amazonas - Test Clip 1 .mp4'
+
+#write the clip
+clip.write_videofile(str(file_to_write), preset='veryfast', threads=2)
+
+
+# ## Loop through all videos and create clips
+# 
+# Now that we have completed a test case, we will loop through all the videos and then create two clips for each video.  One clip will be between 10 and 25 minutes.  The other clip will span from 30 minutes to 45 minutes.  These clips should be checked by hand to report any mistakes or problems. This python code does a nice job of automating the process of creating the clips, but human eyes should verify the quality.
+# 
+# Because of the large file sizes and disk space constraints, I have set up the code to run in chunks, based on the enumerator routes (Ruta 1, Ruta 2, Ruta 3, ...)
+
+# In[6]:
+
+
+# first define the route "chunk"
+chunk = 'Ruta 20'
+
+path_to_open = data_folder / chunk / 'Video' 
+path_to_write = data_folder / chunk / 'Video_clips' 
+
+Path(path_to_write).mkdir(parents=True, exist_ok=True)
+print(path_to_write)
+
+
+# In[7]:
+
+
+#get list of all files
+file_list =[f for f in path_to_open.glob('**/*') if f.is_file() ]
+
+for f in file_list:
+    print(f)
+    print(f.parts[7])
+    file_name=str(f.parts[7]) #this is the 7th part of the file route, with just the file name
+    file_name_base=file_name[:-4]
+    file_name_new=file_name_base + "Clip 1 " + ".MP4"  
+    print(file_name_new)
+
+
+# In[ ]:
+
+
+for f in file_list:
+    #come up a new file name called ".. Clip1.MP4" and ".. Clip2.MP4"
+    file_name=str(f.parts[7]) #this is the 7th part of the file route, with just the file name
+    file_name=str(f.parts[7]) #this is the 7th part of the file route, with just the file name
+    file_name_base=file_name[:-4]
+    file_name_suffix=file_name[-4:]
+    file_name_new1=file_name_base + "Clip 1" + file_name_suffix 
+    file_name_new2=file_name_base + "Clip 2" + file_name_suffix 
+
+    print(file_name_new1)
+    print(file_name_new2)
+    
+    #Calculate duration of video
+    vid=VideoFileClip(str(f))
+    vid_duration=vid.duration
+    
+    #do this if video duration longer than 41 min
+    if vid_duration>= 2460:
+        print("Video is of sufficient length for two clips")
+        #Now cut the clips   
+        clip1 = vid.subclip('00:10:00','00:25:00')
+        file_to_write1= data_folder / chunk / 'Video_clips' / file_name_new1
+    
+        clip2 = vid.subclip('00:26:00','00:41:00')
+        file_to_write2= data_folder / chunk / 'Video_clips' / file_name_new2
+    
+        #write the clip
+        clip1.write_videofile(str(file_to_write1), preset='veryfast', threads=200, codec='libx264')
+        clip2.write_videofile(str(file_to_write2), preset='veryfast', threads=200, codec='libx264',  logger=None)
+        
+    #do this if video duration longer than 25 min but less than 41
+    elif vid_duration>= 1800 and vid_duration< 2460 :
+        print("Video less than 41 minutes but larger than 25 min")
+        #Now cut the clips   
+        clip1 = vid.subclip('00:10:00','00:25:00')
+        file_to_write1= data_folder / chunk / 'Video_clips' / file_name_new1
+    
+        #write the clip
+        clip1.write_videofile(str(file_to_write1), preset='veryfast', threads=200, codec='libx264')
+    
+    else:
+        print("Video of insufficient length")
+

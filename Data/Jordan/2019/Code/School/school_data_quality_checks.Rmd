@@ -545,9 +545,11 @@ teacher_roster_list<-teacher_roster %>%
   select( school_code, questionnaireteachcode2,  teacher_number, teacher_name, school_province_preload, school_district_preload, school_name_preload, lat, lon) 
 
 
-orphan_fix_list <- readxl::read_xlsx(path=paste(save_folder, 'orphan teachers.xlsx', sep="/"), sheet = 'manually mathched by marta') %>%
+orphan_fix_list <- readxl::read_xlsx(path=paste(save_folder, 'Corrections/jordan_orphan_teachers.xlsx', sep="/"), sheet = 'jordan_orphan_teachers') %>%
   select(school_code, interview__key, m3sb_tnumber, corrected_code) %>%
-  mutate(teacher_number=corrected_code) %>%
+  mutate(teacher_number=as.numeric(corrected_code),
+         m3sb_tnumber=as.numeric(m3sb_tnumber),
+         corrected_code=as.numeric(corrected_code)) %>%
   left_join(teacher_roster_list) %>%
   mutate(corrected_name=teacher_name) %>%
   select(school_code, m3sb_tnumber, corrected_name, corrected_code)
@@ -557,7 +559,8 @@ orphan_ok_list <- readxl::read_xlsx(path=paste(save_folder, 'orphan teachers.xls
   mutate(teacher_number=questionnaireteachcode2) %>%
   left_join(teacher_roster_list) %>%
   mutate(corrected_name=teacher_name,
-         corrected_code=questionnaireteachcode2) %>%
+         corrected_code=as.numeric(questionnaireteachcode2),
+         m3sb_tnumber=as.numeric(m3sb_tnumber)) %>%
   select(school_code, m3sb_tnumber, corrected_name, corrected_code)
 
 orphan_fixes <- orphan_fix_list %>%
