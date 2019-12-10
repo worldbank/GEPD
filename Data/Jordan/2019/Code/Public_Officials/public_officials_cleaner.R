@@ -192,37 +192,37 @@ public_officials_dta <- public_officials_dta %>%
     between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
     between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
   ),
-         QB4q2= case_when(
-           QB4q2>=120 ~ 5,
-           QB4q2>=110 ~ 4,
-           QB4q2>=100 ~ 3,
-           QB4q2>=90 ~ 2,
-           QB4q2>=80 ~ 1,
-           TRUE ~ 1),
-         IDM1q3=case_when(
-           IDM1q3==0 ~ 5,
-           (IDM1q3>0 & IDM1q3<=5) ~ 4,
-           (IDM1q3>5 & IDM1q3<=10) ~ 3,
-           (IDM1q3>10 & IDM1q3<=15) ~ 2,
-           TRUE ~ 1),
-         IDM3q1=case_when(
-           IDM3q1==0 ~ 5,
-           (IDM3q1>0 & IDM3q1<=5) ~ 4,
-           (IDM3q1>5 & IDM3q1<=10) ~ 3,
-           (IDM3q1>10 & IDM3q1<=15) ~ 2,
-           TRUE ~ 1),
-         IDM3q2=case_when(
-           IDM3q2==0 ~ 5,
-           (IDM3q2>0 & IDM3q2<=5) ~ 4,
-           (IDM3q2>5 & IDM3q2<=10) ~ 3,
-           (IDM3q2>10 & IDM3q2<=15) ~ 2,
-           TRUE ~ 1),
-         IDM3q3=case_when(
-           IDM3q3==0 ~ 5,
-           (IDM3q3>0 & IDM3q3<=5) ~ 4,
-           (IDM3q3>5 & IDM3q3<=10) ~ 3,
-           (IDM3q3>10 & IDM3q3<=15) ~ 2,
-           TRUE ~ 1)
+  QB4q2= case_when(
+    QB4q2>=120 ~ 5,
+    QB4q2>=110 ~ 4,
+    QB4q2>=100 ~ 3,
+    QB4q2>=90 ~ 2,
+    QB4q2>=80 ~ 1,
+    TRUE ~ 1),
+  IDM1q3=case_when(
+    (IDM1q3>=0 & IDM1q3<=5) ~ 5,
+    (IDM1q3>5 & IDM1q3<=10) ~ 4,
+    (IDM1q3>10 & IDM1q3<=15) ~ 3,
+    (IDM1q3>15 & IDM1q3<=20) ~ 2,
+    TRUE ~ 1),
+  IDM3q1=case_when(
+    (IDM3q1>=0 & IDM3q1<=5) ~ 5,
+    (IDM3q1>5 & IDM3q1<=10) ~ 4,
+    (IDM3q1>10 & IDM3q1<=15) ~ 3,
+    (IDM3q1>15 & IDM3q1<=20) ~ 2,
+    TRUE ~ 1),
+  IDM3q2=case_when(
+    (IDM3q2>=0 & IDM3q2<=5) ~ 5,
+    (IDM3q2>5 & IDM3q2<=10) ~ 4,
+    (IDM3q2>10 & IDM3q2<=15) ~ 3,
+    (IDM3q2>15 & IDM3q2<=20) ~ 2,
+    TRUE ~ 1),
+  IDM3q3=case_when(
+    (IDM3q3>=0 & IDM3q3<=5) ~ 5,
+    (IDM3q3>5 & IDM3q3<=10) ~ 4,
+    (IDM3q3>10 & IDM3q3<=15) ~ 3,
+    (IDM3q3>15 & IDM3q3<=20) ~ 2,
+    TRUE ~ 1)
   )
     
 
