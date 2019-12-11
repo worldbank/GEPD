@@ -160,7 +160,7 @@ api_dummy <- function(cntry, yr) {
     mutate(
       value_metadata=case_when(
         value <=2 ~ "Needs Improvement",
-        value >2 & value<=3 ~ "Caution",
+        value >2 & value<4 ~ "Caution",
         value >=4 ~ "On Target"
       ))
   

@@ -286,7 +286,7 @@ main_indicator_labels<-c(
                          'Teaching - Evaluation', 
                          'Teaching - Monitoring & Accountability', 
                          'Teaching - Intrinsic Motivation', 
-                         'Inputs & Infrastructure - Monitoring',
+                         # 'Inputs & Infrastructure - Monitoring',
                          'School Management - Attraction' ,                   
                          'School Management - Selection & Deployment'  ,      
                          'School Management - Support' ,                      
@@ -301,7 +301,7 @@ main_indicator_labels<-c(
                        'teaching_evaluation', 
                        'teacher_monitoring',
                        'intrinsic_motivation', 
-                       'school_monitoring', 
+                       # 'school_monitoring', 
                        'school_management_attraction', 
                        'school_selection_deployment', 
                        'school_support', 
@@ -329,40 +329,19 @@ main_indicator_labels<-c(
       select(group=group, everything())
 
     
-    data_radar<- data_radar %>%
-      bind_rows(data_radar2)
+
     
     #score expert data (this requires a lot of hard coding and transcribing)
     expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
-    #read in data
-    
-    #start with teachers
-    expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') 
-    
-    expert_dta_teachers_shaped<-data.frame(t(expert_dta_teachers[-1]))
-    colnames(expert_dta_teachers_shaped) <- expert_dta_teachers$Question..
-    
-    #create indicators
-     expert_dta_teachers_final <- expert_dta_teachers_shaped %>%
-      rownames_to_column() %>%
-      filter(rowname=='Answer') %>%
-      select(-rowname)
-    
-    attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Question
 
-    expert_dta_teachers_final <- expert_dta_teachers_final %>%
-      mutate(initial_teacher_salary=2800.4/6947.3) %>% # based on A4 and GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  Also see https://www.cgdev.org/blog/chart-week-teacher-pay-around-world-beyond-disruption-and-deskilling
-      mutate(incentives_hard_to_staff = as.numeric(NA),
-             career_path_teachers = as.numeric(NA) ) %>%
-      mutate(teacher_attraction=)
-    
-    
-    expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'Inputs')
-    expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'School_Management')
-    expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_VD.xlsx', sep="/"), sheet = 'Learners')
-    
+    expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
-        
+    expert_dta_radar <- expert_dta_final %>%
+      select(colnames(data_radar))
+    
+       data_radar<- data_radar %>%
+      bind_rows(expert_dta_radar)
+       
    #create radar plot
     ggradar(data_radar,
             grid.min=1,

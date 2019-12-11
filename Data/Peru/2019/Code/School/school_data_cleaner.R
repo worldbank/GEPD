@@ -51,8 +51,8 @@ school_dta<- school_dta %>%
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
          school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
-         m7_teach_count_pknw=m7_teach_count #this variable was mistakenly not tagged as pknw
-  ) %>%
+         m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
+         total_enrolled=m1saq7) %>%
   mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
   mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
 
@@ -73,7 +73,7 @@ preamble_info <- c( 'interview__id', 'school_code',
                    'school_name_preload', 'school_address_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon' 
+                   'survey_time', 'lat', 'lon', 'total_enrolled' 
                    )
 
 drop_school_info <- c(
@@ -878,7 +878,13 @@ ecd_dta <- ecd_dta %>%
 #calculate students percent correct
 ecd_dta <- ecd_dta %>%
   mutate(ecd_student_knowledge=(ecd_math_student_knowledge+ecd_literacy_student_knowledge+
-                                  ecd_exec_student_knowledge + ecd_soc_student_knowledge)/4)
+                                  ecd_exec_student_knowledge + ecd_soc_student_knowledge)/4) %>%
+  mutate(ecd_student_proficiency=100*as.numeric(ecd_student_knowledge>=80),
+         ecd_math_student_proficiency=100*as.numeric(ecd_math_student_knowledge>=80),
+         ecd_literacy_student_proficiency=100*as.numeric(ecd_literacy_student_knowledge>=80),
+         ecd_exec_student_proficiency=100*as.numeric(ecd_exec_student_knowledge>=80),
+         ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80),
+         )
 #save ecd data at student level anonymized
 ecd_dta_anon <- ecd_dta %>%
   select(school_code, ecd_student_number, ecd_student_age, ecd_student_male, 
@@ -978,7 +984,7 @@ final_indicator_data_INPT <- school_data_INPT %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_INPT=n_miss_row(.)) %>%
-  mutate(inputs=0.3333*textbooks+blackboard_functional + 0.6667*pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
+  mutate(inputs=textbooks+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
   
@@ -1013,7 +1019,7 @@ school_data_INFR <- school_data_INFR %>%
     # exist, separate for boys/girls, clean, private, useable,  handwashing available
     toilet_exists==0  ~ 0,
     toilet_exists==1 & toilet_usable==0 ~ 0.25,
-    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing + toilet_soap)/4,
+    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing )/3,
     TRUE ~ 0
     )) 
 
@@ -1652,26 +1658,32 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
 #############################################
 ##### School  Inputs and Infrastructure Standards ###########
 #############################################
+#   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
+
+school_data_ISTD <- school_data_IMON %>%
+  mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                    pattern="m1scq13_imon__")], na.rm=TRUE),
+         standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                             pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
+  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2)
 
 
-
+final_indicator_data_ISTD <- school_data_ISTD %>%
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_ISTD=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 #############################################
 ##### School  Inputs and Infrastructure Monitoring ###########
 #############################################
 
 # School Survey. This lever measures the extent to which there is a monitoring system in place to ensure that the inputs that must be available at the schools are in fact available at the schools. This set of questions will include three aspects: 
-#   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
 # - 1 Point. Are all input items (functioning blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade classrooms, basic classroom furniture, and at least one computer in the schools) being monitored? (partial credit available) 
 # - 1 Point. Are all infrastructure items (functioning toilets, electricity, drinking water, and accessibility for people with disabilities) being monitored? (partial credit available) 
 # - 1 Point. Is the community involved in the monitoring?
 
 school_data_IMON <- school_data_IMON %>%
-  mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
-                                                   pattern="m1scq13_imon__")], na.rm=TRUE),
-         standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
-                                                            pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
-  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/10) %>%
   mutate(monitoring_inputs=if_else(m1scq1_imon==1,
                                    rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
@@ -1682,7 +1694,7 @@ school_data_IMON <- school_data_IMON %>%
                                    0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
-  mutate(school_monitoring=1+standards_monitoring+monitoring_inputs+monitoring_infrastructure+parents_involved)
+  mutate(school_monitoring=1+1.5*monitoring_inputs+1.5*monitoring_infrastructure+parents_involved)
   
 
 
@@ -1697,8 +1709,26 @@ final_indicator_data_IMON <- school_data_IMON %>%
 ##### School School Management Clarity of Functions  ###########
 #############################################
 
-
-
+school_data_SCFN <- school_data_PKNW %>%
+  mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
+         materials_scfn=if_else((m7sfq15b_pknw__0==1 | m7sfq15b_pknw__98==1),0,1),
+         hiring_scfn=if_else((m7sfq15c_pknw__0==1 | m7sfq15c_pknw__98==1),0,1),
+         supervision_scfn=if_else((m7sfq15d_pknw__0==1 | m7sfq15d_pknw__98==1),0,1),
+         student_scfn=if_else((m7sfq15e_pknw__0==1 | m7sfq15e_pknw__98==1),0,1),
+         principal_hiring_scfn=if_else((m7sfq15f_pknw__0==1 | m7sfq15f_pknw__98==1),0,1),
+         principal_supervision_scfn=if_else((m7sfq15g_pknw__0==1 | m7sfq15g_pknw__98==1),0,1)
+         ) %>%
+  mutate(school_management_clarity=1+
+           (infrastructure_scfn+materials_scfn)/2+
+           (hiring_scfn + supervision_scfn)/2 +
+           student_scfn +
+           (principal_hiring_scfn+ principal_supervision_scfn)/2
+         )
+final_indicator_data_SCFN <- school_data_SCFN %>%
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_SCFN=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 #############################################
 ##### School School Management Attraction  ###########
@@ -1707,11 +1737,20 @@ final_indicator_data_IMON <- school_data_IMON %>%
 # This policy lever measures whether the right candidates are being attracted to the profession of school principals. The questions will aim to capture the provision of benefits to attract and maintain the best people to serve as principals. 
 # 
 # Scoring: 
-#   - For now, score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
-
+#   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
+# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  
+       
 school_data_SATT <- school_data_SATT %>%
-  mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt)) %>%
-  mutate(school_management_attraction=principal_satisfaction)
+  mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
+         principal_salary=12*m7shq2_satt/22833	) %>%
+  mutate(
+         principal_salary_score=case_when(
+           between(principal_salary,0,0.5) ~ 1,
+           between(principal_salary,0.5,0.75) ~ 2,
+           between(principal_salary,0.75,1) ~ 3,
+           between(principal_salary,1,1.5) ~ 4,
+           between(principal_salary,1.5,5) ~ 5)) %>%
+  mutate(school_management_attraction=(principal_satisfaction+principal_salary_score)/2)
   
 final_indicator_data_SATT <- school_data_SATT %>%
   group_by(school_code) %>%
@@ -1778,8 +1817,7 @@ school_data_SSUP <- school_data_SSUP %>%
                                                    pattern="m7sgq4_ssup__")], na.rm=TRUE),
                                     0),
          principal_used_skills=if_else(m7sgq3_ssup==1,
-                                       bin_var(m7sgq5_ssup,1),
-                                       0),
+                                       bin_var(m7sgq5_ssup,1),0),
          principal_offered=if_else((m7sgq7_ssup==2 | m7sgq7_ssup==3 | m7sgq7_ssup==4 | m7sgq7_ssup==5),1,0)
   ) %>%
   mutate(school_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
@@ -1849,7 +1887,7 @@ keep_info <-       c('school_code',
                      'school_name_preload', 'school_address_preload', 
                      'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                     'survey_time', 'lat', 'lon')
+                     'survey_time', 'lat', 'lon', 'total_enrolled')
 
 if (exists('final_school_data')) {
   rm('final_school_data')
@@ -1915,6 +1953,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
             'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
             'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
+            'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
@@ -1928,7 +1967,9 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
             'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
             'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-            'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+            'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+            'standards_monitoring',
+            'school_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
             'school_management_attraction', 'principal_satisfaction',
             'school_selection_deployment', 
             'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
@@ -1968,7 +2009,8 @@ for (i in ind_list ) {
 
 
 school_dta_short <- final_school_data %>%
-  select(keep_info, ind_list)
+  select(keep_info,  ind_list)
+
 
 write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
 write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)
@@ -2056,7 +2098,7 @@ data_list <- c('school_dta', 'school_dta_short', 'school_dta_short_imp', 'school
 
 save(list=data_list, file = file.path(save_folder, "school_survey_data.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
+save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon' ), file = file.path(save_folder, "school_indicators_data.RData"))
 
 
 if (backup_onedrive=="yes") {

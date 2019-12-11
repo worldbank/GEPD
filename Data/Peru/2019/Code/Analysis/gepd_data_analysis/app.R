@@ -189,6 +189,9 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  selectizeInput("imputed", "Use Dataset that uses imputation for missing values, rather than raw dataset?", 
                                                 choices=c("No", "Yes"),
                                                 selected="No")   ,
+                                 selectInput("stud_level_reg", "Use Student Level Data?",
+                                             choices=c('No', 'Yes'),
+                                             selected='No'),
                                  downloadButton("downloadmultireg", "Download"),
                                  htmlOutput("multivariate_regs", height=1400)
                         ),
@@ -250,6 +253,7 @@ server <- function(input, output, session) {
                 'student_attendance','presence_rate',  'absence_rate', 'school_absence_rate', 
                 'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
                 'operational_management', 'vignette_1',  'vignette_2', 
@@ -278,6 +282,7 @@ server <- function(input, output, session) {
                         "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
                         "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
                         "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
                         "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
@@ -306,7 +311,7 @@ server <- function(input, output, session) {
                         "Student Attendance Rate",
                         "Teacher Classroom Presence Rate", 
                         "Teacher Content Proficiency", 
-                        "1st Grade Assessment Score", 
+                        "1st Grade Assessment Proficiency", 
                         "Inputs", 
                         "Infrastructure", 
                         "Operational Management", 
@@ -319,6 +324,7 @@ server <- function(input, output, session) {
                         'Teacher Support (De Facto)', 
                         'Teacher Evaluation (De Facto)', 
                         'Teacher Monitoring & Accountability (De Facto)', 
+                        "Inputs and Infrastructure Standards", 
                         "Inputs and Infrastructure Monitoring", 
                         "School Management Attraction", 
                         "School Management Selection & Deployment",
@@ -334,7 +340,7 @@ server <- function(input, output, session) {
                        'student_attendance', 
                        'presence_rate',
                        'content_proficiency', 
-                       'ecd_student_knowledge', 
+                       'ecd_student_proficiency', 
                        'inputs', 
                        'infrastructure',
                        'operational_management', 
@@ -347,6 +353,7 @@ server <- function(input, output, session) {
                        'teaching_evaluation', 
                        'teacher_monitoring',
                        'intrinsic_motivation', 
+                       'standards_monitoring',
                        'school_monitoring', 
                        'school_management_attraction', 
                        'school_selection_deployment', 
@@ -1139,9 +1146,27 @@ server <- function(input, output, session) {
     dat_for_regs <- reactive({
       
       if (input$imputed=="Yes") {
-        school_dta_short_imp
+
+          school_dta_short_imp
+        
       } else if (input$imputed=="No") {
-        school_dta_short
+        
+        if (input$stud_level_reg=="Yes") {
+          
+          school_dta_short_merge <- school_dta_short %>%
+            select(-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+                      'student_proficient', 'student_proficient_70', 'student_proficient_75',
+                      'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+                      'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75'))
+          
+          assess_4th_grade_anon %>%
+            left_join(school_dta_short_merge)
+          
+        } else {
+        
+          school_dta_short
+          
+        }
       }
       
     })
@@ -1545,6 +1570,7 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Policy Lever (Teaching) - Evaluation', 
                          'Policy Lever (Teaching) - Monitoring & Accountability', 
                          'Policy Lever (Teaching) - Intrinsic Motivation', 
+                         'Policy Lever (Inputs & Infrastructure) - Standards',
                          'Policy Lever (Inputs & Infrastructure) - Monitoring',
                          'Policy Lever (School Management) - Attraction' ,                   
                          'Policy Lever (School Management) - Selection & Deployment'  ,      
