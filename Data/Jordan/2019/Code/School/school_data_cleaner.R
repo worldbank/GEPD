@@ -1810,6 +1810,8 @@ final_indicator_data_IMON <- school_data_IMON %>%
 ##### School School Management Clarity of Functions  ###########
 #############################################
 
+
+
 school_data_SCFN <- school_data_PKNW %>%
   mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
          materials_scfn=if_else((m7sfq15b_pknw__0==1 | m7sfq15b_pknw__98==1),0,1),
@@ -1825,9 +1827,11 @@ school_data_SCFN <- school_data_PKNW %>%
            student_scfn +
            (principal_hiring_scfn+ principal_supervision_scfn)/2
   )
-
-
-
+final_indicator_data_SCFN <- school_data_SCFN %>%
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_SCFN=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 #############################################
 ##### School School Management Attraction  ###########
 #############################################
@@ -2061,7 +2065,8 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
             'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
             'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-            'school_management_attraction', 'principal_satisfaction',
+            'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+            'school_management_attraction', 'principal_satisfaction', 
             'school_selection_deployment', 
             'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
             'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'

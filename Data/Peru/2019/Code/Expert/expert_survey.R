@@ -174,6 +174,53 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 ################################
 expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Peru_final.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal')
 
+expert_dta_learners_shaped<-data.frame(t(expert_dta_learners[-1]))
+colnames(expert_dta_learners_shaped) <- expert_dta_learners$Question..
+
+#create indicators
+expert_dta_learners_final <- expert_dta_learners_shaped %>%
+  rownames_to_column() %>%
+  filter(rowname=='Scores') %>%
+  select(-rowname)
+
+attr(expert_dta_learners_final, "variable.labels") <- expert_dta_learners$Question
+
+#nutrition
+expert_dta_learners_final <- expert_dta_learners_final %>%
+  mutate(iodization=read_var(A1),
+         iron_fortification=read_var(A2),
+         breastfeeding=read_var(A3),
+         school_feeding=read_var(A5)) %>%
+  mutate(nutrition_programs=1+iodization + iron_fortification + breastfeeding + school_feeding)
+
+#health programs
+expert_dta_learners_final <- expert_dta_learners_final %>%
+  mutate(immunization=read_var(A6),
+         healthcare_young_children=read_var(A7),
+         deworming=read_var(A8),
+         antenatal_skilled_delivery=read_var(A9)) %>%
+  mutate(health_programs=1+immunization + healthcare_young_children + deworming + 0.5*antenatal_skilled_delivery)
+
+
+#ECE programs
+expert_dta_learners_final <- expert_dta_learners_final %>%
+  mutate(pre_primary_free_some=read_var(A10),
+         developmental_standards=read_var(A11),
+         ece_qualifications=read_var(A12),
+         ece_in_service=read_var(A13)) %>%
+  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/3 + ece_in_service)
+
+# financial capacity
+expert_dta_learners_final <- expert_dta_learners_final %>%
+  mutate(anti_poverty=read_var(A16)) %>%
+  mutate(financial_capacity=1+2*anti_poverty)
+
+# caregiver skills
+expert_dta_learners_final <- expert_dta_learners_final %>%
+  mutate(good_parent_sharing=read_var(A14),
+         promote_ece_stimulation=read_var(A15)) %>%
+  mutate(caregiver_skills=1+2*good_parent_sharing+promote_ece_stimulation)
+
 
 ################################
 #trim to just important variables
@@ -194,12 +241,20 @@ teachers_drop<-expert_dta_teachers$Question..
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   select(-teachers_drop)
 
+#learners
+
+learners_drop<-expert_dta_learners$Question..
+expert_dta_learners_final <- expert_dta_learners_final %>%
+  select(-learners_drop)
+
+
 expert_dta_final<-expert_dta_teachers_final %>%
   bind_cols(expert_dta_inputs_final) %>%
   bind_cols(expert_dta_school_management_final) %>%
+  bind_cols(expert_dta_learners_final) %>%
   select(-A11.1) %>%
   mutate(group="De Jure") 
 
 write_dta(expert_dta_final,path=paste(expert_dir, 'expert_dta_final.dta', sep="/"))
 
-read_dt
+
