@@ -641,7 +641,8 @@ In the following, we test for differences in the number of students listed in th
 
 frame_test <- school_dta_short %>%
   mutate(total_enrollment_emis=total.boys+total.girls) %>%
-  mutate(total_enrollment_gap=total_enrolled-total_enrollment_emis)
+  mutate(total_enrollment_gap=total_enrolled-total_enrollment_emis) %>%
+  select(school_code, indicator_list, contains('enroll'))
 
 covariates<-indicator_list
 

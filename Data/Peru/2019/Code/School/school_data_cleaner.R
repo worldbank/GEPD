@@ -883,12 +883,13 @@ ecd_dta <- ecd_dta %>%
          ecd_math_student_proficiency=100*as.numeric(ecd_math_student_knowledge>=80),
          ecd_literacy_student_proficiency=100*as.numeric(ecd_literacy_student_knowledge>=80),
          ecd_exec_student_proficiency=100*as.numeric(ecd_exec_student_knowledge>=80),
-         ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80),
+         ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
          )
 #save ecd data at student level anonymized
 ecd_dta_anon <- ecd_dta %>%
   select(school_code, ecd_student_number, ecd_student_age, ecd_student_male, 
          ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
+         ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
          math_items, lit_items, soc_items, exec_items)
 
 

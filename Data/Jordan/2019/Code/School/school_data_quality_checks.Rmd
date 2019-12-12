@@ -704,7 +704,7 @@ In the following, we test for differences in the number of students listed in th
 ```{r sampling_frame_test}
 
 frame_test <- school_dta_short %>%
-  mutate(total_enrollment_emis=total.boys+total.girls) %>%
+  mutate(total_enrollment_emis=total_male_students+total_female_students) %>%
   mutate(total_enrollment_gap=total_enrolled-total_enrollment_emis)
 
 covariates<-indicator_list

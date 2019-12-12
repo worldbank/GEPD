@@ -663,11 +663,12 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
 
 final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
   group_by(school_code) %>%
+  mutate(number_segments=  sum(!is.na(teach_score))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select( -starts_with('interview'), -starts_with('enumerator'),
           -starts_with('m4saq1'))
 
-
+write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_score_counts.csv", sep="/"))
 
 #############################################
 ##### 4th Grade Assessment ###########
@@ -988,12 +989,13 @@ ecd_dta <- ecd_dta %>%
          ecd_math_student_proficiency=100*as.numeric(ecd_math_student_knowledge>=80),
          ecd_literacy_student_proficiency=100*as.numeric(ecd_literacy_student_knowledge>=80),
          ecd_exec_student_proficiency=100*as.numeric(ecd_exec_student_knowledge>=80),
-         ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80),
+         ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
   )
 #save ecd data at student level anonymized
 ecd_dta_anon <- ecd_dta %>%
   select(school_code, interview__key, ecd_student_number, ecd_student_age, ecd_student_male, 
          ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
+         ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
          math_items, lit_items, soc_items, exec_items)
 
 
@@ -1795,7 +1797,7 @@ school_data_IMON <- school_data_IMON %>%
                                    0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
-  mutate(school_monitoring=1+standards_monitoring+monitoring_inputs+monitoring_infrastructure+parents_involved)
+  mutate(school_monitoring=1+1.5*monitoring_inputs+1.5*monitoring_infrastructure+parents_involved)
   
 
 
