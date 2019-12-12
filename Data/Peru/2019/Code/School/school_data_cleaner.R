@@ -1671,7 +1671,7 @@ school_data_ISTD <- school_data_IMON %>%
 
 final_indicator_data_ISTD <- school_data_ISTD %>%
   group_by(school_code) %>%
-  summarise_all(~first(na.omit(.))) %>%
+  summarise_all(~first(na.omit(.))) %>%C
   mutate(n_mssing_ISTD=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 

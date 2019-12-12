@@ -129,7 +129,11 @@ teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything())
   
-
+teacher_questionnaire_school <- teacher_questionnaire %>%
+  group_by(interview__id) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  write_excel_csv(path=file.path(save_folder, "teacher_questionnaire_school_info.csv"))
+  
 #filter out teachers who did not consent to interview
 
 teacher_questionnaire <- teacher_questionnaire %>%

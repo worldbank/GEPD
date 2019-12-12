@@ -285,7 +285,7 @@ main_indicator_labels<-c(
                          'Teaching - Support', 
                          'Teaching - Evaluation', 
                          'Teaching - Monitoring & Accountability', 
-                         'Teaching - Intrinsic Motivation', 
+                         #'Teaching - Intrinsic Motivation', 
                          # 'Inputs & Infrastructure - Monitoring',
                          'School Management - Attraction' ,                   
                          'School Management - Selection & Deployment'  ,      
@@ -300,7 +300,7 @@ main_indicator_labels<-c(
                        'teacher_support', 
                        'teaching_evaluation', 
                        'teacher_monitoring',
-                       'intrinsic_motivation', 
+                       # 'intrinsic_motivation', 
                        # 'school_monitoring', 
                        'school_management_attraction', 
                        'school_selection_deployment', 
@@ -369,6 +369,22 @@ main_indicator_labels<-c(
     )
     
 ```
+```{r dejure_defacto_gap}
+#calculate gap between de_jure and de_facto
+
+defacto_dejure<-data_radar %>%
+  pivot_longer(cols=colnames(data_radar)[-1],
+               names_to='Policy',
+               values_to = 'value') %>%
+  arrange(Policy, group) %>%
+  group_by(Policy) %>%
+  summarise(gap=(nth(value,2)-nth(value, 1))/(nth(value, 2)-1))
+
+mean(defacto_dejure$gap)
+var(defacto_dejure$gap)
+
+
+```
 
 ## De-Facto Policy
 
@@ -411,10 +427,9 @@ data_plot <- public_officials_dta_clean %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   group_by(govt_tier) %>%
-  select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy,
-         impartial_decision_making) %>%
+  select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
   pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
-                      "quality_bureaucracy", "impartial_decision_making"),
+                      "impartial_decision_making","quality_bureaucracy" ),
                names_to = "indicators",
                values_to = "indicator_values") 
 
@@ -426,8 +441,8 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
               position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
     scale_x_discrete(labels = str_wrap(c("National Learning Goals",
                                          "Mandates & Accountability",
-                                         "Quality of the Bureaucracy",
-                                         "Impartial Decision Making"), width = 25)) + 
+                                         "Impartial Decision Making",
+                                         "Quality of the Bureaucracy"), width = 25)) + 
   xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
   ylab("Scale (1-5)") +
   ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
@@ -436,6 +451,22 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     theme(legend.position = "bottom") 
 
 ```
+
+```{r motivation}
+
+data_motivation <- public_officials_dta_clean %>%
+  mutate(greater_motivation=motivation_relative_start>=100,
+         satisfied=(QB4q1==4 | QB4q1==5))
+
+
+
+mean(data_motivation$greater_motivation, na.rm=T)
+
+mean(data_motivation$satisfied, na.rm=T)
+
+```
+
+
 
 ## Do public officials know the National Learning Goals?
 

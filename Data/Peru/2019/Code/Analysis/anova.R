@@ -54,20 +54,39 @@ sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (T
 load(sample_frame_name)
 
 
+assess_4th_grade_anon_aov<-assess_4th_grade_anon %>%
+  group_by(school_code) %>%
+  mutate(total_4th_count=n()) %>%
+  ungroup() %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th/total_4th_count)
+
+school_dta_short_aov<- school_dta_short %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+
 
 
 #################################
 # ANOVA
 #################################
 
-anova <- aov(student_knowledge~factor(school_code), data=assess_4th_grade_anon)
+anova <- aov(student_knowledge~factor(school_code), data=assess_4th_grade_anon_aov, weights = school_ipw)
 
 summary(anova)
 print(anova)
 #> 402908/(403059+402908)=0.4999063
 
 
-fit = lm(student_knowledge ~ factor(school_code), data=assess_4th_grade_anon)
+fit = lm(student_knowledge ~ factor(school_code), data=assess_4th_grade_anon_aov, weights = school_ipw)
 anova(fit)
 
 
+wtd.mean(school_dta_short_aov$student_knowledge, weights =school_dta_short_aov$school_ipw )
+
+wtd.mean(assess_4th_grade_anon_aov$student_knowledge, weights =assess_4th_grade_anon_aov$school_ipw )
+
+
+write_excel_csv( assess_4th_grade_anon_aov, path =  file.path(paste(save_folder, 'assess_fourth_grade_anon.csv', sep="/" )) )

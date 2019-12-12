@@ -250,7 +250,8 @@ server <- function(input, output, session) {
 
     
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
-                'student_attendance','presence_rate',  'absence_rate', 'school_absence_rate', 
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'school_absence_rate', 
                 'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
@@ -266,14 +267,16 @@ server <- function(input, output, session) {
                 'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
                 'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
                 'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                'school_management_attraction', 'principal_satisfaction',
+                'standards_monitoring',
+                'school_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'school_management_attraction', 'principal_satisfaction', 'principal_salary',
                 'school_selection_deployment', 
                 'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
                 'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
                 'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
-                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes',
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
                 'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
     )
     
@@ -295,14 +298,16 @@ server <- function(input, output, session) {
                         'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
                         'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
                         'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                        "Inputs and Infrastructure Monitoring", 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                        "School Management Attraction", 'principal_satisfaction',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 'principal_salary',
                         "School Management Selection & Deployment",
                         "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
                         "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                         "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
                         "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
-                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes',
+                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
                         "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
                         )
   
@@ -326,6 +331,7 @@ server <- function(input, output, session) {
                         'Teacher Monitoring & Accountability (De Facto)', 
                         "Inputs and Infrastructure Standards", 
                         "Inputs and Infrastructure Monitoring", 
+                        "School Management Clarity of Functions", 
                         "School Management Attraction", 
                         "School Management Selection & Deployment",
                         "School Management Support", 
@@ -355,6 +361,7 @@ server <- function(input, output, session) {
                        'intrinsic_motivation', 
                        'standards_monitoring',
                        'school_monitoring', 
+                       'school_management_clarity',
                        'school_management_attraction', 
                        'school_selection_deployment', 
                        'school_support', 
@@ -1501,54 +1508,9 @@ public_officials_dta_collapsed <- public_officials_dta_clean %>%
 
 
 
-drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
-                        'absence_rate','school_absence_rate', 'student_attendance',
-                        'math_content_knowledge', 'literacy_content_knowledge',
-                        'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
-                        'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
-                        'drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-                        'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                        'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                        'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-                        'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
-                        'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
-                        'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-                        'teacher_selection','teacher_deployment',
-                        'pre_service','practicum','in_service','opportunities_teachers_share',
-                        'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences', 
-                        'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                        'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                        'principal_satisfaction',
-                        'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                        'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
-)
 
-indicator_labels<-c('4th Grade Student Proficiency', '4th Grade Math Knowledge', '4th Grade Literacy Knowledge',
-                    'Student Attendance Rate',
-                    "Teacher Classroom Presence Rate",'Teacher Classroom Absence Rate', 'Teacher School Absence Rate', 
-                    "Teacher Content Proficiency", 'Teacher Content Knowledge', 'Teacher Math Content Knowledge', 'Teacher Literacy Content Knowledge', 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
-                    '1st Grade Assessment Score', '1st Grade Numeracy Score', '1st Grade Literacy Score', '1st Grade Executive Functioning Score', '1st Grade Socio-Emotional Score',
-                    'Inputs', 'Functioning Blackboard', 'Classroom Materials', 'Textbooks', 'Desks', 'ICT Usage', 'ICT Access',
-                    'Infrastructure', 'Clean Drinking Water', 'Functioning Toilets', 'Internet', 'Electricity', 'Disability Accessibility', 'Disability Road Access', 'School Ramps', 'Disability School Entrance', 'Classroom Ramps', 'Disability Classroom Entrance', 'Disability Screening',
-                    'Operational Management', 'Operational Management - Vignette 1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'Operational Management - Vignette 2','vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                    'Teacher Intrinsic Motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                    'Instructional Leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-                    'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
-                    'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-                    'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
-                    'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
-                    'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
-                    'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                    'Inputs and Infrastructure Monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                    'School Management Attraction', 'principal_satisfaction',
-                    'School Management Selection & Deployment',
-                    'School Management Support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                    'School Management Evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
-                    'National Learning Goals',
-                    'Mandates and Accountability',
-                    'Quality of Bureaucracy',
-                    'Impartial Decision Making'
-)
+
+
 
 #create subset with just main indicators
 
@@ -1572,6 +1534,7 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Policy Lever (Teaching) - Intrinsic Motivation', 
                          'Policy Lever (Inputs & Infrastructure) - Standards',
                          'Policy Lever (Inputs & Infrastructure) - Monitoring',
+                         "Policy Lever (School Management) - Clarity of Functions", 
                          'Policy Lever (School Management) - Attraction' ,                   
                          'Policy Lever (School Management) - Selection & Deployment'  ,      
                          'Policy Lever (School Management) - Support' ,                      
