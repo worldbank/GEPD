@@ -764,9 +764,17 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
   ungroup() %>%
   mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
          m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
+  mutate(m8saq2_id=if_else(m8saq2_id<0,0,m8saq2_id), #subtract some letters not assessed and make out of 3 points
+         m8saq3_id=if_else(m8saq3_id<0,0,m8saq3_id)) %>%
+  mutate(m8saq2_id=if_else(m8saq2_id>1,1,m8saq2_id), #subtract some letters not assessed and make out of 3 points
+         m8saq3_id=if_else(m8saq3_id>1,1,m8saq3_id)) %>%
   mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
          m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
+    mutate( 
+      m8sbq1_number_sense=if_else(m8sbq1_number_sense<0,0,m8sbq1_number_sense)) %>%
+    mutate(
+      m8sbq1_number_sense=if_else(m8sbq1_number_sense>1,1,m8sbq1_number_sense)) %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 

@@ -275,6 +275,43 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
 
 
 ```
+## correlation matrix
+
+```{r corrmat, echo=FALSE, message=FALSE, warning=FALSE, out.width = "70%"}
+
+
+
+indicator_corr_plot <- round(cor(assess_4th_grade_items , use="complete.obs"), 2)
+      
+        assess_4th_grade_corr_cap<-fig_num(name="assess_4th_grade_corr_cap", caption="Correlation Between assess_4th_grade Items")
+
+      pcorr<- ggcorrplot(assess_4th_grade_corr_plot,
+                         outline.color = "white",
+                         type="full",
+                         ggtheme = theme_bw(),
+                         colors = c("#F8696B", "#FFEB84", "#63BE7B"),
+                         legend.title = "Correlation",
+                         title = assess_4th_grade_corr_cap) + 
+        theme(
+          text = element_text(size = 16),
+        )
+      
+      m <- list(
+         l = 50,
+         r = 50,
+         b = 100,
+         t = 100,
+         pad = 4
+        )
+      ggplotly(pcorr,
+               width = 1000, height = 1000 ) %>%
+          layout(autosize = F,  margin = m)
+
+```
+
+```
+
+
 ## Radar plot
 
 ```{r radar}
@@ -378,7 +415,7 @@ defacto_dejure<-data_radar %>%
                values_to = 'value') %>%
   arrange(Policy, group) %>%
   group_by(Policy) %>%
-  summarise(gap=(nth(value,2)-nth(value, 1))/(nth(value, 2)-1))
+  summarise(gap=(nth(value,2)-nth(value, 1)))
 
 mean(defacto_dejure$gap)
 var(defacto_dejure$gap)
@@ -413,6 +450,12 @@ data_defacto <- school_dta_short %>%
 dataMedian <- summarise(group_by(data_defacto, indicators), MD = round(median(indicator_values, na.rm=T),1))
 datafirst <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.25), na.rm=TRUE),1))
 datathird <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE),1))
+
+datagap <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE)-quantile(indicator_values, probs=c(0.25), na.rm=TRUE),1))
+summary(datafirst)
+summary(datathird)
+
+summary(datagap)
 
 ```
 
