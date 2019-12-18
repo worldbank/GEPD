@@ -16,6 +16,7 @@ library(Hmisc)
 
 
 #Create function to save metadata for each question in each module
+#The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
   varlabels <- sapply(dta, function(x) attr(x,"label"))
   vallabels <- sapply(dta, function(x) attr(x,"labels"))
@@ -33,9 +34,9 @@ makeVlist <- function(dta) {
 #read in teacher roster file
 ############################
 
-teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
+teacher_roster<-read_dta(file.path(download_folder, "questionnaire_selected.dta")) %>%
   mutate(teacher_name=m2saq2,
-         teacher_number=TEACHERS__id)
+         teacher_number=questionnaire_selected__id)
 
 ###########################
 #read in school level file
@@ -51,8 +52,7 @@ school_dta<- school_dta %>%
          lon=m1s0q9__Longitude,
          school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
-         total_enrolled=m1saq7
-  ) %>%
+         total_enrolled=m1saq7) %>%
   mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
   mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
 
@@ -69,11 +69,11 @@ indicators <- indicators %>%
 indicator_names <- indicators$indicator_tag
 
 #list additional info that will be useful to keep in each indicator dataframe
-preamble_info <- c( 'interview__key', 'school_code',
+preamble_info <- c( 'interview__id', 'school_code',
                    'school_name_preload', 'school_address_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon' , 'total_enrolled' 
+                   'survey_time', 'lat', 'lon', 'total_enrolled', 'm7saq8' 
                    )
 
 drop_school_info <- c(
@@ -92,12 +92,12 @@ drop_teacher_info <- c( "questionnaire_roster__id", "teacher_name", "teacher_num
 school_data_preamble_temp <- school_dta %>%
   group_by(school_code) %>%
   select( preamble_info) %>%
-  select(-interview__key) %>%
+  select(-interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
 school_data_preamble <- school_dta %>%
-  group_by(interview__key) %>%
-  select(interview__key, school_code) %>%
+  group_by(interview__id) %>%
+  select(interview__id, school_code) %>%
   left_join(school_data_preamble_temp)
 
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
@@ -129,11 +129,7 @@ teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything())
   
-teacher_questionnaire_school <- teacher_questionnaire %>%
-  group_by(interview__id) %>%
-  summarise_all(~first(na.omit(.))) %>%
-  write_excel_csv(path=file.path(save_folder, "teacher_questionnaire_school_info.csv"))
-  
+
 #filter out teachers who did not consent to interview
 
 teacher_questionnaire <- teacher_questionnaire %>%
@@ -177,6 +173,7 @@ teacher_questionnaire<- teacher_questionnaire %>%
          teacher_age=m3saq6,
   )
 
+
 teacher_questionnaire<- teacher_questionnaire %>%
   mutate(temp=rowSums(select(.,teacher_grd1, teacher_grd2, teacher_grd3, teacher_grd4, teacher_grd5))) %>% # here we count the number of grades present in the classroom
   mutate(multigrade=case_when(temp > 1 ~ 1,
@@ -200,7 +197,7 @@ label(teacher_questionnaire$grade) <- "Grade"
 
 
 #list additional info that will be useful to keep in each indicator dataframe
-preamble_info_teacher <- c('interview__key', 'questionnaire_roster__id', 'teacher_name', 'teacher_number',
+preamble_info_teacher <- c('interview__id', 'questionnaire_roster__id', 'teacher_name', 'teacher_number',
                           'available', 'teacher_position', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5',
                           'teacher_language', 'teacher_math', 'teacher_both_subj', 'teacher_other_subj', 'teacher_education', 'teacher_year_began',
                           'teacher_age')
@@ -227,7 +224,6 @@ for (i in indicator_names ) {
 # School survey. Percent of teachers absent. Teacher is coded absent if they are: 
 #   - not in school 
 # - in school but absent from the class 
-# - in the class but not teaching.
 
 
 bin_var <- function(var, val) {
@@ -246,7 +242,7 @@ bin_var_2 <- function(var, val) {
 }
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
 
 #Add school preamble info
@@ -263,7 +259,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
 #rename a few key variables up front
 teacher_absence_dta<- teacher_absence_dta %>%
   mutate(teacher_name=m2saq2  ,
-         teacher_number=TEACHERS__id ,
+         teacher_number=questionnaireteachcode ,
          teacher_position=m2saq4,
          teacher_permanent=bin_var(m2saq5,1),
          teacher_contract=bin_var(m2saq5,2),
@@ -308,7 +304,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
 label(teacher_absence_dta$grade) <- "Grade"
 
 #list additional info that will be useful to keep in each indicator dataframe
-preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'teacher_number',
+preamble_info_absence <- c('interview__id', 'questionnaire_selected__id', 'teacher_name', 'teacher_number',
                    'teacher_position', 'teacher_permanent', 'teacher_contract', 'teacher_temporary', 'teacher_volunteer', 'teacher_ngo', 'teacher_other',
                    'teacher_fulltime', 'teacher_male', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5', 'grade',
                    'teacher_language', 'teacher_math', 'teacher_both_subj', 'teacher_other_subj', 'subject_joined', 'm2sbq6_efft')
@@ -334,11 +330,12 @@ teacher_absence_dta <- teacher_absence_dta %>%
     m2sbq3_efft!=8   ~ 0,
     is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
   mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
-         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ))
+         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ),
+         presence_rate=100-absence_rate)
 
 
 teacher_absence_final<- teacher_absence_dta %>%
-  select(preamble_info_absence, contains('absent'))
+  select(preamble_info_absence, contains('absent')) 
 
 
 
@@ -384,7 +381,7 @@ final_indicator_data_ATTD<- school_data_INPT %>%
 #Breakdowns by Male/Female
 
 num_boys <- school_dta %>%
-  select(interview__key, m4scq4n_girls, m4scq13_girls )
+  select(interview__id, m4scq4n_girls, m4scq13_girls )
 
 final_indicator_data_ATTD_M<- school_data_INPT %>%
   left_join(num_boys) %>%
@@ -413,15 +410,9 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
 ##### Teacher Knowledge ###########
 #############################################
 
-graded_data <- "no"
+
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
-if (graded_data!='yes') {
-teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info, everything()) 
-
-} else if (graded_data=='yes') {
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
 school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "EPDash.dta"))
 
@@ -441,7 +432,7 @@ teacher_metadata <- makeVlist(teacher_assessment_dta_21)
 teacher_assessment_dta <- teacher_assessment_dta_21 %>%
   left_join(school_data_preamble_21) %>%
   select(preamble_info_21, everything()) 
-}
+
 
 #number missing
 teacher_assessment_dta <- teacher_assessment_dta %>%
@@ -462,7 +453,7 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 teacher_assessment_dta<- teacher_assessment_dta %>%
   mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var_2(.,2)  ) %>%
-  mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
+mutate_at(vars(starts_with("m5s1q"), starts_with("m5s2q")), ~bin_var(.,1)  )
 
 
 #create indicator for % correct on teacher assessment
@@ -501,34 +492,41 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
 #rename a few key variables up front
 teacher_assessment_dta<- teacher_assessment_dta %>%
   mutate(g4_teacher_name=m5sb_troster  ,
-         g4_teacher_number=m5sb_tnum   )
-
+         g4_teacher_number=m5sb_tnum) %>%
+  mutate(questionnaire_roster__id=g4_teacher_number) %>%
+  left_join(teacher_questionnaire, by=c('school_code', 'questionnaire_roster__id')) %>%
+  select(colnames(teacher_assessment_dta), g4_teacher_name, g4_teacher_number, m3saq5 )
+  
 
 #pull apart dataset with just domains
 teacher_assessment_domains <- teacher_assessment_dta %>%
   dplyr::select(typetest, school_code, literacy_content_knowledge, correct_letter, cloze, grammar, read_passage,
-                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data
+                math_content_knowledge, arithmetic_number_relations, geometry, interpret_data, m3saq5
   )
 
 
 teacher_assessment_language <-teacher_assessment_dta %>%
-  select(typetest, school_code, m5sb_tnum, lit_items) %>%
+  select(typetest, school_code, m5sb_tnum, m3saq5, lit_items) %>%
   filter(typetest==2) %>%
   select(-typetest)
 
 teacher_assessment_math <- teacher_assessment_dta %>%
-  select(typetest, school_code, m5sb_tnum, math_items) %>%
+  select(typetest, school_code, m5sb_tnum, m3saq5,  math_items) %>%
   filter(typetest==1) %>%
   select(-typetest)
 
 
-if (graded_data=='yes') {
+
 save(teacher_assessment_language, teacher_assessment_math, teacher_assessment_domains, teacher_metadata, 
-     file = file.path(save_folder, "dashboard_teacher_assessment_data.RData"))
-}
+     file = file.path(save_folder, "dashboard_teacher_assessment_data_after_2015.RData"))
+
 
 #calculate % correct for literacy, math, and total
 final_indicator_data_CONT <- teacher_assessment_dta %>%
+  mutate(questionnaire_roster__id=g4_teacher_number) %>%
+  left_join(teacher_questionnaire, by=c('school_code', 'questionnaire_roster__id')) %>%
+  mutate(teacher_began_teaching=m3saq5,
+         school_code2=school_code) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
   add_count(typetest,name='m5_teach_count_math') %>%
@@ -547,14 +545,19 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
          math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
          math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  
+
   select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
-         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'),
+         -colnames(teacher_questionnaire)) %>%
+  mutate(school_code=school_code2)
 
 #Breakdown by Male/Female
 final_indicator_data_CONT_M <- teacher_assessment_dta %>%
-  mutate(TEACHERS__id=g4_teacher_number) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+  mutate(questionnaire_roster__id=g4_teacher_number) %>%
+  left_join(teacher_questionnaire, by=c('school_code', 'questionnaire_roster__id')) %>%
+  filter(m3saq5>=2015) %>%
+  mutate(questionnaire_selected__id=g4_teacher_number) %>%
+  left_join(teacher_absence_dta, by=c('school_code', 'questionnaire_selected__id')) %>%
   filter(m2saq3==1) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
@@ -572,13 +575,16 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
          math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
          math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  
+
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
 final_indicator_data_CONT_F <- teacher_assessment_dta %>%
-  mutate(TEACHERS__id=g4_teacher_number) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+  mutate(questionnaire_roster__id=g4_teacher_number) %>%
+  left_join(teacher_questionnaire, by=c('school_code', 'questionnaire_roster__id')) %>%
+  filter(m3saq5>=2015) %>%
+  mutate(questionnaire_selected__id=g4_teacher_number) %>%
+  left_join(teacher_absence_dta, by=c('school_code', 'questionnaire_selected__id')) %>%
   filter(m2saq3==2) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
@@ -596,83 +602,11 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
          math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
          math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  
+
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
 
-
-#############################################
-### Teacher Pedagogy ###
-#############################################
-
-teacher_pedagogy <- school_dta %>%
-  select(preamble_info, starts_with('s1'), starts_with('s2'),starts_with('m4s') )
-
-# Generate useful variables
-
-# One observation per segment
-
-segment2 <- teacher_pedagogy %>%
-  select(-starts_with('s1'))
-
-segment1 <- teacher_pedagogy %>%
-  select(-starts_with('s2'))
-
-names(segment1) <- str_replace(names(segment1), "s1", "s")
-names(segment2) <- str_replace(names(segment2), "s2", "s")
-
-teacher_pedagogy_segments <- bind_rows(segment1, segment2)
-
-#create sub-indicators from TEACH
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(classroom_culture=(s_a1+s_a2)/2,
-         instruction=(s_b3+s_b4+s_b5+s_b6)/4,
-         socio_emotional_skills=(s_c7+s_c8+s_c9)/3
-         ) %>%
-  mutate(teach_score=(classroom_culture+instruction+socio_emotional_skills)/3)
-
-# Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
-# Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
-# We are only taking into account teachers for which we have at least 2 snapshots observed
-
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
-  mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
-
-#een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
-#replace tt_yes=tt_yes*100
-#egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
-#replace tt_no=tt_no*100
-
-# Time on task - Second measure
-# Proportion of classes where a low number of students are on task, a medium number of students are on task
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
-         tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
-         tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
-
-# We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
-
-# For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
-# We are only taking into account teachers for which we have at least 2 snapshots observed
-
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
-         tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
-         tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
-         tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
-
-
-
-final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
-  group_by(school_code) %>%
-  mutate(number_segments=  sum(!is.na(teach_score))) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'),
-          -starts_with('m4saq1'))
-
-write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_score_counts.csv", sep="/"))
 
 #############################################
 ##### 4th Grade Assessment ###########
@@ -685,7 +619,7 @@ assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessme
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
-
+  
 
 #number missing
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
@@ -708,7 +642,7 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
 # In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
 # Score this so that if there is a deviation from what 80% of the class says, then it is wrong.
 call_out_scorer <- function(var, pctl) {
-  1-abs(var - quantile(var, pctl, na.rm=T))
+        1-abs(var - quantile(var, pctl, na.rm=T))
 }
 # #old scoring code:
 # mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
@@ -716,25 +650,6 @@ call_out_scorer <- function(var, pctl) {
 #        m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
 #        m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
 #        m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)) 
-
-
-#create a dataset with observations with issues based on enumerator calling out items
-assess_4th_grade_dta_issues <- assess_4th_grade_dta %>%
-  mutate(
-         m8saq2_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])), 
-         m8saq3_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])),
-         m8sbq1_number_sense_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])))   %>%
-  filter(m8saq2_id_tot>3 | m8saq3_id_tot>3 | m8sbq1_number_sense_tot>3) 
-
-assess_4th_grade_dta_issues %>%
-  write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues.csv"))
-
-assess_4th_grade_dta_issues %>%
-  group_by(school_code) %>%
-  summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
-
-
 
 #recode assessment variables to be 1 if student got it correct and zero otherwise
 assess_4th_grade_dta<- assess_4th_grade_dta %>%
@@ -745,36 +660,17 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq4"),
                  starts_with("m8sbq5"),
                  starts_with("m8sbq6"),
-  ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq4_id=if_else(m8saq4_id==5,4, as.numeric(m8saq4_id))) %>% #fix case where some enumerators recorded the pre-filled answer.
-  mutate(m8saq7a_gir=bin_var(m8saq7a_gir, 3),
-         m8saq7b_gir=bin_var(m8saq7b_gir, 3),
-         m8saq7c_gir=bin_var(m8saq7c_gir, 2),
-         m8saq7d_gir=bin_var(m8saq7d_gir, 3),
-         m8saq7e_gir=bin_var(m8saq7e_gir, 4),
-         m8saq7f_gir=bin_var(m8saq7f_gir, 1),
-         m8saq7g_gir=bin_var(m8saq7g_gir, 2),
-         m8saq7h_gir=bin_var(m8saq7h_gir, 2),
-         m8saq7i_gir=bin_var(m8saq7i_gir, 4),
-         m8saq7j_gir=bin_var(m8saq7j_gir, 1),
-         m8saq7k_gir=bin_var(m8saq7k_gir, 3)) %>% #grade lonely giraffe question
+                 ), ~bin_var(.,1)  ) %>% #now handle the special cases
+  mutate(m8saq4_id=if_else(m8saq4_id==5,4,m8saq4_id)) %>% #fix case where some enumerators recorded the pre-filled answer.
   group_by(school_code) %>%
   mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
             ~call_out_scorer(.,0.8)) %>%
   ungroup() %>%
   mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
          m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
-  mutate(m8saq2_id=if_else(m8saq2_id<0,0,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=if_else(m8saq3_id<0,0,m8saq3_id)) %>%
-  mutate(m8saq2_id=if_else(m8saq2_id>1,1,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=if_else(m8saq3_id>1,1,m8saq3_id)) %>%
   mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
          m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
-    mutate( 
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense<0,0,m8sbq1_number_sense)) %>%
-    mutate(
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense>1,1,m8sbq1_number_sense)) %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 
@@ -813,18 +709,18 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
          literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
          math_student_proficient=100*as.numeric(math_student_knowledge>=80),
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
-         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
+         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
+         math_student_proficient_60=100*as.numeric(math_student_knowledge>=60))
 
 
 #save  4th grade data at student level anonymized
 assess_4th_grade_anon <- assess_4th_grade_dta %>%
-  select(school_code, interview__key, student_number, student_age, student_male, 
-         contains('student_proficient'),
+  select(school_code, student_number, student_age, student_male, 
          student_knowledge, math_student_knowledge, literacy_student_knowledge,
          math_items, lit_items)
 
 
-assess_4th_grade_metadata <- makeVlist(assess_4th_grade_dta)
+# assess_4th_grade_metadata <- makeVlist(assess_4th_grade_dta)
 
 
 save(assess_4th_grade_anon, assess_4th_grade_metadta, 
@@ -835,8 +731,8 @@ save(assess_4th_grade_anon, assess_4th_grade_metadta,
 
 
 #calculate % correct for literacy, math, and total
-final_indicator_data_LERN <- assess_4th_grade_anon %>%
-  left_join(school_dta[,c('interview__key', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+final_indicator_data_LERN <- assess_4th_grade_dta %>%
+  left_join(school_dta[,c('interview__id', 'm8_teacher_name', 'm8_teacher_code')]) %>%
   group_by(school_code) %>%
   mutate(n_students=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -844,21 +740,22 @@ final_indicator_data_LERN <- assess_4th_grade_anon %>%
 
 
 #Breakdowns by Male/Female
-final_indicator_data_LERN_M <- assess_4th_grade_anon %>%
-  left_join(school_dta[,c('interview__key', 'm8_teacher_name', 'm8_teacher_code')]) %>%
-  filter(student_male==1) %>%
+final_indicator_data_LERN_M <- assess_4th_grade_dta %>%
+  left_join(school_dta[,c('interview__id', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  filter(m8s1q3==1) %>%
   group_by(school_code) %>%
   mutate(n_students=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
 
-final_indicator_data_LERN_F <- assess_4th_grade_anon %>%
-  left_join(school_dta[,c('interview__key', 'm8_teacher_name', 'm8_teacher_code')]) %>%
-  filter(student_male==0) %>%
+final_indicator_data_LERN_F <- assess_4th_grade_dta %>%
+  left_join(school_dta[,c('interview__id', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  filter(m8s1q3==2) %>%
   group_by(school_code) %>%
   mutate(n_students=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
+
 
 #############################################
 ##### ECD Assessment ###########
@@ -870,7 +767,9 @@ final_indicator_data_LERN_F <- assess_4th_grade_anon %>%
 #read in ecd level file
 ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
 
-ecd_dta_metadata <- makeVlist(ecd_dta)
+ecd_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "ecd_assessment.dta"))
+
+ecd_dta_metadata <- makeVlist(ecd_dta_17)
 
 
 #Add school preamble info
@@ -1002,10 +901,10 @@ ecd_dta <- ecd_dta %>%
          ecd_literacy_student_proficiency=100*as.numeric(ecd_literacy_student_knowledge>=80),
          ecd_exec_student_proficiency=100*as.numeric(ecd_exec_student_knowledge>=80),
          ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
-  )
+         )
 #save ecd data at student level anonymized
 ecd_dta_anon <- ecd_dta %>%
-  select(school_code, interview__key, ecd_student_number, ecd_student_age, ecd_student_male, 
+  select(school_code, ecd_student_number, ecd_student_age, ecd_student_male, 
          ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
          ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
          math_items, lit_items, soc_items, exec_items)
@@ -1015,23 +914,23 @@ save(ecd_dta_anon, ecd_dta_metadata,
      file = file.path(save_folder, "dashboard_ecd_data.RData"))
 
 #calculate % correct for literacy, math, and total
-final_indicator_data_LCAP <- ecd_dta_anon %>%
-  left_join(school_dta[,c('interview__key',  'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
+final_indicator_data_LCAP <- ecd_dta %>%
+  left_join(school_dta[,c('interview__id', 'm6_teacher_name', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
 
 #Breakdowns of Male/Female
-final_indicator_data_LCAP_M <- ecd_dta_anon %>%
-  left_join(school_dta[,c('interview__key', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
-  filter(ecd_student_male==1) %>%
+final_indicator_data_LCAP_M <- ecd_dta %>%
+  left_join(school_dta[,c('interview__id', 'm6_teacher_name', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
+  filter(m6s1q3==1) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
 
-final_indicator_data_LCAP_F <- ecd_dta_anon %>%
-  left_join(school_dta[,c('interview__key', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
-  filter(ecd_student_male==0) %>%
+final_indicator_data_LCAP_F <- ecd_dta %>%
+  left_join(school_dta[,c('interview__id', 'm6_teacher_name', 'm6_teacher_code', 'm6_class_count', 'm6_instruction_time')]) %>%
+  filter(m6s1q3==2) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
@@ -1136,13 +1035,15 @@ school_data_INFR <- school_data_INFR %>%
          toilet_soap=as.numeric(m1sbq8_infr)) %>%
   mutate(functioning_toilet=case_when(
     # exist, separate for boys/girls, clean, private, useable,  handwashing available
-    toilet_exists==1 & toilet_usable==1 & toilet_separate==1  & toilet_private==1  & toilet_handwashing==1 ~ 1,
-    toilet_exists==0 | toilet_usable==0 | toilet_separate==0  | toilet_private==0  | toilet_handwashing==0 ~ 0
-  )) 
+    toilet_exists==0  ~ 0,
+    toilet_exists==1 & toilet_usable==0 ~ 0.25,
+    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing )/3,
+    TRUE ~ 0
+    )) 
 
 #visibility
 school_data_INFR <- school_data_INFR %>%
-  left_join(select(school_data_INPT, interview__key, m4scq8_inpt, m4scq9_inpt, m4scq10_inpt, m1sbq15_inpt )) %>%
+  left_join(select(school_data_INPT, interview__id, m4scq8_inpt, m4scq9_inpt, m4scq10_inpt, m1sbq15_inpt )) %>%
   mutate(visibility=case_when(
     m4scq10_inpt==1 &  m4scq8_inpt==1  ~ 1,
     m4scq10_inpt==0 & m4scq8_inpt==1 ~ 0)) 
@@ -1199,6 +1100,13 @@ final_indicator_data_INFR <- final_indicator_data_INFR %>%
 
 
 
+#############################################
+##### Teacher Pedagogical Skill ###########
+#############################################
+
+
+
+#final_indicator_data_PEDG <- ''
 
 
 #############################################
@@ -1280,7 +1188,7 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
   mutate(feedback_observation=if_else(m3sdq15_ildr==1 & m3sdq19_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1347,19 +1255,16 @@ principal_scorer <- function(var_guess, var_actual, var_total, margin1, margin2)
     0)
 }
 
-
-
 final_indicator_data_PKNW <- school_data_PKNW %>%
   group_by(school_code) %>%
-  select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, m7_teach_count_pknw) %>%
+  select(school_code, m7sfq5_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, m7_teach_count_pknw) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PKNW=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  %>%
   left_join(pknw_actual_combined) %>%
-  mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
-  mutate(add_triple_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T), m5s2q1c_number, m7_teach_count_pknw,0.8,1),
-         multiply_double_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq6_pknw')), na.rm=T), m5s2q1e_number, m7_teach_count_pknw,0.8,1),
-         complete_sentence_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq7_pknw')), na.rm=T), m5s1q1f_grammer, m7_teach_count_pknw,0.8,1),
+  mutate(add_triple_digit_pknw=principal_scorer(m7sfq5_pknw, m5s2q1c_number, m7_teach_count_pknw,0.8,1),
+         multiply_double_digit_pknw=principal_scorer(m7sfq6_pknw, m5s2q1e_number, m7_teach_count_pknw,0.8,1),
+         complete_sentence_pknw=principal_scorer(m7sfq7_pknw, m5s1q1f_grammer, m7_teach_count_pknw,0.8,1),
          experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, m7_teach_count_pknw,0.8,1),
          textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt, m4scq4_inpt,0.8,3),
          blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
@@ -1371,10 +1276,12 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
     (principal_knowledge_avg >0.6 & principal_knowledge_avg<=0.7) ~ 2,
     (principal_knowledge_avg <=0.6 ) ~ 1  )
     ) %>%
-  select(school_code, starts_with('m7sfq5_pknw'),m5s2q1c_number, starts_with('m7sfq6_pknw'), m5s2q1e_number, starts_with('m7sfq7_pknw'), m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
+  filter(m7saq8>=2015)  %>%
+  select(school_code, m7sfq5_pknw,m5s2q1c_number, m7sfq6_pknw, m5s2q1e_number, m7sfq7_pknw, m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw) %>%
-  select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
-         multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw)
+  select(school_code, m7sfq5_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
+         multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw) 
+  
   
 
 #############################################
@@ -1412,6 +1319,7 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
 final_indicator_data_PMAN <- final_indicator_data_PMAN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
+  filter(m7saq8>=2015)  %>%
   mutate(n_mssing_PMAN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
@@ -1488,7 +1396,7 @@ teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
 
 final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
   mutate(n_mssing_TATT=n_miss_row(.)) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1535,7 +1443,7 @@ teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
 
 final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%  
   mutate(n_mssing_TSDP=n_miss_row(.)) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1570,7 +1478,7 @@ final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%
 
 #Add in question on teach opportunities so share ways of teaching
 opp_share<- teacher_questionnaire_ILDR %>%
-  select(interview__key, m3sdq14_ildr) %>%
+  select(interview__id, m3sdq14_ildr) %>%
   mutate(opportunities_teachers_share=bin_var(m3sdq14_ildr,1))
 
 teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
@@ -1583,9 +1491,9 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
                                         0)/2,
          pre_training_practicum_lngth=case_when(
            (m3sdq6_tsup==1 & m3sdq7_tsup>=3 & m3sdq8_tsup>=1) ~  0.5,
-           (m3sdq6_tsup==1 & (m3sdq7_tsup<3 | m3sdq8_tsup<1))  ~ 0,
-           m3sdq6_tsup==2 ~ 0,
-           m3sdq3_tsup==0 ~ 0,
+            (m3sdq6_tsup==1 & (m3sdq7_tsup<3 | m3sdq8_tsup<1))  ~ 0,
+            m3sdq6_tsup==2 ~ 0,
+            m3sdq3_tsup==0 ~ 0,
            TRUE ~ 0),
          in_service_exists=bin_var(m3sdq9_tsup,1),
          in_servce_lngth=case_when(
@@ -1595,18 +1503,20 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
            TRUE ~ 0
          ),
          in_service_classroom=case_when(
-           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 2,
-           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 0.5,
            (m3sdq9_tsup==1 & m3sdq13_tsup==1)  ~ 0,
            m3sdq9_tsup==0 ~ 0,
            TRUE ~ 0
          )
-  ) %>%
+                                     ) %>%
   left_join(opp_share) %>%
   mutate(pre_service=pre_training_exists+pre_training_useful,
          practicum=pre_training_practicum+pre_training_practicum_lngth,
          in_service=0.5*in_service_exists+0.25*in_servce_lngth+0.25*in_service_classroom) %>%
   mutate(teacher_support=1+pre_service+practicum+in_service+opportunities_teachers_share) 
+  # mutate(teacher_support=if_else(teacher_support>5,5,teacher_support)) #need to fix
+
 
 
 
@@ -1614,7 +1524,7 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
 
 final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
   mutate(n_mssing_TSUP=n_miss_row(.)) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1663,7 +1573,7 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
 
 final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
   mutate(n_mssing_TEVL=n_miss_row(.)) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1685,7 +1595,7 @@ final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
 # - 1 Point. One minus the fraction of teachers that had to miss class because of any of the following: collect paycheck, school administrative procedure, errands or request of the school district office, other administrative tasks.
 
 teacher_questionnaire_TMNA2 <- teacher_questionnaire_TATT %>%
-  select(interview__key, school_code, teacher_name, teacher_number, m3seq4_tatt, m3seq5_tatt__1, m3sbq1_tatt__1, m3sbq1_tatt__2, m3sbq1_tatt__3, m3sbq1_tatt__97, m3sbq1_other_tatt )
+  select(interview__id, school_code, teacher_name, teacher_number, m3seq4_tatt, m3seq5_tatt__1, m3sbq1_tatt__1, m3sbq1_tatt__2, m3sbq1_tatt__3, m3sbq1_tatt__97, m3sbq1_other_tatt )
 
 teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
   dplyr::select(-tevl)
@@ -1722,7 +1632,7 @@ teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
 
 final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
   mutate(n_mssing_TMNA=n_miss_row(.)) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1773,6 +1683,7 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
 #############################################
 ##### School  Inputs and Infrastructure Standards ###########
 #############################################
+#   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
 
 school_data_ISTD <- school_data_IMON %>%
   mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
@@ -1788,7 +1699,6 @@ final_indicator_data_ISTD <- school_data_ISTD %>%
   mutate(n_mssing_ISTD=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
-
 #############################################
 ##### School  Inputs and Infrastructure Monitoring ###########
 #############################################
@@ -1799,6 +1709,13 @@ final_indicator_data_ISTD <- school_data_ISTD %>%
 # - 1 Point. Is the community involved in the monitoring?
 
 school_data_IMON <- school_data_IMON %>%
+    mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
+           m1scq5_imon=case_when(
+             m1scq5_imon==0 ~ 0,
+             m1scq5_imon==1 ~ 1,
+             m1scq5_imon==2 ~ 0.5,
+             TRUE ~ 0
+           )) %>%
   mutate(monitoring_inputs=if_else(m1scq1_imon==1,
                                    rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
@@ -1824,8 +1741,6 @@ final_indicator_data_IMON <- school_data_IMON %>%
 ##### School School Management Clarity of Functions  ###########
 #############################################
 
-
-
 school_data_SCFN <- school_data_PKNW %>%
   mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
          materials_scfn=if_else((m7sfq15b_pknw__0==1 | m7sfq15b_pknw__98==1),0,1),
@@ -1834,18 +1749,19 @@ school_data_SCFN <- school_data_PKNW %>%
          student_scfn=if_else((m7sfq15e_pknw__0==1 | m7sfq15e_pknw__98==1),0,1),
          principal_hiring_scfn=if_else((m7sfq15f_pknw__0==1 | m7sfq15f_pknw__98==1),0,1),
          principal_supervision_scfn=if_else((m7sfq15g_pknw__0==1 | m7sfq15g_pknw__98==1),0,1)
-  ) %>%
+         ) %>%
   mutate(school_management_clarity=1+
            (infrastructure_scfn+materials_scfn)/2+
            (hiring_scfn + supervision_scfn)/2 +
            student_scfn +
            (principal_hiring_scfn+ principal_supervision_scfn)/2
-  )
+         )
 final_indicator_data_SCFN <- school_data_SCFN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SCFN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
+
 #############################################
 ##### School School Management Attraction  ###########
 #############################################
@@ -1853,18 +1769,19 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 # This policy lever measures whether the right candidates are being attracted to the profession of school principals. The questions will aim to capture the provision of benefits to attract and maintain the best people to serve as principals. 
 # 
 # Scoring: 
-#   - For now, score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
-
+#   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
+# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  
+       
 school_data_SATT <- school_data_SATT %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=m7shq2_satt/6947.3) %>%
+         principal_salary=12*m7shq2_satt/22833	) %>%
   mutate(
-    principal_salary_score=case_when(
-      between(principal_salary,0,0.25) ~ 1,
-      between(principal_salary,0.25,0.33) ~ 2,
-      between(principal_salary,0.33,0.5) ~ 3,
-      between(principal_salary,0.5,0.67) ~ 4,
-      between(principal_salary,0.67,5) ~ 5)) %>%
+         principal_salary_score=case_when(
+           between(principal_salary,0,0.5) ~ 1,
+           between(principal_salary,0.5,0.75) ~ 2,
+           between(principal_salary,0.75,1) ~ 3,
+           between(principal_salary,1,1.5) ~ 4,
+           between(principal_salary,1.5,5) ~ 5)) %>%
   mutate(school_management_attraction=(principal_satisfaction+principal_salary_score)/2)
   
 final_indicator_data_SATT <- school_data_SATT %>%
@@ -1932,8 +1849,7 @@ school_data_SSUP <- school_data_SSUP %>%
                                                    pattern="m7sgq4_ssup__")], na.rm=TRUE),
                                     0),
          principal_used_skills=if_else(m7sgq3_ssup==1,
-                                       bin_var(m7sgq5_ssup,1),
-                                       0),
+                                       bin_var(m7sgq5_ssup,1),0),
          principal_offered=if_else((m7sgq7_ssup==2 | m7sgq7_ssup==3 | m7sgq7_ssup==4 | m7sgq7_ssup==5),1,0)
   ) %>%
   mutate(school_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
@@ -1993,7 +1909,7 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
 
 #first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
 #list additional info that will be useful to keep in each indicator dataframe
-drop_info <- c('interview__key', 'interview__key',                    
+drop_info <- c('interview__id', 'interview__key',                    
                'school_name_preload', 'school_address_preload', 
                'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
@@ -2033,9 +1949,9 @@ for (i in indicator_names ) {
     if (!exists('final_school_data')) {
       final_school_data<-temp
       print(i)
-      write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+      write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data_after_2015.dta", sep="")), version = 14)
       if (backup_onedrive=="yes") {
-        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data_after_2015.dta", sep="")), version = 14)
       }
       
     } else {
@@ -2043,9 +1959,9 @@ for (i in indicator_names ) {
         left_join(temp, by='school_code') %>%
         select(-ends_with(".x"), -ends_with(".y"))
       
-      write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+      write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data_after_2015.dta", sep="")), version = 14)
       if (backup_onedrive=="yes") {
-        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data_after_2015.dta", sep="")), version = 14)
       }
     }
   }
@@ -2054,18 +1970,25 @@ for (i in indicator_names ) {
 
 #add male/female breakdowns to ind_data_list
 
-ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", "final_indicator_data_CONT_M", 
-                                "final_indicator_data_CONT_F", "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F",
-                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
+                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
+                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
 
 
 #Create list of key indicators
-ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
-            'absence_rate', 'school_absence_rate', 'student_attendance',
-            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
-            'teach_score','classroom_culture','instruction','socio_emotional_skills',
-            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+            'student_proficient', 'student_proficient_70', 'student_proficient_75',
+            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
+            'presence_rate','absence_rate', 'school_absence_rate', 'student_attendance',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
+            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
             'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
@@ -2078,9 +2001,10 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
             'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
             'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-            'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
             'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
-            'school_management_attraction', 'principal_satisfaction', 
+            'standards_monitoring',
+            'school_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+            'school_management_attraction', 'principal_satisfaction',
             'school_selection_deployment', 
             'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
             'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
@@ -2098,11 +2022,11 @@ final_school_data <- final_school_data %>%
 
 
 
-write.csv(final_school_data, file = file.path(save_folder, "final_complete_school_data.csv"))
-write_dta(final_school_data, path = file.path(save_folder, "final_complete_school_data.dta"), version = 14)
+write.csv(final_school_data, file = file.path(save_folder, "final_complete_school_data_after_2015.csv"))
+write_dta(final_school_data, path = file.path(save_folder, "final_complete_school_data_after_2015.dta"), version = 14)
 if (backup_onedrive=="yes") {
-  write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
-  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+  write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data_after_2015.csv"))
+  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data_after_2015.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
 
@@ -2119,91 +2043,18 @@ for (i in ind_list ) {
 
 
 school_dta_short <- final_school_data %>%
-  select(keep_info, ind_list)
+  select(keep_info,  ind_list)
 
-write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
-write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)
+
+write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data_after_2015.csv"))
+write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data_after_2015.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
-  write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
-  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+  write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data_after_2015.csv"))
+  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data_after_2015.dta"), version = 14)
 }
 
-extra_info='no'
 
-if (extra_info=='yes') {
-#################################
-# Read in Satellite Data on GDP
-#################################
-#Data downloaded from Here:
-#https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
-#https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
-# In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
-# 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
-# The method also distinguishes between rural and urban population, assuming the latter to have a higher 
-# GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
-# product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
-# Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
-# LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
-# extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
-# constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
-# is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
-# suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
-# Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
-# extrapolation UNEP/GRID-Geneva.
-
-#Load original sample of schools
-currentDate<-c("2019-10-11")
-sample_folder <- paste(project_folder,country_name,year,"Data/sampling/", sep="/")
-sample_frame_name <- paste(sample_folder,"school_sample_",currentDate,".RData", sep="")
-
-load(sample_frame_name)
-
-
-#open the raster
-raster_folder <- file.path(paste(project_folder,country_name,year,"Data/Maps/GDP_JOR/", sep="/"))
-
-gdp_raster <- raster::raster(paste(raster_folder, "GDP.tif", sep="/"))
-
-#add GDP to database
-school_gdp <- school_dta_short %>%
-  mutate(organization_code=as.numeric(school_code_preload)) %>%
-  left_join(data_set_updated) %>%
-  mutate(longitude=as.character(longitude)) %>%
-  mutate(latitude=as.character(latitude)) %>%
-  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
-         lon=if_else(is.na(lon), as.numeric(longitude), lon)) %>%
-  filter(!is.na(lat) & !is.na(lon)) %>%
-  dplyr::select(school_code, lon, lat)
-
-
-sp::coordinates(school_gdp) <- c("lon","lat")
-school_gdp$GDP <- raster::extract(gdp_raster, school_gdp, 
-                                  buffer=1000, # 1000m radius
-                                  fun=mean,na.rm=T,
-                                  method='simple')
-
-
-school_gdp <- as.data.frame(school_gdp) %>%
-  mutate(GDP=as.numeric(GDP)) %>%
-  select(school_code, GDP)
-
-####################################
-# Multiple Imputation of missing values
-###################################
-
-#use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
-#https://academic.oup.com/aje/article/179/6/764/107562
-impdata<-mice::mice(school_dta_short, m=1,
-           method='rf',
-           maxit = 50, seed = 500)
-
-school_dta_short_imp <- mice::complete(impdata, 1)
-
-} else {
-  school_dta_short_imp <- school_dta_short
-  school_gdp <-school_dta_short
-}
 ################################
 #Store Key Created Datasets
 ################################
@@ -2212,11 +2063,8 @@ school_dta_short_imp <- mice::complete(impdata, 1)
 
 data_list <- c('school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster')
 
-save(list=data_list, file = file.path(save_folder, "school_survey_data.RData"))
+save(list=data_list, file = file.path(save_folder, "school_survey_data_after_2015.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
+save(list=c(ind_dta_list,"school_dta_short", "indicators", 'metadta',  'assess_4th_grade_anon' ), file = file.path(save_folder, "school_indicators_data_after_2015.RData"))
 
 
-if (backup_onedrive=="yes") {
-  save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
-}

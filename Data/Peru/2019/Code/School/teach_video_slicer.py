@@ -150,13 +150,13 @@ for chunk in chunks:
         vid_duration=vid.duration
     
         #do this if video duration longer than 41 min
-        if vid_duration>= 2460:
+        if vid_duration>= 2340:
             print("Video is of sufficient length for two clips")
             #Now cut the clips
-            clip1 = vid.subclip('00:10:00','00:25:00')
+            clip1 = vid.subclip('00:08:00','00:23:00')
             file_to_write1= save_folder / chunk / 'Video_clips' / file_name_new1
     
-            clip2 = vid.subclip('00:26:00','00:41:00')
+            clip2 = vid.subclip('00:24:00','00:39:00')
             file_to_write2= save_folder / chunk / 'Video_clips' / file_name_new2
             if os.path.isfile(str(file_to_write1)):
                 print ("File exist")
@@ -174,7 +174,7 @@ for chunk in chunks:
                 clip2.write_videofile(str(file_to_write2),  threads=200, codec='libx264',  logger=None)
     
         #do this if video duration longer than 25 min but less than 41
-        elif vid_duration>= 1800 and vid_duration< 2460 :
+        elif vid_duration>= 1800 and vid_duration< 2340 :
             print("Video less than 41 minutes but larger than 25 min")
             #Now cut the clips
             clip1 = vid.subclip('00:10:00','00:25:00')

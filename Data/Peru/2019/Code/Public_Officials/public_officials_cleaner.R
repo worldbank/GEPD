@@ -252,10 +252,10 @@ public_officials_dta_clean <-public_officials_dta %>%
 ######
 
 public_officials_dta_clean <-public_officials_dta_clean %>%
-  mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')), ~case_when(.x==900 ~ NA,
-                                                                                                                                .x==998 ~ NA,
-                                                                                                                                .x>=1 & .x<=5 ~ .x,
-                                                                                                                                is.na(.x) ~ NA))
+  mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')), ~case_when(.x==900 ~ as.numeric(NA),
+                                                                                                                                .x==998 ~ as.numeric(NA),
+                                                                                                                                .x>=1 & .x<=5 ~ as.numeric(.x),
+                                                                                                                                is.na(.x) ~ as.numeric(NA)))
 
 ########
 # National Learning Goals
@@ -349,8 +349,11 @@ if (backup_onedrive=="yes") {
 write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
 
 
-
-write_dta(public_officials_dta_short, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
+public_officials_dta_clean2 <- public_officials_dta_clean %>%
+  mutate(pol_personnel_management=politicized_personnel_management ,
+         pol_policy_making=politicized_policy_making ,
+         pol_policy_implementation=politicized_policy_implementation)
+write_dta(public_officials_dta_clean2, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
 keep_info <- c('interview__id','region_code', 'district_code', 'district', 'province','location', 'govt_tier',

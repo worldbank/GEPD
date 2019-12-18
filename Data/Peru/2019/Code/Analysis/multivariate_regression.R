@@ -1,3 +1,5 @@
+library(stargazer)
+library(sandwich)
 school_dta_short_merge <- school_dta_short %>%
   select(-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
             'student_proficient', 'student_proficient_70', 'student_proficient_75',
@@ -5,7 +7,11 @@ school_dta_short_merge <- school_dta_short %>%
             'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75'))
 
 reg_df<- assess_4th_grade_anon %>%
-  left_join(school_dta_short_merge)
+  left_join(school_dta_short_merge) %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th/total_4th_count)
+
 
 covariates<-c( 'presence_rate',
                'content_knowledge',

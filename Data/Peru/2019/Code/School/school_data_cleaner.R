@@ -60,8 +60,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
-indicators <- indicators %>%
+indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
@@ -73,7 +72,7 @@ preamble_info <- c( 'interview__id', 'school_code',
                    'school_name_preload', 'school_address_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon', 'total_enrolled' 
+                   'survey_time', 'lat', 'lon', 'total_enrolled' , 'm7saq8'
                    )
 
 drop_school_info <- c(
@@ -591,6 +590,34 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
          -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
 
 
+#get database for after 2015, when jaime went in office
+final_indicator_data_CONT_after_2015 <- teacher_assessment_dta %>%
+  mutate(questionnaire_roster__id=g4_teacher_number) %>%
+  left_join(teacher_questionnaire, by=c('school_code', 'questionnaire_roster__id')) %>%
+  filter(m3saq5>=2015) %>%
+  group_by(school_code) %>%
+  add_count(school_code,name='m5_teach_count') %>%
+  mutate(content_knowledge=case_when(
+    (!is.na(math_content_knowledge) & !is.na(literacy_content_knowledge)) ~ (math_content_knowledge+literacy_content_knowledge)/2,
+    is.na(math_content_knowledge)  ~ literacy_content_knowledge,
+    is.na(literacy_content_knowledge)  ~ math_content_knowledge)) %>%
+  mutate(content_proficiency=100*as.numeric(content_knowledge>=80),
+         content_proficiency_70=100*as.numeric(content_knowledge>=70),
+         content_proficiency_75=100*as.numeric(content_knowledge>=75),
+         literacy_content_proficiency=100*as.numeric(literacy_content_knowledge>=80),
+         literacy_content_proficiency_70=100*as.numeric(literacy_content_knowledge>=70),
+         literacy_content_proficiency_75=100*as.numeric(literacy_content_knowledge>=75),
+         math_content_proficiency=100*as.numeric(math_content_knowledge>=80),
+         math_content_proficiency_70=100*as.numeric(math_content_knowledge>=70),
+         math_content_proficiency_75=100*as.numeric(math_content_knowledge>=75)) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  
+  select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
+         -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+
+
+
+
 #############################################
 ##### 4th Grade Assessment ###########
 #############################################
@@ -1018,10 +1045,8 @@ school_data_INFR <- school_data_INFR %>%
          toilet_soap=as.numeric(m1sbq8_infr)) %>%
   mutate(functioning_toilet=case_when(
     # exist, separate for boys/girls, clean, private, useable,  handwashing available
-    toilet_exists==0  ~ 0,
-    toilet_exists==1 & toilet_usable==0 ~ 0.25,
-    toilet_exists==1 & toilet_usable==1 ~ 0.5 + 0.5*(toilet_separate + toilet_private + toilet_handwashing )/3,
-    TRUE ~ 0
+    toilet_exists==1 & toilet_usable==1 & toilet_separate==1  & toilet_private==1  & toilet_handwashing==1 ~ 1,
+    toilet_exists==0 | toilet_usable==0 | toilet_separate==0  | toilet_private==0  | toilet_handwashing==0 ~ 0
     )) 
 
 #visibility
@@ -1072,7 +1097,6 @@ final_indicator_data_INFR <- school_data_INFR %>%
 infr_list<-c('drinking_water', 'functioning_toilet', 'internet',  'class_electricity', 'disability_accessibility')
 
 final_indicator_data_INFR <- final_indicator_data_INFR %>%
-  select(preamble_info, infr_list, contains('INFR'), contains('disab')) %>%
   mutate(n_mssing_INFR=n_miss_row(.)) %>%
   mutate(infrastructure=(drinking_water+ functioning_toilet+ internet + class_electricity+ disability_accessibility)) %>%
   select(preamble_info, infrastructure, everything()) %>%
@@ -1473,18 +1497,21 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
            (m3sdq6_tsup==1 & m3sdq7_tsup>=3 & m3sdq8_tsup>=1) ~  0.5,
             (m3sdq6_tsup==1 & (m3sdq7_tsup<3 | m3sdq8_tsup<1))  ~ 0,
             m3sdq6_tsup==2 ~ 0,
-            m3sdq3_tsup==0 ~ 0 ),
+            m3sdq3_tsup==0 ~ 0,
+           TRUE ~ 0),
          in_service_exists=bin_var(m3sdq9_tsup,1),
          in_servce_lngth=case_when(
            (m3sdq9_tsup==1 & m3sdq10_tsup>2 ) ~ 1,
            (m3sdq9_tsup==1 & m3sdq10_tsup<=2) ~ 0,
-           m3sdq9_tsup==0 ~ 0
+           m3sdq9_tsup==0 ~ 0,
+           TRUE ~ 0
          ),
          in_service_classroom=case_when(
-           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 2,
-           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 0.5,
            (m3sdq9_tsup==1 & m3sdq13_tsup==1)  ~ 0,
-           m3sdq9_tsup==0 ~ 0
+           m3sdq9_tsup==0 ~ 0,
+           TRUE ~ 0
          )
                                      ) %>%
   left_join(opp_share) %>%
@@ -1492,6 +1519,7 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
          practicum=pre_training_practicum+pre_training_practicum_lngth,
          in_service=0.5*in_service_exists+0.25*in_servce_lngth+0.25*in_service_classroom) %>%
   mutate(teacher_support=1+pre_service+practicum+in_service+opportunities_teachers_share) 
+  # mutate(teacher_support=if_else(teacher_support>5,5,teacher_support)) #need to fix
 
 
 
@@ -1671,7 +1699,7 @@ school_data_ISTD <- school_data_IMON %>%
 
 final_indicator_data_ISTD <- school_data_ISTD %>%
   group_by(school_code) %>%
-  summarise_all(~first(na.omit(.))) %>%C
+  summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_ISTD=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
@@ -1685,6 +1713,13 @@ final_indicator_data_ISTD <- school_data_ISTD %>%
 # - 1 Point. Is the community involved in the monitoring?
 
 school_data_IMON <- school_data_IMON %>%
+    mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
+           m1scq5_imon=case_when(
+             m1scq5_imon==0 ~ 0,
+             m1scq5_imon==1 ~ 1,
+             m1scq5_imon==2 ~ 0.5,
+             TRUE ~ 0
+           )) %>%
   mutate(monitoring_inputs=if_else(m1scq1_imon==1,
                                    rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
@@ -1939,9 +1974,11 @@ for (i in indicator_names ) {
 
 #add male/female breakdowns to ind_data_list
 
-ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", "final_indicator_data_CONT_M", 
-                                "final_indicator_data_CONT_F", "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F",
-                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
+                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", "final_indicator_data_CONT_after_2015",
+                                "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
+                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
 
 
 #Create list of key indicators
@@ -2020,6 +2057,26 @@ if (backup_onedrive=="yes") {
   write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
   write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
+
+
+#save teacher level files
+teacher_data_list <- c('school_dta', 'school_dta_short',  'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster',
+                       'teacher_questionnaire_ILDR',
+                       'teacher_questionnaire_INPT',
+                       'teacher_questionnaire_TATT',
+                       'teacher_questionnaire_TEVL',
+                       'teacher_questionnaire_TINM',
+                       'teacher_questionnaire_TMNA',
+                       'teacher_questionnaire_TSDP',
+                       'teacher_questionnaire_TSUP',
+                       'teacher_questionnaire_ILDR',
+                       'school_data_SATT',
+                       'school_data_SCFN',
+                       'school_data_SEVL',
+                       'school_data_SSLD',
+                       'school_data_SSUP')
+
+save(list=teacher_data_list, file = file.path(save_folder, "teacher_survey_data.RData"))
 
 
 #################################

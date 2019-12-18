@@ -19,6 +19,7 @@ library(ggridges)
 library(scales)
 library(spatstat)
 library(ggradar)
+library(Hmisc)
 
 # define stle for ggplot based on BBC plotting styles
 bbc_style <- function() {
@@ -235,6 +236,37 @@ infr_urban_rural
 
 ```
 
+## Regional Breakdowns
+
+```{r urban_rural}
+
+
+urban_rural <- school_dta_short %>%
+  mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+  filter(!is.na(rural))
+
+infr_urban_rural <-ggplot(urban_rural, aes(x=infrastructure, y=Type, fill=Type)) +
+  geom_density_ridges() +
+  labs(x='Infrastructure Index')+
+  ggtitle("Infrastructure Across Urban/Rural")
+
+infr_urban_rural
+
+infr_urban_rural <- urban_rural %>%
+  group_by(Type) %>%
+  mutate(weight=school_ipw/sum(school_ipw)) %>%
+  ungroup() %>%
+  ggplot(aes(x=infrastructure))  +
+    geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
+    theme_bw() +
+  labs(x='Infrastructure Index')+
+  ggtitle("Infrastructure Across Urban/Rural")
+  
+infr_urban_rural
+
+```
+
+
 
 ## Do principals know their schools?
 
@@ -309,12 +341,13 @@ indicator_corr_plot <- round(cor(assess_4th_grade_items , use="complete.obs"), 2
 
 ```
 
-```
+
 
 
 ## Radar plot
 
 ```{r radar}
+
 #get list of de facto indicators
 main_indicator_labels<-c( 
                         'Teaching - Attraction',
@@ -406,27 +439,46 @@ main_indicator_labels<-c(
     )
     
 ```
-```{r dejure_defacto_gap}
-#calculate gap between de_jure and de_facto
 
-defacto_dejure<-data_radar %>%
-  pivot_longer(cols=colnames(data_radar)[-1],
-               names_to='Policy',
-               values_to = 'value') %>%
-  arrange(Policy, group) %>%
-  group_by(Policy) %>%
-  summarise(gap=(nth(value,2)-nth(value, 1)))
-
-mean(defacto_dejure$gap)
-var(defacto_dejure$gap)
-
-
-```
 
 ## De-Facto Policy
 
 ```{r defacto}
+#get list of de facto indicators
+main_indicator_labels<-c( 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         'Teaching - Intrinsic Motivation', 
+                         # 'Inputs & Infrastructure - Monitoring',
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
 
+    )  
+    
+    indicators_list<-c(
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                       'intrinsic_motivation', 
+                       # 'school_monitoring', 
+                       'school_management_attraction', 
+                       'school_selection_deployment', 
+                       'school_support', 
+                       'principal_evaluation'
+
+    )
+    
+
+    labels_df_var<-data.frame(indicators=as.character(indicators_list),
+                          indicator_labels=as.character(main_indicator_labels))    
+    
     #get de facto data
 data_defacto <- school_dta_short %>%
     mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
@@ -434,11 +486,12 @@ data_defacto <- school_dta_short %>%
       select(school_code,Type, indicators_list, school_ipw) %>%
       pivot_longer(cols=indicators_list,
                names_to = "indicators",
-               values_to = "indicator_values")
+               values_to = "indicator_values") %>%
+  left_join(labels_df_var)
 
-  ggplot(data=data_defacto, aes(x=indicators, y=indicator_values, fill='#ff0000')) + #now plot the output in a bar graph
+  ggplot(data=data_defacto, aes(x=indicator_labels, y=indicator_values, fill='#ff0000')) + #now plot the output in a bar graph
     geom_boxplot(position="dodge") +
-    scale_x_discrete(labels = str_wrap(main_indicator_labels, width = 25)) + 
+    # scale_x_discrete(labels = str_wrap(indicator_labels, width = 25)) + 
   xlab(str_wrap("Policy Lever Indicators", width=75))+
   ylab("Scale (1-5)") +
   ggtitle(str_wrap("Boxplot of Overall Indicators for Policy Levers", width=75)) +
@@ -458,6 +511,161 @@ summary(datathird)
 summary(datagap)
 
 ```
+
+
+```{r radar2}
+
+#get list of de facto indicators
+main_indicator_labels<-c( 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         'Teaching - Intrinsic Motivation', 
+                         'Inputs & Infrastructure - Standards',
+                         #'Inputs & Infrastructure - Monitoring',
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation',
+                        'Learners - Nutrition',
+                        'Learners - Heath',
+                        'Learners - Center Based Care',
+                        'Learners - Financial Capacity',
+                        'Learners - Caregiver Skills'
+                        
+
+    )  
+    
+    indicators_list<-c(
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                        'intrinsic_motivation', 
+                       'standards_monitoring',
+                        #'school_monitoring', 
+                       'school_management_attraction', 
+                       'school_selection_deployment', 
+                       'school_support', 
+                       'principal_evaluation',
+                       'nutrition_programs',
+                       'health_programs',
+                       'ece_programs',
+                       'financial_capacity',
+                       'caregiver_skills'
+
+    )
+
+    labels_df_radar<-data.frame(indicators=as.character(indicators_list),
+                          indicator_labels=as.character(main_indicator_labels))
+    
+    school_ipw<-school_dta_short$school_ipw
+    
+    #get de facto data
+    data_radar <- school_dta_short %>%
+            mutate(nutrition_programs=4.1,
+             health_programs=3.95,
+             ece_programs=3.85,
+             financial_capacity=2.3,
+             caregiver_skills=4.415) %>% #need to automate this
+      select(school_code, indicators_list, school_ipw) %>%
+      #mutate_at(.vars = indicators_list, scales::rescale) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=school_ipw, na.rm=TRUE) %>%
+      mutate(group="De Facto") %>%
+      select(group=group, everything())
+
+
+
+    data_radar2 <- data_radar %>%
+            mutate(nutrition_programs=4.1,
+             health_programs=3.95,
+             ece_programs=3.85,
+             financial_capacity=2.3,
+             caregiver_skills=4.415) %>% #need to automate this
+      mutate_at(.vars=indicators_list, ~as.numeric(sample_n(as_tibble(c(1:5)),1)[1,1])) %>%
+      mutate(group="De Jure") %>%
+      select(group=group, everything())
+
+    
+
+    
+    #score expert data (this requires a lot of hard coding and transcribing)
+    expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
+
+    expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
+
+    expert_dta_radar <- expert_dta_final %>%
+      mutate(standards_monitoring=inputs_standards) %>%
+      select(colnames(data_radar))
+    
+       data_radar<- data_radar %>%
+      bind_rows(expert_dta_radar)
+       
+   #create radar plot
+    ggradar(data_radar,
+            grid.min=1,
+            grid.mid=3,
+            grid.max=5,
+            values.radar=c("1", "3", "5"),
+            axis.label.size=3,
+            axis.label.offset = 1.25,
+            axis.labels= str_wrap(main_indicator_labels,15),
+            plot.extent.x.sf = 1.5, 
+            plot.extent.y.sf = 1.3,
+            legend.text.size = 3
+              ) +
+      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+      theme_minimal()+
+      theme(    axis.title = ggplot2::element_blank(),
+    axis.text.x = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank()
+
+    )
+    
+    defacto_dejure2<-data_radar %>%
+  pivot_longer(cols=colnames(data_radar)[-1],
+               names_to='Policy',
+               values_to = 'value') %>%
+  arrange(Policy, group) %>%
+  group_by(Policy) %>%
+  summarise(gap=(nth(value,2)-nth(value, 1)))
+
+mean(defacto_dejure2$gap)
+var(defacto_dejure2$gap)
+
+    
+```
+
+
+
+
+
+
+```{r dejure_defacto_gap}
+#calculate gap between de_jure and de_facto
+
+defacto_dejure<-data_radar %>%
+  pivot_longer(cols=colnames(data_radar)[-1],
+               names_to='Policy',
+               values_to = 'value') %>%
+  arrange(Policy, group) %>%
+  group_by(Policy) %>%
+  summarise(gap=(nth(value,2)-nth(value, 1)))
+
+mean(defacto_dejure$gap)
+var(defacto_dejure$gap)
+
+
+```
+
 
 
 ## Overall performance
@@ -794,4 +1002,362 @@ sumstats_overall %>%
   flextable() %>%
   theme_zebra() %>% autofit()
 
+```
+
+
+
+```{r teacher_data, include=FALSE}
+
+#set directory to bring in data
+
+work_dir<- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/"
+
+
+
+#load teacher data for comparisons
+load(paste(work_dir, "School/teacher_survey_data.RData", sep=""))
+
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+# #compare data collected to original sample
+# school_dta_short <- school_dta_short %>%
+#   mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+#   left_join(data_set_updated) %>%
+#   mutate(longitude=as.character(longitude)) %>%
+#   mutate(latitude=as.character(latitude)) %>%
+#   mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+#          lon=if_else(is.na(lon), as.numeric(longitude), lon),
+#          school_ipw=weights) %>%
+#   mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+#   mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+# 
+
+#Create a function which will generate new binary variable using case_when, but 
+#if value is misisng it will generate binary variable to be missing
+#This is done a lot so will create function for it.
+#e.g. school_absent=case_when(
+#         m2sbq6_efft==6  ~ 1,
+#         m2sbq6_efft!=6   ~ 0,
+#         is.na(m2sbq6_efft) ~ as.numeric(NA))
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+#create function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+```
+
+
+```{r teacher_tatt}
+
+graph_dta_tatt<-teacher_questionnaire_TATT %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(teacher_year_began>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_tatt, aes(x=began_after_2015,y=teacher_attraction, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('Teacher Attraction Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_tatt %>%
+  group_by(began_after_2015) %>%
+  summarise(teacher_attraction=mean(teacher_attraction))
+
+reg<-lm(teacher_attraction~began_after_2015, data=graph_dta_tatt)
+summary(reg)
+  
+```
+
+
+```{r teacher_tevl}
+
+graph_dta_tevl<-teacher_questionnaire_TEVL %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(teacher_year_began>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_tevl, aes(x=began_after_2015,y=teaching_evaluation, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('Teacher Evaluation Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_tevl %>%
+  group_by(began_after_2015) %>%
+  summarise(teaching_evaluation=mean(teaching_evaluation))
+
+reg<-lm(teaching_evaluation~began_after_2015, data=graph_dta_tevl)
+summary(reg)
+  
+```
+```{r teacher_tmna}
+
+graph_dta_tmna<-teacher_questionnaire_TMNA %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(teacher_year_began>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_tmna, aes(x=began_after_2015,y=teacher_monitoring, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('Teacher Monitoring & Accountability Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_tmna %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    teacher_monitoring=mean(teacher_monitoring, na.rm=T))
+
+reg<-lm(teacher_monitoring~began_after_2015, data=graph_dta_tmna)
+summary(reg)
+  
+```
+
+
+
+```{r teacher_tsdp}
+
+graph_dta_tsdp<-teacher_questionnaire_TSDP %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(teacher_year_began>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_tsdp, aes(x=began_after_2015,y=teacher_selection_deployment, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('Teacher Selection & Deployment Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_tsdp %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    teacher_selection_deployment=mean(teacher_selection_deployment, na.rm=T))
+
+reg<-lm(teacher_selection_deployment~began_after_2015, data=graph_dta_tsdp)
+summary(reg)
+  
+```
+
+```{r teacher_tsup}
+
+graph_dta_tsup<-teacher_questionnaire_TSUP %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(teacher_year_began>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_tsup, aes(x=began_after_2015,y=teacher_support, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('Teacher Support Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_tsup %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    teacher_support=mean(teacher_support, na.rm=T))
+
+reg<-lm(teacher_support~began_after_2015, data=graph_dta_tsup)
+summary(reg)
+  
+```
+
+
+
+```{r principal_satt}
+
+graph_dta_satt<-school_data_SATT %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(m7saq8>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_satt, aes(x=began_after_2015,y=school_management_attraction, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('School Management Attraction Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_satt %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    school_management_attraction=mean(school_management_attraction, na.rm=T))
+
+reg<-lm(school_management_attraction~began_after_2015, data=graph_dta_satt)
+summary(reg)
+  
+```
+```{r principal_scfn}
+
+graph_dta_scfn<-school_data_SCFN %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(m7saq8>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_scfn, aes(x=began_after_2015,y=school_management_clarity, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('School Management Clarity of Function Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_scfn %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    school_management_clarity=mean(school_management_clarity, na.rm=T))
+
+reg<-lm(school_management_clarity~began_after_2015, data=graph_dta_scfn)
+summary(reg)
+  
+```
+
+```{r principal_sevl}
+
+graph_dta_sevl<-school_data_SEVL %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(m7saq8>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_sevl, aes(x=began_after_2015,y=principal_evaluation, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('School Management Evaluation Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_sevl %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    principal_evaluation=mean(principal_evaluation, na.rm=T))
+
+reg<-lm(principal_evaluation~began_after_2015, data=graph_dta_sevl)
+summary(reg)
+  
+```
+
+
+```{r principal_ssld}
+
+graph_dta_ssld<-school_data_SSLD %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(m7saq8>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_ssld, aes(x=began_after_2015,y=school_selection_deployment, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('School Management Evaluation Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_ssld %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    school_selection_deployment=mean(school_selection_deployment, na.rm=T))
+
+reg<-lm(school_selection_deployment~began_after_2015, data=graph_dta_ssld)
+summary(reg)
+  
+```
+
+
+```{r principal_ssup}
+
+graph_dta_ssup<-school_data_SSUP %>%
+  mutate(codigo.modular=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(
+         school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T)) %>%
+  mutate(began_after_2015=if_else(m7saq8>=2015, 'Hired after 2015', 'Hired before 2015')) %>%
+  filter(!is.na(began_after_2015))
+
+ggplot(graph_dta_ssup, aes(x=began_after_2015,y=school_support, fill=began_after_2015))  +
+  geom_bar(position='dodge', stat='summary', fun.y='mean') +
+  ggtitle('School Management Evaluation Policy Lever for Teacher Hired Before/After 2015') +
+  xlab('Policy Lever') +
+  ylab('Hiring Date') +
+  theme_bw()+
+  theme(legend.title = element_blank())
+
+graph_dta_ssup %>%
+  group_by(began_after_2015) %>%
+  summarise(n=n(),
+    school_support=mean(school_support, na.rm=T))
+
+reg<-lm(school_support~began_after_2015, data=graph_dta_ssup)
+summary(reg)
+  
 ```

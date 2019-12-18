@@ -350,4 +350,8 @@ gen teacher_age=m3saq6
 *   - 0.8 Points. Do teachers receive bonuses? 
 *   - 0.8 Points. One minus the fraction of months in past year with a salary delay.
 
+*******************
+***** Toilets *****
+*******************
+toilet_c
 
