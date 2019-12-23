@@ -26,7 +26,9 @@ import os.path
 save_folder=Path("C:/Users/wb469649/WBG/Sergio Venegas Marin - Videos_Peru/")
 
 network_folder=Path("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_RAW/Data/videos")
-data_folder=Path("D:/Módulo 4 Observación Aula")
+#data_folder=Path("D:/Módulo 4 Observación Aula")
+data_folder=Path("C:/Users/wb469649/WBG/Sergio Venegas Marin - Videos_Peru/")
+
 # # Test Case
 #
 # Now I will open a test clip to see how things are working.  This will help us understand how well the program is functioning.
@@ -119,8 +121,8 @@ for chunk in chunks:
     
     for f in file_list:
         print(f)
-        print(f.parts[4])
-        file_name=str(f.parts[4]) #this is the 4th part of the file route, with just the file name
+        print(f.parts[7])
+        file_name=str(f.parts[7]) #this is the 4th part of the file route, with just the file name
         file_name_base=file_name[:-4]
         file_name_new=file_name_base + "Clip 1 " + ".MP4"
         print(file_name_new)
@@ -131,12 +133,12 @@ for chunk in chunks:
     
     for f in file_list:
         #come up a new file name called ".. Clip1.MP4" and ".. Clip2.MP4"
-        file_name=str(f.parts[4]) #this is the 4th part of the file route, with just the file name
-        file_name=str(f.parts[4]) #this is the 4th part of the file route, with just the file name
+        file_name=str(f.parts[7]) #this is the 4th part of the file route, with just the file name
+        file_name=str(f.parts[7]) #this is the 4th part of the file route, with just the file name
         file_name_base=file_name[:-4]
         file_name_suffix=file_name[-4:]
-        file_name_new1=file_name_base + "Clip 1" + file_name_suffix
-        file_name_new2=file_name_base + "Clip 2" + file_name_suffix
+        file_name_new1=file_name_base + "Clip 1" + ".MP4"
+        file_name_new2=file_name_base + "Clip 2" + ".MP4"
     
         print(file_name_new1)
         print(file_name_new2)
@@ -177,7 +179,7 @@ for chunk in chunks:
         elif vid_duration>= 1800 and vid_duration< 2340 :
             print("Video less than 41 minutes but larger than 25 min")
             #Now cut the clips
-            clip1 = vid.subclip('00:10:00','00:25:00')
+            clip1 = vid.subclip('00:08:00','00:23:00')
             file_to_write1= save_folder / chunk / 'Video_clips' / file_name_new1
     
             if os.path.isfile(str(file_to_write1)):
