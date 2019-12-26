@@ -334,7 +334,8 @@ teacher_absence_dta <- teacher_absence_dta %>%
     m2sbq3_efft!=8   ~ 0,
     is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
   mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
-         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ))
+         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ),
+         presence_rate=100-absence_rate)
 
 
 teacher_absence_final<- teacher_absence_dta %>%
@@ -1061,7 +1062,7 @@ school_data_INPT <- school_data_INPT %>%
   mutate(share_exbook=(m4scq7_inpt)/(m4scq4_inpt)) %>%
   mutate(pens_etc=case_when(
     share_pencil>=0.9 & share_exbook>=0.9  ~ 1,
-     share_pencil<0.9 | share_exbook<0.9 ~ 0),
+    share_pencil<0.9 | share_exbook<0.9 ~ 0),
     textbooks=case_when(
       share_textbook>=0.9   ~ 1,
       share_textbook<0.9  ~ 0)) 
@@ -1086,11 +1087,11 @@ school_data_INPT <- school_data_INPT %>%
 #access to ICT
 school_data_INPT <- school_data_INPT %>%
   mutate(access_ict=case_when(
-                  m1sbq12_inpt==0 | m1sbq13_inpt==0 ~ 0,
-                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 1,
-                  (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 0.5, #Internet didn't work when tested
-                  (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) ) ~ as.numeric(NA)
-                  ))
+    m1sbq12_inpt==0 | m1sbq13_inpt==0 ~ 0,
+    (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 1,
+    (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 0.5, #Internet didn't work when tested
+    (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) ) ~ as.numeric(NA)
+  ))
 
 
 
@@ -1106,7 +1107,7 @@ final_indicator_data_INPT <- school_data_INPT %>%
   mutate(inputs=textbooks+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
-  
+
 
 
 
@@ -1188,17 +1189,23 @@ final_indicator_data_INFR <- school_data_INFR %>%
 infr_list<-c('drinking_water', 'functioning_toilet', 'internet',  'class_electricity', 'disability_accessibility')
 
 final_indicator_data_INFR <- final_indicator_data_INFR %>%
-  select(preamble_info, infr_list, contains('INFR'), contains('disab')) %>%
   mutate(n_mssing_INFR=n_miss_row(.)) %>%
   mutate(infrastructure=(drinking_water+ functioning_toilet+ internet + class_electricity+ disability_accessibility)) %>%
   select(preamble_info, infrastructure, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
 
 
 
 
 
+
+#############################################
+##### Teacher Pedagogical Skill ###########
+#############################################
+
+
+
+#final_indicator_data_PEDG <- ''
 
 
 #############################################
@@ -1219,39 +1226,39 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(
-         vignette_1_resp=if_else((m7sbq1_opmn==0 & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
-         vignette_1_finance=case_when(
-           m7sbq2_opmn==1 ~ 0.5,
-           (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,
-           m7sbq2_opmn==3 ~ 0,
-           m7sbq1_opmn==0 & !(m7sbq4_opmn==4 | m7sbq4_opmn==98) ~ 0.5),
-         vignette_1_address=if_else(m7sbq1_opmn==1, case_when(
-           m7sbq3_opmn==1 ~ 0,
-           (m7sbq3_opmn==2 | m7sbq3_opmn==97) ~ .5,
-           m7sbq3_opmn==3 ~ 1),
-           case_when(
-             m7sbq5_opmn==1 ~ 0,
-             m7sbq5_opmn==2 ~ .5,
-             m7sbq5_opmn==3 ~ 1))) %>% 
-         #give total score for this vignette
-         mutate(vignette_1=vignette_1_resp+vignette_1_finance+vignette_1_address) %>% 
-         mutate(vignette_2_resp=if_else(m7scq1_opmn==98, 0, 0.5), # no one responsible that is known
-                vignette_2_finance=if_else(m7scq1_opmn==1,0,0.5),      #parents are forced to buy textbooks          
+    vignette_1_resp=if_else((m7sbq1_opmn==0 & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
+    vignette_1_finance=case_when(
+      m7sbq2_opmn==1 ~ 0.5,
+      (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,
+      m7sbq2_opmn==3 ~ 0,
+      m7sbq1_opmn==0 & !(m7sbq4_opmn==4 | m7sbq4_opmn==98) ~ 0.5),
+    vignette_1_address=if_else(m7sbq1_opmn==1, case_when(
+      m7sbq3_opmn==1 ~ 0,
+      (m7sbq3_opmn==2 | m7sbq3_opmn==97) ~ .5,
+      m7sbq3_opmn==3 ~ 1),
+      case_when(
+        m7sbq5_opmn==1 ~ 0,
+        m7sbq5_opmn==2 ~ .5,
+        m7sbq5_opmn==3 ~ 1))) %>% 
+  #give total score for this vignette
+  mutate(vignette_1=vignette_1_resp+vignette_1_finance+vignette_1_address) %>% 
+  mutate(vignette_2_resp=if_else(m7scq1_opmn==98, 0, 0.5), # no one responsible that is known
+         vignette_2_finance=if_else(m7scq1_opmn==1,0,0.5),      #parents are forced to buy textbooks          
          #give partial credit based on how quickly it will be solved <1 month, 1-3, 3-6, 6-12, >1 yr
-                vignette_2_address=case_when(
-                                             m7scq2_opmn==1 ~ 1,
-                                             m7scq2_opmn==2 ~ .75,
-                                             m7scq2_opmn==3 ~ .5,
-                                             m7scq2_opmn==4 ~ .25,
-                                             (m7scq2_opmn==5 |m7scq2_opmn==98) ~ 0)) %>%
-        mutate(vignette_2=vignette_2_resp+vignette_2_finance+vignette_2_address) %>%          #sum all components for overall score
-         mutate(operational_management=1+vignette_1+vignette_2 )
-  
+         vignette_2_address=case_when(
+           m7scq2_opmn==1 ~ 1,
+           m7scq2_opmn==2 ~ .75,
+           m7scq2_opmn==3 ~ .5,
+           m7scq2_opmn==4 ~ .25,
+           (m7scq2_opmn==5 |m7scq2_opmn==98) ~ 0)) %>%
+  mutate(vignette_2=vignette_2_resp+vignette_2_finance+vignette_2_address) %>%          #sum all components for overall score
+  mutate(operational_management=1+vignette_1+vignette_2 )
+
 
 final_indicator_data_OPMN <- final_indicator_data_OPMN %>%
   mutate(n_mssing_OPMN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 #############################################
@@ -1286,8 +1293,6 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
   summarise_all(~first(na.omit(.))) %>%
   select(-preamble_info_teacher  )  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
-
 
 
 
@@ -1315,7 +1320,7 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
 
 
 
-  #first create a database containing actual values for each question for the principal
+#first create a database containing actual values for each question for the principal
 pknw_actual_cont <- final_indicator_data_CONT %>%
   select(school_code, m5_teach_count, m5_teach_count_math, m5s2q1c_number, m5s2q1e_number, m5s1q1f_grammer ) 
 
@@ -1336,7 +1341,7 @@ pknw_actual_combined <- pknw_actual_school_inpts %>%
          m5s2q1c_number=m5s2q1c_number*m5_teach_count,
          m5s2q1e_number=m5s2q1e_number*m5_teach_count,
          m5s1q1f_grammer=m5s1q1f_grammer*m5_teach_count)
-  
+
 
 #create function to compare principal responses to actual
 # if principal is within 1 student/teacher, then score as 1, 0 otherwise
@@ -1347,7 +1352,9 @@ principal_scorer <- function(var_guess, var_actual, var_total, margin1, margin2)
     0)
 }
 
-
+######################
+# NEED TO FIX THIS
+#######################
 
 final_indicator_data_PKNW <- school_data_PKNW %>%
   group_by(school_code) %>%
@@ -1370,12 +1377,14 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
     (principal_knowledge_avg >0.7 & principal_knowledge_avg<=0.8) ~ 3,
     (principal_knowledge_avg >0.6 & principal_knowledge_avg<=0.7) ~ 2,
     (principal_knowledge_avg <=0.6 ) ~ 1  )
-    ) %>%
+  ) %>%
   select(school_code, starts_with('m7sfq5_pknw'),m5s2q1c_number, starts_with('m7sfq6_pknw'), m5s2q1e_number, starts_with('m7sfq7_pknw'), m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw) %>%
   select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw)
-  
+
+
+
 
 #############################################
 ##### School Principal Management Skills ###########
@@ -1414,7 +1423,7 @@ final_indicator_data_PMAN <- final_indicator_data_PMAN %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PMAN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 #############################################
 ##### Teacher Teaching Attraction ###########
@@ -1484,7 +1493,7 @@ teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
          salary_delays=if_else(m3seq6_tatt==1, m3seq7_tatt,0)) %>%
   mutate(salary_delays=if_else(salary_delays>12,12,salary_delays)) %>%
   mutate(teacher_attraction=1+0.8*teacher_satisfied_job+.8*teacher_satisfied_status+.8*better_teachers_promoted+.8*teacher_bonus+.8*(1-salary_delays/12))
-  
+
 
 final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
   mutate(n_mssing_TATT=n_miss_row(.)) %>%
@@ -1494,7 +1503,7 @@ final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
   summarise_all(~first(na.omit(.))) %>%
   select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 
@@ -1522,14 +1531,14 @@ teacher_questionnaire_TSDP <- teacher_questionnaire_TSDP %>%
       (m3sdq1_tsdp__5==1 | m3sdq1_tsdp__6==1 | m3sdq1_tsdp__8==1 | m3sdq1_tsdp__9==1 )  ~ 2,
       (m3sdq1_tsdp__1==1 | m3sdq1_tsdp__2==1 | m3sdq1_tsdp__3==1 | m3sdq1_tsdp__4==1 | m3sdq1_tsdp__7==1) ~ 1,
       (m3sdq1_tsdp__1==0 & m3sdq1_tsdp__2==0 & m3sdq1_tsdp__3==0 & m3sdq1_tsdp__4==0 & m3sdq1_tsdp__5==0 & m3sdq1_tsdp__6==0 & m3sdq1_tsdp__7==0 & m3sdq1_tsdp__8==0 & m3sdq1_tsdp__9==0) ~ 0
-      ),
+    ),
     teacher_deployment=case_when(
       (m3seq8_tsdp__3==1 | m3seq8_tsdp__4==1 | m3seq8_tsdp__5==1  )  ~ 2,
       (m3seq8_tsdp__1==1 | m3seq8_tsdp__2==1 | m3seq8_tsdp__97==1) ~ 1,
       ((m3seq8_tsdp__1==0 & m3seq8_tsdp__2==0 & m3seq8_tsdp__3==0 & m3seq8_tsdp__4==0 & m3seq8_tsdp__5==0) | ( m3seq8_tsdp__99==1)) ~ 0
       
-      )
-    ) %>%
+    )
+  ) %>%
   mutate(teacher_selection_deployment=1+teacher_selection+teacher_deployment)
 
 
@@ -1541,7 +1550,7 @@ final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%
   summarise_all(~first(na.omit(.))) %>%
   select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 #############################################
@@ -1595,8 +1604,8 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
            TRUE ~ 0
          ),
          in_service_classroom=case_when(
-           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 2,
-           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup>=3)  ~ 1,
+           (m3sdq9_tsup==1 & m3sdq13_tsup==2)  ~ 0.5,
            (m3sdq9_tsup==1 & m3sdq13_tsup==1)  ~ 0,
            m3sdq9_tsup==0 ~ 0,
            TRUE ~ 0
@@ -1607,6 +1616,8 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
          practicum=pre_training_practicum+pre_training_practicum_lngth,
          in_service=0.5*in_service_exists+0.25*in_servce_lngth+0.25*in_service_classroom) %>%
   mutate(teacher_support=1+pre_service+practicum+in_service+opportunities_teachers_share) 
+# mutate(teacher_support=if_else(teacher_support>5,5,teacher_support)) #need to fix
+
 
 
 
@@ -1620,7 +1631,7 @@ final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
   summarise_all(~first(na.omit(.))) %>%
   select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 #############################################
@@ -1636,10 +1647,10 @@ final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
 
 #list of teacher evluation questions
 tevl<-c(
-        'm3sbq7_tmna__1', 'm3sbq7_tmna__2', 'm3sbq7_tmna__3', 'm3sbq7_tmna__4','m3sbq7_tmna__5', 'm3sbq7_tmna__6', 'm3sbq7_tmna__97',
-        'm3sbq8_tmna__2', 'm3sbq8_tmna__3', 'm3sbq8_tmna__4','m3sbq8_tmna__5', 'm3sbq8_tmna__6', 'm3sbq8_tmna__7', 'm3sbq8_tmna__8', 'm3sbq8_tmna__97', 'm3sbq8_tmna__98',
-        'm3sbq9_tmna__1', 'm3sbq9_tmna__2', 'm3sbq9_tmna__3', 'm3sbq9_tmna__4', 'm3sbq9_tmna__7', 'm3sbq9_tmna__97', 'm3sbq9_tmna__98',
-        'm3bq10_tmna__1', 'm3bq10_tmna__2', 'm3bq10_tmna__3', 'm3bq10_tmna__4', 'm3bq10_tmna__7', 'm3bq10_tmna__97', 'm3bq10_tmna__98')
+  'm3sbq7_tmna__1', 'm3sbq7_tmna__2', 'm3sbq7_tmna__3', 'm3sbq7_tmna__4','m3sbq7_tmna__5', 'm3sbq7_tmna__6', 'm3sbq7_tmna__97',
+  'm3sbq8_tmna__2', 'm3sbq8_tmna__3', 'm3sbq8_tmna__4','m3sbq8_tmna__5', 'm3sbq8_tmna__6', 'm3sbq8_tmna__7', 'm3sbq8_tmna__8', 'm3sbq8_tmna__97', 'm3sbq8_tmna__98',
+  'm3sbq9_tmna__1', 'm3sbq9_tmna__2', 'm3sbq9_tmna__3', 'm3sbq9_tmna__4', 'm3sbq9_tmna__7', 'm3sbq9_tmna__97', 'm3sbq9_tmna__98',
+  'm3bq10_tmna__1', 'm3bq10_tmna__2', 'm3bq10_tmna__3', 'm3bq10_tmna__4', 'm3bq10_tmna__7', 'm3bq10_tmna__97', 'm3bq10_tmna__98')
 
 teacher_questionnaire_TEVL <- teacher_questionnaire_TMNA %>%
   dplyr::select(school_code, preamble_info_teacher, tevl, m3sbq6_tmna, m3sbq8_tmna__1)
@@ -1648,7 +1659,7 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
   mutate(formally_evaluated=bin_var(m3sbq6_tmna,1),
          evaluation_content=if_else(m3sbq6_tmna==1,
                                     (m3sbq8_tmna__1+m3sbq8_tmna__2+ m3sbq8_tmna__3 + m3sbq8_tmna__5 + m3sbq8_tmna__6)/5,
-                                            0),
+                                    0),
          negative_consequences=case_when(
            (m3sbq9_tmna__1==1 | m3sbq9_tmna__2==1 | m3sbq9_tmna__3==1 | m3sbq9_tmna__4==1 | m3sbq9_tmna__97==1) ~ 1,
            (is.na(m3sbq9_tmna__1) & is.na(m3sbq9_tmna__2) & is.na(m3sbq9_tmna__3) & is.na(m3sbq9_tmna__4) & is.na(m3sbq9_tmna__97)) ~ as.numeric(NA),
@@ -1657,7 +1668,7 @@ teacher_questionnaire_TEVL<- teacher_questionnaire_TEVL %>%
            (m3bq10_tmna__1==1 | m3bq10_tmna__2==1 | m3bq10_tmna__3==1 | m3bq10_tmna__4==1 | m3bq10_tmna__97==1) ~ 1,
            (is.na(m3bq10_tmna__1) & is.na(m3bq10_tmna__2) & is.na(m3bq10_tmna__3) & is.na(m3bq10_tmna__4) & is.na(m3bq10_tmna__97)) ~ as.numeric(NA),
            TRUE ~ 0)
-         ) %>%
+  ) %>%
   mutate(teaching_evaluation=1+formally_evaluated+evaluation_content+negative_consequences+positive_consequences)
 
 
@@ -1669,7 +1680,7 @@ final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
   summarise_all(~first(na.omit(.))) %>%
   select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 
@@ -1690,35 +1701,35 @@ teacher_questionnaire_TMNA2 <- teacher_questionnaire_TATT %>%
 teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
   dplyr::select(-tevl)
 
-  teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
+teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
   left_join(teacher_questionnaire_TMNA2)
-  
-  teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
-    mutate(attendance_evaluated=if_else(m3sbq6_tmna==1,
-                                        case_when(
-                                          (m3sbq8_tmna__1==1) ~ 1,
-                                          TRUE ~ 0
-                                        ),
-                                        0),
-           attendance_rewarded=if_else(m3seq4_tatt==1,
-                                       case_when(
-                                         (m3seq5_tatt__1==1) ~ 1,
-                                         TRUE ~ 0
-                                       ),
-                                       0),
-           attendence_sanctions=case_when(
-             (m3sbq2_tmna__1==1 | m3sbq2_tmna__2==1 | m3sbq2_tmna__3==1 | m3sbq2_tmna__4==1 | m3sbq2_tmna__97==1) ~ 1,
-             (is.na(m3sbq2_tmna__1) & is.na(m3sbq2_tmna__2) & is.na(m3sbq2_tmna__3) & is.na(m3sbq2_tmna__4) & is.na(m3sbq2_tmna__97)) ~ as.numeric(NA),
-             TRUE ~ 0
-           ),
-           miss_class_admin=case_when(
-             (m3sbq1_tatt__1==1 | m3sbq1_tatt__2==1 | m3sbq1_tatt__3==1 | m3sbq1_tatt__97==1) ~ 1,
-             (m3sbq1_tatt__1==0 & m3sbq1_tatt__2==0 & m3sbq1_tatt__3==0 & m3sbq1_tatt__97==0) ~ 0,
-             (grepl('salud', teacher_questionnaire_TMNA$m3sbq1_other_tatt)) ~ 0, #some teachers reported missing for health reasons, we don't want these included.
-             TRUE ~ as.numeric(NA)
-           )
-           )  %>%
-    mutate(teacher_monitoring=1+attendance_evaluated + 1*attendance_rewarded + 1*attendence_sanctions + (1-miss_class_admin))
+
+teacher_questionnaire_TMNA <- teacher_questionnaire_TMNA %>%
+  mutate(attendance_evaluated=if_else(m3sbq6_tmna==1,
+                                      case_when(
+                                        (m3sbq8_tmna__1==1) ~ 1,
+                                        TRUE ~ 0
+                                      ),
+                                      0),
+         attendance_rewarded=if_else(m3seq4_tatt==1,
+                                     case_when(
+                                       (m3seq5_tatt__1==1) ~ 1,
+                                       TRUE ~ 0
+                                     ),
+                                     0),
+         attendence_sanctions=case_when(
+           (m3sbq2_tmna__1==1 | m3sbq2_tmna__2==1 | m3sbq2_tmna__3==1 | m3sbq2_tmna__4==1 | m3sbq2_tmna__97==1) ~ 1,
+           (is.na(m3sbq2_tmna__1) & is.na(m3sbq2_tmna__2) & is.na(m3sbq2_tmna__3) & is.na(m3sbq2_tmna__4) & is.na(m3sbq2_tmna__97)) ~ as.numeric(NA),
+           TRUE ~ 0
+         ),
+         miss_class_admin=case_when(
+           (m3sbq1_tatt__1==1 | m3sbq1_tatt__2==1 | m3sbq1_tatt__3==1 | m3sbq1_tatt__97==1) ~ 1,
+           (m3sbq1_tatt__1==0 & m3sbq1_tatt__2==0 & m3sbq1_tatt__3==0 & m3sbq1_tatt__97==0) ~ 0,
+           (grepl('salud', teacher_questionnaire_TMNA$m3sbq1_other_tatt)) ~ 0, #some teachers reported missing for health reasons, we don't want these included.
+           TRUE ~ as.numeric(NA)
+         )
+  )  %>%
+  mutate(teacher_monitoring=1+attendance_evaluated + 1*attendance_rewarded + 1*attendence_sanctions + (1-miss_class_admin))
 
 final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
   mutate(n_mssing_TMNA=n_miss_row(.)) %>%
@@ -1728,7 +1739,7 @@ final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
   summarise_all(~first(na.omit(.))) %>%
   select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 
@@ -1743,7 +1754,7 @@ final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
 # given to teachers on intrinsic motivation.
 
 intrinsic_motiv_q_rev <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
-                     'm3scq7_tinm', 'm3scq10_tinm')
+                           'm3scq7_tinm', 'm3scq10_tinm')
 
 intrinsic_motiv_q <- c( 'm3scq11_tinm', 'm3scq14_tinm')
 
@@ -1761,18 +1772,19 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
            m3scq15_tinm__3>=1 ~ 0,
            (m3scq15_tinm__3!=1 & (m3scq15_tinm__1>=1 | m3scq15_tinm__2>=1 | m3scq15_tinm__4>=1 & m3scq15_tinm__5>=1)) ~ 1,
            TRUE ~ as.numeric(NA)
-           )) %>%
+         )) %>%
   mutate(intrinsic_motivation=1+0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-drop_teacher_info)  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 #############################################
 ##### School  Inputs and Infrastructure Standards ###########
 #############################################
+#   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
 
 school_data_ISTD <- school_data_IMON %>%
   mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
@@ -1788,7 +1800,6 @@ final_indicator_data_ISTD <- school_data_ISTD %>%
   mutate(n_mssing_ISTD=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
-
 #############################################
 ##### School  Inputs and Infrastructure Monitoring ###########
 #############################################
@@ -1799,18 +1810,25 @@ final_indicator_data_ISTD <- school_data_ISTD %>%
 # - 1 Point. Is the community involved in the monitoring?
 
 school_data_IMON <- school_data_IMON %>%
+  mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
+         m1scq5_imon=case_when(
+           m1scq5_imon==0 ~ 0,
+           m1scq5_imon==1 ~ 1,
+           m1scq5_imon==2 ~ 0.5,
+           TRUE ~ 0
+         )) %>%
   mutate(monitoring_inputs=if_else(m1scq1_imon==1,
                                    rowMeans(.[grep(x=colnames(school_data_IMON), 
-                                                  pattern="m1scq4_imon__")], na.rm=TRUE),
+                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
                                    0),
          monitoring_infrastructure=if_else(m1scq7_imon==1,
                                            rowMeans(.[grep(x=colnames(school_data_IMON), 
-                                                  pattern="m1scq9_imon__")], na.rm=TRUE),
-                                   0),
+                                                           pattern="m1scq9_imon__")], na.rm=TRUE),
+                                           0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
   mutate(school_monitoring=1+1.5*monitoring_inputs+1.5*monitoring_infrastructure+parents_involved)
-  
+
 
 
 final_indicator_data_IMON <- school_data_IMON %>%
@@ -1818,13 +1836,11 @@ final_indicator_data_IMON <- school_data_IMON %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_IMON=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 #############################################
 ##### School School Management Clarity of Functions  ###########
 #############################################
-
-
 
 school_data_SCFN <- school_data_PKNW %>%
   mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
@@ -1846,6 +1862,7 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SCFN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
+
 #############################################
 ##### School School Management Attraction  ###########
 #############################################
@@ -1853,26 +1870,27 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 # This policy lever measures whether the right candidates are being attracted to the profession of school principals. The questions will aim to capture the provision of benefits to attract and maintain the best people to serve as principals. 
 # 
 # Scoring: 
-#   - For now, score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
+#   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
+# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  
 
 school_data_SATT <- school_data_SATT %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=m7shq2_satt/6947.3) %>%
+         principal_salary=12*m7shq2_satt/22833	) %>%
   mutate(
     principal_salary_score=case_when(
-      between(principal_salary,0,0.25) ~ 1,
-      between(principal_salary,0.25,0.33) ~ 2,
-      between(principal_salary,0.33,0.5) ~ 3,
-      between(principal_salary,0.5,0.67) ~ 4,
-      between(principal_salary,0.67,5) ~ 5)) %>%
+      between(principal_salary,0,0.5) ~ 1,
+      between(principal_salary,0.5,0.75) ~ 2,
+      between(principal_salary,0.75,1) ~ 3,
+      between(principal_salary,1,1.5) ~ 4,
+      between(principal_salary,1.5,5) ~ 5)) %>%
   mutate(school_management_attraction=(principal_satisfaction+principal_salary_score)/2)
-  
+
 final_indicator_data_SATT <- school_data_SATT %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SATT=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 #############################################
@@ -1899,14 +1917,14 @@ school_data_SSLD <- school_data_SSLD %>%
     (!(m7sgq2_ssld==6 | m7sgq2_ssld==7) & (m7sgq1_ssld__1==1 | m7sgq1_ssld__4==1 | m7sgq1_ssld__5==1 | m7sgq1_ssld__97==1) ) ~ 3,
     (m7sgq1_ssld__6==1 | m7sgq1_ssld__7==1 ) ~ 2, 
     TRUE ~ as.numeric(NA))
-    )
+  )
 
 final_indicator_data_SSLD <- school_data_SSLD %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSLD=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 #############################################
@@ -1929,11 +1947,10 @@ school_data_SSUP <- school_data_SSUP %>%
   mutate(prinicipal_trained=bin_var(m7sgq3_ssup,1),
          principal_training=if_else(m7sgq3_ssup==1,
                                     rowMeans(.[grep(x=colnames(school_data_SSUP), 
-                                                   pattern="m7sgq4_ssup__")], na.rm=TRUE),
+                                                    pattern="m7sgq4_ssup__")], na.rm=TRUE),
                                     0),
          principal_used_skills=if_else(m7sgq3_ssup==1,
-                                       bin_var(m7sgq5_ssup,1),
-                                       0),
+                                       bin_var(m7sgq5_ssup,1),0),
          principal_offered=if_else((m7sgq7_ssup==2 | m7sgq7_ssup==3 | m7sgq7_ssup==4 | m7sgq7_ssup==5),1,0)
   ) %>%
   mutate(school_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
@@ -1943,7 +1960,7 @@ final_indicator_data_SSUP <- school_data_SSUP %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SSUP=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 #############################################
 ##### School School Management Evaluation  ###########
@@ -1960,13 +1977,13 @@ school_data_SEVL<- school_data_SEVL %>%
          principal_eval_tot=rowSums(.[grep(x=colnames(school_data_SEVL), 
                                            pattern="m7sgq10_sevl__")], na.rm=TRUE)-m7sgq10_sevl__98) %>%
   mutate(principal_evaluation_multiple=if_else(m7sgq8_sevl==1,
-                                            case_when(
-                                              principal_eval_tot>=5 ~ 1,
-                                              (principal_eval_tot>1 & principal_eval_tot<5) ~ 0.666667,
-                                              principal_eval_tot==1 ~ 0.3333333,
-                                              TRUE ~ 0
-                                            ),
-                                            0),
+                                               case_when(
+                                                 principal_eval_tot>=5 ~ 1,
+                                                 (principal_eval_tot>1 & principal_eval_tot<5) ~ 0.666667,
+                                                 principal_eval_tot==1 ~ 0.3333333,
+                                                 TRUE ~ 0
+                                               ),
+                                               0),
          principal_negative_consequences=case_when(
            (m7sgq11_sevl__1==1 | m7sgq11_sevl__2==1 | m7sgq11_sevl__3==1 | m7sgq11_sevl__4==1 | m7sgq11_sevl__97==1) ~ 1,
            TRUE ~ 0),
@@ -1981,7 +1998,7 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_SEVL=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+
 
 
 
@@ -1993,7 +2010,7 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
 
 #first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
 #list additional info that will be useful to keep in each indicator dataframe
-drop_info <- c('interview__key', 'interview__key',                    
+drop_info <- c('interview__id', 'interview__key',                    
                'school_name_preload', 'school_address_preload', 
                'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
@@ -2054,18 +2071,26 @@ for (i in indicator_names ) {
 
 #add male/female breakdowns to ind_data_list
 
-ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", "final_indicator_data_CONT_M", 
-                                "final_indicator_data_CONT_F", "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F",
-                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
+                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
+                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
 
 
 #Create list of key indicators
-ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
-            'absence_rate', 'school_absence_rate', 'student_attendance',
-            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge',
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+            'student_proficient', 'student_proficient_70', 'student_proficient_75',
+            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
+            'presence_rate','absence_rate', 'school_absence_rate', 'student_attendance',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
+            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
             'teach_score','classroom_culture','instruction','socio_emotional_skills',
-            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
             'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
             'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
@@ -2078,14 +2103,14 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
             'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
             'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-            'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
             'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
-            'school_management_attraction', 'principal_satisfaction', 
+            'standards_monitoring',
+            'school_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+            'school_management_attraction', 'principal_satisfaction',
             'school_selection_deployment', 
             'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
             'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
 )
-
 
 
                 
@@ -2129,7 +2154,7 @@ if (backup_onedrive=="yes") {
   write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
-extra_info='no'
+extra_info='yes'
 
 if (extra_info=='yes') {
 #################################

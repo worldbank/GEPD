@@ -92,7 +92,6 @@ bbc_style <- function() {
   )
 }
 
-
 # Define UI for application that examines GEPD data
 ui <- navbarPage("Global Education Policy Dashboard",
   #####################################################
@@ -161,10 +160,12 @@ ui <- navbarPage("Global Education Policy Dashboard",
                         tabPanel("Bivariate Regression Analysis", value=5, 
                                  p('This tool generates scatter plots between any two indicators, and shows the regression line and coefficients from 
                                    a simple bivariate OLS regression of the first indicator on the second.'),
+                                 
                                  selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
+                                 uiOutput("plot_choices")  %>% withSpinner(), 
                                  downloadButton("downloadregplot", "Download"),
-                                 plotOutput("regplot", height=1400)
+                                 plotOutput("regplot", height=600)
                                  ),
                         tabPanel("Multivariate Regression Tool", value=7, 
                                  p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
@@ -173,7 +174,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                    necessarily causal.  The X variables include our Dashboard indicators, as well as the option to include
                                    the rural status of the school, as well as GDP per square kilometer within one square kilometer of the school.  GDP per square kilometer data 
                                    is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  Additionally, 
-                                   the user has the option to include regional fixed effects.  In the case of Jordan, these are Jordan Directorate fixed effects.'),
+                                   the user has the option to include regional fixed effects.  In the case of Peru, these are Peruvian Department fixed effects.'),
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  
@@ -187,6 +188,9 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  selectizeInput("imputed", "Use Dataset that uses imputation for missing values, rather than raw dataset?", 
                                                 choices=c("No", "Yes"),
                                                 selected="No")   ,
+                                 selectInput("stud_level_reg", "Use Student Level Data?",
+                                             choices=c('No', 'Yes'),
+                                             selected='No'),
                                  downloadButton("downloadmultireg", "Download"),
                                  htmlOutput("multivariate_regs", height=1400)
                         ),
@@ -223,15 +227,44 @@ server <- function(input, output, session) {
     
     
     load(paste("school_sample_2019-10-11.RData"))
-    #correct a few missing values in weights with governorate average
-    #because stratification was at the governorate level, this is accurate correction.
-    data_set_updated <- data_set_updated %>%
-      group_by(governorate, supervisory_authority_factor) %>%
-      mutate(weights=replace(weights, which(is.na(weights)),
-                               mean(weights, na.rm=TRUE)),
-             total_4th=replace(total_students_grade_4, which(is.na(total_students_grade_4)),
-                                mean(total_students_grade_4, na.rm=TRUE))
-             )
+
+    
+    
+    #define function to create weights for summary statistics
+    df_weights_function <- function(dataset,scode, snumber, prov) {
+      scode<-enquo(scode)  
+      snumber<-enquo(snumber)
+      prov<-enquo(prov)
+      
+      dataset %>%
+        mutate(!! scode := as.numeric(.data$school_code)) %>%
+        left_join(data_set_updated) %>%
+        mutate(school_ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ,
+               province=!! prov)
+    }
+    
+    #define function to reformat the sampling frame dataset to match needs of App
+    sampling_dataset_function <- function(dataset, prov, snumber) {
+      prov<-enquo(prov)
+      snumber<-enquo(snumber)
+      
+      dataset %>%
+        group_by(!! prov) %>%
+        mutate(weights=replace(.data$weights, which(is.na(.data$weights)),
+                               mean(.data$weights, na.rm=TRUE)),
+               !! snumber := replace(!! snumber, which(is.na(!! snumber)),
+                                     mean(!! snumber, na.rm=TRUE)),
+               province=!! prov
+        )
+    }
+    
+    
+    
+        #correct a few missing values in weights with province average
+    #because stratification was at the province level, this is accurate correction.
+    data_set_updated <- sampling_dataset_function(data_set_updated, governorate, total_students_grade_4)
+      
+
     
     
     indicators <- indicators %>%
@@ -245,9 +278,12 @@ server <- function(input, output, session) {
 
     
     ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
-                'student_attendance','presence_rate',  'absence_rate', 'school_absence_rate', 
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'school_absence_rate', 
                 'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
                 'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
                 'operational_management', 'vignette_1',  'vignette_2', 
@@ -260,14 +296,16 @@ server <- function(input, output, session) {
                 'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
                 'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
                 'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                'school_management_attraction', 'principal_satisfaction',
+                'standards_monitoring',
+                'school_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'school_management_attraction', 'principal_satisfaction', 'principal_salary',
                 'school_selection_deployment', 
                 'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
                 'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
                 'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
-                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes',
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
                 'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
     )
     
@@ -275,7 +313,9 @@ server <- function(input, output, session) {
                         "Student Attendance Rate",
                         "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
                         "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        'Teacher Pedagogical Skills','TEACH classroom culture',' TEACH instruction','TEACH socio-emotional skills',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
                         "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
                         "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
@@ -288,14 +328,16 @@ server <- function(input, output, session) {
                         'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
                         'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
                         'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                        "Inputs and Infrastructure Monitoring", 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                        "School Management Attraction", 'principal_satisfaction',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 'principal_salary',
                         "School Management Selection & Deployment",
                         "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
                         "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                         "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
                         "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
-                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes',
+                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
                         "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
                         )
   
@@ -304,7 +346,8 @@ server <- function(input, output, session) {
                         "Student Attendance Rate",
                         "Teacher Classroom Presence Rate", 
                         "Teacher Content Proficiency", 
-                        "1st Grade Assessment Score", 
+                        'Teacher Pedagogical Skills',
+                        "1st Grade Assessment Proficiency", 
                         "Inputs", 
                         "Infrastructure", 
                         "Operational Management", 
@@ -317,7 +360,9 @@ server <- function(input, output, session) {
                         'Teacher Support (De Facto)', 
                         'Teacher Evaluation (De Facto)', 
                         'Teacher Monitoring & Accountability (De Facto)', 
+                        "Inputs and Infrastructure Standards", 
                         "Inputs and Infrastructure Monitoring", 
+                        "School Management Clarity of Functions", 
                         "School Management Attraction", 
                         "School Management Selection & Deployment",
                         "School Management Support", 
@@ -332,7 +377,8 @@ server <- function(input, output, session) {
                        'student_attendance', 
                        'presence_rate',
                        'content_proficiency', 
-                       'ecd_student_knowledge', 
+                       'teach_score',
+                       'ecd_student_proficiency', 
                        'inputs', 
                        'infrastructure',
                        'operational_management', 
@@ -345,7 +391,9 @@ server <- function(input, output, session) {
                        'teaching_evaluation', 
                        'teacher_monitoring',
                        'intrinsic_motivation', 
+                       'standards_monitoring',
                        'school_monitoring', 
+                       'school_management_clarity',
                        'school_management_attraction', 
                        'school_selection_deployment', 
                        'school_support', 
@@ -363,6 +411,7 @@ server <- function(input, output, session) {
     sub_ind_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
                           'absence_rate','school_absence_rate', 'student_attendance',
                           'math_content_knowledge', 'literacy_content_knowledge',
+                          'classroom_culture','instruction','socio_emotional_skills',
                           'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                           'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
                           'drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
@@ -478,11 +527,8 @@ server <- function(input, output, session) {
           
         }
 
-        df<- df %>%
-          mutate(organization_code=as.numeric(school_code)) %>%
-          left_join(data_set_updated) %>%
-          mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
-        
+        #need to modify this depending on country
+        df<-df_weights_function(df,organization_code, total_students_grade_4, governorate)
         
         if (input$explorer_weights=="No") {
           #add function to produce weighted summary stats
@@ -518,10 +564,8 @@ server <- function(input, output, session) {
               filter(student_male==1)          
           }
           
-          df<- df %>%
-            mutate(organization_code=as.numeric(school_code)) %>%
-            left_join(data_set_updated) %>%
-            mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+          #need to modify this depending on country
+          df<-df_weights_function(df, organization_code, total_students_grade_4, governorate)
           
           
           if (input$explorer_weights=="No") {
@@ -796,10 +840,12 @@ server <- function(input, output, session) {
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m1s?q?|m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
         metadata<-metadta
         
-        weights <- dat() %>%
-          mutate(organization_code=as.numeric(school_code)) %>%
-          left_join(data_set_updated) %>%
-          mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+        #need to modify this depending on country
+        temp_df<-dat()
+        
+        weights <-df_weights_function(temp_df, organization_code, total_students_grade_4, governorate)
+        
+
         
         sch_ipw<-weights$school_ipw 
         
@@ -931,9 +977,7 @@ server <- function(input, output, session) {
         
       df_reg<-school_dta_short
       
-      df_reg<- df_reg %>%
-        mutate(organization_code=as.numeric(school_code)) %>%
-        left_join(data_set_updated)
+      df_reg<- df_weights_function(df_reg, organization_code, total_students_grade_4, governorate) 
       
       
       if (input$subgroup=="Rural") {
@@ -947,9 +991,8 @@ server <- function(input, output, session) {
       #keep just school code and learning outcome
 
       df_reg <- df_reg %>%
-        select(school_code, as.character(get_tag_reg()[1]), weights, total_4th ) %>%
-        rename(y=2) %>%
-        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+        select(school_code, as.character(get_tag_reg()[1]), school_ipw ) %>%
+        rename(y=2) 
 
         
 
@@ -986,15 +1029,15 @@ server <- function(input, output, session) {
     #Regression Analysis of key indicators
     #########################################
     
-    
-    regp<- reactive({
+    plotod <- reactive ({
+      
       
       if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
         df_reg_plot <- dat() %>%
           select(one_of(ind_list), school_code) %>%
           rowid_to_column("ID") %>%
           pivot_longer(cols=one_of(ind_list),
-                     names_to='indicators', values_to='values') %>%
+                       names_to='indicators', values_to='values') %>%
           left_join(dat_reg()) %>%
           left_join(labels_df) 
         
@@ -1007,19 +1050,60 @@ server <- function(input, output, session) {
           left_join(dat_reg()) %>%
           left_join(labels_df) 
       }
+      
+      df_reg_plot
+
+    })
+    
+    
+    #Allow user to select choices of indicator to show histograms
+    ploto_choices <- reactive({
+      
+      return(as.character(unique(plotod()$indicator_labels)))
+      
+    })
+    
+    #Make default one of our main indicators
+    plot_selected <- reactive({
+      
+      
+      temp_plot <- plotod() %>%
+        filter(indicator_labels %in% main_indicator_labels)
+      
+      return(as.character(unique(temp_plot$indicator_labels)))
+      
+    })
+    
+    #update select input list with these values
+    output$plot_choices = renderUI({
+      
+      
+      selectizeInput('plot_choose',"Choose Additional Sub-Indicators to plot",  choices = ploto_choices(),
+                     selected=plot_selected(), 
+                     multiple = TRUE)
+      
+    })
+
+    regp<- reactive({
+      
+      df_reg_plot_dta<-plotod() %>%
+        filter(indicator_labels %in% input$plot_choose)
 
       
-      regplots<- ggplot(data=na.omit(df_reg_plot), aes(x=values, y=y, group=indicator_labels, colour=indicator_labels)) +
+      regplots<- ggplot(data=na.omit(df_reg_plot_dta), aes(x=values, y=y, group=indicator_labels, color=
+                                                             if_else((indicator_labels %in% main_indicator_labels), 
+                                                                                                                 "#2C89C4" ,"#ff0000"  ))) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes(weight = school_ipw)) +
         facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(10))) +
+        scale_color_manual(labels = c( "Primary Indicator", "Sub-Indicator"),  values= c( "#ff0000", "#2C89C4")) +
         bbc_style() +
         theme(
           text = element_text(size = 16),
           
         ) +
         expand_limits(x = 0, y = 0) +
-        ggtitle(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices)) +
+        ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices),50)) +
         labs(colour = "Indicator") +
         ylab(input$reg_choices) +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
@@ -1028,6 +1112,12 @@ server <- function(input, output, session) {
       
       
       regplots
+      
+      
+      
+      
+      
+      
       
     })
     output$regplot<-renderPlot({
@@ -1090,9 +1180,27 @@ server <- function(input, output, session) {
     dat_for_regs <- reactive({
       
       if (input$imputed=="Yes") {
-        school_dta_short_imp
+
+          school_dta_short_imp
+        
       } else if (input$imputed=="No") {
-        school_dta_short
+        
+        if (input$stud_level_reg=="Yes") {
+          
+          school_dta_short_merge <- school_dta_short %>%
+            select(-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+                      'student_proficient', 'student_proficient_70', 'student_proficient_75',
+                      'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+                      'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75'))
+          
+          assess_4th_grade_anon %>%
+            left_join(school_dta_short_merge)
+          
+        } else {
+        
+          school_dta_short
+          
+        }
       }
       
     })
@@ -1100,9 +1208,9 @@ server <- function(input, output, session) {
     
     dat_mult_reg <- reactive({
       #create database with just learning outcomes
-      df_mult_reg<-dat_for_regs() %>%
-        mutate(organization_code=as.numeric(school_code)) %>%
-        left_join(data_set_updated) 
+      temp_df2<-dat_for_regs()
+      df_mult_reg<-df_weights_function(temp_df2, organization_code, total_students_grade_4, governorate)
+      
       
       
       if (input$subgroup=="Rural") {
@@ -1115,9 +1223,8 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_mult_reg <- df_mult_reg %>%
-        select(school_code, as.character(get_tag_outcome()[1]), weights, total_4th, governorate, rural ) %>%
-        rename(y=2) %>%
-        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+        select(school_code, as.character(get_tag_outcome()[1]), school_ipw, province, rural ) %>%
+        rename(y=2) 
       
       if (input$explorer_weights=="No") {
         #add function to produce weighted summary stats
@@ -1134,16 +1241,16 @@ server <- function(input, output, session) {
     
     mult_regs<-reactive({
       
-      # gdp <- school_gdp %>%
-      #   select(school_code, GDP) %>%
-      #   mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
+      gdp <- school_gdp %>%
+        select(school_code, GDP) %>%
+        mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
       
       if (input$province_dummies=="No") {
         df_multi_reg <- dat_for_regs() %>%
-          # left_join(gdp) %>%
+          left_join(gdp) %>%
           select(one_of(get_tag_mult_cov()), school_code) %>%
           left_join(dat_mult_reg()) %>%
-          select(-school_code,-weights, -school_ipw, -total_4th, -governorate) 
+          select(-school_code, -school_ipw,  -province) 
       
       
         my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), sep=""))
@@ -1154,12 +1261,12 @@ server <- function(input, output, session) {
         
       } else if (input$province_dummies=="Yes") {
         df_multi_reg <- dat_for_regs() %>%
-          # left_join(gdp) %>%
+          left_join(gdp) %>%
           select(one_of(get_tag_mult_cov()), school_code) %>%
           left_join(dat_mult_reg()) %>%
-          select(-school_code,-weights, -school_ipw, -total_4th) 
+          select(-school_code, -school_ipw) 
         
-        my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(governorate)', sep=""))
+        my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(province)', sep=""))
         multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$school_ipw)     
         # Adjust standard errors
         cov1_multi         <- vcovHC(multi_reg, type = "HC1")
@@ -1227,10 +1334,7 @@ server <- function(input, output, session) {
     
     dat_sub_reg <- reactive({
       #create database with just learning outcomes
-      df_sub_reg<-school_dta_short %>%
-        mutate(organization_code=as.numeric(school_code)) %>%
-        left_join(data_set_updated)
-      
+      df_sub_reg<-df_weights_function( school_dta_short, organization_code, total_students_grade_4, governorate)
       
       if (input$subgroup=="Rural") {
         df_sub_reg<- df_sub_reg %>%
@@ -1242,9 +1346,8 @@ server <- function(input, output, session) {
       
       #keep just school code and learning outcome
       df_sub_reg <- df_sub_reg %>%
-        select(school_code, as.character(get_tag_sub_reg()[1]), weights, total_4th ) %>%
-        rename(y=2) %>%
-        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+        select(school_code, as.character(get_tag_sub_reg()[1]), school_ipw ) %>%
+        rename(y=2) 
       
       if (input$explorer_weights=="No") {
         #add function to produce weighted summary stats
@@ -1264,7 +1367,7 @@ score<-reactive({
   df_scoring_reg <- dat() %>%
     select(one_of(sub_ind_list), school_code) %>%
     left_join(dat_sub_reg()) %>%
-    select(-school_code,-weights, -school_ipw, -total_4th)
+    select(-school_code, -school_ipw)
   
   scoring_reg<-lm(y~., df_scoring_reg, weights = dat()$school_ipw)
   
@@ -1427,55 +1530,9 @@ public_officials_dta_collapsed <- public_officials_dta_clean %>%
 
 
 
-drilldown_list<-c(      'math_student_knowledge', 'literacy_student_knowledge',
-                        'absence_rate','school_absence_rate', 'student_attendance',
-                        'math_content_knowledge', 'literacy_content_knowledge',
-                        'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
-                        'blackboard_functional', 'pens_etc', 'share_desk', 'used_ict', 'access_ict',
-                        'drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-                        'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                        'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                        'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-                        'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
-                        'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
-                        'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-                        'teacher_selection','teacher_deployment',
-                        'pre_service','practicum','in_service','opportunities_teachers_share',
-                        'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences', 
-                        'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                        'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                        'principal_satisfaction',
-                        'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                        'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
-)
 
-indicator_labels<-c('4th Grade Student Proficiency', '4th Grade Math Knowledge', '4th Grade Literacy Knowledge',
-                    'Student Attendance Rate',
-                    "Teacher Classroom Presence Rate",'Teacher Classroom Absence Rate', 'Teacher School Absence Rate', 
-                    "Teacher Content Proficiency", 'Teacher Content Knowledge', 'Teacher Math Content Knowledge', 'Teacher Literacy Content Knowledge', 'Grammer', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
-                    '1st Grade Assessment Score', '1st Grade Numeracy Score', '1st Grade Literacy Score', '1st Grade Executive Functioning Score', '1st Grade Socio-Emotional Score',
-                    'Inputs', 'Functioning Blackboard', 'Classroom Materials', 'Textbooks', 'Desks', 'ICT Usage', 'ICT Access',
-                    'Infrastructure', 'Clean Drinking Water', 'Functioning Toilets', 'Internet', 'Electricity', 'Disability Accessibility', 'Disability Road Access', 'School Ramps', 'Disability School Entrance', 'Classroom Ramps', 'Disability Classroom Entrance', 'Disability Screening',
-                    'Operational Management', 'Operational Management - Vignette 1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'Operational Management - Vignette 2','vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-                    'Teacher Intrinsic Motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-                    'Instructional Leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-                    'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
-                    'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
-                    'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-                    'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
-                    'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
-                    'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
-                    'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-                    'Inputs and Infrastructure Monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
-                    'School Management Attraction', 'principal_satisfaction',
-                    'School Management Selection & Deployment',
-                    'School Management Support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                    'School Management Evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
-                    'National Learning Goals',
-                    'Mandates and Accountability',
-                    'Quality of Bureaucracy',
-                    'Impartial Decision Making'
-)
+
+
 
 #create subset with just main indicators
 
@@ -1484,6 +1541,7 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Student Attendance',
                          'Teacher Effort', 
                          "Teacher Content Knowledge", 
+                         "Teacher Pedagogical Skills",
                          'Capacity for Learning', 
                          'Basic Inputs', 
                          'Basic Infrastructure', 
@@ -1497,7 +1555,9 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Policy Lever (Teaching) - Evaluation', 
                          'Policy Lever (Teaching) - Monitoring & Accountability', 
                          'Policy Lever (Teaching) - Intrinsic Motivation', 
+                         'Policy Lever (Inputs & Infrastructure) - Standards',
                          'Policy Lever (Inputs & Infrastructure) - Monitoring',
+                         "Policy Lever (School Management) - Clarity of Functions", 
                          'Policy Lever (School Management) - Attraction' ,                   
                          'Policy Lever (School Management) - Selection & Deployment'  ,      
                          'Policy Lever (School Management) - Support' ,                      
@@ -1524,10 +1584,7 @@ output$indicators_table <- DT::renderDataTable({
 # School Survey
     metadata<-metadta
     
-    weights <- school_dta_short %>%
-      mutate(organization_code=as.numeric(school_code)) %>%
-      left_join(data_set_updated) %>%
-      mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th) 
+    weights <- df_weights_function(school_dta_short, organization_code, total_students_grade_4, governorate)  
 
     sch_ipw<-weights$school_ipw 
     
@@ -1568,11 +1625,9 @@ output$indicators_table <- DT::renderDataTable({
     
     #Now do breakdown by Urban/Rural
     #urban
-    sumstats_school_urban <- school_dta_short %>%
-      mutate(organization_code=as.numeric(school_code)) %>%
-      left_join(data_set_updated) %>%
-      filter(rural==FALSE) %>%
-      mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
+    sumstats_school_urban <- df_weights_function(school_dta_short, organization_code, total_students_grade_4, governorate) %>%
+      filter(rural==FALSE) 
+
     
     sch_ipw<-sumstats_school_urban$school_ipw 
     
@@ -1601,12 +1656,9 @@ output$indicators_table <- DT::renderDataTable({
       select(varlabel, mean_urban, ci_urban)
     
     #rural
-      sumstats_school_rural <- school_dta_short %>%
-        mutate(organization_code=as.numeric(school_code)) %>%
-        left_join(data_set_updated) %>%
-        filter(rural==TRUE) %>%
-        mutate(school_ipw=if_else(is.na(weights), median(weights, na.rm=T), weights)*total_4th)
-      
+      sumstats_school_rural <- df_weights_function(school_dta_short,organization_code, total_students_grade_4, governorate)  %>%
+        filter(rural==TRUE) 
+
         
         sch_ipw<-sumstats_school_rural$school_ipw 
       
@@ -1712,7 +1764,7 @@ output$indicators_table <- DT::renderDataTable({
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Peru 2019",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
                 escape = FALSE,

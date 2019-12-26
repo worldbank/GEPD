@@ -95,7 +95,7 @@ clip.write_videofile(str(file_to_write), preset='veryfast', threads=2)
 # first define the route "chunk"
 chunk = 'Ruta 6'
 
-chunks=['Ruta 1','Ruta 2','Ruta 3','Ruta 4','Ruta 5','Ruta 6','Ruta 7','Ruta 8','Ruta 9','Ruta 10','Ruta 11','Ruta 12','Ruta 13','Ruta 14','Ruta 15','Ruta 16',
+chunks=['Ruta 14','Ruta 15','Ruta 16',
         'Ruta 17', 'Ruta 18', 'Ruta 19', 'Ruta 20']
 
 for chunk in chunks:
@@ -165,7 +165,7 @@ for chunk in chunks:
             else:
                 print ("File not exist")
                 #write the clip
-                clip1.write_videofile(str(file_to_write1),  threads=200, codec='libx264')
+                clip1.write_videofile(str(file_to_write1),   codec='libx264')
             
             if os.path.isfile(str(file_to_write2)):
                 print ("File exist")
