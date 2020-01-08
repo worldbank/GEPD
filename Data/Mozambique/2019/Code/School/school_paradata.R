@@ -52,13 +52,11 @@ quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter
 currentDate<-Sys.Date()
 
 tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
-
-approval<-""
-
+  
 ######################################
 # Interactions with API
 ######################################
-
+  
 #Get list of questionnaires available
 #the server address may need to be modified
 q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
@@ -68,13 +66,14 @@ str(content(q))
 
 
 #pull data from version of our Education Policy Dashboard Questionnaire
-POST(paste(server_add,"/api/v1/export/paradata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", approval, sep=""),
+POST(paste(server_add,"/api/v1/export/paradata/06756cace6d24cc996ffccbfc26a2264$",quest_version,"/start", sep=""),
      authenticate(user, password))
+
 
 #sleep for 10 seconds to wait for stata file to compile
 Sys.sleep(10)
 
-dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",approval,sep=""),
+dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/06756cace6d24cc996ffccbfc26a2264$", quest_version,"/",sep=""),
                     authenticate(user, password))
 
 redirectURL <- dataDownload$url 
@@ -88,8 +87,15 @@ writeBin(RawData$content, filecon)
 #close the connection
 close(filecon)
 
+
+
 #unzip
-unzip(file.path(download_folder, tounzip), exdir=download_folder) 
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else {
+  unzip(file.path(download_folder, tounzip), exdir=download_folder)
+}
 
 
 #########################################
@@ -98,19 +104,30 @@ unzip(file.path(download_folder, tounzip), exdir=download_folder)
 
 #read in data
 
-para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t") 
+# if (quest_version!=17) {
+#   para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+#   para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+#   
+#   para_df <- para_df %>%
+#     bind_rows(para_df_17)
+# 
+# } else if (quest_version==17) {
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  
+
+
 
 #label variables
 var.labels=c(
-  interview__id = "Unique 32-character long identifier of the interview",
-  order = "Sequential event number within each interview",
-  event = "Type of event happened",
-  responsible = "Login name of the person who initiated the event",
-  role = "System role of the person who initiated the event",
-  timestamp = "Date and time when the event happened",
-  offset = "Timezone offset relative to UTC",
-  parameters = "Event-specific parameters"
-)
+            interview__id = "Unique 32-character long identifier of the interview",
+            order = "Sequential event number within each interview",
+            event = "Type of event happened",
+            responsible = "Login name of the person who initiated the event",
+            role = "System role of the person who initiated the event",
+            timestamp = "Date and time when the event happened",
+            offset = "Timezone offset relative to UTC",
+            parameters = "Event-specific parameters"
+            )
 # Label data
 label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 
@@ -133,8 +150,9 @@ para_df <- para_df %>%
 
 #Only keep paradata on actual questions for indicators. These are tagged with m******
 para_df <- para_df %>% 
-  filter(str_detect(parameters, "DEM|NLG|ACM|QB|IDM|ORG")) %>%
+  filter(str_detect(parameters, "m1s|m2s|m3s|m4s|m5s|m6s|m7s|m8s")) %>%
   filter(responsible!="")
+
 
 #Split up question name to identify tags for each indicator
 para_df <- para_df %>% 
@@ -142,9 +160,19 @@ para_df <- para_df %>%
 
 #Add tags for module, section, and indicator
 para_df <- para_df %>% 
-  mutate(module = str_to_upper(substr(question, start=1, stop=3))) %>%
+  mutate(module = str_to_upper(substr(question, start=1, stop=2))) %>%
   mutate(section = str_to_upper(substr(question, start=1, stop=4))) %>%
-  mutate(indicator=str_to_upper(if_else(substr(question, start=1, stop=2)=="QB", substr(question, start=1, stop=2), substr(question, start=1, stop=3))))
+  separate(question, c(NA, "indicator"), sep="_", remove=FALSE) %>%
+  mutate(indicator = str_to_upper(indicator))
+
+#Read in list of indicators
+indicators <- read_delim(here::here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
+indicators <- indicators %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+indicator_names <- indicators$indicator_tag
 
 
 #merge on question text
@@ -158,8 +186,28 @@ makeVlist <- function(dta) {
 }
 
 
+#create school metadata frame
+raw_school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+school_metadta<-makeVlist(raw_school_dta)
 
-metadata <- rbind(public_officials_metadata)
+#create teacher questionnaire metadata frame
+raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
+
+#create teacher absence metadata frame
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
+
+#create ecd metadata frame
+raw_ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_metadta<-makeVlist(raw_ecd_dta)
+
+#create 4th grade assessment metadata frame
+raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_metadta<-makeVlist(raw_assess_4th_grade_dta)
+
+metadata <- rbind(school_metadta, teacher_questionnaire_metadta, ecd_metadta, assess_4th_grade_metadta)
+metadata <- rbind(school_metadta, teacher_questionnaire_metadta, teacher_absence_metadta, ecd_metadta, assess_4th_grade_metadta)
 
 metadata <- metadata %>% 
   mutate(question=name)
@@ -174,12 +222,52 @@ para_dta<- para_df %>%
   select(-vallabel, -varlabel, -ï..interview__id)
 write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+
+para_df_tab <- para_df %>%
+  select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id) %>%
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timestamp=last(timestamp))
+
+#create a database based on paradata on the number of modules completed per school
+para_df_module <- para_df %>% 
+  group_by(ï..interview__id, module) %>% 
+  summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec))
+
+school_dta_preamble_id <- school_dta %>%
+  select(interview__id, interview__key, school_code, school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon )
+
+school_modules_complete <- para_df_module %>%
+  mutate(interview__id=ï..interview__id) %>%
+  ungroup() %>%
+  select(-c('ï..interview__id', 'timelength_sec')) %>%
+  left_join(school_dta_preamble_id) %>%
+  mutate(val='Yes') %>%
+  pivot_wider(names_from=module, values_from = val) %>%
+  group_by(school_code) %>%
+  mutate(interview__key1=first(interview__key),
+         interview__key2=nth(interview__key,2),
+         responsible1=first(responsible),
+         responsible2=nth(responsible,2)) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  select(school_code,  
+         responsible1, responsible2, interview__key1, interview__key2, M1, M2, M3, M4, M5, M6, M7, M8,
+         school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon) %>%
+  arrange(school_code)
+  
+
+save(para_df_section, para_df_tab, school_modules_complete, file=paste(save_folder, "paradata_light.RData", sep="/"))
+
+
+# 
 # ######################################
 # # Length of each question by Enumerator
 # #######################################
 # 
 # para_df_tab <- para_df %>%
-#   select( responsible, date, module, section, question, varlabel, timelength_sec, ï..interview__id,)
+#   select( responsible, date, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
 # 
 # linked_df<-SharedData$new(para_df_tab)
 # 
@@ -193,13 +281,13 @@ write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 #          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
 #          
 #        ),
-#        
+#       
 #        list (
 #          plot_ly(linked_df, x=~question, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
 #            layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Question ID')),
 #          datatable(linked_df, 
 #                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-#                               'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+#                             'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
 #                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
 #                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
 #          
@@ -228,15 +316,15 @@ write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 #          filter_checkbox("module", "Module", linked_df, ~module, inline=FALSE)
 #        ),
 #        list (
-#          plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
-#            layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
-#          
-#          datatable(linked_df, 
-#                    colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-#                               'Length in Seconds' = 'timelength_sec'),
-#                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
-#                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
-#          
+#        plot_ly(linked_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible) %>%
+#          layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name')),
+#       
+#         datatable(linked_df, 
+#                  colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+#                             'Length in Seconds' = 'timelength_sec'),
+#                  extensions="Scroller", style="bootstrap", class="compact", width="100%",
+#                  options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+#       
 #        )
 #        
 # )
@@ -246,7 +334,7 @@ write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 # #######################################
 # 
 # para_df_tab <- para_df %>%
-#   select( responsible, date, timestamp, module, section, question, varlabel, timelength_sec, ï..interview__id,)
+#   select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
 # 
 # linked_df<-SharedData$new(para_df_tab)
 # 
@@ -266,7 +354,7 @@ write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 #            layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID')),
 #          datatable(linked_df, 
 #                    colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
-#                               'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
+#                               'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
 #                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
 #                    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
 #          

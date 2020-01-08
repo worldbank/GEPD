@@ -95,8 +95,7 @@ clip.write_videofile(str(file_to_write), preset='veryfast', threads=2)
 # first define the route "chunk"
 chunk = 'Ruta 6'
 
-chunks=['Ruta 14','Ruta 15','Ruta 16',
-        'Ruta 17', 'Ruta 18', 'Ruta 19', 'Ruta 20']
+chunks=[ 'Ruta 18', 'Ruta 19', 'Ruta 20']
 
 for chunk in chunks:
     path_to_open = data_folder / chunk / 'Video'
