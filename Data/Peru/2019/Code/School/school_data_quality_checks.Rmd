@@ -631,3 +631,55 @@ bscols(widths=c(3,NA),
 )
 
 ```
+
+
+## Test of Differences Between Sampling Information in Sampling Frame and Data Collected
+
+In the following, we test for differences in the number of students listed in the school based on EMIS data compared to the number of students reported by the principal when the enumerator visited.  Significant differences could affect the validity of our results, as survey weights are based on the EMIS data.  We plot the two numbers against one another, and also check for a relationship between the discrepancies and our dashboard indicators.
+
+```{r sampling_frame_test}
+
+frame_test <- school_dta_short %>%
+  mutate(total_enrollment_emis=total.boys+total.girls) %>%
+  mutate(total_enrollment_gap=total_enrolled-total_enrollment_emis) %>%
+  select(school_code, indicator_list, contains('enroll'))
+
+covariates<-indicator_list
+
+my_formula <- as.formula(paste('total_enrollment_gap ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg<-lm(my_formula, frame_test)   
+# Adjust standard errors
+cov1_multi         <- sandwich::vcovHC(multi_reg, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+stargazer( multi_reg, type = "html",
+           se        = list(robust_multi_se),
+           title = "Regression of Total Enrollment as Collected during School Survey Versus EMIS data",
+           style='aer',
+           notes= c(
+                    'Heteroskedasticity robust standard errors in parenthesis.'
+                    )
+)
+
+ggplot(frame_test, aes(x=total_enrollment_emis, y=total_enrolled)) +
+  geom_point() +
+  geom_smooth() +
+  xlab("# of Students based on EMIS") +
+  ylab("# of Students based on Survey") +
+  ggtitle(str_wrap('Plot of # of Students based on EMIS data on # of Students based on Survey Data for Dashboard Schools',65)) +
+  theme_bw() 
+  
+
+```
+```{r reg_results, results='asis', echo=FALSE}
+stargazer( multi_reg, type = "html",
+           se        = list(robust_multi_se),
+           title = "Regression of Gap between Total Enrollment as Collected during School Survey and EMIS data on Dashboard Indicators",
+           style='aer',
+           notes= c(
+                    'Heteroskedasticity robust standard errors in parenthesis.'
+                    )
+)
+
+```
+

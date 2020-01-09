@@ -26,8 +26,11 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
+
 #Country name
 country <-'Mozambique'
+country_name <-'Mozambique'
+
 year <- '2019'
 
 #########################
@@ -37,11 +40,30 @@ year <- '2019'
 #The save_folder will be the location of where cleaned data is stored
 
 if (Sys.getenv("USERNAME") == "wb469649"){
-  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work"
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
   download_folder <-file.path(paste(project_folder,country,year,"Data/raw/Public_Officials", sep="/"))
   save_folder <- file.path(paste(project_folder,country,year,"Data/clean/Public_Officials", sep="/"))
+  
+  backup_onedrive="yes"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/Public_Officials", sep="/"))
+  
+} else if (Sys.getenv("USERNAME") == "wb550666"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
+  
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/Public_Officials", sep="/"))
+  
+  # This is experimental and not currently in use.
+  backup_onedrive="yes"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/Public_Officials", sep="/"))
+  
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  save_folder_onedrive <- choose.dir(default = "", caption = "Select folder to save backed up data to onedrive")
+  
 }
 
 
@@ -52,12 +74,20 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
-source('public_officials_api.R')
+source('public_officials_api.R', local=TRUE)
+
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to clean data
-source('public_officials_data_cleaner.R')
+source('public_officials_cleaner.R', local=TRUE)
+
+
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
+#launch file to access data from API
+source('public_officials_paradata.R', local=TRUE)
 
 #create R markdown file with quality checks
-rmarkdown::render('public_officials_data_quality_checks.Rmd',  
-                  output_file =  paste("school_data_quality_checks_", country,".html", sep=''), 
-                  output_dir = save_folder)
+rmarkdown::render('public_officials_quality_checks.Rmd',  
+                  output_file =  paste("public_officials_quality_checks_", country,".html", sep=''), 
+                  output_dir = save_folder_onedrive)

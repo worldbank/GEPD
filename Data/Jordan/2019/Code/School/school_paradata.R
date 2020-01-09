@@ -231,8 +231,34 @@ para_df_tab <- para_df %>%
   group_by(ï..interview__id, section) %>% 
   summarise(responsible=first(responsible), date=first(date), module=first(module), timestamp=last(timestamp))
 
+#create a database based on paradata on the number of modules completed per school
+para_df_module <- para_df %>% 
+  group_by(ï..interview__id, module) %>% 
+  summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec))
 
-save(para_df_section, para_df_tab, file=paste(save_folder, "paradata_light.RData", sep="/"))
+school_dta_preamble_id <- school_dta %>%
+  select(interview__id, interview__key, school_code, school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon )
+
+school_modules_complete <- para_df_module %>%
+  mutate(interview__id=ï..interview__id) %>%
+  ungroup() %>%
+  select(-c('ï..interview__id', 'timelength_sec')) %>%
+  left_join(school_dta_preamble_id) %>%
+  mutate(val='Yes') %>%
+  pivot_wider(names_from=module, values_from = val) %>%
+  group_by(school_code) %>%
+  mutate(interview__key1=first(interview__key),
+         interview__key2=nth(interview__key,2),
+         responsible1=first(responsible),
+         responsible2=nth(responsible,2)) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  select(school_code,  
+         responsible1, responsible2, interview__key1, interview__key2, M1, M2, M3, M4, M5, M6, M7, M8,
+         school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon) %>%
+  arrange(school_code)
+  
+
+save(para_df_section, para_df_tab, school_modules_complete, file=paste(save_folder, "paradata_light.RData", sep="/"))
 
 
 # 

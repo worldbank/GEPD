@@ -172,8 +172,20 @@ public_officials_dta <- public_officials_dta %>%
          proportion_contracts_political=IDM3q2,
          proportion_producement_political=IDM3q3,
          DEM1q13=as.numeric(DEM1q13)) %>%
-  mutate(QB1q2= if_else(abs(QB1q2-class_size)<=4, 5-abs(QB1q2-class_size), 1),
-         QB1q1= if_else(abs(QB1q1-absence)<=4, 5-abs(QB1q1-absence), 1),
+  mutate(QB1q2= case_when(
+            between(abs(QB1q2-class_size)/class_size,0,10) ~ 5, #between 0-10% of actual value gets 5 points
+            between(abs(QB1q2-class_size)/class_size,10,20) ~ 4, #between 10-20% of actual value gets 4 points
+            between(abs(QB1q2-class_size)/class_size,20,30) ~ 3, #between 20-30% of actual value gets 3 points
+            between(abs(QB1q2-class_size)/class_size,30,40) ~ 2, #between 30-40% of actual value gets 2 points
+            between(abs(QB1q2-class_size)/class_size,40,100) ~ 1 #between 40-10% of actual value gets 1 points
+  ),
+         QB1q1= case_when(
+            between(abs(QB1q1-absence)/absence,0,10) ~ 5, #between 0-10% of actual value gets 5 points
+            between(abs(QB1q1-absence)/absence,10,20) ~ 4, #between 10-20% of actual value gets 4 points
+            between(abs(QB1q1-absence)/absence,20,30) ~ 3, #between 20-30% of actual value gets 3 points
+            between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
+            between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
+  ),
          QB4q2= case_when(
            QB4q2>=120 ~ 5,
            QB4q2>=110 ~ 4,
@@ -182,28 +194,28 @@ public_officials_dta <- public_officials_dta %>%
            QB4q2>=80 ~ 1,
            TRUE ~ 1),
          IDM1q3=case_when(
-           IDM1q3==0 ~ 5,
-           (IDM1q3>0 & IDM1q3<=5) ~ 4,
-           (IDM1q3>5 & IDM1q3<=10) ~ 3,
-           (IDM1q3>10 & IDM1q3<=15) ~ 2,
+           (IDM1q3>=0 & IDM1q3<=5) ~ 5,
+           (IDM1q3>5 & IDM1q3<=10) ~ 4,
+           (IDM1q3>10 & IDM1q3<=15) ~ 3,
+           (IDM1q3>15 & IDM1q3<=20) ~ 2,
            TRUE ~ 1),
          IDM3q1=case_when(
-           IDM3q1==0 ~ 5,
-           (IDM3q1>0 & IDM3q1<=5) ~ 4,
-           (IDM3q1>5 & IDM3q1<=10) ~ 3,
-           (IDM3q1>10 & IDM3q1<=15) ~ 2,
+           (IDM3q1>=0 & IDM3q1<=5) ~ 5,
+           (IDM3q1>5 & IDM3q1<=10) ~ 4,
+           (IDM3q1>10 & IDM3q1<=15) ~ 3,
+           (IDM3q1>15 & IDM3q1<=20) ~ 2,
            TRUE ~ 1),
          IDM3q2=case_when(
-           IDM3q2==0 ~ 5,
-           (IDM3q2>0 & IDM3q2<=5) ~ 4,
-           (IDM3q2>5 & IDM3q2<=10) ~ 3,
-           (IDM3q2>10 & IDM3q2<=15) ~ 2,
+           (IDM3q2>=0 & IDM3q2<=5) ~ 5,
+           (IDM3q2>5 & IDM3q2<=10) ~ 4,
+           (IDM3q2>10 & IDM3q2<=15) ~ 3,
+           (IDM3q2>15 & IDM3q2<=20) ~ 2,
            TRUE ~ 1),
          IDM3q3=case_when(
-           IDM3q3==0 ~ 5,
-           (IDM3q3>0 & IDM3q3<=5) ~ 4,
-           (IDM3q3>5 & IDM3q3<=10) ~ 3,
-           (IDM3q3>10 & IDM3q3<=15) ~ 2,
+           (IDM3q3>=0 & IDM3q3<=5) ~ 5,
+           (IDM3q3>5 & IDM3q3<=10) ~ 4,
+           (IDM3q3>10 & IDM3q3<=15) ~ 3,
+           (IDM3q3>15 & IDM3q3<=20) ~ 2,
            TRUE ~ 1)
   )
     
@@ -330,17 +342,22 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
-  write_dta(public_officials_dta_clean, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+  write_dta(public_officials_dta_short, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
 }
 
 
 write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
-write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
+
+
+public_officials_dta_clean2 <- public_officials_dta_clean %>%
+  mutate(pol_personnel_management=politicized_personnel_management ,
+         pol_policy_making=politicized_policy_making ,
+         pol_policy_implementation=politicized_policy_implementation)
+write_dta(public_officials_dta_clean2, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
 keep_info <- c('interview__id','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
-
 
 ###############
 #Aggregate to office level
@@ -349,7 +366,7 @@ keep_info <- c('interview__id','region_code', 'district_code', 'district', 'prov
 public_officials_office_level<- public_officials_dta_clean %>%
   group_by(region_code, district_code, govt_tier) %>%
   select(keep_info,bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm, 
-         starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
+         starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM'), motivation_relative_start ) %>%
   mutate(count=n() ) %>% 
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
   
@@ -378,13 +395,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
 # public_officials_dta_clean2 <- data.frame(sapply(label_df$name, ff))
 
 
-# #now add labels
-# for (row in 1:nrow(label_df)) {
-#   var <- label_df[row, "name"]
-#   lab <- label_df[row, "vallabel"]
-#   
-#   public_officials_dta_clean$var[1] <- 1
-# }
+
 ################################
 #Store Key Created Datasets
 ################################

@@ -53,7 +53,7 @@ currentDate<-Sys.Date()
 
 tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
 
-approval<-"?Status=ApprovedByHeadquarters"
+approval<-""
 
 ######################################
 # Interactions with API
