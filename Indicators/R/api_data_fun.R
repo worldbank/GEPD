@@ -103,7 +103,7 @@ api_data <- function(data_dir1, data_dir2, data_dir3, cntry, yr) {
       SE.PRM.LERN.3.F = indicator_means(math_student_proficient, "school", "LERN",  "Female"),
       SE.PRM.LERN.3.M = indicator_means(math_student_proficient, "school", "LERN",  "Male"),
       SE.PRM.LERN.3.R = indicator_means(math_student_proficient, "school", "LERN",  "Rural"),
-      SE.PRM.LERN.3.U = indicator_means(math_student_proficient, "school", "LERN",  "Urban"),
+      SE.PRM.LERN.3.U = indicator_means(math_student_proficient, "school", "LERN",  "Urban")
     )
   
   
@@ -111,9 +111,46 @@ api_data <- function(data_dir1, data_dir2, data_dir3, cntry, yr) {
   # Teacher Effort		(EFFT)
   #######################################
   
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.EFFT     = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
+      SE.PRM.EFFT.1   = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
+      SE.PRM.EFFT.1.F = 100-indicator_means(absence_rate, "school", "EFFT",  "Female"),
+      SE.PRM.EFFT.1.M = 100-indicator_means(absence_rate, "school", "EFFT",  "Male"),
+      SE.PRM.EFFT.1.R = 100-indicator_means(absence_rate, "school", "EFFT",  "Rural"),
+      SE.PRM.EFFT.1.U = 100-indicator_means(absence_rate, "school", "EFFT",  "Urban"),
+      SE.PRM.EFFT.2   = 100-indicator_means(school_absence_rate, "school", "EFFT",  "All"),  
+      SE.PRM.EFFT.2.F = 100-indicator_means(school_absence_rate, "school", "EFFT",  "Female"),
+      SE.PRM.EFFT.2.M = 100-indicator_means(school_absence_rate, "school", "EFFT",  "Male"),
+      SE.PRM.EFFT.2.R = 100-indicator_means(school_absence_rate, "school", "EFFT",  "Rural"),
+      SE.PRM.EFFT.2.U = 100-indicator_means(school_absence_rate, "school", "EFFT",  "Urban")
+
+    )
+  
+  
   #######################################
   # 	Teacher Content Knowledge	(CONT)
   #######################################
+  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.CONT     = indicator_means(content_proficiency, "school", "CONT",  "All"),
+      SE.PRM.CONT.1   = indicator_means(content_proficiency, "school", "CONT",  "All"),
+      SE.PRM.CONT.1.F = indicator_means(content_proficiency, "school", "CONT",  "Female"),
+      SE.PRM.CONT.1.M = indicator_means(content_proficiency, "school", "CONT",  "Male"),
+      SE.PRM.CONT.1.R = indicator_means(content_proficiency, "school", "CONT",  "Rural"),
+      SE.PRM.CONT.1.U = indicator_means(content_proficiency, "school", "CONT",  "Urban"),
+      SE.PRM.CONT.2   = indicator_means(literacy_content_proficiency, "school", "CONT",  "All"),  
+      SE.PRM.CONT.2.F = indicator_means(literacy_content_proficiency, "school", "CONT",  "Female"),
+      SE.PRM.CONT.2.M = indicator_means(literacy_content_proficiency, "school", "CONT",  "Male"),
+      SE.PRM.CONT.2.R = indicator_means(literacy_content_proficiency, "school", "CONT",  "Rural"),
+      SE.PRM.CONT.2.U = indicator_means(literacy_content_proficiency, "school", "CONT",  "Urban"),
+      SE.PRM.CONT.3   = indicator_means(math_content_proficiency, "school", "CONT",  "All"),
+      SE.PRM.CONT.3.F = indicator_means(math_content_proficiency, "school", "CONT",  "Female"),
+      SE.PRM.CONT.3.M = indicator_means(math_content_proficiency, "school", "CONT",  "Male"),
+      SE.PRM.CONT.3.R = indicator_means(math_content_proficiency, "school", "CONT",  "Rural"),
+      SE.PRM.CONT.3.U = indicator_means(math_content_proficiency, "school", "CONT",  "Urban")
+    )
   
   #######################################
   # Teacher Pedagogical Skills	(PEDG)
@@ -122,6 +159,27 @@ api_data <- function(data_dir1, data_dir2, data_dir3, cntry, yr) {
   #######################################
   # 	Basic Inputs	(INPT)
   #######################################
+  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.INPT    
+      SE.PRM.INPT.1  
+      SE.PRM.INPT.1.R
+      SE.PRM.INPT.1.U
+      SE.PRM.INPT.2  
+      SE.PRM.INPT.2.R
+      SE.PRM.INPT.2.U
+      SE.PRM.INPT.3  
+      SE.PRM.INPT.3.R
+      SE.PRM.INPT.3.U
+      SE.PRM.INPT.4  
+      SE.PRM.INPT.4.R
+      SE.PRM.INPT.4.U
+      SE.PRM.INPT.5  
+      SE.PRM.INPT.5.R
+      SE.PRM.INPT.5.U
+    )
+  
   
   #######################################
   # 	Basic Infrastructure	(INFR)
