@@ -14,6 +14,8 @@ library(naniar)
 library(vtable)
 library(readxl)
 library(readr)
+library(wbstats)
+
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 ########################
@@ -111,23 +113,27 @@ df_defacto_dejure <- df %>%
          Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
   select(Series, Indicator.Name)
   
+# Prepare a data frame, on which we can add values
 
+##########################
+# Now create database for upload with correct format for EdStats
+###########################
 #Pivot longer
 df_longer<-df %>%
   pivot_longer(cols=c(
-                      'Subquestion_1', 'Subquestion_2', 'Subquestion_3',
-                      'Subquestion_4', 'Subquestion_5', 'Subquestion_6',
-                      'Subquestion_7', 'Subquestion_8','Subquestion_9',
-                      'Subquestion_10', 'Subquestion_11', 'Subquestion_12',
-                      'Subquestion_13', 'Subquestion_14', 'Subquestion_15',
-                      'Subquestion_16', 'Subquestion_17', 'Subquestion_18',
-                      'Subquestion_19', 'Subquestion_20'),
-               values_to='short_desc') %>%
+    'Subquestion_1', 'Subquestion_2', 'Subquestion_3',
+    'Subquestion_4', 'Subquestion_5', 'Subquestion_6',
+    'Subquestion_7', 'Subquestion_8','Subquestion_9',
+    'Subquestion_10', 'Subquestion_11', 'Subquestion_12',
+    'Subquestion_13', 'Subquestion_14', 'Subquestion_15',
+    'Subquestion_16', 'Subquestion_17', 'Subquestion_18',
+    'Subquestion_19', 'Subquestion_20'),
+    values_to='short_desc') %>%
   filter(short_desc!="") %>%
   filter(short_desc!="Overall") %>%
   pivot_longer(cols=c(    "Column_2", "Column_3", "Column_4","Column_5", "Column_6"),
-    values_to='urban_rural_gender',
-    names_to = 'urban_rural_gender_name')  %>%
+               values_to='urban_rural_gender',
+               names_to = 'urban_rural_gender_name')  %>%
   select(-urban_rural_gender_name) %>%
   filter(urban_rural_gender!="") 
 
@@ -149,7 +155,7 @@ df_sub<-df_longer %>%
     (urban_rural_gender!="Overall") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
     TRUE ~ Indicator.Name  )) %>%
   select(-Column_1, -type, -num, -urban_rural_gender) 
-  
+
 api_final  <- df_overall %>%
   bind_rows(df_defacto_dejure) %>%
   bind_rows(df_sub) %>%
@@ -174,16 +180,65 @@ api_final <- api_final %>%
   select(-c(indicator_tag, Value))
 
 
-#export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_Info.csv')
 
-
+##########################
+#use api_data function to pull in data collected
+##########################
 # Example:
 data_dir1 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/School"
 data_dir2 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Public_officials"
 data_dir3 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Expert_Survey"
 
+
+#read in databases for indicators
+
+load(paste(data_dir1, "school_indicators_data.RData", sep="/"))
+load(paste(data_dir2, "public_officials_indicators_data.RData", sep="/"))
+
+school_df <- read_stata(paste(data_dir1, 'final_complete_school_data.dta', sep="/" ))
+public_officials_df <- read_stata(paste(data_dir2, 'public_officials_survey_data.dta', sep="/" ))
+expert_df <- read_stata(paste(data_dir3, 'expert_dta_final.dta', sep="/" ))
+
+
+#load sampling info
+load(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_2019-07-22.RData"))
+
+#define function to create weights for summary statistics
+df_weights_function <- function(dataset,scode, snumber, prov) {
+  scode<-enquo(scode)  
+  snumber<-enquo(snumber)
+  prov<-enquo(prov)
+  
+  dataset %>%
+    mutate(!! scode := as.numeric(.data$school_code)) %>%
+    left_join(data_set_updated) %>%
+    mutate(school_ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ,
+           province=!! prov)
+}
+
+
+school_df <- df_weights_function(school_df,codigo.modular, total_4th, departamento)
+
+#pull data for learning poverty from wbopendata
+#list of indicators
+ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.OOS",  "SE.LPV.PRIM.OOS.FE", "SE.LPV.PRIM.OOS.MA",
+               "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA")
+#read in data from wbopendata
+wbopendat<-WDI(country="PE", indicator=ind_list, start=2013, end=2013, extra=T) %>%
+  filter(!is.na(SE.LPV.PRIM) & !is.na(country)) %>%
+  group_by(iso3c) %>%
+  arrange(year) %>%
+  filter(row_number()==n())
+
+
 PER_data_2019 <- api_data(data_dir1, data_dir2, data_dir3, 'PER', 2019)
+
+
+#export Indicators_metatdata section
+write_excel_csv(api_final, 'GEPD_Indicators_API_Info.csv')
+
+
+
 
 
 
