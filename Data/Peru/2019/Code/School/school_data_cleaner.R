@@ -1167,7 +1167,16 @@ final_indicator_data_OPMN <- final_indicator_data_OPMN %>%
   mutate(n_mssing_OPMN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
   
+#Breakdowns by Male/Female
+final_indicator_data_OPMN_M <- final_indicator_data_OPMN %>%
+  filter(m7saq10==1) %>%
+  mutate(n_mssing_OPMN=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
+final_indicator_data_OPMN_F <- final_indicator_data_OPMN %>%
+  filter(m7saq10==2) %>%
+  mutate(n_mssing_OPMN=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 #############################################
 ##### School Instructional Leadership ###########

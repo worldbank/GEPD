@@ -41,7 +41,7 @@ currentDate<-Sys.Date()
 tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
 
 
-
+if (need_api==1) {
 ######################################
 # Interactions with API
 ######################################
@@ -86,6 +86,7 @@ unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
 }
 
+}
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
@@ -228,7 +229,8 @@ ecd_metadta<-ecd_metadta %>%
 
 ecd_dta <- ecd_dta %>%
   bind_rows(ecd_dta_17) %>%
-  bind_rows(ecd_dta_15)
+  bind_rows(ecd_dta_15) %>%
+  select(-m6s1q1)
 
 
 ecd_dta %>%
@@ -256,7 +258,8 @@ assess_4th_grade_metadta<-assess_4th_grade_metadta %>%
 
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   bind_rows(assess_4th_grade_dta_17) %>%
-  bind_rows(assess_4th_grade_dta_15)
+  bind_rows(assess_4th_grade_dta_15) %>%
+  select(-m8s1q1)
 
 
 assess_4th_grade_dta %>%
@@ -291,7 +294,8 @@ teacher_questionnaire_metadta<-teacher_questionnaire_metadta %>%
 
 teacher_questionnaire <- teacher_questionnaire %>%
   bind_rows(teacher_questionnaire_17) %>%
-  bind_rows(teacher_questionnaire_15)
+  bind_rows(teacher_questionnaire_15) %>%
+  select(-m3sb_troster)
 
 
 teacher_questionnaire %>%
@@ -325,7 +329,8 @@ teacher_absence_metadta<-teacher_absence_metadta %>%
 
 teacher_absence_dta <- teacher_absence_dta %>%
   bind_rows(teacher_absence_dta_17) %>%
-  bind_rows(teacher_absence_dta_15)
+  bind_rows(teacher_absence_dta_15) %>%
+  select(-m2saq2)
 
 
 teacher_absence_dta %>%
@@ -354,7 +359,8 @@ teacher_assessment_metadta<-teacher_assessment_metadta %>%
 
 teacher_assessment_dta <- teacher_assessment_dta %>%
   bind_rows(teacher_assessment_dta_17) %>%
-  bind_rows(teacher_assessment_dta_15)
+  bind_rows(teacher_assessment_dta_15) %>%
+  select(-m5sb_troster)
 
 
 teacher_assessment_dta %>%
@@ -376,7 +382,7 @@ metadta %>%
 
 
 tounzip <- paste("myddi-",currentDate, ".zip" ,sep="")
-
+if (need_api==1) {
 ######################################
 # Interactions with API
 ######################################
@@ -475,7 +481,7 @@ if (quest_version==17) {
   unzip(file.path(download_folder, tounzip), exdir=download_folder)
 }
 
-
+}
 #########################################
 # Read in paradata and do basic cleaning
 #########################################

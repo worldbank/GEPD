@@ -14,7 +14,7 @@ library(naniar)
 library(vtable)
 library(readxl)
 library(readr)
-library(wbstats)
+library(WDI)
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
@@ -184,6 +184,11 @@ api_final <- api_final %>%
 ##########################
 #use api_data function to pull in data collected
 ##########################
+
+###########
+# Peru
+###########
+
 # Example:
 data_dir1 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/School"
 data_dir2 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Public_officials"

@@ -162,22 +162,27 @@ api_data <- function(data_dir1, data_dir2, data_dir3, cntry, yr) {
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.INPT    
-      SE.PRM.INPT.1  
-      SE.PRM.INPT.1.R
-      SE.PRM.INPT.1.U
-      SE.PRM.INPT.2  
-      SE.PRM.INPT.2.R
-      SE.PRM.INPT.2.U
-      SE.PRM.INPT.3  
-      SE.PRM.INPT.3.R
-      SE.PRM.INPT.3.U
-      SE.PRM.INPT.4  
-      SE.PRM.INPT.4.R
-      SE.PRM.INPT.4.U
-      SE.PRM.INPT.5  
-      SE.PRM.INPT.5.R
-      SE.PRM.INPT.5.U
+      #(De Facto) Average number of classroom inputs in classrooms	
+      SE.PRM.INPT     =indicator_means(inputs, "school", "INPT",  "All"),
+      SE.PRM.INPT.1   =indicator_means(inputs, "school", "INPT",  "All"),
+      SE.PRM.INPT.1.R =indicator_means(inputs, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.1.U =indicator_means(inputs, "school", "INPT",  "Urban"),
+      #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
+      SE.PRM.INPT.2   =0.33*indicator_means(textbooks, "school", "INPT",  "All") + 0.67*indicator_means(pens_etc, "school", "INPT",  "All"),
+      SE.PRM.INPT.2.R =0.33*indicator_means(textbooks, "school", "INPT",  "Rural") + 0.67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.2.U =0.33*indicator_means(textbooks, "school", "INPT",  "Rural") + 0.67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
+      #(De Facto) Percent of classrooms with a functional blackboard and chalk	
+      SE.PRM.INPT.3   =indicator_means(blackboard_functional, "school", "INPT",  "All"),
+      SE.PRM.INPT.3.R =indicator_means(blackboard_functional, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.3.U =indicator_means(blackboard_functional, "school", "INPT",  "Urban"),
+      #(De Facto) Percent of classrooms with basic classroom furniture	
+      SE.PRM.INPT.4   =indicator_means(share_desk, "school", "INPT",  "All"),
+      SE.PRM.INPT.4.R =indicator_means(share_desk, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.4.U =indicator_means(share_desk, "school", "INPT",  "Urban"),
+      #(De Facto) Percent of schools with access to EdTech	
+      SE.PRM.INPT.5   =indicator_means(access_ict, "school", "INPT",  "All"),
+      SE.PRM.INPT.5.R =indicator_means(access_ict, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.5.U =indicator_means(access_ict, "school", "INPT",  "Urban"),
     )
   
   
@@ -185,14 +190,85 @@ api_data <- function(data_dir1, data_dir2, data_dir3, cntry, yr) {
   # 	Basic Infrastructure	(INFR)
   #######################################
   
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      #(De Facto) Average number of infrastructure aspects present in schools	
+      SE.PRM.INFR     =indicator_means(infrastructure	, "school", "INFR",  "All"),
+      SE.PRM.INFR.1   =indicator_means(infrastructure	, "school", "INFR",  "All"),
+      SE.PRM.INFR.1.R =indicator_means(infrastructure	, "school", "INFR",  "Rural"),
+      SE.PRM.INFR.1.U =indicator_means(infrastructure	, "school", "INFR",  "Urban"),
+      #(De Facto) Percent of schools with drinking water	
+      SE.PRM.INFR.2   =indicator_means(drinking_water	, "school", "INFR",  "All"),
+      SE.PRM.INFR.2.R =indicator_means(drinking_water	, "school", "INFR",  "Rural"),
+      SE.PRM.INFR.2.U =indicator_means(drinking_water	, "school", "INFR",  "Urban"),
+      #(De Facto) Percent of schools with functioning toilets
+      SE.PRM.INFR.3   =indicator_means(functioning_toilet	, "school", "INFR",  "All"),
+      SE.PRM.INFR.3.R =indicator_means(functioning_toilet	, "school", "INFR",  "Rural"),
+      SE.PRM.INFR.3.U =indicator_means(functioning_toilet	, "school", "INFR",  "Urban"),
+      #(De Facto) Percent of schools with access to electricity	
+      SE.PRM.INFR.4   =indicator_means(class_electricity, "school", "INFR",  "All"),
+      SE.PRM.INFR.4.R =indicator_means(class_electricity, "school", "INFR",  "Rural"),
+      SE.PRM.INFR.4.U =indicator_means(class_electricity, "school", "INFR",  "Urban"),
+      #(De Facto) Percent of schools with access to internet	
+      SE.PRM.INFR.5   =indicator_means(internet, "school", "INFR",  "All"),
+      SE.PRM.INFR.5.R =indicator_means(internet, "school", "INFR",  "Rural"),
+      SE.PRM.INFR.5.U =indicator_means(internet, "school", "INFR",  "Urban"),
+      #	(De Facto) Percent of schools accessible to children with special needs	
+      SE.PRM.INFR.6   =indicator_means(disability_accessibility, "school", "INFR",  "All"),
+      SE.PRM.INFR.6.R =indicator_means(disability_accessibility, "school", "INFR",  "Rural"),
+      SE.PRM.INFR.6.U =indicator_means(disability_accessibility, "school", "INFR",  "Urban"),
+    )
+  
   #######################################
   # Learning Capacity	(LCAP)
   #######################################
+  
+  #api_final[grep('LERN', api_final$Series),1]
+  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.LCAP     = indicator_means(ecd_student_proficiency	, "school", "LCAP",  "All"),
+      SE.PRM.LCAP.1   = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "All"),
+      SE.PRM.LCAP.1.F = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Female"),
+      SE.PRM.LCAP.1.M = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Male"),
+      SE.PRM.LCAP.1.R = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Rural"),
+      SE.PRM.LCAP.1.U = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Urban"),
+      SE.PRM.LCAP.2   = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "All"),  
+      SE.PRM.LCAP.2.F = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Female"),
+      SE.PRM.LCAP.2.M = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Male"),
+      SE.PRM.LCAP.2.R = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Rural"),
+      SE.PRM.LCAP.2.U = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Urban"),
+      SE.PRM.LCAP.3   = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "All"),
+      SE.PRM.LCAP.3.F = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Female"),
+      SE.PRM.LCAP.3.M = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Male"),
+      SE.PRM.LCAP.3.R = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Rural"),
+      SE.PRM.LCAP.3.U = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Urban"),
+      SE.PRM.LCAP.4   = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "All"),
+      SE.PRM.LCAP.4.F = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Female"),
+      SE.PRM.LCAP.4.M = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Male"),
+      SE.PRM.LCAP.4.R = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Rural"),
+      SE.PRM.LCAP.4.U = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Urban"),
+      SE.PRM.LCAP.5   = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "All"),
+      SE.PRM.LCAP.5.F = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Female"),
+      SE.PRM.LCAP.5.M = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Male"),
+      SE.PRM.LCAP.5.R = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Rural"),
+      SE.PRM.LCAP.5.U = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Urban")
+    )
   
   #######################################
   # Student Attendance	(ATTD)
   #######################################
   
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.ATTD     = indicator_means(student_attendance	, "school", "ATTD",  "All"),
+      SE.PRM.ATTD.1   = indicator_means(student_attendance	, "school", "ATTD",  "All"),
+      SE.PRM.ATTD.1.F = indicator_means(student_attendance	, "school", "ATTD",  "Female"),
+      SE.PRM.ATTD.1.M = indicator_means(student_attendance	, "school", "ATTD",  "Male"),
+      SE.PRM.ATTD.1.R = indicator_means(student_attendance	, "school", "ATTD",  "Rural"),
+      SE.PRM.ATTD.1.U = indicator_means(student_attendance	, "school", "ATTD",  "Urban"),
+
+    )
   #######################################
   # Operactional Management (OPMN)
   #######################################
