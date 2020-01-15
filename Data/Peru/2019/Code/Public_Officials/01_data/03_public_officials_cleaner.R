@@ -103,12 +103,13 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
 
 load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
 
 currentDate<-c("2019-07-22")
-sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/sampling/school_sample_",currentDate,".RData", sep=""))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
 
@@ -341,19 +342,19 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
   filter(director_hr==0)
 
 if (backup_onedrive=="yes") {
-  write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
-  write_dta(public_officials_dta_short, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+  write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))
+  write_dta(public_officials_dta_short, path = file.path(confidential_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
 }
 
 
-write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
+write.csv(public_officials_dta_clean, file = file.path(confidential_folder, "public_officials_survey_data.csv"))
 
 
 public_officials_dta_clean2 <- public_officials_dta_clean %>%
   mutate(pol_personnel_management=politicized_personnel_management ,
          pol_policy_making=politicized_policy_making ,
          pol_policy_implementation=politicized_policy_implementation)
-write_dta(public_officials_dta_clean2, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
+write_dta(public_officials_dta_clean2, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
 
 
 keep_info <- c('interview__id','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
@@ -404,7 +405,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
 
 data_list <- c( 'public_officials_dta_clean','public_officials_office_level')
 
-save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
+save(data_list, file = file.path(confidential_folder, "public_officials_survey_data.RData"))
 
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
@@ -451,13 +452,13 @@ for (i in indicator_names ) {
 
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables
 
 if (backup_onedrive=="yes") {
-  save(data_list, file = file.path(save_folder_onedrive, "public_officials_survey_data.RData"))
+  save(data_list, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.RData"))
 }
 
 

@@ -9,28 +9,23 @@ indicator_means <- function(variable, dataset, tag,  unit) {
       
       stat_df<-get(paste("final_indicator_data_",tag, sep=""))
       
-      stat_df<- df_weights_function(stat_df,codigo.modular, total_4th, departamento)
-      
+
     } else if (unit=="Female") {
       
       stat_df<-get(paste("final_indicator_data_",tag, "_F", sep=""))
-      stat_df<- df_weights_function(stat_df,codigo.modular, total_4th, departamento)
-      
+
     } else if (unit=="Male") {
       
       stat_df<-get(paste("final_indicator_data_",tag, "_M", sep=""))
-      stat_df<- df_weights_function(stat_df,codigo.modular, total_4th, departamento)
-      
+
     } else if (unit=="Rural") {
       
       stat_df<-get(paste("final_indicator_data_",tag, sep="")) 
-      stat_df<- df_weights_function(stat_df,codigo.modular, total_4th, departamento) %>%
         filter(rural==TRUE)
       
     } else if (unit=="Urban") {
       
       stat_df<-get(paste("final_indicator_data_",tag, sep="")) 
-      stat_df<- df_weights_function(stat_df,codigo.modular, total_4th, departamento) %>%
         filter(rural==FALSE)
       
     }

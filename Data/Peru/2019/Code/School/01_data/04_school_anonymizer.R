@@ -49,9 +49,31 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
 
 
-data_list<-c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', 'school_gdp', 'assess_4th_grade_anon' )
+data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
+             "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
 
 
+#define function to create weights for summary statistics
+
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+
+df_weights_function <- function(dataset,scode, snumber, prov) {
+  scode<-enquo(scode)  
+  snumber<-enquo(snumber)
+  prov<-enquo(prov)
+  
+  dataset %>%
+    mutate(!! scode := as.numeric(.data$school_code)) %>%
+    left_join(data_set_updated) %>%
+    mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural")])))
+}
 
 
 ####################
@@ -84,6 +106,12 @@ for (i in data_list ) {
       temp <- temp %>%
         left_join(key) %>%
         select(hashed_school_code, hashed_school_province, hashed_school_district, everything())
+    }
+    
+    
+    #add on weights
+    if ("school_code" %in% colnames(temp)) {
+      temp <- df_weights_function(temp, codigo.modular, total_4th, departamento)
     }
     
     #Scrub names, geocodes
@@ -149,7 +177,7 @@ for (i in data_list ) {
     
       final_school_data<-temp
       print(i)
-      write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+      write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
 
       
 

@@ -28,9 +28,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'Peru'
+country <-'PER'
+country_name <- "Peru"
 year <- '2019'
-
 #########################
 # File paths #
 #########################
@@ -44,7 +44,8 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
   
-
+  backup_onedrive="no"
+  
 } else if (Sys.getenv("USERNAME") == "wb550666"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"

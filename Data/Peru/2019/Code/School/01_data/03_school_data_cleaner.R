@@ -731,7 +731,11 @@ assess_4th_grade_anon <- assess_4th_grade_dta %>%
          student_knowledge, math_student_knowledge, literacy_student_knowledge,
          math_items, lit_items)
 
+#Add in assessment metadata
+assess_4th_grade_dta_meta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
 
+assess_4th_grade_metadta<-makeVlist(assess_4th_grade_dta_meta) %>%
+  mutate(indicator_tag='LERN' )
 # assess_4th_grade_metadata <- makeVlist(assess_4th_grade_dta)
 
 
@@ -2184,6 +2188,15 @@ school_dta_short_imp <- mice::complete(impdata, 1)
 ################################
 #Store Key Created Datasets
 ################################
+
+school_metadta$varlabel<-as.character(school_metadta$varlabel)
+ecd_dta_metadata$varlabel<-as.character(ecd_dta_metadata$varlabel)
+assess_4th_grade_metadta$varlabel<-as.character(assess_4th_grade_metadta$varlabel)
+teacher_questionnaire_metadta$varlabel<-as.character(teacher_questionnaire_metadta$varlabel)
+teacher_metadata$varlabel<-as.character(teacher_metadata$varlabel)
+
+metadta<-bind_rows(school_metadta,  ecd_dta_metadata, assess_4th_grade_metadta, teacher_questionnaire_metadta, teacher_metadata)
+
 
 #saves the following in R and stata format
 #add male/female breakdowns to ind_data_list
