@@ -344,8 +344,8 @@ if (backup_onedrive=="yes") {
 }
 
 
-write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
-write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
+write.csv(public_officials_dta_clean, file = file.path(confidential_folder, "public_officials_survey_data.csv"))
+write_dta(public_officials_dta_clean, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
 
 
 keep_info <- c('interview__id','interview__key', 'office_preload', 'govt_tier',
@@ -403,7 +403,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
 
 data_list <- c( 'public_officials_dta_clean','public_officials_office_level')
 
-save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
+save(data_list, file = file.path(confidential_folder, "public_officials_survey_data.RData"))
 
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
@@ -450,7 +450,7 @@ for (i in indicator_names ) {
 
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables
