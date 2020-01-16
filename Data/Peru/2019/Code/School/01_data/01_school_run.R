@@ -67,5 +67,6 @@ source('02_school_api.R', local=TRUE)
 # #launch file to clear data=
 source('03_school_data_cleaner.R', local=TRUE)
 
-
+# launch anonymizer file
+source('04_school_anonymizer.R', local=TRUE)
 

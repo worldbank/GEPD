@@ -311,7 +311,7 @@ preamble_info_absence <- c('interview__id', 'questionnaire_selected__id', 'teach
 
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
-  mutate(school_absence_rate=100*case_when(
+  mutate(sch_absence_rate=100*case_when(
     m2sbq6_efft==6 | teacher_available==2 ~ 1,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
@@ -330,7 +330,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
     m2sbq3_efft!=8   ~ 0,
     is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
   mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
-         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ),
+         sch_absence_rate=if_else(is.na(sch_absence_rate), principal_absence, sch_absence_rate ),
          presence_rate=100-absence_rate)
 
 
@@ -713,13 +713,13 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=80),
+  mutate(student_proficient=100*as.numeric(student_knowledge>=86.6), #26/30
          student_proficient_70=100*as.numeric(student_knowledge>=70),
          student_proficient_75=100*as.numeric(student_knowledge>=75),
-         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=80),
+         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=92), #12/13 points
          literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
          literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
-         math_student_proficient=100*as.numeric(math_student_knowledge>=80),
+         math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
          math_student_proficient_60=100*as.numeric(math_student_knowledge>=60))
@@ -1210,9 +1210,11 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
            m3sdq18_ildr__2==1 ~ "Professional Development",
            m3sdq18_ildr__3==1 ~ "Monitoring",
            m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
-         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>1),1,0), #make sure there was discussion and lasted more than 10 min
+         discussion_30_min=bin_var(m3sdq20_ildr,1),
+         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3),1,0), #make sure there was discussion and lasted more than 30 min
          feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
+         lesson_plan=if_else(m3sdq23_ildr==1,1,0),
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
   mutate(feedback_observation=if_else(m3sdq15_ildr==1 & m3sdq19_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
@@ -1333,11 +1335,15 @@ final_indicator_data_PKNW_F <- final_indicator_data_PKNW %>%
 
 
 # Score of 1-5 based on sum of following: 
+# goal setting:
 #   - 1 Point. School Goals Exists 
 # - 1 Point. School goals are clear to school director, teachers, students, parents, and other members of community (partial credit available) 
 # - 1 Point. Specific goals related to improving student achievement ( improving test scores, improving pass rates, reducing drop out, reducing absenteeism, improving pedagogy, more resources for infrastructure, more resources for inputs) 
 # - 1 Point. School has defined system to measure goals (partial credit available)
-
+# problem solving:
+# - 1.33 point on proactive (partial credit for just notifying a superior) on absence issue
+# - 0.33 for each group principal would contact to gather info on absence
+# - 1.33 point for working with local authorities, 0.5 points for organizing remedial classes, 0.25 for just informing parents
 #Create variables for whether school goals exists, are clear, are relevant to learning, and are measured in an appropriate way.
 
 final_indicator_data_PMAN <- school_data_PMAN %>%
@@ -1357,8 +1363,26 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
                                          (m7sdq5_pman==2 | m7sdq5_pman==97 ) ~ 0.5,
                                          (m7sdq5_pman==3) ~ 1),
                                        0)) %>%
-  mutate(principal_management=1+school_goals_exist+school_goals_clear+school_goals_relevant+school_goals_measured)
+  mutate(goal_setting=1+school_goals_exist+school_goals_clear+school_goals_relevant+school_goals_measured) %>%
+  # Now for problem solving
+  mutate(
+    problem_solving_proactive=case_when(
+                                  (m7seq1_pman==4 ) ~ 1,
+                                  (m7seq1_pman==2 | m7seq1_pman==3 ) ~ 0.5,
+                                  (m7seq1_pman==1 | m7seq1_pman==98 ) ~ 0,
+                                  TRUE ~ 0),
+    problem_solving_info_collect=(m7seq2_pman__1+m7seq2_pman__2 + m7seq2_pman__3 + m7seq2_pman__4)/4,
+    problem_solving_stomach=case_when(
+                              (m7seq3_pman==4 ) ~ 1,
+                              (m7seq1_pman==3 ) ~ 0.5,
+                              (m7seq1_pman==1 | m7seq1_pman==2 | m7seq1_pman==98 ) ~ 0.25,
+                              TRUE ~ 0)
+                                 
+    ) %>%
+  mutate(problem_solving=1+(4/3)*problem_solving_proactive+(4/3)*problem_solving_info_collect+(4/3)*problem_solving_stomach) %>%
+  
 
+  mutate(principal_management=(goal_setting+problem_solving)/2)
 final_indicator_data_PMAN <- final_indicator_data_PMAN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -2025,7 +2049,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'student_proficient', 'student_proficient_70', 'student_proficient_75',
             'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
             'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
-            'presence_rate','absence_rate', 'school_absence_rate', 'student_attendance',
+            'presence_rate','absence_rate', 'sch_absence_rate', 'student_attendance',
             'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
             'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
             'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
@@ -2038,7 +2062,8 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
             'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
             'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
-            'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+            'principal_management', 'goal_setting', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured', 
+            'problem_solving', 'problem_solving_proactive','problem_solving_info_collect','problem_solving_stomach',
             'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
             'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
             'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',

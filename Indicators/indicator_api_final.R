@@ -191,28 +191,21 @@ api_final <- api_final %>%
 
 # Example:
 
-project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/"
-download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
-confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-
-
-data_dir1 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/School"
-data_dir2 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Public_officials"
-data_dir3 <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Expert_Survey"
+#specify path to data
+data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/"
 
 
 #read in databases for indicators
 
-load(paste(data_dir1, "school_indicators_data.RData", sep="/"))
-load(paste(data_dir2, "public_officials_indicators_data.RData", sep="/"))
+load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
+load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
 
-school_df <- read_stata(paste(data_dir1, 'final_complete_school_data.dta', sep="/" ))
-public_officials_df <- read_stata(paste(data_dir2, 'public_officials_survey_data.dta', sep="/" ))
-expert_df <- read_stata(paste(data_dir3, 'expert_dta_final.dta', sep="/" ))
+
+expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', sep="/" ))
 
 
 #load sampling info
-load(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_2019-07-22.RData"))
+load(paste(data_dir, "Sampling/school_sample_2019-07-22.RData", sep="/"))
 
 
 
@@ -228,7 +221,7 @@ wbopendat<-WDI(country="PE", indicator=ind_list, start=2013, end=2013, extra=T) 
   filter(row_number()==n())
 
 
-PER_data_2019 <- api_data(data_dir1, data_dir2, data_dir3, 'PER', 2019)
+PER_data_2019 <- api_data(data_dir, 'PER', 2019)
 
 
 #export Indicators_metatdata section

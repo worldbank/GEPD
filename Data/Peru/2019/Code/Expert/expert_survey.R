@@ -1,7 +1,7 @@
 library(tidyverse)
 library(haven)
 #score expert data (this requires a lot of hard coding and transcribing)
-expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
+expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Expert_Survey"
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
@@ -29,7 +29,8 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #teacher attraction
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
-  mutate(teacher_attraction=read_var(A4))
+  mutate(teacher_attraction=read_var(A4),
+         teacher_salary=(12*2100.30/22833))
 
 #teacher selection and deployment
 #

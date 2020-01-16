@@ -806,13 +806,13 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=80),
+  mutate(student_proficient=100*as.numeric(student_knowledge>=82.9), #34/41
          student_proficient_70=100*as.numeric(student_knowledge>=70),
          student_proficient_75=100*as.numeric(student_knowledge>=75),
-         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=80),
+         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=83.3), #20/24 points
          literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
          literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
-         math_student_proficient=100*as.numeric(math_student_knowledge>=80),
+         math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
 
@@ -1280,7 +1280,7 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
            m3sdq18_ildr__2==1 ~ "Professional Development",
            m3sdq18_ildr__3==1 ~ "Monitoring",
            m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
-         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>1),1,0), #make sure there was discussion and lasted more than 10 min
+         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3),1,0), #make sure there was discussion and lasted more than 10 min
          feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%

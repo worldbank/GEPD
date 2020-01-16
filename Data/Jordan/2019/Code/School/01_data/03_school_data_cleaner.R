@@ -73,7 +73,7 @@ preamble_info <- c( 'interview__key', 'school_code',
                    'school_name_preload', 'school_address_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon' , 'total_enrolled' 
+                   'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq8', 'm7saq10'
                    )
 
 drop_school_info <- c(
@@ -200,7 +200,7 @@ label(teacher_questionnaire$grade) <- "Grade"
 
 
 #list additional info that will be useful to keep in each indicator dataframe
-preamble_info_teacher <- c('interview__key', 'questionnaire_roster__id', 'teacher_name', 'teacher_number',
+preamble_info_teacher <- c('interview__key', 'questionnaire_roster__id', 'teacher_name', 'teacher_number', 'm7saq10',
                           'available', 'teacher_position', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5',
                           'teacher_language', 'teacher_math', 'teacher_both_subj', 'teacher_other_subj', 'teacher_education', 'teacher_year_began',
                           'teacher_age')
@@ -806,13 +806,13 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 #calculate students percent correct
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
-  mutate(student_proficient=100*as.numeric(student_knowledge>=80),
+  mutate(student_proficient=100*as.numeric(student_knowledge>=82.9), #34/41
          student_proficient_70=100*as.numeric(student_knowledge>=70),
          student_proficient_75=100*as.numeric(student_knowledge>=75),
-         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=80),
+         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=83.3), #20/24 points
          literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
          literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
-         math_student_proficient=100*as.numeric(math_student_knowledge>=80),
+         math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
 
@@ -1259,7 +1259,16 @@ final_indicator_data_OPMN <- final_indicator_data_OPMN %>%
   mutate(n_mssing_OPMN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
+#Breakdowns by Male/Female
+final_indicator_data_OPMN_M <- final_indicator_data_OPMN %>%
+  filter(m7saq10==1) %>%
+  mutate(n_mssing_OPMN=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
+final_indicator_data_OPMN_F <- final_indicator_data_OPMN %>%
+  filter(m7saq10==2) %>%
+  mutate(n_mssing_OPMN=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 #############################################
 ##### School Instructional Leadership ###########
@@ -1280,20 +1289,32 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
            m3sdq18_ildr__2==1 ~ "Professional Development",
            m3sdq18_ildr__3==1 ~ "Monitoring",
            m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
-         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>1),1,0), #make sure there was discussion and lasted more than 10 min
+         discussion_30_min=bin_var(m3sdq20_ildr,1),
+         discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3),1,0), #make sure there was discussion and lasted more than 30 min
          feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                           | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
+         lesson_plan=if_else(m3sdq23_ildr==1,1,0),
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
   mutate(feedback_observation=if_else(m3sdq15_ildr==1 & m3sdq19_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
-  group_by(interview__key) %>%
+  group_by(interview__id) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(-preamble_info_teacher  )  %>%
+  select(-preamble_info_teacher_drop_ildr  )  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
+
+
+#Breakdowns by Male/Female
+final_indicator_data_ILDR_M <- final_indicator_data_ILDR %>%
+  filter(m7saq10==1) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+final_indicator_data_ILDR_F <- final_indicator_data_ILDR %>%
+  filter(m7saq10==2) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 
 #############################################
@@ -1352,9 +1373,7 @@ principal_scorer <- function(var_guess, var_actual, var_total, margin1, margin2)
     0)
 }
 
-######################
-# NEED TO FIX THIS
-#######################
+
 
 final_indicator_data_PKNW <- school_data_PKNW %>%
   group_by(school_code) %>%
@@ -1384,6 +1403,14 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw)
 
 
+#Breakdowns by Male/Female
+final_indicator_data_PKNW_M <- final_indicator_data_PKNW %>%
+  filter(m7saq10==1) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+final_indicator_data_PKNW_F <- final_indicator_data_PKNW %>%
+  filter(m7saq10==2) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 
 #############################################
@@ -1392,11 +1419,15 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
 
 
 # Score of 1-5 based on sum of following: 
+# goal setting:
 #   - 1 Point. School Goals Exists 
 # - 1 Point. School goals are clear to school director, teachers, students, parents, and other members of community (partial credit available) 
 # - 1 Point. Specific goals related to improving student achievement ( improving test scores, improving pass rates, reducing drop out, reducing absenteeism, improving pedagogy, more resources for infrastructure, more resources for inputs) 
 # - 1 Point. School has defined system to measure goals (partial credit available)
-
+# problem solving:
+# - 1.33 point on proactive (partial credit for just notifying a superior) on absence issue
+# - 0.33 for each group principal would contact to gather info on absence
+# - 1.33 point for working with local authorities, 0.5 points for organizing remedial classes, 0.25 for just informing parents
 #Create variables for whether school goals exists, are clear, are relevant to learning, and are measured in an appropriate way.
 
 final_indicator_data_PMAN <- school_data_PMAN %>%
@@ -1416,14 +1447,41 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
                                          (m7sdq5_pman==2 | m7sdq5_pman==97 ) ~ 0.5,
                                          (m7sdq5_pman==3) ~ 1),
                                        0)) %>%
-  mutate(principal_management=1+school_goals_exist+school_goals_clear+school_goals_relevant+school_goals_measured)
-
+  mutate(goal_setting=1+school_goals_exist+school_goals_clear+school_goals_relevant+school_goals_measured) %>%
+  # Now for problem solving
+  mutate(
+    problem_solving_proactive=case_when(
+      (m7seq1_pman==4 ) ~ 1,
+      (m7seq1_pman==2 | m7seq1_pman==3 ) ~ 0.5,
+      (m7seq1_pman==1 | m7seq1_pman==98 ) ~ 0,
+      TRUE ~ 0),
+    problem_solving_info_collect=(m7seq2_pman__1+m7seq2_pman__2 + m7seq2_pman__3 + m7seq2_pman__4)/4,
+    problem_solving_stomach=case_when(
+      (m7seq3_pman==4 ) ~ 1,
+      (m7seq1_pman==3 ) ~ 0.5,
+      (m7seq1_pman==1 | m7seq1_pman==2 | m7seq1_pman==98 ) ~ 0.25,
+      TRUE ~ 0)
+    
+  ) %>%
+  mutate(problem_solving=1+(4/3)*problem_solving_proactive+(4/3)*problem_solving_info_collect+(4/3)*problem_solving_stomach) %>%
+  
+  
+  mutate(principal_management=(goal_setting+problem_solving)/2)
 final_indicator_data_PMAN <- final_indicator_data_PMAN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PMAN=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
+
+#Breakdowns by Male/Female
+final_indicator_data_PMAN_M <- final_indicator_data_PMAN %>%
+  filter(m7saq10==1) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+final_indicator_data_PMAN_F <- final_indicator_data_PMAN %>%
+  filter(m7saq10==2) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
 
 #############################################
 ##### Teacher Teaching Attraction ###########
@@ -2097,7 +2155,8 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
             'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
             'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
-            'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+            'principal_management', 'goal_setting', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured', 
+            'problem_solving', 'problem_solving_proactive','problem_solving_info_collect','problem_solving_stomach',
             'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
             'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
             'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
