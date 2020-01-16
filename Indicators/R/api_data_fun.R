@@ -524,11 +524,11 @@ api_data <- function(data_dir, cntry, yr) {
   SE.PRM.TEVL  = indicator_means(teaching_evaluation		, "school", "TEVL",  "All"),     #Policy Lever (Teaching) - Evaluation                                                                                     
   SE.PRM.TEVL.1 =expert_df$evaluation_law, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national)
   SE.PRM.TEVL.2 =expert_df$evaluation_law_school, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools                    
-  SE.PRM.TEVL.3 = indicator_means(formally_evaluated		, "school", "TEVL",  "All"),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
+  SE.PRM.TEVL.3 = 100*indicator_means(formally_evaluated		, "school", "TEVL",  "All"),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
   SE.PRM.TEVL.4 =expert_df$evaluation_criteria, #(De Jure) The criteria to evaluate teachers is clear                                                                     
   SE.PRM.TEVL.5 = indicator_means(m3sbq8_tmna__1	+m3sbq8_tmna__2 + m3sbq8_tmna__3 + m3sbq8_tmna__4 + m3sbq8_tmna__5 + m3sbq8_tmna__6 + m3sbq8_tmna__7 + m3sbq8_tmna__8 + m3sbq8_tmna__97		, "school", "TEVL",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
-  SE.PRM.TEVL.6 = indicator_means(negative_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
-  SE.PRM.TEVL.7 = indicator_means(positive_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
+  SE.PRM.TEVL.6 = 100*indicator_means(negative_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
+  SE.PRM.TEVL.7 = 100*indicator_means(positive_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
   SE.PRM.TEVL.8 =expert_df$negative_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more negative evaluations                         
   SE.PRM.TEVL.9 =expert_df$positive_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more positive evaluations                         
   SE.PRM.TEVL.DF = indicator_means(teaching_evaluation		, "school", "TEVL",  "All"),  #(De Facto) Policy Lever (Teaching) - Evaluation                                                                          
@@ -542,71 +542,77 @@ api_data <- function(data_dir, cntry, yr) {
   SE.PRM.TMNA = indicator_means(teacher_monitoring		, "school", "TMNA",  "All"),    #Policy Lever (Teaching) - Monitoring & Accountability                                                       
   SE.PRM.TMNA.1  = expert_df$absence_collected, #(De Jure) Information on teacher presence/absenteeism is being collected on a regular basis                 
   SE.PRM.TMNA.2  = expert_df$attendance_rewarded, #(De Jure) Teachers receive monetary compensation for being present                                          
-  SE.PRM.TMNA.3 = indicator_means(attendance_rewarded		, "school", "TMNA",  "All"),   #(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present             
-  SE.PRM.TMNA.4 = indicator_means(miss_class_admin		, "school", "TMNA",  "All"),   #(De Facto) Percent of teachers that report having been absent because of administrative processes           
-  SE.PRM.TMNA.5 = indicator_means(attendence_sanctions		, "school", "TMNA",  "All"),  #(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time
+  SE.PRM.TMNA.3 = 100*indicator_means(attendance_rewarded		, "school", "TMNA",  "All"),   #(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present             
+  SE.PRM.TMNA.4 = 100*indicator_means(miss_class_admin		, "school", "TMNA",  "All"),   #(De Facto) Percent of teachers that report having been absent because of administrative processes           
+  SE.PRM.TMNA.5 = 100*indicator_means(attendence_sanctions		, "school", "TMNA",  "All"),  #(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time
   SE.PRM.TMNA.DF = indicator_means(teacher_monitoring		, "school", "TMNA",  "All"),  #(De Facto) Policy Lever (Teaching) - Monitoring & Accountability                                            
   SE.PRM.TMNA.DJ =expert_df$teacher_monitoring #(De Jure) Policy Lever (Teaching) - Monitoring & Accountability
     )
   #######################################
   # Policy Lever (Teaching) - Intrinsic Motivation 	(TINM)
   #######################################
-  
-  SE.PRM.TINM    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
-  SE.PRM.TINM.1  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.10 #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
-  SE.PRM.TINM.11 #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
-  SE.PRM.TINM.12 #(De Facto) New teachers are required to undergo a probationary period                                                    
-  SE.PRM.TINM.13 #(De Jure) New teachers are required to undergo a probationary period                                                     
-  SE.PRM.TINM.2  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
-  SE.PRM.TINM.3  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.4  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
-  SE.PRM.TINM.5  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
-  SE.PRM.TINM.6  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
-  SE.PRM.TINM.7  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
-  SE.PRM.TINM.8  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
-  SE.PRM.TINM.9  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
-  SE.PRM.TINM.DF #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
-  SE.PRM.TINM.DJ #(De Jure) Policy Lever (Teaching) - Intrinsic Motivation   
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
+  SE.PRM.TINM.1 = 100*indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.10 = 100*indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+  SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
+  SE.PRM.TINM.12 = 100*indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
+  SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
+  SE.PRM.TINM.2 = 100*indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+  SE.PRM.TINM.3 = 100*indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.4 = 100*indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+  SE.PRM.TINM.5 = 100*indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
+  SE.PRM.TINM.6 = 100*indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
+  SE.PRM.TINM.7 = 100*indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+  SE.PRM.TINM.8 = 100*indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+  SE.PRM.TINM.9 = 100*indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+  SE.PRM.TINM.DF = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"), #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
+  SE.PRM.TINM.DJ = expert_df$intrinsic_motivation #(De Jure) Policy Lever (Teaching) - Intrinsic Motivation   
+    )
   #######################################
   # Policy Lever (Inputs & Infrastructure) - Standards 	(ISTD)
   #######################################
-  
-  SE.PRM.ISTD    #Policy Lever (Inputs & Infrastructure) - Standards                                                                       
-  SE.PRM.ISTD.1  #(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?                   
-  SE.PRM.ISTD.10 #(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
-  SE.PRM.ISTD.11 #(De Jure) Is there a policy in place to require that schools have functioning toilets?                                   
-  SE.PRM.ISTD.12 #(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
-  SE.PRM.ISTD.13 #(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?              
-  SE.PRM.ISTD.14 #(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
-  SE.PRM.ISTD.2  #(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
-  SE.PRM.ISTD.3  #(De Jure) Is there a national connectivity program?                                                                      
-  SE.PRM.ISTD.4  #(De Facto) Do you know if there is a national connectivity program?                                                      
-  SE.PRM.ISTD.5  #(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computi~
-  SE.PRM.ISTD.6  #(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/~
-  SE.PRM.ISTD.7  #(De Jure) Is there a policy in place to require that schools have access to electricity?                                 
-  SE.PRM.ISTD.8  #(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?                 
-  SE.PRM.ISTD.9  #(De Jure) Is there a policy in place to require that schools have access to drinking water?                              
-  SE.PRM.ISTD.DF #(De Facto) Policy Lever (Inputs & Infrastructure) - Standards                                                            
-  SE.PRM.ISTD.DJ #(De Jure) Policy Lever (Inputs & Infrastructure) - Standards    
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.ISTD  =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"), #Policy Lever (Inputs & Infrastructure) - Standards                                                                       
+  SE.PRM.ISTD.1  =expert_df$textbook_policy, #(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?                   
+  SE.PRM.ISTD.10 =  indicator_means(m1scq14_imon__4		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
+  SE.PRM.ISTD.11 =expert_df$toilet_policy, #(De Jure) Is there a policy in place to require that schools have functioning toilets?                                   
+  SE.PRM.ISTD.12 =  indicator_means(m1scq14_imon__1		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
+  SE.PRM.ISTD.13 =expert_df$disability_policy, #(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?              
+  SE.PRM.ISTD.14 =  indicator_means(m1scq14_imon__3		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
+  SE.PRM.ISTD.2  =  indicator_means(m1scq13_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
+  SE.PRM.ISTD.3  =expert_df$connectivity_program, #(De Jure) Is there a national connectivity program?                                                                      
+  SE.PRM.ISTD.4  =  -999,#(De Facto) Do you know if there is a national connectivity program?                                                      
+  SE.PRM.ISTD.5  =expert_df$materials_policy, #(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computi~
+  SE.PRM.ISTD.6  =  indicator_means(m1scq13_imon__5		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/~
+  SE.PRM.ISTD.7  =expert_df$electricity_policy, #(De Jure) Is there a policy in place to require that schools have access to electricity?                                 
+  SE.PRM.ISTD.8  =  indicator_means(m1scq14_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?                 
+  SE.PRM.ISTD.9  =expert_df$water_policy, #(De Jure) Is there a policy in place to require that schools have access to drinking water?                              
+  SE.PRM.ISTD.DF =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"),#(De Facto) Policy Lever (Inputs & Infrastructure) - Standards                                                            
+  SE.PRM.ISTD.DJ =expert_df$inputs_standards #(De Jure) Policy Lever (Inputs & Infrastructure) - Standards    
+    )
   #######################################
   # olicy Lever (Inputs & Infrastructure) - Monitoring 	(IMON)
   #######################################
   
-  SE.PRM.IMON    #Policy Lever (Inputs & Infrastructure) - Monitoring                                                                      
-  SE.PRM.IMON.1  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
-  SE.PRM.IMON.10 #(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored                         
-  SE.PRM.IMON.2  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-  SE.PRM.IMON.3  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
-  SE.PRM.IMON.4  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
-  SE.PRM.IMON.5  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-  SE.PRM.IMON.6  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
-  SE.PRM.IMON.7  #(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?                          
-  SE.PRM.IMON.8  #(De Jure) Number of basic inputs clearly articulated as needing to be monitored                                          
-  SE.PRM.IMON.9  #(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?                  
-  SE.PRM.IMON.DF #(De Facto) Policy Lever (Inputs & Infrastructure) - Monitoring                                                           
-  SE.PRM.IMON.DJ #(De Jure) Policy Lever (Inputs & Infrastructure) - Monitoring  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.IMON  =  indicator_means(sch_monitoring		, "school", "IMON",  "All"),    #Policy Lever (Inputs & Infrastructure) - Monitoring                                                                      
+  SE.PRM.IMON.1  =  indicator_means(m1scq1_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
+  SE.PRM.IMON.10 =-999, #(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored                         
+  SE.PRM.IMON.2  =  indicator_means(parents_involved		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
+  SE.PRM.IMON.3  =  indicator_means(m1scq5_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
+  SE.PRM.IMON.4  =  indicator_means(m1scq7_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
+  SE.PRM.IMON.5  =  indicator_means(bin_var(m1scq10_imon,1)		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
+  SE.PRM.IMON.6  =  indicator_means(m1scq11_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
+  SE.PRM.IMON.7  =-999, #(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?                          
+  SE.PRM.IMON.8  =-999, #(De Jure) Number of basic inputs clearly articulated as needing to be monitored                                          
+  SE.PRM.IMON.9  =-999, #(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?                  
+  SE.PRM.IMON.DF  =  indicator_means(sch_monitoring		, "school", "IMON",  "All"), #(De Facto) Policy Lever (Inputs & Infrastructure) - Monitoring                                                           
+  SE.PRM.IMON.DJ =-999, #(De Jure) Policy Lever (Inputs & Infrastructure) - Monitoring  
+    )
   #######################################
   # Policy Lever (Learners) - Nutrition Programs 	(LNTN)
   #######################################

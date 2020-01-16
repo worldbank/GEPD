@@ -1734,8 +1734,24 @@ intrinsic_motiv_q <- c( 'm3scq11_tinm', 'm3scq14_tinm')
 intrinsic_motiv_q_all <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
                            'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm')
 
+teacher_questionnaire_TINM2 <- teacher_questionnaire_TMNA %>%
+  dplyr::select(school_code, preamble_info_teacher, m3sdq2_tmna)
+
 final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
+  left_join(teacher_questionnaire_TINM2) %>%
   mutate(n_mssing_TINM=n_miss_row(.)) %>%
+  mutate(    
+    SE_PRM_TINM_1 = 100*if_else(m3scq1_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+    SE_PRM_TINM_2 = 100*if_else(m3scq2_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+    SE_PRM_TINM_3 = 100*if_else(m3scq3_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+    SE_PRM_TINM_4 = 100*if_else(m3scq4_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+    SE_PRM_TINM_5 = 100*if_else(m3scq5_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
+    SE_PRM_TINM_6 = 100*if_else(m3scq6_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
+    SE_PRM_TINM_7 = 100*if_else(m3scq7_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+    SE_PRM_TINM_8 = 100*if_else(m3scq10_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+    SE_PRM_TINM_9 = 100*if_else(m3scq11_tinm>=4,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+    SE_PRM_TINM_10 = 100*if_else(m3scq14_tinm>=4,1,0) #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+  ) %>%
   mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
   mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
   mutate(acceptable_absent=(m3scq1_tinm+ m3scq2_tinm + m3scq3_tinm)/3,
@@ -1746,7 +1762,7 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
            (m3scq15_tinm__3!=1 & (m3scq15_tinm__1>=1 | m3scq15_tinm__2>=1 | m3scq15_tinm__4>=1 & m3scq15_tinm__5>=1)) ~ 1,
            TRUE ~ as.numeric(NA)
          )) %>%
-  mutate(intrinsic_motivation=1+0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching) %>%
+  mutate(intrinsic_motivation=1+0.8*(0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching+bin_var(m3sdq2_tmna,1))) %>%
   group_by(school_code) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-drop_teacher_info)  %>%
@@ -1800,7 +1816,7 @@ school_data_IMON <- school_data_IMON %>%
                                            0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
-  mutate(school_monitoring=1+1.5*monitoring_inputs+1.5*monitoring_infrastructure+parents_involved)
+  mutate(sch_monitoring=1+1.5*monitoring_inputs+1.5*monitoring_infrastructure+parents_involved)
 
 
 
@@ -1824,7 +1840,7 @@ school_data_SCFN <- school_data_PKNW %>%
          principal_hiring_scfn=if_else((m7sfq15f_pknw__0==1 | m7sfq15f_pknw__98==1),0,1),
          principal_supervision_scfn=if_else((m7sfq15g_pknw__0==1 | m7sfq15g_pknw__98==1),0,1)
   ) %>%
-  mutate(school_management_clarity=1+
+  mutate(sch_management_clarity=1+
            (infrastructure_scfn+materials_scfn)/2+
            (hiring_scfn + supervision_scfn)/2 +
            student_scfn +
@@ -1856,7 +1872,7 @@ school_data_SATT <- school_data_SATT %>%
       between(principal_salary,0.75,1) ~ 3,
       between(principal_salary,1,1.5) ~ 4,
       between(principal_salary,1.5,5) ~ 5)) %>%
-  mutate(school_management_attraction=(principal_satisfaction+principal_salary_score)/2)
+  mutate(sch_management_attraction=(principal_satisfaction+principal_salary_score)/2)
 
 final_indicator_data_SATT <- school_data_SATT %>%
   group_by(school_code) %>%
@@ -1883,7 +1899,7 @@ final_indicator_data_SATT <- school_data_SATT %>%
 # - 5 Quality teaching, demonstrated management qualities, or knowledge of local community is the most important factor in hiring.
 
 school_data_SSLD <- school_data_SSLD %>%
-  mutate(school_selection_deployment=case_when(
+  mutate(sch_selection_deployment=case_when(
     (m7sgq2_ssld==2 | m7sgq2_ssld==3 | m7sgq2_ssld==8) ~ 5,
     (m7sgq2_ssld==6 | m7sgq2_ssld==7) ~ 1,
     (!(m7sgq2_ssld==6 | m7sgq2_ssld==7) & (m7sgq1_ssld__2==1 | m7sgq1_ssld__3==1 | m7sgq1_ssld__8==1) ) ~ 4,
@@ -1926,7 +1942,7 @@ school_data_SSUP <- school_data_SSUP %>%
                                        bin_var(m7sgq5_ssup,1),0),
          principal_offered=if_else((m7sgq7_ssup==2 | m7sgq7_ssup==3 | m7sgq7_ssup==4 | m7sgq7_ssup==5),1,0)
   ) %>%
-  mutate(school_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
+  mutate(sch_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
 
 final_indicator_data_SSUP <- school_data_SSUP %>%
   group_by(school_code) %>%
@@ -2069,12 +2085,12 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
             'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
             'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-            'school_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+            'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
             'standards_monitoring',
-            'school_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
-            'school_management_attraction', 'principal_satisfaction',
-            'school_selection_deployment', 
-            'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+            'sch_management_attraction', 'principal_satisfaction',
+            'sch_selection_deployment', 
+            'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
             'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
 )
 
