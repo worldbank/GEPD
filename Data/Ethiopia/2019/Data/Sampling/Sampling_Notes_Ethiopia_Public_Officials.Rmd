@@ -1,0 +1,66 @@
+---
+title: "Ethiopia Global Education Policy Dashboard Survey - Public Officials"
+author: "Brian Stacy"
+date: "1/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+library(rgdal)
+library(tidyverse)
+library(readxl)
+library(leaflet)
+library(kableExtra)
+library(DT)
+library(skimr)
+library(haven)
+library(crosstalk)
+library(purrr)
+set.seed(54351324)
+
+#################################
+#Specify Directories, etc
+#################################
+
+#Specify directory where sampling frame located
+#Specify directory where sampling frame located
+dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2019/Data/Sampling/"
+
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"ETH_sampling_data.dta"
+#specify name of sampling frame file.  This needs to be a csv file
+public_file_frame<-"ETH_sampling_data.dta"
+old_file_frame<-"Sampling_Frame_2009.dta"
+#specify date that sample was created.  This may be useful if you want to access stored results
+#date_frame<-c("2019-07-22")
+
+date_frame<-c("2019-12-23")
+
+```
+
+## Introduction
+
+This file outlines the sampling strategy for Ethiopia for the Survey of Public Officials.  For sampling notes on the School Survey, please see the markdown report produced using:
+
+https://github.com/worldbank/GEPD/blob/master/Data/Ethiopia/2019/Data/Sampling/Sampling_Notes_Ethiopia.Rmd
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+
+For our Survey of Public Officials, we will sample a total of 200 public officials.  Roughly 40 officials will be surveyed at the central level, while 60 officials will be surveyed at the regional level and 100 at the district (Woreda) level.  For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where 6 Regional offices are chosen at random from among the regions in which schools were sampled.  Then among these 6 Regions, we also select at random 20 Woreda offices from among the Woredas in which schools werer sampled.  The result of this sampling approach is that for 6 clusters we will have links from the school to the Woreda office to the Regional office to the central office.  Within the Regional office 10 public officials will be interviewed.  Within the Woreda offices 5 officials will be interviewed.  
+
+In other countries we interviewed the following profiles: head of organization, head of school monitoring, head of finance, head of planning, head of HR, and, if needed, some randomly chosen officials. The number of public officials to randomize varies according to the type of office (regional or district) and if the above positions are combined.
+
+For the randomly chosen officials, the randomization has to be done with Survey Solutions following these steps:
+
+  1.	Get (or write down on paper) the full list of public officials 
+  2.	Count and assign a number to each public official in the list (exclude those that were directly selected, for example the head of HR)
+  3.	Count the public officials in the list and put the total number of public officials into Survey Solutions 
+  4.	Interview the public officials according to the order given by Survey Solutions (if a public official who was randomly chosen is not available, go with the next one in the list)
+  5.	Take a picture of the full list and upload it to Survey Solutions for quality control
+
+
+ 
