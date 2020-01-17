@@ -37,6 +37,38 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     
   } else if (dataset== 'public_officials') {
     
+    if (unit=="All") {
+      
+      stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep=""))
+      
+
+    } else if (unit=="central") {
+      
+      stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
+        filter(govt_tier=="Ministry of Education (or equivalent)")
+      
+    } else if (unit=="regional") {
+      
+      stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
+        filter(rural=='Regional office (or equivalent)')
+      
+    }
+    else if (unit=="district") {
+      
+      stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
+        filter(rural=='District office (or equivalent)')
+      
+    }
+    r <- eval(substitute(variable), stat_df, parent.frame())
+    
+    #produce weights of 1 for all observations
+    stat_df<-stat_df %>%
+      mutate(ipw=1)
+    
+    weights <- stat_df$ipw
+    
+    wtd.mean(r, weights=weights, na.rm=T)
+    
   } 
   
 }
@@ -67,17 +99,14 @@ bin_var_NA0 <- function(var, val) {
 }
 
 #function to create indicator data for a specified country and year
-api_data <- function(data_dir, cntry, yr) {
-  
-  
 
   #transpose the indicator values dataframe to make it easier to add values
-  api_final <- api_final %>%
+api_template <- api_template %>%
     mutate(value = as.numeric(NA))
   
-  indicator_values_transpose <- as.data.frame(t(as.matrix(api_final))) 
+  indicator_values_transpose <- as.data.frame(t(as.matrix(api_template))) 
   
-  colnames(indicator_values_transpose) <- api_final$Series 
+  colnames(indicator_values_transpose) <- api_template$Series 
   
   indicator_values_transpose <- indicator_values_transpose %>%
     filter(rownames(indicator_values_transpose)=="value")
@@ -94,7 +123,11 @@ api_data <- function(data_dir, cntry, yr) {
       SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
       SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
       SE.LPV.PRIM.BMP	= wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= wbopendat$SE.LPV.PRIM.BMP
+      SE.LPV.PRIM.BMP.1	= wbopendat$SE.LPV.PRIM.BMP,
+      SE.PRM.PROE =-999,
+      SE.PRM.PROE.1 =-999,
+      SE.PRM.TENR	 =-999,
+      SE.PRM.TENR.1	 =-999
     )
   
   
@@ -554,19 +587,19 @@ api_data <- function(data_dir, cntry, yr) {
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
-  SE.PRM.TINM.1 = 100*indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.10 = 100*indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
-  SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
-  SE.PRM.TINM.12 = 100*indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
+  SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.10 = indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+  SE.PRM.TINM.11 = indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
+  SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
   SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
-  SE.PRM.TINM.2 = 100*indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
-  SE.PRM.TINM.3 = 100*indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.4 = 100*indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
-  SE.PRM.TINM.5 = 100*indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
-  SE.PRM.TINM.6 = 100*indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
-  SE.PRM.TINM.7 = 100*indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
-  SE.PRM.TINM.8 = 100*indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
-  SE.PRM.TINM.9 = 100*indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+  SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+  SE.PRM.TINM.3 = indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.4 = indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+  SE.PRM.TINM.5 = indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
+  SE.PRM.TINM.6 = indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
+  SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+  SE.PRM.TINM.8 = indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+  SE.PRM.TINM.9 = indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
   SE.PRM.TINM.DF = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"), #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
   SE.PRM.TINM.DJ = expert_df$intrinsic_motivation #(De Jure) Policy Lever (Teaching) - Intrinsic Motivation   
     )
@@ -577,24 +610,24 @@ api_data <- function(data_dir, cntry, yr) {
     mutate(
   SE.PRM.ISTD  =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"), #Policy Lever (Inputs & Infrastructure) - Standards                                                                       
   SE.PRM.ISTD.1  =expert_df$textbook_policy, #(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?                   
-  SE.PRM.ISTD.10 =  indicator_means(m1scq14_imon__4		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
+  SE.PRM.ISTD.10 =  100*indicator_means(m1scq14_imon__4		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
   SE.PRM.ISTD.11 =expert_df$toilet_policy, #(De Jure) Is there a policy in place to require that schools have functioning toilets?                                   
-  SE.PRM.ISTD.12 =  indicator_means(m1scq14_imon__1		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
+  SE.PRM.ISTD.12 =  100*indicator_means(m1scq14_imon__1		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
   SE.PRM.ISTD.13 =expert_df$disability_policy, #(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?              
-  SE.PRM.ISTD.14 =  indicator_means(m1scq14_imon__3		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
-  SE.PRM.ISTD.2  =  indicator_means(m1scq13_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
+  SE.PRM.ISTD.14 =  100*indicator_means(m1scq14_imon__3		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
+  SE.PRM.ISTD.2  =  100*indicator_means(m1scq13_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
   SE.PRM.ISTD.3  =expert_df$connectivity_program, #(De Jure) Is there a national connectivity program?                                                                      
   SE.PRM.ISTD.4  =  -999,#(De Facto) Do you know if there is a national connectivity program?                                                      
   SE.PRM.ISTD.5  =expert_df$materials_policy, #(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computi~
-  SE.PRM.ISTD.6  =  indicator_means(m1scq13_imon__5		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/~
+  SE.PRM.ISTD.6  =  100*indicator_means(m1scq13_imon__5		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/~
   SE.PRM.ISTD.7  =expert_df$electricity_policy, #(De Jure) Is there a policy in place to require that schools have access to electricity?                                 
-  SE.PRM.ISTD.8  =  indicator_means(m1scq14_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?                 
+  SE.PRM.ISTD.8  =  100*indicator_means(m1scq14_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?                 
   SE.PRM.ISTD.9  =expert_df$water_policy, #(De Jure) Is there a policy in place to require that schools have access to drinking water?                              
   SE.PRM.ISTD.DF =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"),#(De Facto) Policy Lever (Inputs & Infrastructure) - Standards                                                            
   SE.PRM.ISTD.DJ =expert_df$inputs_standards #(De Jure) Policy Lever (Inputs & Infrastructure) - Standards    
     )
   #######################################
-  # olicy Lever (Inputs & Infrastructure) - Monitoring 	(IMON)
+  # Policy Lever (Inputs & Infrastructure) - Monitoring 	(IMON)
   #######################################
   
   indicator_values_transpose <- indicator_values_transpose %>%
@@ -616,259 +649,260 @@ api_data <- function(data_dir, cntry, yr) {
   #######################################
   # Policy Lever (Learners) - Nutrition Programs 	(LNTN)
   #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.LNTN.1 =expert_df$iodization,   #(De Jure) Does a national policy to encourage salt iodization exist?                                                     
+  SE.PRM.LNTN.2 =100*as.numeric(defacto_dta_learners_final$`Percentage of households with salt testing positive for any iodide among households`), #(De Facto) Percent of households with salt testing positive for any iodide among households                              
+  SE.PRM.LNTN.3 =expert_df$iron_fortification, #(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?            
+  SE.PRM.LNTN.4  =100*as.numeric(defacto_dta_learners_final$`Percentage of children age 6-23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day`), #(De Facto) Percent of children age 6-23 months who had at least the minimum dietary diversity and the minimum meal frequ~
+  SE.PRM.LNTN.5  =expert_df$breastfeeding, #(De Jure) Does a national policy exist to encourage breastfeeding?                                                       
+  SE.PRM.LNTN.6  =100*as.numeric(defacto_dta_learners_final$`Percentage of children born in the five (three) years preceding the survey who were ever breastfed`), #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed               
+  SE.PRM.LNTN.7  =expert_df$school_feeding, #(De Jure) Is there a publicly funded school feeding program?                                                             
+  SE.PRM.LNTN.8  =-999 #(De Facto) Percent of schools reporting having publicly funded school feeding program                                    
+    ) %>%
+    mutate(
+      SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6)/300+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs                                                                  
+      SE.PRM.LNTN.DJ =expert_df$nutrition_programs#(De Jure) Policy Lever (Learners) - Nutrition Programs  
+  ) %>%
+  mutate(
+    SE.PRM.LNTN =SE.PRM.LNTN.DF   #Policy Lever (Learners) - Nutrition Programs                                                                             
   
-  SE.PRM.LNTN    #Policy Lever (Learners) - Nutrition Programs                                                                             
-  SE.PRM.LNTN.1  #(De Jure) Does a national policy to encourage salt iodization exist?                                                     
-  SE.PRM.LNTN.2  #(De Facto) Percent of households with salt testing positive for any iodide among households                              
-  SE.PRM.LNTN.3  #(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?            
-  SE.PRM.LNTN.4  #(De Facto) Percent of children age 6-23 months who had at least the minimum dietary diversity and the minimum meal frequ~
-  SE.PRM.LNTN.5  #(De Jure) Does a national policy exist to encourage breastfeeding?                                                       
-  SE.PRM.LNTN.6  #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed               
-  SE.PRM.LNTN.7  #(De Jure) Is there a publicly funded school feeding program?                                                             
-  SE.PRM.LNTN.8  #(De Facto) Percent of schools reporting having publicly funded school feeding program                                    
-  SE.PRM.LNTN.DF #(De Facto) Policy Lever (Learners) - Nutrition Programs                                                                  
-  SE.PRM.LNTN.DJ #(De Jure) Policy Lever (Learners) - Nutrition Programs   
+    )
   #######################################
   # Policy Lever (Learners) - Health 	(LHTH)
   #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.LHTH.1 =expert_df$immunization, #(De Jure) Are young children required to receive a complete course of childhood immunizations?                           
+  SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final$`Percentage of children who at age: a) 12-23 months had received all basic vaccinations at any time before the survey, b) 24-35 months had received all vaccinations recommended in the national immunization schedule - DTP vaccine proxy`), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
+  SE.PRM.LHTH.3 =expert_df$healthcare_young_children, #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
+  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of  children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance                                                      
+  SE.PRM.LHTH.5 =expert_df$deworming, #(De Jure) Are deworming pills funded and distributed by the government?                                                  
+  SE.PRM.LHTH.6 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children age 6-59 months who received deworming medication.`), #(De Facto) Percent of children age 6-59 months who received deworming medication                                         
+  SE.PRM.LHTH.7 =expert_df$antenatal_skilled_delivery, #(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?                   
+  SE.PRM.LHTH.8 =100*as.numeric(defacto_dta_learners_final$`MICS/DHS - Percentage of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility`) #(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was deliv~
+    ) %>%
+    mutate(
+      SE.PRM.LHTH.DF =4*(SE.PRM.LHTH.2+SE.PRM.LHTH.4+SE.PRM.LHTH.6 + SE.PRM.LHTH.8)/400+1,#(De Facto) Policy Lever (Learners) - Health                                                                              
+    SE.PRM.LHTH.DJ =expert_df$health_programs#(De Jure) Policy Lever (Learners) - Health 
+    ) %>%
+  mutate(
+  SE.PRM.LHTH =SE.PRM.LHTH.DF   #Policy Lever (Learners) - Health                                                                                         
   
-  SE.PRM.LHTH    #Policy Lever (Learners) - Health                                                                                         
-  SE.PRM.LHTH.1  #(De Jure) Are young children required to receive a complete course of childhood immunizations?                           
-  SE.PRM.LHTH.2  #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
-  SE.PRM.LHTH.3  #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
-  SE.PRM.LHTH.4  #(De Facto) Percent of  children under 5 covered by health insurance                                                      
-  SE.PRM.LHTH.5  #(De Jure) Are deworming pills funded and distributed by the government?                                                  
-  SE.PRM.LHTH.6  #(De Facto) Percent of children age 6-59 months who received deworming medication                                         
-  SE.PRM.LHTH.7  #(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?                   
-  SE.PRM.LHTH.8  #(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was deliv~
-  SE.PRM.LHTH.DF #(De Facto) Policy Lever (Learners) - Health                                                                              
-  SE.PRM.LHTH.DJ #(De Jure) Policy Lever (Learners) - Health 
+    )
   #######################################
   # Policy Lever (Learners) - Center-Based Care 	(LCBC)
   #######################################
-  
-  SE.PRM.LCBC    #Policy Lever (Learners) - Center-Based Care                                                                               
-  SE.PRM.LCBC.1  #(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary educat~
-  SE.PRM.LCBC.2  #(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme                  
-  SE.PRM.LCBC.3  #(De Jure) Are there developmental standards established for early childhood care and education?                           
-  SE.PRM.LCBC.4  #(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary tea~
-  SE.PRM.LCBC.5  #(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-servic~
-  SE.PRM.LCBC.DF #(De Facto) Policy Lever (Learners) - Center-Based Care                                                                    
-  SE.PRM.LCBC.DJ #(De Jure) Policy Lever (Learners) - Center-Based Care  
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.LCBC.1  =expert_df$pre_primary_free_some,#(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary educat~
+  SE.PRM.LCBC.2  =100*(as.numeric(defacto_dta_learners_final$`Percentage of children age 36-59 months who are attending ECE`)+as.numeric(defacto_dta_learners_final$`Percentage of ECE Classrooms with Effective Practices`))/2,#(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme                  
+  SE.PRM.LCBC.3  =expert_df$developmental_standards,#(De Jure) Are there developmental standards established for early childhood care and education?                           
+  SE.PRM.LCBC.4  =expert_df$ece_qualifications,#(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary tea~
+  SE.PRM.LCBC.5  =expert_df$ece_in_service#(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-servic~
+    ) %>%
+    mutate(
+      SE.PRM.LCBC.DF =4*(SE.PRM.LCBC.2)/100+1,#(De Facto) Policy Lever (Learners) - Center-Based Care                                                                    
+      SE.PRM.LCBC.DJ =expert_df$ece_programs#(De Jure) Policy Lever (Learners) - Center-Based Care  
+    ) %>%
+    mutate(
+  SE.PRM.LCBC = SE.PRM.LCBC.DF  #Policy Lever (Learners) - Center-Based Care                                                                               
+    )
   #######################################
   # Policy Lever (Learners) - Caregiver Capacity - Financial Capacity 	(LFCP)
   #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.LFCP.1 = expert_df$anti_poverty,  #(De Jure) Are anti poverty interventions that focus on ECD publicly supported?         
+  SE.PRM.LFCP.2 =-999, #(De Jure) Are cash transfers conditional on ECD services/enrollment publicly supported?
+  SE.PRM.LFCP.3 =-999, #(De Jure) Are cash transfers focused partially on ECD publicly supported?              
+  SE.PRM.LFCP.4 =100*as.numeric(defacto_dta_learners_final$`Coverage of social protection programs (Best data source to be identified)`) #(De Facto) Coverage of social protection programs                                      
+    ) %>%
+    mutate(
+      SE.PRM.LFCP.DF=4*SE.PRM.LFCP.4/100 +1, #(De Facto) Policy Lever (Learners) - Caregiver Capacity - Financial Capacity           
+      SE.PRM.LFCP.DJ=expert_df$financial_capacity #(De Jure) Policy Lever (Learners) - Caregiver Capacity - Financial Capacity  
+    ) %>%
+    mutate(
+  SE.PRM.LFCP=SE.PRM.LFCP.DF    #Policy Lever (Learners) - Caregiver Capacity - Financial Capacity                      
   
-  SE.PRM.LFCP    #Policy Lever (Learners) - Caregiver Capacity - Financial Capacity                      
-  SE.PRM.LFCP.1  #(De Jure) Are anti poverty interventions that focus on ECD publicly supported?         
-  SE.PRM.LFCP.2  #(De Jure) Are cash transfers conditional on ECD services/enrollment publicly supported?
-  SE.PRM.LFCP.3  #(De Jure) Are cash transfers focused partially on ECD publicly supported?              
-  SE.PRM.LFCP.4  #(De Facto) Coverage of social protection programs                                      
-  SE.PRM.LFCP.DF #(De Facto) Policy Lever (Learners) - Caregiver Capacity - Financial Capacity           
-  SE.PRM.LFCP.DJ #(De Jure) Policy Lever (Learners) - Caregiver Capacity - Financial Capacity  
-  
+    )
   #######################################
   # Policy Lever (Learners) - Caregiver Capacity - Skills Capacity 	(LSKC)
   #######################################
-  
-  SE.PRM.LSKC    #Policy Lever (Learners) - Caregiver Capacity - Skills Capacity                                                            
-  SE.PRM.LSKC.1  #(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?                  
-  SE.PRM.LSKC.2  #(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early ~
-  SE.PRM.LSKC.3  #(De Facto) Percent of children under age 5 who have three or more children's books                                        
-  SE.PRM.LSKC.4  #(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and respo~
-  SE.PRM.LSKC.DF #(De Facto) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity                                                 
-  SE.PRM.LSKC.DJ #(De Jure) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity 
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.LSKC.1 =expert_df$good_parent_sharing, #(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?                  
+  SE.PRM.LSKC.2 =expert_df$promote_ece_stimulation, #(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early ~
+  SE.PRM.LSKC.3 =-999, #(De Facto) Percent of children under age 5 who have three or more children's books                                        
+  SE.PRM.LSKC.4 =100*as.numeric(defacto_dta_learners_final$`Percentage of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household`) #(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and respo~
+  ) %>%
+  mutate(
+    SE.PRM.LSKC.DF = 4*(SE.PRM.LSKC.4)/100+1,#(De Facto) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity                                                 
+    SE.PRM.LSKC.DJ =expert_df$caregiver_skills
+  ) %>%
+  mutate(#(De Jure) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity 
+    SE.PRM.LSKC =  SE.PRM.LSKC.DF  #Policy Lever (Learners) - Caregiver Capacity - Skills Capacity                                                            
+  )
   #######################################
   # Policy Lever (School Management) - Clarity of Functions 	(SCFN)
   #######################################
-  
-  SE.PRM.SCFN    #Policy Lever (School Management) - Clarity of Functions                                                                  
-  SE.PRM.SCFN.1  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance~
-  SE.PRM.SCFN.10 #(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?                   
-  SE.PRM.SCFN.11 #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hirin~
-  SE.PRM.SCFN.12 #(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?                
-  SE.PRM.SCFN.13 #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal super~
-  SE.PRM.SCFN.14 #(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?             
-  SE.PRM.SCFN.2  #(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastruct~
-  SE.PRM.SCFN.3  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement~
-  SE.PRM.SCFN.4  #(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?                       
-  SE.PRM.SCFN.5  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring ~
-  SE.PRM.SCFN.6  #(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?                  
-  SE.PRM.SCFN.7  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervi~
-  SE.PRM.SCFN.8  #(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?    
-  SE.PRM.SCFN.9  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
-  SE.PRM.SCFN.DF #(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
-  SE.PRM.SCFN.DJ #(De Jure) Policy Lever (School Management) - Clarity of Functions    
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.SCFN   = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),  #Policy Lever (School Management) - Clarity of Functions                                                                  
+  SE.PRM.SCFN.1 = 100*indicator_means(infrastructure_scfn		, "school", "SCFN",  "All"),  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance~
+  SE.PRM.SCFN.10 =expert_df$student_scfn, #(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?                   
+  SE.PRM.SCFN.11 = 100*indicator_means(principal_hiring_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hirin~
+  SE.PRM.SCFN.12 =expert_df$principal_hiring_scfn,#(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?                
+  SE.PRM.SCFN.13 = 100*indicator_means(principal_supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal super~
+  SE.PRM.SCFN.14 =expert_df$principal_supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?             
+  SE.PRM.SCFN.2  =expert_df$infrastructure_scfn, #(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastruct~
+  SE.PRM.SCFN.3  = 100*indicator_means(materials_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement~
+  SE.PRM.SCFN.4  =expert_df$materials_scfn,#(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?                       
+  SE.PRM.SCFN.5  = 100*indicator_means(hiring_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring ~
+  SE.PRM.SCFN.6  =expert_df$hiring_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?                  
+  SE.PRM.SCFN.7  = 100*indicator_means(supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervi~
+  SE.PRM.SCFN.8  =expert_df$supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?    
+  SE.PRM.SCFN.9  = 100*indicator_means(student_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
+  SE.PRM.SCFN.DF = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),#(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
+  SE.PRM.SCFN.DJ =expert_df$school_management_clarity#(De Jure) Policy Lever (School Management) - Clarity of Functions    
+    )
   #######################################
   # Policy Lever (School Management) - Attraction 	(SATT)
   #######################################
-  
-  SE.PRM.SATT    #Policy Lever (School Management) - Attraction                                                                             
-  SE.PRM.SATT.1  #(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as pr~
-  SE.PRM.SATT.2  #(De Facto) Average principal salary as percent of GDP per capita                                                          
-  SE.PRM.SATT.3  #(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community    
-  SE.PRM.SATT.DF #(De Facto) Policy Lever (School Management) - Attraction                                                                  
-  SE.PRM.SATT.DJ #(De Jure) Policy Lever (School Management) - Attraction  
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.SATT  = indicator_means(sch_management_attraction		, "school", "SATT",  "All"),  #Policy Lever (School Management) - Attraction                                                                             
+  SE.PRM.SATT.1  =expert_df$professionalized, #(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as pr~
+  SE.PRM.SATT.2 = indicator_means(principal_salary		, "school", "SATT",  "All"),  #(De Facto) Average principal salary as percent of GDP per capita                                                          
+  SE.PRM.SATT.3  = indicator_means(principal_satisfaction		, "school", "SATT",  "All"),#(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community    
+  SE.PRM.SATT.DF = indicator_means(sch_management_attraction		, "school", "SATT",  "All"), #(De Facto) Policy Lever (School Management) - Attraction                                                                  
+  SE.PRM.SATT.DJ =expert_df$school_management_attraction#(De Jure) Policy Lever (School Management) - Attraction  
+    )
   #######################################
   # Policy Lever (School Management) - Selection & Deployment 	(SSLD)
   #######################################
-  
-  SE.PRM.SSLD    #Policy Lever (School Management) - Selection & Deployment                                                                
-  SE.PRM.SSLD.1  #(De Jure) Is there a systematic approach/rubric for the selection of principals?                                         
-  SE.PRM.SSLD.10 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is yea~
-  SE.PRM.SSLD.11 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is qua~
-  SE.PRM.SSLD.12 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is dem~
-  SE.PRM.SSLD.13 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is hav~
-  SE.PRM.SSLD.14 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is pol~
-  SE.PRM.SSLD.15 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is eth~
-  SE.PRM.SSLD.16 #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is kno~
-  SE.PRM.SSLD.2  #(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?              
-  SE.PRM.SSLD.3  #(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of exp~
-  SE.PRM.SSLD.4  #(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of ~
-  SE.PRM.SSLD.5  #(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated~
-  SE.PRM.SSLD.6  #(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relatio~
-  SE.PRM.SSLD.7  #(De Facto) Percent of principals that report that the factors considered when selecting a principal include political af~
-  SE.PRM.SSLD.8  #(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group 
-  SE.PRM.SSLD.9  #(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of~
-  SE.PRM.SSLD.DF #(De Facto) Policy Lever (School Management) - Selection & Deployment                                                     
-  SE.PRM.SSLD.DJ #(De Jure) Policy Lever (School Management) - Selection & Deployment  
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.SSLD  =  indicator_means(sch_selection_deployment		, "school", "SSLD",  "All"),#Policy Lever (School Management) - Selection & Deployment                                                                
+  SE.PRM.SSLD.1  =expert_df$principal_rubric,#(De Jure) Is there a systematic approach/rubric for the selection of principals?                                         
+  SE.PRM.SSLD.10  =  100*indicator_means(m7sgq2_ssld==1		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is yea~
+  SE.PRM.SSLD.11 =  100*indicator_means(m7sgq2_ssld==2		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is qua~
+  SE.PRM.SSLD.12 =  100*indicator_means(m7sgq2_ssld==3		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is dem~
+  SE.PRM.SSLD.13 =  100*indicator_means(m7sgq2_ssld==4		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is hav~
+  SE.PRM.SSLD.14 =  100*indicator_means(m7sgq2_ssld==6		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is pol~
+  SE.PRM.SSLD.15 =  100*indicator_means(m7sgq2_ssld==7		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is eth~
+  SE.PRM.SSLD.16 =  100*indicator_means(m7sgq2_ssld==8		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is kno~
+  SE.PRM.SSLD.2  =expert_df$principal_factors,#(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?              
+  SE.PRM.SSLD.3  =  100*indicator_means(m7sgq1_ssld__1		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of exp~
+  SE.PRM.SSLD.4  =  100*indicator_means(m7sgq1_ssld__2		, "school", "SSLD",  "All"),#(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of ~
+  SE.PRM.SSLD.5  =  100*indicator_means(m7sgq1_ssld__3		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated~
+  SE.PRM.SSLD.6  =  100*indicator_means(m7sgq1_ssld__4		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relatio~
+  SE.PRM.SSLD.7  =  100*indicator_means(m7sgq1_ssld__6		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include political af~
+  SE.PRM.SSLD.8  =  100*indicator_means(m7sgq1_ssld__7		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group 
+  SE.PRM.SSLD.9  =  100*indicator_means(m7sgq1_ssld__8		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of~
+  SE.PRM.SSLD.DF =  indicator_means(sch_selection_deployment		, "school", "SSLD",  "All"), #(De Facto) Policy Lever (School Management) - Selection & Deployment                                                     
+  SE.PRM.SSLD.DJ =expert_df$school_selection_deployment #(De Jure) Policy Lever (School Management) - Selection & Deployment  
+    )
   #######################################
   # Policy Lever (School Management) - Support 	(SSUP)
   #######################################
-  
-  SE.PRM.SSUP    #Policy Lever (School Management) - Support                                                                        
-  SE.PRM.SSUP.1  #(De Jure) Are principals required to have training on how to manage a school?                                     
-  SE.PRM.SSUP.10 #(De Facto) Percent of principals that report having used the skills they gained at the last training they attended
-  SE.PRM.SSUP.11 #(De Facto) Average number of trainings that principals report having been offered to them in the past year        
-  SE.PRM.SSUP.2  #(De Jure) Are principals required to have management training for new principals?                                 
-  SE.PRM.SSUP.3  #(De Jure) Are principals required to have in-service training?                                                    
-  SE.PRM.SSUP.4  #(De Jure) Are principals required to have mentoring/coaching by experienced principals?                           
-  SE.PRM.SSUP.5  #(De Jure) How many times per year do principals have trainings?                                                   
-  SE.PRM.SSUP.6  #(De Facto) Percent of principals that report ever having received formal training                                 
-  SE.PRM.SSUP.7  #(De Facto) Percent of principals that report having received management training for new principals               
-  SE.PRM.SSUP.8  #(De Facto) Percent of principals that report having received in-service training                                  
-  SE.PRM.SSUP.9  #(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals         
-  SE.PRM.SSUP.DF #(De Facto) Policy Lever (School Management) - Support                                                             
-  SE.PRM.SSUP.DJ #(De Jure) Policy Lever (School Management) - Support 
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.SSUP    =  indicator_means(sch_support		, "school", "SSUP",  "All"), #Policy Lever (School Management) - Support                                                                        
+  SE.PRM.SSUP.1  =expert_df$principal_training_required,#(De Jure) Are principals required to have training on how to manage a school?                                     
+  SE.PRM.SSUP.10 =  100*indicator_means(m7sgq5_ssup		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having used the skills they gained at the last training they attended
+  SE.PRM.SSUP.11 =  indicator_means(m7sgq7_ssup		, "school", "SSUP",  "All"),#(De Facto) Average number of trainings that principals report having been offered to them in the past year        
+  SE.PRM.SSUP.2  =expert_df$principal_training_type1,#(De Jure) Are principals required to have management training for new principals?                                 
+  SE.PRM.SSUP.3  =expert_df$principal_training_type2,#(De Jure) Are principals required to have in-service training?                                                    
+  SE.PRM.SSUP.4  =expert_df$principal_training_type3,#(De Jure) Are principals required to have mentoring/coaching by experienced principals?                           
+  SE.PRM.SSUP.5  =expert_df$principal_training_frequency_2,#(De Jure) How many times per year do principals have trainings?                                                   
+  SE.PRM.SSUP.6  =  100*indicator_means(m7sgq3_ssup		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report ever having received formal training                                 
+  SE.PRM.SSUP.7  =  100*indicator_means(m7sgq4_ssup__1		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received management training for new principals               
+  SE.PRM.SSUP.8  =  100*indicator_means(m7sgq4_ssup__2		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report having received in-service training                                  
+  SE.PRM.SSUP.9  =  100*indicator_means(m7sgq4_ssup__3		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals         
+  SE.PRM.SSUP.DF   =  indicator_means(sch_support		, "school", "SSUP",  "All"),  #(De Facto) Policy Lever (School Management) - Support                                                             
+  SE.PRM.SSUP.DJ =expert_df$school_support#(De Jure) Policy Lever (School Management) - Support 
+    )
   #######################################
   # Policy Lever (School Management) - Evaluation 	(SEVL)
   #######################################
-  
-  SE.PRM.SEVL    #Policy Lever (School Management) - Evaluation                                                          
-  SE.PRM.SEVL.1  #(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?  
-  SE.PRM.SEVL.2  #(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?                  
-  SE.PRM.SEVL.3  #(De Facto) Percent of principals that report having been evaluated  during the last school year        
-  SE.PRM.SEVL.4  #(De Facto) Percent of principals that report having been evaluated on multiple factors                 
-  SE.PRM.SEVL.5  #(De Facto) Percent of principals that report there would be consequences after two negative evaluations
-  SE.PRM.SEVL.6  #(De Facto) Percent of principals that report there would be consequences after two positive evaluations
-  SE.PRM.SEVL.DF #(De Facto) Policy Lever (School Management) - Evaluation                                               
-  SE.PRM.SEVL.DJ #(De Jure) Policy Lever (School Management) - Evaluation     
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.SEVL   =  indicator_means(principal_evaluation		, "school", "SEVL",  "All"), #Policy Lever (School Management) - Evaluation                                                          
+  SE.PRM.SEVL.1  =expert_df$principal_monitor_law,#(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?  
+  SE.PRM.SEVL.2  =expert_df$principal_monitor_criteria,#(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?                  
+  SE.PRM.SEVL.3 =  100*indicator_means(m7sgq8_sevl		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated  during the last school year        
+  SE.PRM.SEVL.4 =  100*indicator_means(principal_eval_tot>1		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated on multiple factors                 
+  SE.PRM.SEVL.5 =  100*indicator_means(principal_negative_consequences	, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report there would be consequences after two negative evaluations
+  SE.PRM.SEVL.6  =100*indicator_means(principal_positive_consequences	, "school", "SEVL",  "All"),#(De Facto) Percent of principals that report there would be consequences after two positive evaluations
+  SE.PRM.SEVL.DF =  indicator_means(principal_evaluation		, "school", "SEVL",  "All"), #(De Facto) Policy Lever (School Management) - Evaluation                                               
+  SE.PRM.SEVL.DJ =expert_df$principal_evaluation #(De Jure) Policy Lever (School Management) - Evaluation     
+    )
   #######################################
   # Politics & Bureaucratic Capacity - Quality of Bureaucracy 	(BQBR)
   #######################################
-  
-  SE.PRM.BQBR   #Politics & Bureaucratic Capacity - Quality of Bureaucracy                                                                  
-  SE.PRM.BQBR.1 #Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
-  SE.PRM.BQBR.2 #(Quality of Bureaucracy) average score for knowledge and skills                                                            
-  SE.PRM.BQBR.3 #(Quality of Bureaucracy) average score for work environment                                                                
-  SE.PRM.BQBR.4 #(Quality of Bureaucracy) average score for merit                                                                           
-  SE.PRM.BQBR.5 #(Quality of Bureaucracy) average score for motivation and attitudes       
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy                                                                  
+  SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
+  SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills                                                            
+  SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment                                                                
+  SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit                                                                           
+  SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes      
+)
   #######################################
   # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
   #######################################
-  
-  SE.PRM.BIMP   #Politics & Bureaucratic Capacity - Impartial Decision-Making                                                               
-  SE.PRM.BIMP.1 #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-  SE.PRM.BIMP.2 #(Impartial Decision-Making) average score for politicized personnel management                                             
-  SE.PRM.BIMP.3 #(Impartial Decision-Making) average score for politicized policy-making                                                    
-  SE.PRM.BIMP.4 #(Impartial Decision-Making) average score for politicized policy implementation                                            
-  SE.PRM.BIMP.5 #(Impartial Decision-Making) average score for employee unions as facilitators 
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making                                                               
+  SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+  SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management                                             
+  SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making                                                    
+  SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation                                            
+  SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators 
+    )
   #######################################
   # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
   #######################################
-  
-  SE.PRM.BMAC   #Politics & Bureaucratic Capacity - Mandates & Accountability                                                               
-  SE.PRM.BMAC.1 #Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-  SE.PRM.BMAC.2 #(Mandates & Accountability) Average score for coherence                                                                    
-  SE.PRM.BMAC.3 #(Mandates & Accountability) Average score for transparency                                                                 
-  SE.PRM.BMAC.4 #(Mandates & Accountability) Average score for accountability of public officials    
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability                                                               
+  SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+  SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence                                                                    
+  SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency                                                                 
+  SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials    
+    )
   #######################################
   # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
   #######################################
-  
-  SE.PRM.BNLG   #Politics & Bureaucratic Capacity - National Learning Goals                                                                 
-  SE.PRM.BNLG.1 #Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
-  SE.PRM.BNLG.2 #(National Learning Goals) Average score for targeting                                                                      
-  SE.PRM.BNLG.3 #(National Learning Goals) Average score for monitoring                                                                     
-  SE.PRM.BNLG.4 #(National Learning Goals) Average score for incentives                                                                     
-  SE.PRM.BNLG.5 #(National Learning Goals) Average score for community engagement   
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals                                                                 
+  SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
+  SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting                                                                      
+  SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring                                                                     
+  SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives                                                                     
+  SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement   
+    )
   #######################################
   # Politics & Bureaucratic Capacity - Financing 	(BFIN)
   #######################################
-  
-  SE.PRM.BFIN   #Politics & Bureaucratic Capacity - Financing                                                                               
-  SE.PRM.BFIN.1 #Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
-  SE.PRM.BFIN.2 #(Financing) - Adequacy expressed by the per child spending                                                                 
-  SE.PRM.BFIN.3 #(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
-  SE.PRM.BFIN.4 #(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
-  SE.PRM.BFIN.5 #(Financing) - Equity 
-  
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BFIN   = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #Politics & Bureaucratic Capacity - Financing                                                                               
+  SE.PRM.BFIN.1 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1,#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
+  SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`), #(Financing) - Adequacy expressed by the per child spending                                                                 
+  SE.PRM.BFIN.3 =-999,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
+  SE.PRM.BFIN.4 =-999,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
+  SE.PRM.BFIN.5 =-999,#(Financing) - Equity 
+    )
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
     rownames_to_column(var='Series') %>%
     rename(value = V1  )
   
-}
-#   
-#   
-#   #Tags
-#   practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD"
-#   
-#   
-#   
-#   
-#   #read in practice data
-#   api_p <- api_final %>%
-#     rename(Indicator.Name='Indicator Name') %>%
-#     filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
-#     rename(  'Indicator Name'=Indicator.Name) %>%
-#     select(Series, 'Indicator Name') %>%
-#     mutate(value=rbinom(n(), 100, 0.7)) %>%
-#     mutate(
-#       value_metadata=case_when(
-#         value <=50 ~ "Needs Improvement",
-#         value >50 & value<=80 ~ "Caution",
-#         value >80 ~ "On Target"
-#       ))
-#   
-#   #read in non-practice data
-#   api_c <- api_final %>%
-#     rename(Indicator.Name='Indicator Name') %>%
-#     filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
-#     rename(  'Indicator Name'=Indicator.Name) %>%
-#     select(Series, 'Indicator Name') %>%
-#     mutate(value=rbinom(n(), 5, 0.7)) %>%
-#     mutate(
-#       value_metadata=case_when(
-#         value <=2 ~ "Needs Improvement",
-#         value >2 & value<4 ~ "Caution",
-#         value >=4 ~ "On Target"
-#       ))
-#   
-#   api_dummy_p %>%
-#     bind_rows(api_dummy_c) %>%
-#     arrange(Series) %>%
-#     mutate(year=yr,
-#            cty_or_agg="cty",
-#            countrycode=cntry)
-# }
+api_final<-api_template %>%
+    dplyr::select(-value) %>%
+    left_join(indicator_values_back)
+  

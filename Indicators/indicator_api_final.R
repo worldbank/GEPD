@@ -45,7 +45,6 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # PER_data_2019 <- api_data(data_dir1, data_dir2, data_dir3, 'PER', 2019)
 
-source('R/api_data_fun.R', local=TRUE)
 
 
 ############################
@@ -156,7 +155,7 @@ df_sub<-df_longer %>%
     TRUE ~ Indicator.Name  )) %>%
   select(-Column_1, -type, -num, -urban_rural_gender) 
 
-api_final  <- df_overall %>%
+api_template  <- df_overall %>%
   bind_rows(df_defacto_dejure) %>%
   bind_rows(df_sub) %>%
   arrange(Series) %>%
@@ -169,7 +168,7 @@ indicator_match  <- df_overall %>%
   select(Series, Indicator.Name, indicator_tag)
 
 #add extra metadata
-api_final <- api_final %>%
+api_template <- api_template %>%
   mutate(Source="Global Education Policy Dashboard",
          'Source Organization'="World Bank") %>%
   left_join(indicator_choices) %>%
@@ -195,18 +194,6 @@ api_final <- api_final %>%
 data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/"
 
 
-#read in databases for indicators
-
-load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
-load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
-
-
-expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', sep="/" ))
-
-
-#load sampling info
-load(paste(data_dir, "Sampling/school_sample_2019-07-22.RData", sep="/"))
-
 
 
 #pull data for learning poverty from wbopendata
@@ -220,12 +207,47 @@ wbopendat<-WDI(country="PE", indicator=ind_list, start=2013, end=2013, extra=T) 
   arrange(year) %>%
   filter(row_number()==n())
 
+#read in databases for indicators
 
-PER_data_2019 <- api_data(data_dir, 'PER', 2019)
+load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
+load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
+
+
+expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', sep="/" ))
+
+#score expert data (this requires a lot of hard coding and transcribing)
+#read in data
+defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal') 
+defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
+colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
+
+#create indicators
+defacto_dta_learners_final <- defacto_dta_learners_shaped %>%
+  rownames_to_column() %>%
+  filter(rowname=='Scoring') %>%
+  select(-rowname)
+
+
+
+#financing
+finance_df <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Finance_scoring.xlsx', sep="/"),  .name_repair = 'universal') 
+finance_df_shaped<-data.frame(t(finance_df[-1]), stringsAsFactors = FALSE)
+colnames(finance_df_shaped) <- finance_df$Question
+
+#create indicatorsTS
+finance_df_final <- finance_df_shaped %>%
+  rownames_to_column() %>%
+  filter(rowname=='Scores') %>%
+  select(-rowname)
+
+
+source('R/api_data_fun.R')
+
+PER_data_2019 <- api_final
 
 
 #export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_Info.csv')
+write_excel_csv(api_final, 'GEPD_Indicators_API_PER.csv')
 
 
 

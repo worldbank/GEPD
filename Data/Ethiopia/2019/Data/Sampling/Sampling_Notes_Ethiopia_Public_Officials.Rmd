@@ -28,13 +28,6 @@ set.seed(54351324)
 #Specify directory where sampling frame located
 dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2019/Data/Sampling/"
 
-#specify name of sampling frame file.  This needs to be a csv file
-file_frame<-"ETH_sampling_data.dta"
-#specify name of sampling frame file.  This needs to be a csv file
-public_file_frame<-"ETH_sampling_data.dta"
-old_file_frame<-"Sampling_Frame_2009.dta"
-#specify date that sample was created.  This may be useful if you want to access stored results
-#date_frame<-c("2019-07-22")
 
 date_frame<-c("2019-12-23")
 
@@ -62,5 +55,94 @@ For the randomly chosen officials, the randomization has to be done with Survey 
   4.	Interview the public officials according to the order given by Survey Solutions (if a public official who was randomly chosen is not available, go with the next one in the list)
   5.	Take a picture of the full list and upload it to Survey Solutions for quality control
 
+```{r load, echo=FALSE, warning=FALSE}
+#load the school level data
+
+sample_file_name <- paste(dir_frame,"school_sample_",date_frame,".Rdata", sep="")
+
+load(file=sample_file_name)   
+
+#Some summary stats and descriptives
+ggplot(data=sample_updated, aes(region)) +
+  geom_histogram(stat='count') +
+  stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
+  coord_flip() +
+  expand_limits(y=400) +
+  theme_bw() +
+  ggtitle(str_wrap("Counts of the Number of Schools by Region in Selected Sample of 300 Schools",55))
+
+```
+
+We will make sure all regions have the possibility of being selected, but we will give greater weight to regions with more schools (for example Amhara).  In the next code snippet, we will create the weights.
+
+```{r regional_weights, echo=TRUE}
+
+ #form regional weights, based on the number of schools.
+  region_weights<- data_set_updated %>% #read in school sample frame as basis for forming weights
+    group_by(region) %>%
+    summarise(n_schools=n() )  #count number of schools per region
+
+  #select six regions
+  regions_list <- region_weights %>%
+    sample_n(6, weight=n_schools)
+
+  region_frame_name <- paste(dir_frame,"/region_sample_",Sys.Date(),".csv", sep="")
+  datatable(regions_list,
+            caption="Regions selected for Public Officials Survey")
+
+  write_excel_csv(regions_list,region_frame_name) 
+
+```
+The regions selected are: `r paste(regions_list$region, sep=",")`
+
+Now we will select the Woredas.
+
+```{r woredas}
+
+  #From within regions, assign how many woredas to visit
+  regions_list <- regions_list %>%
+  ungroup() %>%
+  mutate(N_woredas_to_sample=(20*n_schools/sum(n_schools))) #get number of woredas based on number of schools
+
+
+  
+  regions_list <- regions_list %>% 
+    mutate(N_woredas_to_sample=case_when(
+      region=="Oromiya" ~8,
+      region=="Amhara" ~6,
+      region=="SNNP" ~4,
+      TRUE ~ 1
+    )) #do some reallocation to ensure at least one school from each region
+
+    
+  woreda_list<- sample_updated %>%
+    group_by(region, woreda) %>%
+    mutate(n_schools_woreda=n()) %>%
+    summarise_all(first) %>%
+    group_by(region) %>%
+    left_join(regions_list) %>%
+    filter(!is.na(n_schools)) %>% #drop woredas in regions not selected
+    sample_n(N_woredas_to_sample) %>%
+    dplyr::select(region, zone, woreda, region_code, zone_code, woreda_code)
+  
+  #Change Addis Ababa "woreda" values, because the chosen isn't a woreda it is a sub-city admin unit
+  woreda_list <- woreda_list %>%
+    mutate(
+      zone=if_else(region=="Addis Ababa","NA",zone),
+      woreda=if_else(region=="Addis Ababa","NA",woreda),
+      zone_code=if_else(region=="Addis Ababa",as.numeric(NA),as.numeric(zone_code)),
+      woreda_code=if_else(region=="Addis Ababa",as.numeric(NA),as.numeric(woreda_code))
+    )
+  
+  #save as csv
+  dist_frame_name <- paste(dir_frame,"/woreda_sample_",Sys.Date(),".csv", sep="")
+  datatable(woreda_list,
+            options = list(pageLength = 21),
+            caption="Woredas selected for Public Officials Survey")
+
+  write_excel_csv(woreda_list,dist_frame_name) 
+  write_excel_csv(woreda_list,dist_frame_name) 
+
+```
 
  

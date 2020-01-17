@@ -1,7 +1,7 @@
 library(tidyverse)
 library(haven)
 #score expert data (this requires a lot of hard coding and transcribing)
-expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/Expert_Survey"
+expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/Expert_Survey"
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
@@ -157,6 +157,9 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_training_required=read_var(A8),
          principal_training_type=read_var(A9),
+         principal_training_type1=read_var(A9.1),
+         principal_training_type2=read_var(A9.2),
+         principal_training_type3=read_var(A9.3),
          principal_training_frequency_1=read_var(A10.1),
          principal_training_frequency_2=read_var(A10.2),
          principal_training_frequency_3=read_var(A10.3)
