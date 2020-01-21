@@ -184,6 +184,8 @@ datatable(sample_random, caption = 'List of Public Schools Chosen for Sample')
 write_excel_csv(sample_random, paste(dir_frame, '/sample_public_schools_', Sys.Date(),  '.csv', sep=""))
 
 ```
+
+
 # Replacement Schools
 
 Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the Woreda, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, zone, and woreda of the originally sampled school for which this school serves as a replacement. 

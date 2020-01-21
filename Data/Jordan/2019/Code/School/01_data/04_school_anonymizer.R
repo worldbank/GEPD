@@ -38,7 +38,7 @@ for (i in indicator_names ) {
 }
   
 ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
-                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", "final_indicator_data_CONT_after_2015",
+                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
                                 "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
@@ -50,13 +50,13 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-             "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
+               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
 
 
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-currentDate<-c("2019-07-22")
+currentDate<-c("2019-10-11")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
@@ -111,7 +111,7 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, codigo.modular, total_4th, departamento)
+      temp <- df_weights_function(temp, organization_code, total_students_grade_4, governorate)
     }
     
     #Scrub names, geocodes

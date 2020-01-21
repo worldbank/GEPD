@@ -28,7 +28,7 @@ library(ggthemes)
 #read in office level file
 
 skim_with_defaults()
-load(file=paste(save_folder, "paradata.RData", sep="/"))
+load(file=paste(confidential_folder, "paradata.RData", sep="/"))
 ```
 
 ## Introduction
@@ -242,7 +242,7 @@ To start, the following figures and tables will highlight missing values for a f
 
 ```{r missings, error=FALSE, message=FALSE, include=FALSE}
 
-load(paste(save_folder, "public_officials_survey_data.RData", sep="/"))
+load(paste(confidential_folder, "public_officials_survey_data.RData", sep="/"))
 
 
 sumstats<-public_officials_dta_clean %>%
@@ -277,7 +277,7 @@ sumstats_df<-skim(sumstats) %>%
                          labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making')))
 
 #export Indicators sumstats
-write_excel_csv(sumstats_df, paste(save_folder,'GEPD_Public_Officials_Indicators.csv',sep=""))
+write_excel_csv(sumstats_df, paste(confidential_folder,'GEPD_Public_Officials_Indicators.csv',sep=""))
 ```
 
 

@@ -1,0 +1,167 @@
+---
+title: "GEPD Technical Note"
+author: "Brian Stacy"
+date: "1/21/2020"
+output: 
+  word_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+      
+      
+# Background on Project
+Policymakers in low- and middle-income countries who are working to improve student learning often find themselves flying blind. They see the budget that goes into education and (sometimes) the learning that students come out with, but they lack information on the crucial factors in between— the practices, policies, and politics—that drive those learning outcomes. The new Global Education Policy Dashboard initiative will fill that gap.
+
+## The Challenge: Understanding the Learning Crisis
+Many countries, despite having significantly increased access to education for their children and youth, now realize that they are facing a learning crisis. For instance, when grade 3 students in Nicaragua were tested in 2011, only half correctly solved 5 + 6. And in Kenya, Tanzania, and Uganda, when grade 3 students were asked recently to read a sentence such as  “The  name  of  the  dog  is  Puppy,”  three-quarters could  not  answer  what  the  dog’s  name  was.  Examples like these from around the world underline that schooling is not the same as learning—even though education policy often assumes that it is.
+
+The World Development Report 2018 argued that the learning crisis has both micro- and system-level causes: poor service delivery in schools and communities, driven by unhealthy politics and low bureaucratic capacity, mediated through policies that are not aligned toward learning for all. To tackle the crisis and improve student learning at scale, countries need to know where they stand on all three of these dimensions—practices (or service delivery), policies, and politics.
+
+But providing such a systemwide overview requires better measurement. Many of these drivers of learning are not captured by existing administrative systems. And although new measurement tools capture some of those aspects well, no single instrument pulls together data on all these areas. This gap leaves policymakers in the dark about what is working and what isn’t.
+
+## Our Response: Shining a light on the drivers of learning
+To fill this gap, the World Bank, with support from the Bill and Melinda Gates Foundation and the UK’s Department for International Development, is designing a Global Education Policy Dashboard, which will measure the drivers of learning outcomes in basic education around the world. In doing so, it will highlight gaps between current practice and  what the evidence suggests would be most effective in promoting learning, and it will give governments a way to set priorities and track progress as they work to close those gaps. This collaboration will advance the goals of the Human Capital Project, a global effort to accelerate more and better investments in people for greater equity and economic growth.
+
+The dashboard will start by focusing attention on education outcomes—learning and participation in primary school.  The next set of indicators will measure the quality of service delivery, focusing on four key school-level ingredients of student learning:  teaching, school management, technology for learning, and learner preparation.  
+
+In addition, the dashboard will measure deeper systemic drivers: the policies and politics that determine the quality of service delivery. The end goal is to have a set of indicators that is comprehensive but also focused so stakeholders can pay attention to what is really most important.
+
+The dashboard will be implemented in 13 countries in 2019, with a goal of rapidly expanding coverage after lessons from the field have been incorporated.
+
+## Our Approach: How the Dashboard will achieve this
+Develop tools to collect data at all levels of the system on a regular basis. Because of the shortcomings of existing data on the drivers of learning, in its early stage the dashboard will rely primarily on data collected under this initiative, rather than just presenting existing data in a new framework. In each participating country, the initiative will deploy various new data-collection instruments, including a School Survey, an Expert Survey, and a Survey of Public Officials. This multilevel approach is necessary to gather data on all the drivers of learning, from the level of the learner to the level of the system. The aim is to develop lean and cost-effective instruments so the dashboard can be inexpensive enough to be applied repeatedly and to be scaled up after initial phasing.
+
+Embed innovative measurement approaches in a coherent, system-wide framework. The  dashboard  approach  combines  the conceptual framework of the World Development Report 2018 with indicators derived from streamlined versions of the most current measurement tools. These tools include the Service Delivery Indicators (SDI) initiative, Systems Approach for Better Results (SABER), Global Early Child Development Database (GECDD), World Management Survey, Bureaucracy Lab surveys, and others.
+
+Present a user-friendly dashboard interface. After gathering data, the dashboard initiative  will  display  the  indicators  in   an easy-to-use interface, focusing attention on key constraints. The primary audience will be policymakers, placing a premium on a visual representation that illuminates key relationships and constraints on learning.
+
+Make resources available for implementation in all developing countries. Along with  developing  the  dashboard  and  implementing it in an initial set of 13 countries, the World Bank and partners will create tools and resources to make it easy for countries to use it to strengthen their own administrative systems. Ultimately, this will allow global scale-up to all developing countries that find it useful.
+
+# Development of the Dashboard Instruments
+The dashboard project collects new data in each country using three new instruments:  A School Survey, a Policy Survey, and a Survey of Public Officials. Data collection involves school visits, classroom observations, legislative reviews, teacher and student assessments, and interviews with teachers, principals, and public officials. In addition, the project draws on some existing data sources to complement the new data it collects. A major objective of the GEPD project was to develop focused, cost-effective instruments and data-collection procedures, so that the dashboard can be inexpensive enough to be applied (and re-applied) in many countries.  The team achieved this by streamlining and simplifying existing instruments, and thereby reducing the time required for data collection and training of enumerators.  
+
+More information pertaining to each of the three instruments can be found below
+
+## School Survey
+
+The School Survey collects data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It consists of streamlined versions of existing instruments—including Service Delivery Surveys on teachers and inputs/infrastructure, TEACH on pedagogical practice, Global Early Child Development Database (GECDD) on school readiness of young children, and the Development World Management Survey (DWMS) on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of the Service Delivery Indicators (SDI) Survey, the number of items and the complexity of the questions within each module is significantly lower. The School Survey includes 8 short modules: School Information, Teacher Presence, Teacher Survey, Classroom Observation, Teacher Assessment, Early Learner Direct Assessment, School Management Survey, and 4th Grade Student Assessment. For a team of two enumerators, it takes on average about 4 hours to collect all information in a given school. For more information, refer to the Frequently Asked Questions. 
+
+### Student Learning Assessment
+
+### Teacher Content Knowledge Assessment
+
+### 1st Grade Assessment
+
+### TEACH Pedagogy Assessment
+
+Teach is a free classroom observation tool that provides a window into one of the less explored and more important aspects of a student’s education: what goes on in the classroom. The tool is intended to be used in primary classrooms (grades 1-6) and was designed to help low- and middle-income countries track and improve teaching quality.
+
+Teach captures practices that nurture children’s cognitive and — for the first time — socioemotional skills.Teach is the first tool to holistically measure what happens in the classroom. It does so by considering not just time spent on learning but, more importantly, the quality of teaching practices.
+
+Teach was developed with low- and middle-income countries in mind and can be contextualized for different settings. For instance, additional elements can be added at the request of the government and local video footage is used to train observers on the tool.
+Teach includes a complementary toolkit that helps teams conduct the training with a detailed script and training guide, collect data using a data collection app available in several languages, and clean and analyze data with automatized programs — including assessing the validity of Teach scores. A template report to help communicate the results is also available.
+Teach and all its complementary toolkit is free.
+In addition to its tailored design, Teach underwent a rigorous development and validation process over a 2-year timeframe. The tool was piloted in over 1,000 classrooms across Mozambique, Pakistan, the Philippines, and Uruguay, and tested with global video footage from 12 low- and middle-income countries. Analyses of the training data indicate that after only 4 days, almost 90% of participants passed the Teach Reliability Exam, which involves coding 3 videos reliably. Please contact us if you’d like more information on the tool’s interrater reliability and other metrics of validation.
+For more information on the Teach project please see:
+
+https://www.worldbank.org/en/topic/education/brief/teach-helping-countries-track-and-improve-teaching-quality
+
+## Principal Questionnaire
+
+## Teacher Questionnaire
+
+## Survey of Public Officials
+The Survey of Public Officials collects information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey is a streamlined and education-focused version of the civil-servant surveys that the Bureaucracy Lab (a joint initiative of the Governance Global Practice and the Development Impact Evaluation unit of the World Bank) has implemented recently in several countries. The survey includes questions about technical and leadership skills, work environment, stakeholder engagement, impartial decision-making, and attitudes and behaviors. The survey takes 40-60 minutes per public official and is used with those working at the central, regional, and district level of the Ministry of Education of each country. 
+
+## Policy Survey
+
+ The Policy Survey collects information to feed into the Policy de jure indicators. This survey is filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey includes questions on policies related to teachers, school management, inputs and infrastructure, and learners. In total, there are 52 questions in the survey as of January 2020. 
+
+## Final Notes
+While most dashboard indicators are derived from data collected using these instruments, the team also draws on existing data for a small number of indicators.  This is particularly key for Outcome data (school participation and learning), where the team reports on existing data wherever possible. Similarly, because factors outside the education system also affect education outcomes, the dashboard also includes a few indicators based on existing data from other sectors.  For example, many factors that affect whether children are in school and ready to learn lie outside the education system.  Thus, policy levers for this Practice area include indicators like the rate of children attending early childhood education programs, the share of children that are fully immunized, among others. Please refer to the Detailed Indicator Information for more details.
+
+
+# Sampling
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of typically around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+For our Survey of Public Officials, we will sample a total of 200 public officials.  Roughly 60 officials are typically surveyed at the federal level, while 140 officials will be surveyed at the regional/district level.  For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where roughly 10 regional offices (or whatever the secondary administrative unit is called) are chosen at random from among the regions in which schools were sampled.  Then among these 10 regions, we also typically select around 10 districts (tertiary administrative level units) from among the districts in which schools werer sampled.  The result of this sampling approach is that for 10 clusters we will have links from the school to the district office office to the regional office to the central office.  Within the regions/districts, five or six officials will be sampled, including the head of organization, HR director, two division directors from finance and planning, and one or two randomly selected professional employees among the finance, planning, and one other service related department chosen at random.  At the federal level, we will interview the HR director, finance director, planning director, and three randomly selected service focused departments.  In addition to the directors of each of these departments, a sample of 9 professional employees will be chosen in each department at random on the day of the interview.
+
+### Peru Specific Comments
+
+MELQO data was merged with the Peru school frame in order to optimally stratify.  We stratified on the basis of urban/rual and department.  There are 25 departments in Peru. In 2017, Peru conducted an examination of around 4,500 children between 5 and 8 years old, with a median age of 6.  The MELQO exam is quite similar to our ECD examination module.  We are able to use data from this 2017 survey to choose the number of schools in each province optimally by calculating means and standard deviations by province and feeding this information into the optimal stratification algorithm.  See https://cran.r-project.org/web/packages/SamplingStrata/vignettes/SamplingStrata.html.  Provinces with low standard deviations among students in terms of their MELQO development scores are allocated fewer schools compared to an allocation that is simply based on population, and provinces with high standard deviations are allocated more schools.  
+
+203 schools were chosen for our survey after optimally stratifying.  The table below shows the allocation across department and by urban/rural. 
+
+### Jordan  Specific Comments
+
+For our school survey, we select only schools that are supervised by the Minsitry or Education or are Private schools.  No schools supervised by the Ministry of Defense, Ministry of Endowments, Ministry of Higher Education , or Ministry of Social Development are included.  This left us with a sampling frame containing 3,330 schools, with 1297 private schools and 2003 schools managed by the Minsitry of Education. The schools must also have at least 3 grade 1 students, 3 grade 4 students, and 3 teachers.
+
+We oversampled Southern schools to reach a total of 50 Southern schools for regional comparisons.  Additionally, we oversampled Evening schools, for a total of 40 evening schools.
+
+### Mozambique  Specific Comments
+
+Our sampled schools come from the list of schools surveyed by the 2018 SDI survey.  Because we were supplementing data that was collected as part of the 2018 SDI, we chose from among the schools sampled for this survey.  For public officials, the sampling was similar as described above.
+
+### Rwanda Specific Comments
+
+In order to visit two schools per day, we clustered at the sector level choosing two schools per cluster.  With a sample of 200 schools, this means that we had to allocate 100 PSUs.  We combined this clustering with stratification by district and by the urban rural status of the schools.  The number of PSUs allocated to each stratum is proportionate to the number of schools in each stratum (i.e. the district X urban/rural status combination).  
+
+
+### Punjab Specific Comments
+The survey in Pubjab is a combined effort of the Early Learning Partnership project and of the Global Education Policy Dashboard project.  
+
+Overall, we draw a sample of 200 public schools, 200 private schools and 200 public-private partnership (PPP) schools.  We  stratified by urban/rural.  
+
+At this stage it is important to note, that there are certain districts which we may not be able to visit due to security concerns, these are:
+
+* Mianwali
+* Dera Ghazi Khan (DG Khan)
+* Rajan Pur
+* Bhakkar
+
+We have removed these districts from the sampling frame.  
+
+Out of the 200 public schools to be surveyed we would like approximately 100 of these schools to be schools that are meeting ECE quality standards (in the data set this corresponds to public_strata==1).  Out of the remaining public schools to be sampled, 50 schools will be schools that have ECE but do not meet quality standards (public_strata==2) and 50 will be schools that have no ECE at all, and have only have katchi classes (public_strata==3). 
+
+
+
+
+Due to operational constraints, we did not draw a random sample of all schools at province level.  We selected six districts for the survey (out of 32).   The survey team drew a convenience sample of 6 districts that is representative of North, Central and South Punjab, which includes both richer and poorer districts. A convenience sample was appropriate due to security and operational constraints of working in Punjab. The selected districts were:
+
+* Attock
+* Faisalabad
+* Lahore 
+* Muzaffargarh 
+* Rahimyar Khan
+* Sargodha  
+
+In order to deal with potential refusals and closed schools, a set of replacement schools was also drawn. Within the final strata, schools were sampled proportional to size (number of total enrolled children in pre-primary). 
+
+## School
+## Public Officials
+## Survey Weights
+
+# Data Collection
+## Survey Solutions
+## Anonymization
+
+# Data Quality Checks
+
+# Indicator Construction
+
+# Data Visualization Tools
+
+# Appendix
+## Psychometric Properties of 4th Grade Assessment
+## Psychometric Properties of 1st Grade Assessment
+## Psychometric Properties of Teacher Assessment
+

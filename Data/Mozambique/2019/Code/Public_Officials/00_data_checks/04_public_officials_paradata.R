@@ -167,12 +167,12 @@ metadata <- metadata %>%
 para_df <- para_df %>% 
   left_join(metadata )
 
-save(para_df, file=paste(save_folder, "paradata.RData", sep="/"))
+save(para_df, file=paste(confidential_folder, "paradata.RData", sep="/"))
 
 para_dta<- para_df %>% 
   mutate(interview_id=ï..interview__id) %>%
   select(-vallabel, -varlabel, -ï..interview__id)
-write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
+write_dta(para_dta, path=paste(confidential_folder, "paradata.dta", sep="/"))
 
 # ######################################
 # # Length of each question by Enumerator
