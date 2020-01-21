@@ -2,13 +2,22 @@
 title: "GEPD Technical Note"
 author: "Brian Stacy"
 date: "1/21/2020"
-output: 
+output:
   word_document:
-    toc: true
+    toc: yes
+  html_document:
+    df_print: paged
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(captioner)
+#produce caption for tables/figures
+  tab_num<-captioner(prefix="Table")
+  fig_num<-captioner(prefix="Figure")
 ```
 
 
@@ -52,6 +61,8 @@ More information pertaining to each of the three instruments can be found below
 The School Survey collects data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It consists of streamlined versions of existing instruments—including Service Delivery Surveys on teachers and inputs/infrastructure, TEACH on pedagogical practice, Global Early Child Development Database (GECDD) on school readiness of young children, and the Development World Management Survey (DWMS) on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of the Service Delivery Indicators (SDI) Survey, the number of items and the complexity of the questions within each module is significantly lower. The School Survey includes 8 short modules: School Information, Teacher Presence, Teacher Survey, Classroom Observation, Teacher Assessment, Early Learner Direct Assessment, School Management Survey, and 4th Grade Student Assessment. For a team of two enumerators, it takes on average about 4 hours to collect all information in a given school. For more information, refer to the Frequently Asked Questions. 
 
 ### Student Learning Assessment
+
+The SDI student test was designed as a one-on-one evaluation with enumerators reading out instructions to students in their mother tongue. This was done so as to build up a differentiated picture of students’ cognitive skills; i.e. oral one-to-one testing which allows testing whether a child can solve a mathematics problem even when his/her reading ability is so low that he/she would not be able to attempt the problem independently. The language test (implemented in the language of instruction: English, French, Swahili, or Portuguese) ranged from simple tasks testing letter and word recognition to a more challenging reading comprehension test.  The mathematics test ranged from recognizing and ordering numbers, to addition of one- to three-digit numbers, to one- and two-digit subtraction, to single digit multiplication and division.
 
 ### Teacher Content Knowledge Assessment
 
@@ -158,10 +169,51 @@ In order to deal with potential refusals and closed schools, a set of replacemen
 
 # Indicator Construction
 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+indicators_dir <- "C:/Users/wb469649/Documents/Github/GEPD/Indicators/"
+
+    #Get metadata from github
+    indicator_choices<-read_delim(paste(indicators_dir, 'indicators_choices.md',sep=""), delim="|", trim_ws=TRUE)
+    
+    #Display metadata for indicator
+    indicator_choices <- indicator_choices %>%
+      dplyr::select(-X1, -X6) %>%
+      dplyr::filter(Series!="---") 
+    
+    names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
+    
+    
+  #produce caption for table
+  indicator_choices_captioner<-tab_num(name="indicator_choices_cap", caption="High Level Description of How Each Indicator is Scored")
+  
+  #Produce table
+  indicator_choices %>% 
+    select(Indicator.Name, Value, How.is.the.indicator.scored.) %>%
+    kable(caption=indicator_choices_captioner,
+          col.names =c( "Indicator Name", "Values", "How Indicator is Scored")) 
+
+```
+
+
 # Data Visualization Tools
 
 # Appendix
 ## Psychometric Properties of 4th Grade Assessment
+For a full report on the psychometric properties of our assessment in Peru, see:
+
+https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EeI0nmjm-MlLl3OyPAfOzdsB0VBT7v-Q1JHrwig3H2FMEw?e=Pq2Fzg
+
 ## Psychometric Properties of 1st Grade Assessment
+For a full report on the psychometric properties of our assessment in Peru, see:
+
+https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EcwUNOUuTE1Ltjow7o10AUQBulnO_kKRPR0Oh8yTv5l7MA?e=miiiZU
+
+
 ## Psychometric Properties of Teacher Assessment
+For a full report on the psychometric properties of our assessment in Peru, see:
+
+https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EbHd7iWaxGhJspphCXLqkfwBAlzQ0hUjtUb8uT151CxL-A?e=82bgKE
+
+
 
