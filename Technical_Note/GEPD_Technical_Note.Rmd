@@ -3,10 +3,10 @@ title: "GEPD Technical Note"
 author: "Brian Stacy"
 date: "1/21/2020"
 output:
-  word_document:
-    toc: yes
   html_document:
     df_print: paged
+    toc: yes
+  word_document:
     toc: yes
 ---
 
@@ -223,6 +223,759 @@ https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/Ecw
 For a full report on the psychometric properties of our assessment in Peru, see:
 
 https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EbHd7iWaxGhJspphCXLqkfwBAlzQ0hUjtUb8uT151CxL-A?e=82bgKE
+
+
+## Detailed Indicator Construction
+
+Below is a list of the primary indicators and sub-indicators used to construct our final indicators.
+
+```{r subindicators, echo=FALSE}
+
+ ind_list <-c('student_knowledge', 
+                'math_student_knowledge', 
+                'literacy_student_knowledge', 
+                'student_proficient', 
+                'literacy_student_proficient', 
+                'math_student_proficient', 
+                'student_proficient_70',  
+                'student_proficient_75',
+             'student_attendance',
+             'presence_rate',  
+             'absence_rate', 
+             'school_absence_rate', 
+             'content_proficiency', 
+             'literacy_content_proficiency', 
+             'math_content_proficiency', 
+             'content_proficiency_70', 
+             'content_proficiency_75', 
+             'content_knowledge', 
+             'math_content_knowledge', 
+             'literacy_content_knowledge', 
+             'grammar', 
+             'cloze',  
+             'read_passage', 
+             'arithmetic_number_relations', 
+             'geometry', 
+             'interpret_data',
+             'ecd_student_knowledge', 
+             'ecd_math_student_knowledge', 
+             'ecd_literacy_student_knowledge', 
+             'ecd_exec_student_knowledge', 
+             'ecd_soc_student_knowledge',
+             'ecd_student_proficiency', 
+             'ecd_math_student_proficiency',
+             'ecd_literacy_student_proficiency', 
+             'ecd_exec_student_proficiency', 
+             'ecd_soc_student_proficiency',
+             'inputs', 
+             'blackboard_functional', 
+             'pens_etc',
+             'textbooks', 
+             'share_desk', 
+             'used_ict', 
+             'access_ict',
+             'infrastructure',
+             'drinking_water', 
+             'functioning_toilet', 
+             'internet', 
+             'class_electricity',
+             'disability_accessibility',
+             'operational_management',
+             'vignette_1', 
+             'vignette_2', 
+             'intrinsic_motivation', 
+             'acceptable_absent', 
+             'students_deserve_attention', 
+             'growth_mindset', 
+             'motivation_teaching',
+             'instructional_leadership', 
+             'classroom_observed', 
+             'classroom_observed_recent', 
+             'discussed_observation', 
+             'feedback_observation', 
+             'lesson_plan_w_feedback',
+             'principal_knowledge_score', 
+             'add_triple_digit_pknw', 
+             'multiply_double_digit_pknw', 
+             'complete_sentence_pknw', 
+             'experience_pknw', 
+             'textbooks_pknw', 
+             'blackboard_pknw',
+             'principal_management', 
+             'school_goals_exist',
+             'school_goals_clear',
+             'school_goals_relevant',
+             'school_goals_measured',
+             'teacher_attraction', 
+             'teacher_satisfied_job', 
+             'teacher_satisfied_status', 
+             'better_teachers_promoted' ,
+             'teacher_bonus', 
+             'salary_delays',
+             'teacher_selection_deployment', 
+             'teacher_selection',
+             'teacher_deployment',
+             'teacher_support', 
+             'pre_service',
+             'practicum',
+             'in_service',
+             'opportunities_teachers_share',
+             'teaching_evaluation', 
+             'formally_evaluated', 
+             'evaluation_content', 
+             'negative_consequences',
+             'positive_consequences',
+             'teacher_monitoring',
+             'attendance_evaluated' ,
+             'attendance_rewarded' , 
+             'attendence_sanctions', 
+             'miss_class_admin',
+             'standards_monitoring',
+             'school_monitoring', 
+             'monitoring_inputs',
+             'monitoring_infrastructure',
+             'parents_involved',
+             'school_management_clarity', 
+             'infrastructure_scfn',
+             'materials_scfn',
+             'hiring_scfn', 
+             'supervision_scfn', 
+             'student_scfn' , 
+             'principal_hiring_scfn', 
+             'principal_supervision_scfn',
+             'school_management_attraction', 
+             'principal_satisfaction', 
+             'principal_salary',
+             'school_selection_deployment', 
+             'school_support', 
+             'prinicipal_trained',
+             'principal_training',
+             'principal_used_skills',
+             'principal_offered',
+             'principal_evaluation', 
+             'principal_formally_evaluated',
+             'principal_evaluation_multiple',
+             'principal_negative_consequences',
+             'principal_positive_consequences',
+             'national_learning_goals', 
+             'targeting', 
+             'monitoring', 
+             'incentives', 
+             'community_engagement',
+             'mandates_accountability' , 
+             'coherence', 
+             'transparency', 
+             'accountability', 
+             'quality_bureaucracy', 
+             'knowledge_skills', 
+             'work_environment', 
+             'merit', 
+             'motivation_attitudes',
+             'motivation_relative_start',
+             'impartial_decision_making',
+             'politicized_personnel_management',
+             'politicized_policy_making', 
+             'politicized_policy_implementation', 
+             'employee_unions_as_facilitators'
+ )
+ 
+ indicator_labels<-c("4th Grade Student Knowledge", 
+                     "4th Grade Math Knowledge", 
+                     "4th Grade Literacy Knowledge", 
+                     "4th Grade Student Proficiency", 
+                     "4th Grade Student Proficiency Literacy",
+                     "4th Grade Student Proficiency Math",
+                     "4th Grade Student Proficiency at 70% threshold",  
+                     "4th Grade Student Proficiency at 75% threshold",
+                     "Student Attendance Rate",
+                     "Teacher Classroom Presence Rate ", 
+                     "Teacher Classroom Absence Rate ", 
+                     "Teacher School Absence Rate", 
+                     "Teacher Content Proficiency", 
+                     "Teacher Content Proficiency Literacy", 
+                     "Teacher Content Proficiency Math", 
+                     "Teacher Content Proficiency at 70% threshold", 
+                     "Teacher Content Proficiency at 75% threshold", 
+                     "Teacher Content Knowledge", 
+                     "Teacher Math Content Knowledge", 
+                     "Teacher Literacy Content Knowledge", 
+                     'Grammar', 
+                     'Cloze Task',  
+                     'Read Passage', 
+                     'Arithmetic & Number Relations', 
+                     'Geometry', 
+                     'Interpret Data',
+                     "1st Grade Assessment Score", 
+                     "1st Grade Numeracy Score", 
+                     "1st Grade Literacy Score", 
+                     "1st Grade Executive Functioning Score", 
+                     "1st Grade Socio-Emotional Score",
+                     "1st Grade Assessment Proficiency", 
+                     "1st Grade Numeracy Proficiency", 
+                     "1st Grade Literacy Proficiency", 
+                     "1st Grade Executive Functioning Proficiency", 
+                     "1st Grade Socio-Emotional Proficiency",
+                     "Inputs", 
+                     "Functioning Blackboard (Based on classroom observation: Is there a blackboard, Is there chalk, and Is there sufficient light", 
+                     "Classroom Materials (Pens, Pencils, Exercise Books)", 
+                     "Textbooks", 
+                     "Desks", 
+                     "ICT Usage", 
+                     "ICT Access",
+                     "Infrastructure", 
+                     "Clean Drinking Water", 
+                     "Functioning Toilets", 
+                     "Internet", 
+                     "Electricity", 
+                     "Disability Accessibility", 
+                     "Operational Management", 
+                     "Operational Management - Vignette 1",  
+                     "Operational Management - Vignette 2",
+                     "Teacher Intrinsic Motivation", 
+                     'Scores on set of questions to teachers on whether it is ever acceptable to be absent', 
+                     'Scores on set of questions to teachers on whether some students deserve more attention than others', 
+                     'Scores on questions related to growth mindset', 
+                     'Motivation to teach based on whether teacher joined teaching just for job security',
+                     "Instructional Leadership", 
+                     'Whether or not classroom has been observed', 
+                     'Whether observation took place in last 12 months', 
+                     'Whether teacher discussed classroom observation with principal/head teacher', 
+                     'Whehter feedback was given on classroom observation and converation lasted more than 30 min', 
+                     'Whether teacher had feedback on lesson plan',
+                     'Principal Knowledge of School', 
+                     'Correct on # of Teachers correct on Triple Digit Addition', 
+                     'Correct on # of Teachers correct on Double Digit Multiplication', 
+                     'Correct on # of Teachers correct on Completing Sentence Question', 
+                     'Correct on # of Teachers Under 3 Years Experience', 
+                     'Correct on # of Students with Textbooks ', 
+                     'Correct on Functional Blackboard',
+                     'Principal Management Skills', 
+                     'According to Principal: School Goals Exist',
+                     'According to Principal:  to Principal: School Goals Clear',
+                     'According to Principal: School Goals Relevant',
+                     'According to Principal: School Goals Measured',
+                     'Teacher Attraction (De Facto)', 
+                     'Teacher Satisfied with Job', 
+                     'Teachers Satisfied with Status in Community', 
+                     'Teacher perceives that better teachers more likely to be promoted' ,
+                     'Teacher received bonus in past year', 
+                     'Salary Delays reported by teacher',
+                     'Teacher Selection & Deployment (De Facto)', 
+                     'Teacher recruited based on passing written content knowledge test, passed interview stage assessment, passed an assessment conducted by supervisor based on practical experience, conduct during mockup class',
+                     'Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview.',
+                     'Teacher Support (De Facto)', 
+                     'Had pre-service training and teacher reported finding it useful',
+                     'Had a practicum and training lasted multiple days',
+                     'Had in-service training that lasted more than 2 days and had a component that took place in classroom ',
+                     'Whether teacher reported having opportunities to come together and share ways of improving teaching',
+                     'Teacher Evaluation (De Facto)', 
+                     'Teacher reported being formally evaluated', 
+                     'Evaluation had multiple components', 
+                     'Teacher reported negative consequences would occur if received 2 or more negative evaluations',
+                     'Teacher reported positive consequences would occur if received 2 or more positive evaluations',
+                     'Teacher Monitoring & Accountability (De Facto)', 
+                     'Teachers evaluated by some authority on basis of absence' , 
+                     'Teacher reported good attendance is rewarded. ' , 
+                     'Teacher reported there are consequences for chronic absence (more than 30% absence)', 
+                     'Teacher reported having to miss class for administrative reasons',
+                     'Inputs and Infrastructure Standards',
+                     "Inputs and Infrastructure Monitoring", 
+                     'Fraction of inputs Principal reported being monitored (functioning blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade classrooms, basic classroom furniture, and at least one computer in the schools)',
+                     'Fraction of infrastructure elements Principal reported being monitored (functioning toilets, electricity, drinking water, and accessibility for people with disabilities)',
+                     'Principal reports community involved in the monitoring',
+                     "School Management Clarity of Functions", 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Maintenance of Infrastructure',
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Procurement of materials',
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher hiring and assignment', 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher supervision, training, and coaching', 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Student Learning Assessments' , 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal hiring and assignment', 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal Supervision and training',
+                     "School Management Attraction", 
+                     'Principal satisfied with status in community', 
+                     'Principal reported salary as fraction of GDP',
+                     "School Management Selection & Deployment",
+                     "School Management Support", 
+                     'Principal reported receiving formal training on managing school',
+                     'Principal had received the following training (1/3 point for each): Management training for new principals, in-service training, mentoring coaching',
+                     'Principal reported using skills from training',
+                     'Principal reported offered training at least once per year',
+                     "School Management Evaluation", 
+                     'Principal reported being formally evaluated',
+                     'Principal evaluation based on multiple components (at least 5 components for full credit',
+                     'Principal reported negative consequences would occur if received 2 or more negative evaluations',
+                     'Principal reported negative consequences would occur if received 2 or more negative evaluations',
+                     "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                     "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                     "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'Motivation Relative to Starting Public Service',
+                     "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+ )
+ 
+ indicator_module<-c("4th Grade Student Assessment", 
+                     "4th Grade Student Assessment", 
+                     "4th Grade Student Assessment",  
+                     "4th Grade Student Assessment", 
+                     "4th Grade Student Assessment", 
+                     "4th Grade Student Assessment", 
+                     "4th Grade Student Assessment",   
+                     "4th Grade Student Assessment", 
+                     "Student Roster and Classroom Observation",
+                     "Teacher Roster and School Inspection", 
+                     "Teacher Roster and School Inspection", 
+                     "Teacher Roster and School Inspection", 
+                     "Teacher Assessment", 
+                     "Teacher Assessment", 
+                     "Teacher Assessment", 
+                     "Teacher Assessment", 
+                     "Teacher Assessment",  
+                     "Teacher Assessment", 
+                     "Teacher Assessment",  
+                     "Teacher Assessment",  
+                     "Teacher Assessment",  
+                     "Teacher Assessment",   
+                     "Teacher Assessment",  
+                     "Teacher Assessment",  
+                     "Teacher Assessment", 
+                     "Teacher Assessment", 
+                     "1st Grade Direct Assessment", 
+                     "1st Grade Direct Assessment",
+                     "1st Grade Direct Assessment", 
+                     "1st Grade Direct Assessment", 
+                     "1st Grade Direct Assessment",
+                     "1st Grade Direct Assessment",
+                     "1st Grade Direct Assessment", 
+                     "1st Grade Direct Assessment",
+                     "1st Grade Direct Assessment", 
+                     "1st Grade Direct Assessment",
+                     "Classroom Observation", 
+                     "Classroom Observation",
+                     "Classroom Observation", 
+                     "Classroom Observation",
+                     "Classroom Observation", 
+                     "Teacher Inverview", 
+                     "School Inspection",
+                     "School Inspection", 
+                     "School Inspection",
+                     "School Inspection", 
+                     "School Inspection",  
+                     "School Inspection",  
+                     "School Inspection",  
+                     "Principal Interview", 
+                     "Principal Interview",   
+                     "Principal Interview", 
+                     "Teacher Interview", 
+                     "Teacher Interview",  
+                     "Teacher Interview", 
+                     "Teacher Interview",  
+                     "Teacher Interview", 
+                     "Teacher Interview",  
+                     "Teacher Interview", 
+                     "Teacher Interview",  
+                     "Teacher Interview", 
+                     "Teacher Interview",  
+                     "Teacher Interview", 
+                     'Principal Interview', 
+                     'Principal Interview', 
+                     'Principal Interview',
+                     'Principal Interview', 
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview', 
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Teacher Interview', 
+                     'Teacher Interview', 
+                     'Teacher Interview', 
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview', 
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview', 
+                     'Teacher Interview',
+                     'Teacher Interview',
+                     'Teacher Interview', 
+                     'Teacher Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview', 
+                     'Principal Interview',
+                     'Principal Interview',
+                    'Principal Interview',
+                     'Principal Interview', 
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview', 
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     'Principal Interview',
+                     "Public Official Interview", 'Public Official Interview', 'Public Official Interview', 'Public Official Interview', 'Public Official Interview',
+                     "Public Official Interview", 'Public Official Interview', 'Public Official Interview', 'Public Official Interview',
+                     "Public Official Interview", 'Public Official Interview', 'Public Official Interview', 'Public Official Interview', 'Public Official Interview', 'Public Official Interview',
+                     "Public Official Interview", 'Public Official Interview', 'Public Official Interview', 'Public Official Interview', 'Public Official Interview'
+ ) 
+ 
+ 
+  survey_variables<-c("4th Grade Student Knowledge", 
+                     "4th Grade Math Knowledge", 
+                     "4th Grade Literacy Knowledge", 
+                     "4th Grade Student Proficiency", 
+                     "4th Grade Student Proficiency Literacy",
+                     "4th Grade Student Proficiency Math",
+                     "4th Grade Student Proficiency at 70% threshold",  
+                     "4th Grade Student Proficiency at 75% threshold",
+                     "Student Attendance Rate",
+                     "Teacher Classroom Presence Rate ", 
+                     "Teacher Classroom Absence Rate ", 
+                     "Teacher School Absence Rate", 
+                     "Teacher Content Proficiency", 
+                     "Teacher Content Proficiency Literacy", 
+                     "Teacher Content Proficiency Math", 
+                     "Teacher Content Proficiency at 70% threshold", 
+                     "Teacher Content Proficiency at 75% threshold", 
+                     "Teacher Content Knowledge", 
+                     "Teacher Math Content Knowledge", 
+                     "Teacher Literacy Content Knowledge", 
+                     'Grammar', 
+                     'Cloze Task',  
+                     'Read Passage', 
+                     'Arithmetic & Number Relations', 
+                     'Geometry', 
+                     'Interpret Data',
+                     "1st Grade Assessment Score", 
+                     "1st Grade Numeracy Score", 
+                     "1st Grade Literacy Score", 
+                     "1st Grade Executive Functioning Score", 
+                     "1st Grade Socio-Emotional Score",
+                     "1st Grade Assessment Proficiency", 
+                     "1st Grade Numeracy Proficiency", 
+                     "1st Grade Literacy Proficiency", 
+                     "1st Grade Executive Functioning Proficiency", 
+                     "1st Grade Socio-Emotional Proficiency",
+                     "Inputs", 
+                     "Functioning Blackboard (Based on classroom observation: Is there a blackboard, Is there chalk, and Is there sufficient light", 
+                     "Classroom Materials (Pens, Pencils, Exercise Books)", 
+                     "Textbooks", 
+                     "Desks", 
+                     "ICT Usage", 
+                     "ICT Access",
+                     "Infrastructure", 
+                     "Clean Drinking Water", 
+                     "Functioning Toilets", 
+                     "Internet", 
+                     "Electricity", 
+                     "Disability Accessibility", 
+                     "Operational Management", 
+                     "Operational Management - Vignette 1",  
+                     "Operational Management - Vignette 2",
+                     "Teacher Intrinsic Motivation", 
+                     'Scores on set of questions to teachers on whether it is ever acceptable to be absent', 
+                     'Scores on set of questions to teachers on whether some students deserve more attention than others', 
+                     'Scores on questions related to growth mindset', 
+                     'Motivation to teach based on whether teacher joined teaching just for job security',
+                     "Instructional Leadership", 
+                     'Whether or not classroom has been observed', 
+                     'Whether observation took place in last 12 months', 
+                     'Whether teacher discussed classroom observation with principal/head teacher', 
+                     'Whehter feedback was given on classroom observation and converation lasted more than 30 min', 
+                     'Whether teacher had feedback on lesson plan',
+                     'Principal Knowledge of School', 
+                     'Correct on # of Teachers correct on Triple Digit Addition', 
+                     'Correct on # of Teachers correct on Double Digit Multiplication', 
+                     'Correct on # of Teachers correct on Completing Sentence Question', 
+                     'Correct on # of Teachers Under 3 Years Experience', 
+                     'Correct on # of Students with Textbooks ', 
+                     'Correct on Functional Blackboard',
+                     'Principal Management Skills', 
+                     'According to Principal: School Goals Exist',
+                     'According to Principal:  to Principal: School Goals Clear',
+                     'According to Principal: School Goals Relevant',
+                     'According to Principal: School Goals Measured',
+                     'Teacher Attraction (De Facto)', 
+                     'Teacher Satisfied with Job', 
+                     'Teachers Satisfied with Status in Community', 
+                     'Teacher perceives that better teachers more likely to be promoted' ,
+                     'Teacher received bonus in past year', 
+                     'Salary Delays reported by teacher',
+                     'Teacher Selection & Deployment (De Facto)', 
+                     'Teacher recruited based on passing written content knowledge test, passed interview stage assessment, passed an assessment conducted by supervisor based on practical experience, conduct during mockup class',
+                     'Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview.',
+                     'Teacher Support (De Facto)', 
+                     'Had pre-service training and teacher reported finding it useful',
+                     'Had a practicum and training lasted multiple days',
+                     'Had in-service training that lasted more than 2 days and had a component that took place in classroom ',
+                     'Whether teacher reported having opportunities to come together and share ways of improving teaching',
+                     'Teacher Evaluation (De Facto)', 
+                     'Teacher reported being formally evaluated', 
+                     'Evaluation had multiple components', 
+                     'Teacher reported negative consequences would occur if received 2 or more negative evaluations',
+                     'Teacher reported positive consequences would occur if received 2 or more positive evaluations',
+                     'Teacher Monitoring & Accountability (De Facto)', 
+                     'Teachers evaluated by some authority on basis of absence' , 
+                     'Teacher reported good attendance is rewarded. ' , 
+                     'Teacher reported there are consequences for chronic absence (more than 30% absence)', 
+                     'Teacher reported having to miss class for administrative reasons',
+                     'Inputs and Infrastructure Standards',
+                     "Inputs and Infrastructure Monitoring", 
+                     'Fraction of inputs Principal reported being monitored (functioning blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade classrooms, basic classroom furniture, and at least one computer in the schools)',
+                     'Fraction of infrastructure elements Principal reported being monitored (functioning toilets, electricity, drinking water, and accessibility for people with disabilities)',
+                     'Principal reports community involved in the monitoring',
+                     "School Management Clarity of Functions", 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Maintenance of Infrastructure',
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Procurement of materials',
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher hiring and assignment', 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher supervision, training, and coaching', 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Student Learning Assessments' , 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal hiring and assignment', 
+                     'Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal Supervision and training',
+                     "School Management Attraction", 
+                     'Principal satisfied with status in community', 
+                     'Principal reported salary as fraction of GDP',
+                     "School Management Selection & Deployment",
+                     "School Management Support", 
+                     'Principal reported receiving formal training on managing school',
+                     'Principal had received the following training (1/3 point for each): Management training for new principals, in-service training, mentoring coaching',
+                     'Principal reported using skills from training',
+                     'Principal reported offered training at least once per year',
+                     "School Management Evaluation", 
+                     'Principal reported being formally evaluated',
+                     'Principal evaluation based on multiple components (at least 5 components for full credit',
+                     'Principal reported negative consequences would occur if received 2 or more negative evaluations',
+                     'Principal reported negative consequences would occur if received 2 or more negative evaluations',
+                     "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                     "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                     "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'Motivation Relative to Starting Public Service',
+                     "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+ )
+ 
+ 
+ labels_df<-data.frame(indicators=as.character(ind_list),
+                       indicator_labels=as.character(indicator_labels),
+                       indicator_module=as.character(indicator_module))
+ 
+ 
+#produce caption for table
+data_desc_cap<-tab_num(name="data_desc_cap", caption="Detailed Documentation of Indicators & Sub-Indicators")
+kable(labels_df,
+      caption=data_desc_cap,
+      col.names = c("Variable Name", "Variable Description", "How Was Data Collected?"))
+
+```
+
+
+We will show a working example of how each indicator is scored in the case of Peru.
+
+```{r peru_data_load, include=FALSE}
+
+#load relevant libraries
+
+library(skimr)
+library(naniar)
+library(vtable)
+library(digest)
+library(tidyverse)
+library(haven)
+library(stringr)
+library(Hmisc)
+
+#Country name
+country <-'PER'
+country_name <- "Peru"
+year <- '2019'
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+
+  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/"
+
+  read_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/School", sep="/"))
+  backup_onedrive="no"
+
+
+
+
+
+load(paste(read_folder,"school_indicators_data_anon.RData", sep="/"))
+
+
+```
+
+### Teacher Absence
+
+
+Teacher absence is defined as whether or not the teacher was absenct from the school or classroom during an unannounced visit.  For a working example, see below.  The basis for the question is the following below:
+
+What was the teacher doing when you located him/ her on the first visit?	
+1= In classroom- teaching  
+2= In classroom- not teaching  
+3= At school- teaching outdoors  
+4= At school not his/her shift/not her class  
+5= At school- not in classroom  
+6= Absent from school  
+
+
+```{r absence}
+
+teacher_absence_ex<-teacher_roster_anon %>%
+  select(teacher_number, m2sbq6_efft, teacher_available, m2sbq3_efft) %>%
+  filter(!is.na(m2sbq6_efft) | !is.na(m2sbq3_efft) )
+
+
+#create indicator for whether each teacher was absent from school
+teacher_absence_ex <- teacher_absence_ex %>%
+  mutate(sch_absence_rate=100*case_when(
+    m2sbq6_efft==6 | teacher_available==2 ~ 1,
+    m2sbq6_efft!=6   ~ 0,
+    is.na(m2sbq6_efft) ~ as.numeric(NA)))
+
+#create indicator for whether each teacher was absent from classroom or school
+teacher_absence_ex <- teacher_absence_ex %>%
+  mutate(absence_rate=100*case_when(
+    m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
+    m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
+    is.na(m2sbq6_efft) ~ as.numeric(NA)) )
+
+#create indicator for whether each principal was absent from school
+teacher_absence_ex <- teacher_absence_ex %>%
+  mutate(principal_absence=100*case_when(
+    m2sbq3_efft==8  ~ 1,
+    m2sbq3_efft!=8   ~ 0,
+    is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
+  mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
+         sch_absence_rate=if_else(is.na(sch_absence_rate), principal_absence, sch_absence_rate ),
+         presence_rate=100-absence_rate)
+
+  #produce caption for table
+absence_captioner<-tab_num(name="absence_cap", caption="Data Example of How Absence Scored")
+kable(head(teacher_absence_ex, n=5),
+      caption=absence_captioner)
+
+label(teacher_absence_ex$m2sbq3_efft)
+label(teacher_absence_ex$m2sbq6_efft)
+label(teacher_absence_ex$teacher_available)
+
+
+```
+### Student Attendance
+
+Student attendance is based on the classroom observation of a randomly selected fourth grade class.  The teacher is asked for the class roster and the enumerator then takes a count of the students in the classroom.  A working example is below.
+
+```{r Student_Attendance }
+#############################################
+##### Student Attendance ###########
+#############################################
+
+#Percent of 4th grade students who are present during an unannounced visit.
+
+school_data_INPT_ex<- school_dta_anon %>%
+  select(m4scq4_inpt, m4scq12_inpt )  %>%
+  filter(!is.na(m4scq4_inpt) & !is.na(m4scq12_inpt)) %>%
+  mutate(student_attendance=m4scq4_inpt/m4scq12_inpt) %>%
+  mutate(student_attendance=100*student_attendance) 
+  
+#produce caption for table
+attendance_cap<-tab_num(name="attendance_cap", caption="Data Example of How Student Attendance Scored")
+kable(head(school_data_INPT_ex, n=5),
+      caption=attendance_cap)
+
+label(school_data_INPT_ex$m4scq4_inpt)
+label(school_data_INPT_ex$m4scq12_inpt)
+```
+
+### Teacher Knowledge
+
+
+The teacher content knowledge score is based on a teacher assessment given to teachers.  The assessment is described in more detail above.  Math teachers were given a mathematics exam and Language teachers were given a separate language exam.  In cases where a teacher taught both subjects, the teacher is randomly given either the math or language exam. The knowledge score is the sum of the items answered correctly out of the total number of items, based on either the math or language assessment as is given.  A detailed scoring example is omitted, because of space, but details on scoring are provided in the GEPD github repo:
+
+https://github.com/worldbank/GEPD
+
+```{r Teacher_Knowledge, eval=FALSE, include=FALSE}
+#############################################
+##### Teacher Knowledge ###########
+#############################################
+
+
+
+teacher_assessment_dta_ex <- teacher_assessment_dta_anon %>%
+  select(m5sb_tnum, starts_with("m5s1q"), starts_with("m5s2q"))
+
+#calculate teachers lit items correct
+teacher_assessment_dta_ex <- teacher_assessment_dta_ex %>%
+  mutate(literacy_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s1q")], na.rm=TRUE),
+         correct_letter=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s1q3")], na.rm=TRUE),
+         cloze=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s1q2")], na.rm=TRUE),
+         grammar=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s1q1")], na.rm=TRUE),
+         read_passage=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s1q4")], na.rm=TRUE))
+
+####Math####
+#calculate # of math items
+teacher_assessment_dta_ex$math_length<-length(grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s2q"))
+
+math_items<-colnames(teacher_assessment_dta_ex[,grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s2q")])
+
+#calculate teachers math items correct
+teacher_assessment_dta_ex <- teacher_assessment_dta_ex %>%
+  mutate(math_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="m5s2q")], na.rm=TRUE),
+         arithmetic_number_relations=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="number")], na.rm=TRUE),
+         geometry=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="geometric")], na.rm=TRUE),
+         interpret_data=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="data")], na.rm=TRUE))
+
+#produce caption for table
+cont_cap<-tab_num(name="cont_cap", caption="Data Example of How Teacher Knowledge Scored")
+kable(head(teacher_assessment_dta_ex, n=5),
+      caption=cont_cap)
+
+
+```
+
+
+
+### 4th Grade Assessment
+
+Students in a randomly chosen class were given an assessment containing math and language items based on the SDI examination. More details on this examination is above.  A students score is the sum of the literacy sub-score and the math sub-score.  The literacy score is constructed so that each literacy item is given the same weight and is the sum of individual literacy items.  Math scores are calculated similarly.  The final content knowledge score is then the sum of the two components.  A detailed scoring example is omitted, because of space, but details on scoring are provided in the GEPD github repo:
+
+Proficiency is then based on whether the student correctly answered a set number of questions (12/13 in literacy, 14/17 in math), which was determined by consulting a set of experts on whether a minimally proficient 4th grader should be able to answer the questions correctly.  
+
+
+
+### ECE Assessment
+
+A randomly selected set of three 1st grade students are given an assessment of early literacy, numeracy, executive functioning and socio-emotional skills.  The assessment was created based on items from the MELQO assessment.  A students score is the sum of the literacy sub-score, the math sub-score, the executive functioning score, and the socio-emotional score.  Each domain (literacy, numeracy, executive functioning and socio-emotional skills) is given equal weight.  Within each domain scores are based on the number of items correct in each domain.  
+
 
 
 

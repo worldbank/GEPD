@@ -294,6 +294,7 @@ school_metadta$varlabel<-as.character(school_metadta$varlabel)
 metadta<-bind_rows(school_metadta,  ecd_metadta, assess_4th_grade_metadta, teacher_questionnaire_metadta, teacher_assessment_metadta)
 
 metadta %>%
+  mutate(vallabel=as.character(vallabel)) %>%
   writexl::write_xlsx( path=file.path(download_folder, "metadata.xlsx"))
 
 }

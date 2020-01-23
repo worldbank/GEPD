@@ -683,6 +683,11 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
   mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
          m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
          m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
+  mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
+            ~case_when(
+              0>=. & .<=1 ~ .,
+              .<0 ~0,
+              .>1 ~1)) %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
 
 
@@ -2262,6 +2267,15 @@ save(list=data_list, file = file.path(confidential_folder, "school_survey_data.R
 save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
 
 
+names(data_list) <- data_list
+mapply(write_dta, data_list,  path = file.path(paste(confidential_folder,"data", sep="/"), paste0(names(data_list), '.dta')), version = 14)
+
+
 if (backup_onedrive=="yes") {
   save(list=data_list, file = file.path(confidential_folder_onedrive, "school_survey_data.RData"))
-}
+  names(data_list) <- data_list
+  mapply(write_dta, data_list,  path = file.path(confidential_folder_onedrive, paste0(names(data_list), '.dta')), version = 14)
+
+  
+  
+    }

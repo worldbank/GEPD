@@ -223,7 +223,8 @@ public_officials_dta <- public_officials_dta %>%
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'region_code', 'district_code', 'district', 'province','location', 'govt_tier',
+preamble_info <- c('interview__id', 'school_district_preload', 'school_province_preload',
+                   'region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
@@ -357,7 +358,7 @@ public_officials_dta_clean2 <- public_officials_dta_clean %>%
 write_dta(public_officials_dta_clean2, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
 
 
-keep_info <- c('interview__id','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
+keep_info <- c('interview__id', 'school_district_preload', 'school_province_preload','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 ###############
@@ -452,7 +453,7 @@ for (i in indicator_names ) {
 
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables
