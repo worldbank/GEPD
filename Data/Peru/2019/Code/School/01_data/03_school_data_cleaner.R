@@ -685,7 +685,7 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
   mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
             ~case_when(
-              0>=. & .<=1 ~ .,
+              0<=. & .<=1 ~ .,
               .<0 ~0,
               .>1 ~1)) %>%
   select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
@@ -2231,6 +2231,35 @@ impdata<-mice::mice(school_dta_short, m=1,
                     maxit = 50, seed = 500)
 
 school_dta_short_imp <- mice::complete(impdata, 1)
+
+
+##########################################
+#define function to create weights for summary statistics
+##########################################
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+
+df_weights_function <- function(dataset,scode, snumber, prov) {
+  scode<-enquo(scode)  
+  snumber<-enquo(snumber)
+  prov<-enquo(prov)
+  
+  dataset %>%
+    mutate(!! scode := as.numeric(.data$school_code)) %>%
+    left_join(data_set_updated) %>%
+    mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural")])))
+}
+
+
+weights <- df_weights_function(school_dta_short, codigo.modular, total_4th, departamento) %>%
+  select(school_code,  ipw, rural)
+
 ################################
 #Store Key Created Datasets
 ################################
@@ -2261,21 +2290,34 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
                "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon')
-
+dta_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
+                 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon')
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
+
 
 save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
 
 
-names(data_list) <- data_list
-mapply(write_dta, data_list,  path = file.path(paste(confidential_folder,"data", sep="/"), paste0(names(data_list), '.dta')), version = 14)
+
+names(dta_list) <- dta_list
+mapply(dta_list,  paste(paste0(names(dta_list), '.dta')))
+
+mapply(write_dta, dta_list,  path = file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list), '.dta')))
+names(dta_list) <- dta_list
+for(i in names(dta_list)){
+  print( i)
+  write_dta(get(dta_list[[i]]), file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list[[i]]), '.dta')))
+}
 
 
 if (backup_onedrive=="yes") {
   save(list=data_list, file = file.path(confidential_folder_onedrive, "school_survey_data.RData"))
-  names(data_list) <- data_list
-  mapply(write_dta, data_list,  path = file.path(confidential_folder_onedrive, paste0(names(data_list), '.dta')), version = 14)
-
+  names(dta_list) <- dta_list
+  for(i in names(dta_list)){
+    print( i)
+    write_dta(get(dta_list[[i]]), file.path(paste(confidential_folder_onedrive,"data", sep="/"), paste0(dta_list[[i]], '.dta')))
+  }
+  
   
   
     }
