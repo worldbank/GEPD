@@ -146,9 +146,9 @@ api_dummy <- function(cntry, yr) {
     mutate(value=rbinom(n(), 100, 0.7)) %>%
     mutate(
       value_metadata=case_when(
-        value <=50 ~ "Needs Improvement",
-        value >50 & value<=80 ~ "Caution",
-        value >80 ~ "On Target"
+        value <70 ~ "Needs Improvement",
+        value >70 & value<=90 ~ "Caution",
+        value >90 ~ "On Target"
       ))
   
   api_dummy_c <- api_final %>%

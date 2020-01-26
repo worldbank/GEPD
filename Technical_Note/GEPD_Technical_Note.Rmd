@@ -3,12 +3,12 @@ title: "GEPD Technical Note"
 author: "Brian Stacy"
 date: "1/21/2020"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     df_print: paged
     toc: yes
   word_document:
+    toc: yes
+  pdf_document:
     toc: yes
 ---
 
@@ -59,57 +59,27 @@ Make resources available for implementation in all developing countries. Along w
 # Development of the Dashboard Instruments
 The dashboard project collects new data in each country using three new instruments:  A School Survey, a Policy Survey, and a Survey of Public Officials. Data collection involves school visits, classroom observations, legislative reviews, teacher and student assessments, and interviews with teachers, principals, and public officials. In addition, the project draws on some existing data sources to complement the new data it collects. A major objective of the GEPD project was to develop focused, cost-effective instruments and data-collection procedures, so that the dashboard can be inexpensive enough to be applied (and re-applied) in many countries.  The team achieved this by streamlining and simplifying existing instruments, and thereby reducing the time required for data collection and training of enumerators.  
 
-More information pertaining to each of the three instruments can be found below
+More information pertaining to each of the three instruments can be found in the Global Education POlicy Dashboard Booklet.
 
-## School Survey
+# Proficiency Cutoffs
 
-The School Survey collects data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It consists of streamlined versions of existing instruments—including Service Delivery Surveys on teachers and inputs/infrastructure, TEACH on pedagogical practice, Global Early Child Development Database (GECDD) on school readiness of young children, and the Development World Management Survey (DWMS) on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of the Service Delivery Indicators (SDI) Survey, the number of items and the complexity of the questions within each module is significantly lower. The School Survey includes 8 short modules: School Information, Teacher Presence, Teacher Survey, Classroom Observation, Teacher Assessment, Early Learner Direct Assessment, School Management Survey, and 4th Grade Student Assessment. For a team of two enumerators, it takes on average about 4 hours to collect all information in a given school. For more information, refer to the Frequently Asked Questions. 
+NEED TO ADD BACK IN TO DISCUSS HOW WE ARRIVED AT OUR THRESHOLDS
 
-### Student Learning Assessment
+# Stop Light Scoring System
 
-The SDI student test was designed as a one-on-one evaluation with enumerators reading out instructions to students in their mother tongue. This was done so as to build up a differentiated picture of students’ cognitive skills; i.e. oral one-to-one testing which allows testing whether a child can solve a mathematics problem even when his/her reading ability is so low that he/she would not be able to attempt the problem independently. The language test (implemented in the language of instruction: English, French, Swahili, or Portuguese) ranged from simple tasks testing letter and word recognition to a more challenging reading comprehension test.  The mathematics test ranged from recognizing and ordering numbers, to addition of one- to three-digit numbers, to one- and two-digit subtraction, to single digit multiplication and division.
+We use the following system for categorizing our main indicators into three levels: On Target, Caution, and Needs Improvement.
 
-### Teacher Content Knowledge Assessment
+For our indicators ranging from 0-100, we use the following system:
 
-The objective of the teacher test is three-fold. The first objective is to examine whether teachers have the mastery of the subjects they are teaching. This is interpreted as the minimum knowledge required for the teacher to be effective. In addition, the test also examines the extent to which teachers demonstrate mastery of subject content skills that are above the level they are teaching at and finally, mastery of pedagogic skills.
+1. On Target - Values at least 90%  
+2. Caution - Values between 70-90  
+3. Needs improvement - Values under 70%  
 
-To simplify the administration of the test it was designed as a marking exercise, in which teachers are asked to mark and correct a hypothetical student's exam. The Language test was administered to teachers teaching language, or language and other subjects, and the mathematics test was administered to teacher teaching mathematics, or mathematics and other subjects. The test was validated against 13 Sub-Saharan primary curricula.^[The countries included for the review were: Botswana, Ethiopia, Gambia, Kenya, Magadascar, Mauritius, Namibia, Nigeria, Rwanda, Seychelles, South Africa, Tanzania and Uganda. See David Johnson, Andrew Cunningham and Rachel Dowling (2012) ``Teaching Standards and Curriculum Review'', prepared as background document for the SDI Survey.] ^[While some SDI countries were not part of the review, before doing the SDI survey the SDI team verified that the school curriculum was compatible with the SDI teacher and student test. For more information see SDI Technical report for each specific country.[}]
+For our indicators ranging 1-5, we use the following system:
 
-The language test consisted of two sections. The first section asked teachers to assess pupil language literacy by correcting a primary school pupil language test. The teachers have to correct whether the ``student answer'' is correct, and in case it is incorrect, has to write the correct answer. The second section asks teachers to correct a letter written by a child in 4th grade. The teachers have to correct the letter for grammar, punctuation (between sentences and within sentences), spelling, syntax, and salutation by circling the mistakes and writing the correction on the line.
-
-The mathematics test asks teachers to assess pupil numeracy literacy by correcting a primary school pupil mathematic test. The teachers have to correct whether the ``student answer'' is correct, and in case it is incorrect it has to write the correct answer.
-
-The pedagogy test consists of three sections designed to capture all the skills teachers would routinely be asked to apply when teaching. The first section asks teachers to prepare a lesson plan about road accidents based on a simple information given a text they had read. The second task asks teachers to assess children's writing on the basis of two sample letters (written by grade 4 children). Teachers have to point out the strengths and weaknesses on the student's letters, by evaluating  pupil's ability to write simple letters, use sentence structures correctly including past and present tenses, use a range of vocabulary, and use both within and between sentence punctuation.  The final task asks teachers to inspect test scores of 10 children, aggregate them and make some statements about learning patterns.
-### 1st Grade Assessment
-
-### TEACH Pedagogy Assessment
-
-Teach is a free classroom observation tool that provides a window into one of the less explored and more important aspects of a student’s education: what goes on in the classroom. The tool is intended to be used in primary classrooms (grades 1-6) and was designed to help low- and middle-income countries track and improve teaching quality.
-
-Teach captures practices that nurture children’s cognitive and — for the first time — socioemotional skills.Teach is the first tool to holistically measure what happens in the classroom. It does so by considering not just time spent on learning but, more importantly, the quality of teaching practices.
-
-Teach was developed with low- and middle-income countries in mind and can be contextualized for different settings. For instance, additional elements can be added at the request of the government and local video footage is used to train observers on the tool.
-Teach includes a complementary toolkit that helps teams conduct the training with a detailed script and training guide, collect data using a data collection app available in several languages, and clean and analyze data with automatized programs — including assessing the validity of Teach scores. A template report to help communicate the results is also available.
-Teach and all its complementary toolkit is free.
-In addition to its tailored design, Teach underwent a rigorous development and validation process over a 2-year timeframe. The tool was piloted in over 1,000 classrooms across Mozambique, Pakistan, the Philippines, and Uruguay, and tested with global video footage from 12 low- and middle-income countries. Analyses of the training data indicate that after only 4 days, almost 90% of participants passed the Teach Reliability Exam, which involves coding 3 videos reliably. Please contact us if you’d like more information on the tool’s interrater reliability and other metrics of validation.
-For more information on the Teach project please see:
-
-https://www.worldbank.org/en/topic/education/brief/teach-helping-countries-track-and-improve-teaching-quality
-
-## Principal Questionnaire
-
-## Teacher Questionnaire
-
-## Survey of Public Officials
-The Survey of Public Officials collects information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey is a streamlined and education-focused version of the civil-servant surveys that the Bureaucracy Lab (a joint initiative of the Governance Global Practice and the Development Impact Evaluation unit of the World Bank) has implemented recently in several countries. The survey includes questions about technical and leadership skills, work environment, stakeholder engagement, impartial decision-making, and attitudes and behaviors. The survey takes 40-60 minutes per public official and is used with those working at the central, regional, and district level of the Ministry of Education of each country. 
-
-## Policy Survey
-
- The Policy Survey collects information to feed into the Policy de jure indicators. This survey is filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey includes questions on policies related to teachers, school management, inputs and infrastructure, and learners. In total, there are 52 questions in the survey as of January 2020. 
-
-## Final Notes
-While most dashboard indicators are derived from data collected using these instruments, the team also draws on existing data for a small number of indicators.  This is particularly key for Outcome data (school participation and learning), where the team reports on existing data wherever possible. Similarly, because factors outside the education system also affect education outcomes, the dashboard also includes a few indicators based on existing data from other sectors.  For example, many factors that affect whether children are in school and ready to learn lie outside the education system.  Thus, policy levers for this Practice area include indicators like the rate of children attending early childhood education programs, the share of children that are fully immunized, among others. Please refer to the Detailed Indicator Information for more details.
-
+1. On Target - Values at least 4  
+2. Caution - Values between 2 and 4  
+3. Needs improvement - Values 2 and under  
 
 # Sampling
 
@@ -124,7 +94,7 @@ For our Survey of Public Officials, we will sample a total of 200 public officia
 
 Our team consulted with several sampling experts at the World Bank to discuss strategies for sampling schools.  As mentioned, the goal of our survey is to be able to detect differences across time and by urban/rural location.  The result of our consultation with experts was to use an optimal stratification strategy based on the optimal stratified sampling technique in Barcaroli (2014) which uses the genetic algorithm to produce an optimal number of strata and an optimal number of units within strata.  Optimal stratification can lead to reduced sampling error compared to alternative approaches such as cluster sampling or simple random sampling.  
 
-Before producing the sample using the optimal stratification approach, we would define the sampling frame.  Typically, we would take all schools with at least three 1st grade and at least three 4th grade students, according to the latest school census, for inclusion in the frame.  Depending on the country, we may or may not include private schools in the sampling frame depending on the particular country context.  The decision to include private schools is usually determined by the share of private schools that make up the total student enrollment and the ease with which we are able to enter private schools in the country.  We work with the government and the local World Bank team in making this decision.  In Peru, we included only public schools in the sampling frame, because private schools make up only a small percentage of total student enrollment.
+Before producing the sample using the optimal stratification approach, we would define the sampling frame.  Typically, we would take all schools with at least three 1st grade and at least three 4th grade students, according to the latest school census, for inclusion in the frame.  A minimum of three 1st grade and 4th grade students was set to ensure that a sufficient number of teachers in primary school and students would be interviewed.  In order to do this, we work with the World Bank country teams and the country government to compile an up to date and detailed database containing information on schools. Depending on the country, we may or may not include private schools in the sampling frame depending on the particular country context.  The decision to include private schools is usually determined by the share of private schools that make up the total student enrollment and the ease with which we are able to enter private schools in the country.  We work with the government and the local World Bank team in making this decision.  In Peru, we included only public schools in the sampling frame, because private schools make up only a small percentage of total student enrollment.
 
 In our stratified sampling approach, we typically use a countries 1st or 2nd level administative division (which usually is a province or department) depending on the country and the urban/rural status of the school as stratification variables.  For example, in Peru, the Departamento and urban/rural status of the school made up the stratification variables.  In cases, where private schools are also included in the sampling frame, the public/private status of the school is also included as a stratification variable.
 
@@ -227,29 +197,68 @@ https://github.com/worldbank/GEPD/blob/develop/Data/Pakistan_Punjab/2019/Code/Sa
 
 ## Power Considerations
 
-In order to assess the likely detectable effect sizes for some of our key indicators, we incorporated data from previous surveys that used a similar methodology as the Global Education Policy Dashboard.  We examined the likely detectable effect sizes for the following indicators: absenteeism, teacher content knowledge, 4th grade student knowledge, Early Childhood Development, and Teacher pedagogical skills.
+In order to assess the likely detectable effect sizes for some of our key indicators, we incorporated data from previous surveys that used a similar methodology as the Global Education Policy Dashboard.  We examined the likely detectable effect sizes for the following indicators: absenteeism, teacher content knowledge, 4th grade student knowledge, Early Childhood Development, and Teacher pedagogical skills.  
 
 
-For absenteeism, we used data previously collected as part of the Service Delivery Indicators (SDI) survey (https://www.sdindicators.org/).  Data came from the countries of Afghanistan (SABER SD), Tanzania, Kenya, Mozambique, Nigeria, Uganda, and Senegal.  In each country, data on teacher presence was collected using a very similar questionnaire.  One difference is that for the SDI survey absence was collected during a second unannounced visit to the school.  In our case, we notify the school that a team of enumerators will be coming by the school over a two week period, but do not give them the exact day.  Setting aside this difference, we were able to calculate the intra-class correlation (ICC) in absence for teachers within the same school for each country and using these ICCs exame expected detectable effect sizes by # of schools sampled.  With a benchmark of around 200 schools, we expect to detect differences between two years of between 0.06-0.08 percentage points in absenteeism.
 
-![absence_power](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/absence_power_schools.png)
+For absenteeism, we used data previously collected as part of the Service Delivery Indicators (SDI) survey (https://www.sdindicators.org/).  Data came from the countries of Afghanistan (SABER SD), Tanzania, Kenya, Mozambique, Nigeria, Uganda, and Senegal.  In each country, data on teacher presence was collected using a very similar questionnaire.  One difference is that for the SDI survey absence was collected during a second unannounced visit to the school.  In our case, we notify the school that a team of enumerators will be coming by the school over a two week period, but do not give them the exact day.  Setting aside this difference, we were able to calculate the intra-class correlation (ICC) in absence for teachers within the same school for each country and using these ICCs exame expected detectable effect sizes by # of schools sampled.  With a benchmark of around 200 schools, we expected to detect differences between two years of between 0.06-0.08 percentage points in absenteeism.
 
-For teacher content knowledge, we used the same data sources and a similar methodology to find that in terms of absence, we would be likely to detect
+![](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/absence_power_schools.png)
 
-
-![tknow_power](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/know_power_schools.png)
-
-![sknow_power](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/stud_know_power_schools.png)
-
-![ecd_power](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/ecd_power_schools.png)
-
-![teach_power](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/teach_power_schools.png)
+For teacher content knowledge, we used the same data sources and a similar methodology.  Assuming a range of intra-class correlations which were found in previous SDI countries, we expected to detect a change in Teacher Content Knowledge of better than 0.05 standard deviations of teacher knowledge over two years.
 
 
-```{r confidence_intervals_peru, echo=FALSE, message=FALSE, warning=FALSE}
+![](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/know_power_schools.png)
+
+
+For our 1st grade assessment, we used direct assessment data from the MELQO survey of Kindergarten students in four countries: Ethiopia, Peru, Mongolia, and Tanzania.  ICCs for these countries ranged from 0.05 in Mongolia to 0.43 in Tanzania.  Assuming a sample size of 200, we would expect to detect a change in Early Learner Knowledge of around 0.14 -0.2 standard deviations.
+
+![](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/ecd_power_schools.png)
+Finally, for teacher pedagogical skills, we used prior data from the TEACH survey in Mozambique and the Punjab province of Pakistan.  Based on data from these countries, we expected to detect a change in Teacher Pedagogy of around 0.16-0.18 units on the 1-5 scale of teacher pedagogical performance using our sample of 200 schools.  
+![](C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/teach_power_schools.png)
+
+
+```{r confidence_intervals_peru, message=FALSE, warning=FALSE, include=FALSE}
 
 peru_stats<-read_csv("C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/Global Education Policy DashboardGEPD Data Explorer.csv") %>%
-  select(-c("Ratio of Rural to Urban"))
+  select(-c("Ratio of Rural to Urban")) %>%
+  rename(CI=4)
+
+
+
+
+
+
+```
+
+## Validation of Power Calculations using Peru Data
+
+We can begin to test the assumptions of our power analysis by comparing the precision implied in our power calculations to data actually collected from our Survey in Peru in 2019.  Our Peru sample is discussed in greater detail above, but briefly we visited 205 schools.  While our power analyis was primarily concerned with the detectable effect size over a two year period, we can still use data from one year of data collection to assess whether our projects were on target.  
+
+Our power analysis aimed to assess the detectable effect size across two years.  Making an assumption that the sampling variance for our indicators is constant across time, we can project the detectable effect size under this assmption.  Let the following be the standard error of the difference in means of one of our indicators, where $\bar X_j$ is the sample mean for year j and $\hat \sigma^2_j$ is the sample variance for year j.
+
+$SE(\bar X_1-\bar X_0)=\sqrt(\hat \sigma^2_1/N_1 + \hat \sigma^2_0/N0)$ 
+
+and if we assume equal variances $\sigma^2_1=\sigma^2_0$ and that the sample sizes will be the same $N_1=N_2$, the our Standard Error of the difference of the means of the two samples is:
+
+$SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$ 
+
+
+
+For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(peru_stats$Mean[3],2)` and a standard error of `r round((as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)`
+
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)` percentage points from our original mean of `r round(peru_stats$Mean[3],2)` .
+
+This actually suggests that in the case of Peru, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Peru for absence or to improved precision resulting from our optimal stratification technique.
+
+For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[4],str_length(peru_stats$CI[4])-5,str_length(peru_stats$CI[4])-1))-peru_stats$Mean[4])/1.96,2)` percentage points from our original mean.
+
+For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[5],str_length(peru_stats$CI[5])-5,str_length(peru_stats$CI[5])-1))-peru_stats$Mean[5])/1.96,2)` percentage points from our original mean.
+
+## Full Tabulation of Means and Confidence Intervals for Peru
+Means and 95% Confidence Intervals are available for all of our primary indicators collected using our surveys below.
+
+```{r echo=FALSE}
 
 #caption
 peru_cap<-tab_num(name="peru_cap", caption="Summary Statistics and Confidence Intervals for Dashboard Indicators - Peru 2019")
@@ -260,13 +269,65 @@ kable(peru_stats,
 
 ```
 
+
+
 ## Survey Weights
 
+Survey weights are constructed using our original sampling frame for a country.  School Weights are the inverse probability that a 4th grade student in the school is randomly selected for the school survey.  This is calculated by summing the total number of students in each particular school and dividing by the total number of 4th grade students in the sampling frame.  In cases where we have large amounts of non-responses or refusals to enter the school, we will add an adjustment term to account for non-response.  This could happen for instance, if an originally sampled school was selected but refused and the two replacement schools for that school also refused.
+
+For student level or teacher level data, we will also create an adjustment for the random selection of classrooms, teachers, or students that takes place within schools.  In order to form these weights at the individual level, the school weight is multiplied by the number of units sampled (five teachers for the teacher interview, 10 for the teacher absence module, one for the class of 4th graders, and three for the three randomly selected 1st grade students.).  
+
+
 # Data Collection
+
+Below, we will briefly discuss the data collection protocols and processes used by our team.  In short, we use Survey Solutions, which is a tablet based, free, open source survey tool designed by the World Bank.  The data flow then is as follows:
+
+1. Data is collected by an enumerator  
+2. The enumerator or their supervisor then uploads the collected data to our secure server (typically a server generated by the Survey Solutions team)  
+3. The data is encrypted on the server  
+4. The Global Education Policy Dashboard Team then downloads the encrypted data using the Survey Solutions API
+5. Our data is stored in a secure folder
+6. We clean the data, create unique IDs for students, teachers, principals, schools, and public officials using cryptographic hashing 
+7. A number of data quality checks are run to minimize missing values, identify enumerator errors, and ensure accurate coding  
+8. The data is then anonymized removing all PII information  
+9. Our final indicators are then aggregated to the National level, as well as offering breakdowns by Urban/Rural and Gender  
+10. This aggregated data is then uploaded to the World Bank open data platform Edstats  
+11. The Global Education Policy Dashboard website then pulls the data from EdStats using the EdStats API system  
+
+
 ## Survey Solutions
+
+Survey Solutions is a free, open source data collection platform designed by World Bank staff.
+
+The raw data will be hosted on a secure server, which is certified by several dozen well known international bodies, including the EU Data Protection Directive.  More information on the certifications can be found here: https://support.mysurvey.solutions/faq/how-secure-is-the-world-bank-cloud-/. 
+
 ## Anonymization
 
+Immediately following download of data from Survey Solutions, we remove the following and save as an anonymized version of the data:
+1.Drop Enumerator name  
+2. Drop school name, address, official school codes (EMIS codes)  
+3. Drop principal name, phone numbers  
+4. Drop Geo-code info  
+5. Drop unique responses, such as when respondent is asked to specify other as a choice  
+
+The following are produced:
+1. Produce Crypto-hashed School ID, Province ID, District ID  
+
+We convert the following variables into categorical data:
+2. Respondent age
+3. Year began teaching
+4. Number of students in school/class
+5. Top-coded variables:
+6. Educational degrees
+
+
 # Data Quality Checks
+
+While survey data is collected, we run daily quality checks to ensure the data is high quality.  These include both built in checks available through the survey solutions HeadQuarters app, and also a custom designed data quality check tool.
+
+Survey Solutions has several built in quality checks.  These include a mapping tool based on the geocoordinates enterred by the enumerators during data collection and an interview management system where supervisors or the headquarters can see whether all questions that should have been completed by the enumerator are completed.  Supervisors then have the option to send feedback to the enumerator and reject the interview until the data is sucessfully collected.
+
+Additionally, our team has designed a set of custom tools for our Survey of Public Officials and School Survey.  All code for our data quality checks can be found on our Global Education POlicy Dashboard github site (https://github.com/worldbank/GEPD).  These tools allow the field team to calculate our final primary indicators in real time and check for any anomalies including missing values, data enterred at strange times (e.g. after regular business hours), and to look at data collected for specific enumerators.
 
 # Indicator Construction
 
@@ -297,25 +358,10 @@ indicators_dir <- "C:/Users/wb469649/Documents/Github/GEPD/Indicators/"
 ```
 
 
-# Data Visualization Tools
+
+
 
 # Appendix
-## Psychometric Properties of 4th Grade Assessment
-For a full report on the psychometric properties of our assessment in Peru, see:
-
-https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EeI0nmjm-MlLl3OyPAfOzdsB0VBT7v-Q1JHrwig3H2FMEw?e=Pq2Fzg
-
-## Psychometric Properties of 1st Grade Assessment
-For a full report on the psychometric properties of our assessment in Peru, see:
-
-https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EcwUNOUuTE1Ltjow7o10AUQBulnO_kKRPR0Oh8yTv5l7MA?e=miiiZU
-
-
-## Psychometric Properties of Teacher Assessment
-For a full report on the psychometric properties of our assessment in Peru, see:
-
-https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EbHd7iWaxGhJspphCXLqkfwBAlzQ0hUjtUb8uT151CxL-A?e=82bgKE
-
 
 ## Detailed Indicator Construction
 
@@ -736,58 +782,58 @@ Below is a list of the primary indicators and sub-indicators used to construct o
  ) 
  
  
-  survey_variables<-c("4th Grade Student Knowledge", 
-                     "4th Grade Math Knowledge", 
-                     "4th Grade Literacy Knowledge", 
-                     "4th Grade Student Proficiency", 
-                     "4th Grade Student Proficiency Literacy",
-                     "4th Grade Student Proficiency Math",
+  survey_det<-c("Fraction correct on our 4th grade assessment", 
+                     "Fraction correct on our 4th grade math assessment", 
+                     "Fraction correct on our 4th grade language assessment", 
+                     "Whether or not student reached 34/41 items correct", 
+                     "Whether or not student reached 20/24 items correct",
+                     "Whether or not student reached 14/17 items correct",
                      "4th Grade Student Proficiency at 70% threshold",  
                      "4th Grade Student Proficiency at 75% threshold",
-                     "Student Attendance Rate",
-                     "Teacher Classroom Presence Rate ", 
-                     "Teacher Classroom Absence Rate ", 
-                     "Teacher School Absence Rate", 
-                     "Teacher Content Proficiency", 
-                     "Teacher Content Proficiency Literacy", 
-                     "Teacher Content Proficiency Math", 
+                     "# of students present divided by # according to class list",
+                     "Fraction of teachers out of 10 that were in class and school during attendance check", 
+                     "Fraction of teacher not in class or school during attendance check", 
+                     "Fraction of teacher not in school during attendance check", 
+                     "Fraction of teachers scoring 80% of higher on overall content assessment", 
+                     "Fraction of teachers scoring 80% of higher on literacy content assessment", 
+                     "Fraction of teachers scoring 80% of higher on math content assessment", 
                      "Teacher Content Proficiency at 70% threshold", 
                      "Teacher Content Proficiency at 75% threshold", 
-                     "Teacher Content Knowledge", 
-                     "Teacher Math Content Knowledge", 
-                     "Teacher Literacy Content Knowledge", 
-                     'Grammar', 
-                     'Cloze Task',  
-                     'Read Passage', 
-                     'Arithmetic & Number Relations', 
-                     'Geometry', 
-                     'Interpret Data',
-                     "1st Grade Assessment Score", 
-                     "1st Grade Numeracy Score", 
-                     "1st Grade Literacy Score", 
-                     "1st Grade Executive Functioning Score", 
-                     "1st Grade Socio-Emotional Score",
-                     "1st Grade Assessment Proficiency", 
-                     "1st Grade Numeracy Proficiency", 
-                     "1st Grade Literacy Proficiency", 
-                     "1st Grade Executive Functioning Proficiency", 
-                     "1st Grade Socio-Emotional Proficiency",
-                     "Inputs", 
+                     "Average score at school level on math and literacy portion of content exam", 
+                     "Fraction correct on overall math assessment", 
+                     "Fraction correct on overall literacy assessment", 
+                     'Fraction correct on grammar task of content assessment', 
+                     'Fraction correct on cloze task of content assessment',  
+                     'Fraction correct on read a passage task of content assessment', 
+                     'Fraction correct on arithmetic and number relations task of content assessment', 
+                     'Fraction correct on geometry task of content assessment', 
+                     'Fraction correct on interpretting data task of content assessment',
+                     "Average of the fraction correct in numeracy, literacy, socio-emotional, and executive functioning", 
+                     "1st Grade Numeracy Fraction Correct", 
+                     "1st Grade Literacy Fraction Correct", 
+                     "1st Grade Executive Functioning Fraction Correct", 
+                     "1st Grade Socio-Emotional Fraction Correct",
+                     "Marked as proficient if student could score at least 80% of items correct", 
+                     "Marked as proficient if student could score at least 90% of math items correct", 
+                     "Marked as proficient if student could score at least 80% of literacyitems correct", 
+                     "Marked as proficient if student could score at least 70% of executive functiong items correct", 
+                     "Marked as proficient if student could score at least 80% of socio-emotional items correct",
+                     "Total of whether there is functional blackboard, materials, desks, and ICT", 
                      "Functioning Blackboard (Based on classroom observation: Is there a blackboard, Is there chalk, and Is there sufficient light", 
-                     "Classroom Materials (Pens, Pencils, Exercise Books)", 
-                     "Textbooks", 
-                     "Desks", 
-                     "ICT Usage", 
-                     "ICT Access",
+                     "# of Classroom Materials (Pens, Pencils, Exercise Books) divided by # of students in class", 
+                     "# of Classroom  Textbooks divided by # of students in class", 
+                     "# of Classroom  Desks divided by # of students in class", 
+                     "Whether or not teacher reported using ICT", 
+                     "Whether tablets/computers were working and had internet connectivity",
                      "Infrastructure", 
-                     "Clean Drinking Water", 
-                     "Functioning Toilets", 
-                     "Internet", 
-                     "Electricity", 
-                     "Disability Accessibility", 
+                     "Enumerators assess whether water comes from piped water, protected well, packaged bottle water, or tanker truck.  No credit for unprotected sources", 
+                     "Toilets exist, separate for boys/girls, clean, private, useable,  handwashing available", 
+                     "1 point if internet working, 0.5 if doesn't work well, 0 if not at all", 
+                     "Enuermator assessment of whether electricity worked in randomly selected class", 
+                     "Accessibility from road, has ramp with accessible entrance for school and classrooms", 
                      "Operational Management", 
-                     "Operational Management - Vignette 1",  
-                     "Operational Management - Vignette 2",
+                     "Leaky roof vignette: 0.5 points are awarded for someone specific having the responsibility to fix,0.5 point is awarded if the school can fully fund the repair, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community, 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved.",  
+                     "Inadequate number of textbooks vignette: 0.5 points are awarded for someone specific having the responsibility to fix,0.5 point is awarded if the school can fully address, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community, 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved.",
                      "Teacher Intrinsic Motivation", 
                      'Scores on set of questions to teachers on whether it is ever acceptable to be absent', 
                      'Scores on set of questions to teachers on whether some students deserve more attention than others', 
@@ -862,23 +908,40 @@ Below is a list of the primary indicators and sub-indicators used to construct o
                      'Principal evaluation based on multiple components (at least 5 components for full credit',
                      'Principal reported negative consequences would occur if received 2 or more negative evaluations',
                      'Principal reported negative consequences would occur if received 2 or more negative evaluations',
-                     "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
-                     "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
-                     "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'Motivation Relative to Starting Public Service',
-                     "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+                     "Average of Targeting, Monitoring, Incentives, and Community Engagement components", 
+                'Questions on whether learning goals exist, are measurable, whether tasks aligned', 
+                'Questions on how well performance goals tracked, EMIS system, how info reviewed', 
+                'Are rewards given for high performance, rewards for excellence in contributing to learning goals, does information inform budgets', 
+                'Most common means of getting feedback from parents, is feedback used for evaluation/budgets',
+                "Average of coherence, transparency, accountability of public officials", 
+                'Is organizational responsibilities clear', 
+                'Are achievements related to performance targets made public, is transparency beneficial', 
+                'What would happen to public officials in cases of malfeasance',
+                 "Average score of knowledge and skills, work environment, merit, movitation and attitudes", 
+                'Public officials asked if they know numbers on average class size, teacher absences', 
+                'Do employees trust one another, gifts to public officials, encouragement of new ideas', 
+                'How is selection and deployment done', 
+                'How satisfied are public officials, how motivated, is it OK for teachers to be absent, ok for some students get less attention', 
+                'Motivation Relative to Starting Public Service',
+                "Impartial Decision Making", 
+                'Are hiring/promotion decisions/evaluations based on public influence', 
+                'Are budget,procurement, curriculum decisions affected by politics?', 
+                'What proportion of public officials broken rules, are contracts/procuements subject to politics', 
+                'Does union membership affect teacher hiring, do public official union members get preferential treatment, are new practices influence by unions?'
  )
  
  
- labels_df<-data.frame(indicators=as.character(ind_list),
+ labels_df<-data.frame(
                        indicator_labels=as.character(indicator_labels),
-                       indicator_module=as.character(indicator_module))
+                       indicator_module=as.character(indicator_module),
+                       survey_det=as.character(survey_det))
  
  
 #produce caption for table
 data_desc_cap<-tab_num(name="data_desc_cap", caption="Detailed Documentation of Indicators & Sub-Indicators")
 kable(labels_df,
       caption=data_desc_cap,
-      col.names = c("Variable Name", "Variable Description", "How Was Data Collected?"))
+      col.names = c("Variable", "How Was Data Collected?", "Details on Scoring"))
 
 ```
 
@@ -915,6 +978,10 @@ year <- '2019'
   project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/"
 
   read_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/School", sep="/"))
+  
+
+  read_folder <-'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/School'
+  
   backup_onedrive="no"
 
 
@@ -1068,6 +1135,22 @@ Proficiency is then based on whether the student correctly answered a set number
 
 A randomly selected set of three 1st grade students are given an assessment of early literacy, numeracy, executive functioning and socio-emotional skills.  The assessment was created based on items from the MELQO assessment.  A students score is the sum of the literacy sub-score, the math sub-score, the executive functioning score, and the socio-emotional score.  Each domain (literacy, numeracy, executive functioning and socio-emotional skills) is given equal weight.  Within each domain scores are based on the number of items correct in each domain.  
 
+
+## Psychometric Properties of 4th Grade Assessment
+For a full report on the psychometric properties of our assessment in Peru, see:
+
+https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EeI0nmjm-MlLl3OyPAfOzdsB0VBT7v-Q1JHrwig3H2FMEw?e=Pq2Fzg
+
+## Psychometric Properties of 1st Grade Assessment
+For a full report on the psychometric properties of our assessment in Peru, see:
+
+https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EcwUNOUuTE1Ltjow7o10AUQBulnO_kKRPR0Oh8yTv5l7MA?e=miiiZU
+
+
+## Psychometric Properties of Teacher Assessment
+For a full report on the psychometric properties of our assessment in Peru, see:
+
+https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EbHd7iWaxGhJspphCXLqkfwBAlzQ0hUjtUb8uT151CxL-A?e=82bgKE
 
 
 
