@@ -1,12 +1,12 @@
 ---
 title: "GEPD Technical Note"
-author: "Brian Stacy"
-date: "1/21/2020"
+author: "Global Education Policy Dashboard Team"
+date: "1/27/2020"
 output:
+  word_document:
+    toc: yes
   html_document:
     df_print: paged
-    toc: yes
-  word_document:
     toc: yes
   pdf_document:
     toc: yes
@@ -22,10 +22,7 @@ library(captioner)
   fig_num<-captioner(prefix="Figure")
 ```
 
-# NEED TO ADD Decision points document.  
 
-1. Stop light system scoring
-2. 1st grade assessment
       
       
 # Background on Project
@@ -63,7 +60,86 @@ More information pertaining to each of the three instruments can be found in the
 
 # Proficiency Cutoffs
 
-NEED TO ADD BACK IN TO DISCUSS HOW WE ARRIVED AT OUR THRESHOLDS
+For our learning indicators and our indicator of teaching proficiency, we had to set thresholds for minimal proficiency. Below we will discuss how these proficiency cutoffs were determined.
+
+### Student Learning Assessment
+
+The SDI student test was designed as a one-on-one evaluation with enumerators reading out instructions to students in their mother tongue. This was done so as to build up a differentiated picture of students’ cognitive skills; i.e. oral one-to-one testing which allows testing whether a child can solve a mathematics problem even when his/her reading ability is so low that he/she would not be able to attempt the problem independently. The language test (implemented in the language of instruction: English, French, Swahili, or Portuguese) ranged from simple tasks testing letter and word recognition to a more challenging reading comprehension test.  The mathematics test ranged from recognizing and ordering numbers, to addition of one- to three-digit numbers, to one- and two-digit subtraction, to single digit multiplication and division.
+
+The sub-domains for the literacy section are:
+
+* Letter Identification
+*	Word Recognition
+*	Reading Comprehension Story I  
+* Reading Comprehension Story II 
+
+The Reading Comprehension Story II set of items were added to the standard SDI assessment by our team, and came from a publicly released items from the PIRLS assessment.
+
+The sub-domains for the math section are:
+
+*	Number Sense
+*	Arithmetic
+*	Word Problem
+*	Sequences
+
+
+In order to determine whether or not a child was proficient based on our assessment, out team consulted with a set of experts to complete a standard setting exercise where each expert was asked to rate whether a minimally proficient student in the subject should be able to answer the item correctly using the global proficiency framework being designed by UIS.  The result of that exercise was that we would expect a minimally proficient child to answer 20/24 questions correctly on our literacy section and 14/17 points on our mathematics assessment.  Students scoring at least this many points on our assessment are rated as proficient and otherwise rated not proficient.
+
+INCLUDE LIST OF EXPERTS WE CONSULTED TO THANK THEM HERE
+
+### Teacher Content Knowledge Assessment
+
+The objective of the teacher test is three-fold. The first objective is to examine whether teachers have the mastery of the subjects they are teaching. This is interpreted as the minimum knowledge required for the teacher to be effective. In addition, the test also examines the extent to which teachers demonstrate mastery of subject content skills that are above the level they are teaching at and finally, mastery of pedagogic skills.
+
+To simplify the administration of the test it was designed as a marking exercise, in which teachers are asked to mark and correct a hypothetical student's exam. The Language test was administered to teachers teaching language, or language and other subjects, and the mathematics test was administered to teacher teaching mathematics, or mathematics and other subjects. The test was validated against 13 Sub-Saharan primary curricula.^[The countries included for the review were: Botswana, Ethiopia, Gambia, Kenya, Magadascar, Mauritius, Namibia, Nigeria, Rwanda, Seychelles, South Africa, Tanzania and Uganda. See David Johnson, Andrew Cunningham and Rachel Dowling (2012) "Teaching Standards and Curriculum Review", prepared as background document for the SDI Survey.] ^[While some SDI countries were not part of the review, before doing the SDI survey the SDI team verified that the school curriculum was compatible with the SDI teacher and student test. For more information see SDI Technical report for each specific country.]
+
+The language test consisted of two sections. The first section asked teachers to assess pupil language literacy by correcting a primary school pupil language test. The teachers have to correct whether the "student answer" is correct, and in case it is incorrect, has to write the correct answer. The second section asks teachers to correct a letter written by a child in 4th grade. The teachers have to correct the letter for grammar, punctuation (between sentences and within sentences), spelling, syntax, and salutation by circling the mistakes and writing the correction on the line.
+The mathematics test asks teachers to assess pupil numeracy literacy by correcting a primary school pupil mathematic test. The teachers have to correct whether the "student answer" is correct, and in case it is incorrect it has to write the correct answer.
+
+The pedagogy test consists of three sections designed to capture all the skills teachers would routinely be asked to apply when teaching. The first section asks teachers to prepare a lesson plan about road accidents based on a simple information given a text they had read. The second task asks teachers to assess children's writing on the basis of two sample letters (written by grade 4 children). Teachers have to point out the strengths and weaknesses on the student's letters, by evaluating  pupil's ability to write simple letters, use sentence structures correctly including past and present tenses, use a range of vocabulary, and use both within and between sentence punctuation.  The final task asks teachers to inspect test scores of 10 children, aggregate them and make some statements about learning patterns.
+
+We set a threshold of 80% on the math and language assessment for a teacher being minimally proficient.  This standard was used in the Service Delivery Indicators initiative, and we are using it as a benchmark as well.
+
+### 1st Grade Assessment
+
+Our first grade assessment tool was derived mostly from the MELQO assessment developed as an open source tool to measure early childhood development in the domains of numeracy, literacy, socio-emotional skills and numeracy.  For more details on the development of this initiative see:
+
+https://unesdoc.unesco.org/ark:/48223/pf0000248053
+
+The MELQO instrument was designed to measure development of children around the age of six years old.  Our target group, 1st graders, is slightly older and we did some adaptation in which we removed some items and added items on simple sentence reading to better match what is expected of older children.
+
+
+The sub-domains for the literacy section are:
+
+*	Expressive Vocabulary
+* Letter Identification
+*	Word Recognition
+*	Sentence Reading
+*	Listening Comprehension Story 
+*	Name Writing
+*	Print Awareness
+
+
+The sub-domains for the math section are:
+
+*	Verbal Counting
+*	Producing a Set
+*	Number Identification
+*	Number Comparison
+*	Simple Addition
+
+
+The sub-domains for the socio-emotional section are:
+
+*	Perspective Taking/Empathy
+*	Conflict Resolution
+
+The sub-domains for the executive functioning section are:
+
+*	Working Memory/Backward Digit Spans
+*	Follow Instructions/Head, Toes, Knees, Shoulders Task
+
+Our threshold for proficiency on our 1st grade assessment is to score at least 80% of the items correctly. We validated this approach by calculating the percent correct in the top 25% highest scoring schools in Peru on our 4th grade dashboard assessment and found that students in these schools answered around this percentage of items correct.
 
 # Stop Light Scoring System
 
@@ -945,6 +1021,7 @@ kable(labels_df,
 
 ```
 
+## Working Indicator Examples
 
 We will show a working example of how each indicator is scored in the case of Peru.
 
