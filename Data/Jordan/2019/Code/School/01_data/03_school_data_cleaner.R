@@ -414,7 +414,7 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
 ##### Teacher Knowledge ###########
 #############################################
 
-graded_data <- "no"
+graded_data <- "yes"
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
 if (graded_data!='yes') {
@@ -424,24 +424,24 @@ teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessmen
 
 } else if (graded_data=='yes') {
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
-school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "EPDash.dta"))
+school_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "EPDash.dta"))
 
-school_dta_21<- school_dta_21 %>%
+school_dta_17<- school_dta_17 %>%
   mutate(school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code))
   )
 
-preamble_info_21 <- c('school_code' )
+preamble_info_17 <- c('school_code' )
 
-school_data_preamble_21<- school_dta_21 %>%
-  select(interview__key, preamble_info_21)
+school_data_preamble_17<- school_dta_17 %>%
+  select(interview__key, preamble_info_17)
 
-teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
-teacher_metadata <- makeVlist(teacher_assessment_dta_21)
+teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
+teacher_metadata <- makeVlist(teacher_assessment_dta_17)
 
 #Add school preamble info
-teacher_assessment_dta <- teacher_assessment_dta_21 %>%
-  left_join(school_data_preamble_21) %>%
-  select(preamble_info_21, everything()) 
+teacher_assessment_dta <- teacher_assessment_dta_17 %>%
+  left_join(school_data_preamble_17) %>%
+  select(preamble_info_17, everything()) 
 }
 
 #number missing
@@ -665,13 +665,19 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
          tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
 
 
-
 final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
+  mutate(teach_prof=teach_score>=3,                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+         classroom_culture_prof=classroom_culture>=3,
+         instruction_prof=instruction>=3,
+         socio_emotional_skills_prof=socio_emotional_skills>=3) %>%
   group_by(school_code) %>%
   mutate(number_segments=  sum(!is.na(teach_score))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select( -starts_with('interview'), -starts_with('enumerator'),
           -starts_with('m4saq1'))
+
+#Breakdowns by Male/Female
+
 
 write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
 
@@ -2116,6 +2122,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
             'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
             'teach_score','classroom_culture','instruction','socio_emotional_skills',
+            'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof',
             'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
             'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
             'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',

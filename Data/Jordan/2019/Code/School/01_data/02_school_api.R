@@ -76,9 +76,12 @@ writeBin(RawData$content, filecon)
 #close the connection
 close(filecon)
 
-
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else {
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
-
+}
 
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
@@ -238,6 +241,7 @@ teacher_absence_dta %>%
 
 #read in teacher assessment file
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
 
 #Add in assessment metadata
 teacher_assessment_metadta<-makeVlist(teacher_assessment_dta) %>%

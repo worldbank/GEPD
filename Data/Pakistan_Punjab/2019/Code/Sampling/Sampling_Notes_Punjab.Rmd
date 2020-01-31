@@ -471,6 +471,43 @@ write_excel_csv(sample_replace_private, paste(dir_frame, '/sample_replacement_sc
 
 ```
 
+For access reasons, we had to reallocate 46 schools from the Lahore Cantt district to our other districts.  This is just for private schools.
+
+```{r lahore_cantt}
+
+# select one replacement per district
+sample_noncantt_private <- data_set_updated_private %>%
+    mutate(
+    rural_share=case_when(
+      urban_rural==1 ~ 0.5,
+      urban_rural==2 ~ 0.5,
+      TRUE ~ 0)) %>%
+  group_by(DistrictName) %>%
+  mutate(total_ece=sum(total_pre_primary, na.rm=T)) %>%
+  ungroup() %>%
+  mutate(district_share=total_ece/sum(total_pre_primary, na.rm=T)) %>%
+  left_join(sampled_districts_private) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(TehsilName!="LAHORE CANTT.") %>%
+  filter(is.na(sample)) %>%
+  group_by(DistrictName, urban_rural) %>% 
+  mutate(school_number=round(60*district_share*rural_share,0)) %>%
+  sample_n(school_number, weight=total_pre_primary) %>%   #select 46 replacement schools
+    ungroup() %>% # fix an issue where two extra schools are selected.  Had to do a trick to get exactly 200
+  sample_n(49, weight=total_pre_primary) 
+  
+write_excel_csv(sample_noncantt_private,  paste(dir_frame, '/sample_noncantt_schools_private_', Sys.Date(),  '.csv', sep=""))
+
+sample_private_update <- sample_private %>%
+ filter(TehsilName!="LAHORE CANTT.") %>%
+  bind_rows(sample_noncantt_private)
+  
+write_excel_csv(sample_private_update,  paste(dir_frame, '/sample_schools_private_', Sys.Date(),  '.csv', sep=""))
+  
+```
+
+
+
 # Summary Statistics of Sample
 
 ```{r sample_stats, echo=FALSE}
@@ -497,7 +534,7 @@ sumstats_sample_public <- sample_public %>%
   spread(stat, formatted) %>%
   dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
   
-sumstats_sample_private <- sample_private %>%
+sumstats_sample_private <- sample_private_update %>%
   ungroup() %>%
     transmute(num_teachers=TeachingStaffMale + TeachingStaffFemale,
             total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
@@ -553,7 +590,7 @@ map_public <- sample_public %>%
         )) %>%
     select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_katchi_enrollment, total_ece_enrollment, total_1st_enrollment, rural, public_strata, longitude, latitude   )
 
-map_private <- sample_private %>%
+map_private <- sample_private_update %>%
     mutate(longitude=as.character(GPS_East)) %>%
     mutate(latitude=as.character(GPS_North)) %>%
     mutate(longitude=as.numeric(longitude)) %>%

@@ -79,7 +79,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source('school_api.R', local=TRUE)
  
 # #launch file to clear data=
-source('school_data_cleaner.R', local=TRUE)
+source('03_school_data_cleaner.R', local=TRUE)
 
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))

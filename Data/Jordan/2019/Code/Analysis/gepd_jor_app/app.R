@@ -1758,13 +1758,14 @@ output$indicators_table <- DT::renderDataTable({
   # create 19 breaks and 20 rgb color values ranging from white to red
   
   sumstats_df <- sumstats_df %>%
-    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban)) %>%
+    mutate(ratio=if_else(abs(ratio)>100000,as.numeric(NA), ratio))
   
   brks <- seq(0, max(sumstats_df$ratio, na.rm=T), length.out = 19)
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Peru 2019",
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
                 escape = FALSE,

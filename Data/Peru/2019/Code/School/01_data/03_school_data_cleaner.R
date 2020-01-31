@@ -1865,11 +1865,11 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 # 
 # Scoring: 
 #   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
-# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  
+# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=JO.  
 
 school_data_SATT <- school_data_SATT %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=12*m7shq2_satt/22833	) %>%
+         principal_salary=12*m7shq2_satt/3011.67	) %>%
   mutate(
     principal_salary_score=case_when(
       between(principal_salary,0,0.5) ~ 1,

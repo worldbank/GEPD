@@ -72,7 +72,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural")])))
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" |
+                                                        names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory")])))
 }
 
 
