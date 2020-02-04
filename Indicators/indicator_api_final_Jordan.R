@@ -191,7 +191,7 @@ api_template <- api_template %>%
 # Example:
 
 #specify path to data
-data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
+data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT//JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
 
 
 
@@ -209,8 +209,8 @@ wbopendat<-WDI(country="JO", indicator=ind_list, start=2015, end=2015, extra=T) 
 
 #read in databases for indicators
 
-load(paste(data_dir, "anonymized/School/school_indicators_data_anon.RData", sep="/"))
-# load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
+load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
+load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
 # 
 # 
 # expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', sep="/" ))
@@ -241,7 +241,7 @@ load(paste(data_dir, "anonymized/School/school_indicators_data_anon.RData", sep=
 #   select(-rowname)
 
 
-source('R/api_data_fun.R')
+source('R/api_data_fun_JOR.R')
 
 JOR_data_2019 <- api_final
 
@@ -252,30 +252,3 @@ write_excel_csv(api_final, 'GEPD_Indicators_API_JOR.csv')
 
 
 
-
-
-PER_dummy_data_2019 <- api_dummy('PER', 2019)
-PER_dummy_data_2020 <- api_dummy('PER', 2020)
-PER_dummy_data_2021 <- api_dummy('PER', 2021)
-
-JOR_dummy_data_2019 <- api_dummy('JOR', 2019)
-JOR_dummy_data_2020 <- api_dummy('JOR', 2020)
-JOR_dummy_data_2021 <- api_dummy('JOR', 2021)
-
-
-RWA_dummy_data_2019 <- api_dummy('RWA', 2019)
-RWA_dummy_data_2020 <- api_dummy('RWA', 2020)
-RWA_dummy_data_2021 <- api_dummy('RWA', 2021)
-
-ETH_dummy_data_2019 <- api_dummy('ETH', 2019)
-ETH_dummy_data_2020 <- api_dummy('ETH', 2020)
-ETH_dummy_data_2021 <- api_dummy('ETH', 2021)
-
-
-
-country_dummy_data <- bind_rows(PER_dummy_data_2019, PER_dummy_data_2020, PER_dummy_data_2021,
-                                JOR_dummy_data_2019, JOR_dummy_data_2020, JOR_dummy_data_2021,
-                                RWA_dummy_data_2019, RWA_dummy_data_2020, RWA_dummy_data_2021,
-                                ETH_dummy_data_2019, ETH_dummy_data_2020, ETH_dummy_data_2021)
-
-write_excel_csv(country_dummy_data, 'GEPD_Indicators_dummy.csv')

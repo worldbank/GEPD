@@ -209,27 +209,27 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.PEDG     = indicator_means(teach_prof, "school", "CONT",  "All"),
-      SE.PRM.PEDG.1   = indicator_means(teach_prof, "school", "CONT",  "All"),
-      SE.PRM.PEDG.1.F = indicator_means(teach_prof, "school", "CONT",  "Female"),
-      SE.PRM.PEDG.1.M = indicator_means(teach_prof, "school", "CONT",  "Male"),
-      SE.PRM.PEDG.1.R = indicator_means(teach_prof, "school", "CONT",  "Rural"),
-      SE.PRM.PEDG.1.U = indicator_means(teach_prof, "school", "CONT",  "Urban"),
-      SE.PRM.PEDG.2   = indicator_means(classroom_culture_prof, "school", "CONT",  "All"),  
-      SE.PRM.PEDG.2.F = indicator_means(classroom_culture_prof, "school", "CONT",  "Female"),
-      SE.PRM.PEDG.2.M = indicator_means(classroom_culture_prof, "school", "CONT",  "Male"),
-      SE.PRM.PEDG.2.R = indicator_means(classroom_culture_prof, "school", "CONT",  "Rural"),
-      SE.PRM.PEDG.2.U = indicator_means(classroom_culture_prof, "school", "CONT",  "Urban"),
-      SE.PRM.PEDG.3   = indicator_means(instruction_prof, "school", "CONT",  "All"),
-      SE.PRM.PEDG.3.F = indicator_means(instruction_prof, "school", "CONT",  "Female"),
-      SE.PRM.PEDG.3.M = indicator_means(instruction_prof, "school", "CONT",  "Male"),
-      SE.PRM.PEDG.3.R = indicator_means(instruction_prof, "school", "CONT",  "Rural"),
-      SE.PRM.PEDG.3.U = indicator_means(instruction_prof, "school", "CONT",  "Urban"),
-      SE.PRM.PEDG.3   = indicator_means(socio_emotional_skills_prof, "school", "CONT",  "All"),
-      SE.PRM.PEDG.3.F = indicator_means(socio_emotional_skills_prof, "school", "CONT",  "Female"),
-      SE.PRM.PEDG.3.M = indicator_means(socio_emotional_skills_prof, "school", "CONT",  "Male"),
-      SE.PRM.PEDG.3.R = indicator_means(socio_emotional_skills_prof, "school", "CONT",  "Rural"),
-      SE.PRM.PEDG.3.U = indicator_means(socio_emotional_skills_prof, "school", "CONT",  "Urban")
+      SE.PRM.PEDG     = 100*indicator_means(teach_score>=3, "school", "PEDG",  "All"),
+      SE.PRM.PEDG.1   = 100*indicator_means(teach_score>=3, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.1.F = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.1.R = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.1.U = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.2   = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "All"),  
+      #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.2.R = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.2.U = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.3   = 100*indicator_means(instruction>=3, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.3.F = 100*indicator_means(instruction>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.3.M = 100*indicator_means(instruction>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.3.R = 100*indicator_means(instruction>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.3.U = 100*indicator_means(instruction>=3, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.4   = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.4.F = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.4.M = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.4.R = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.4.U = indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Urban")
     )
   
   #######################################
@@ -612,19 +612,19 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
-  SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.10 = indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
-  SE.PRM.TINM.11 = indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
-  SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
+  SE.PRM.TINM.1 = 100*indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.10 = 100*indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+  SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
+  SE.PRM.TINM.12 = 100*indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
   # SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
-  SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
-  SE.PRM.TINM.3 = indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.4 = indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
-  SE.PRM.TINM.5 = indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
-  SE.PRM.TINM.6 = indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
-  SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
-  SE.PRM.TINM.8 = indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
-  SE.PRM.TINM.9 = indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+  SE.PRM.TINM.2 = 100*indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+  SE.PRM.TINM.3 = 100*indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.4 = 100*indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+  SE.PRM.TINM.5 = 100*indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
+  SE.PRM.TINM.6 = 100*indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
+  SE.PRM.TINM.7 = 100*indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+  SE.PRM.TINM.8 = 100*indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+  SE.PRM.TINM.9 = 100*indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
   SE.PRM.TINM.DF = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"), #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
   # SE.PRM.TINM.DJ = expert_df$intrinsic_motivation #(De Jure) Policy Lever (Teaching) - Intrinsic Motivation   
     )
@@ -863,65 +863,65 @@ api_template <- api_template %>%
   SE.PRM.SEVL.DF =  indicator_means(principal_evaluation		, "school", "SEVL",  "All"), #(De Facto) Policy Lever (School Management) - Evaluation                                               
   # SE.PRM.SEVL.DJ =expert_df$principal_evaluation #(De Jure) Policy Lever (School Management) - Evaluation     
     )
-#   #######################################
-#   # Politics & Bureaucratic Capacity - Quality of Bureaucracy 	(BQBR)
-#   #######################################
-#   indicator_values_transpose <- indicator_values_transpose %>%
-#     mutate(
-#   SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy                                                                  
-#   SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
-#   SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills                                                            
-#   SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment                                                                
-#   SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit                                                                           
-#   SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes      
-# )
-#   #######################################
-#   # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
-#   #######################################
-#   indicator_values_transpose <- indicator_values_transpose %>%
-#     mutate(
-#   SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making                                                               
-#   SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-#   SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management                                             
-#   SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making                                                    
-#   SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation                                            
-#   SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators 
-#     )
-#   #######################################
-#   # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
-#   #######################################
-#   indicator_values_transpose <- indicator_values_transpose %>%
-#     mutate(
-#   SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability                                                               
-#   SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-#   SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence                                                                    
-#   SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency                                                                 
-#   SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials    
-#     )
-#   #######################################
-#   # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
-#   #######################################
-#   indicator_values_transpose <- indicator_values_transpose %>%
-#     mutate(
-#   SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals                                                                 
-#   SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
-#   SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting                                                                      
-#   SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring                                                                     
-#   SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives                                                                     
-#   SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement   
-#     )
-#   #######################################
-#   # Politics & Bureaucratic Capacity - Financing 	(BFIN)
-#   #######################################
-#   indicator_values_transpose <- indicator_values_transpose %>%
-#     mutate(
-#   SE.PRM.BFIN   = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #Politics & Bureaucratic Capacity - Financing                                                                               
-#   SE.PRM.BFIN.1 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1,#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
-#   SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`), #(Financing) - Adequacy expressed by the per child spending                                                                 
-#   SE.PRM.BFIN.3 =-999,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
-#   SE.PRM.BFIN.4 =-999,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
-#   SE.PRM.BFIN.5 =-999,#(Financing) - Equity 
-#     )
+  #######################################
+  # Politics & Bureaucratic Capacity - Quality of Bureaucracy 	(BQBR)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy
+  SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
+  SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills
+  SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment
+  SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit
+  SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes
+)
+  #######################################
+  # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making
+  SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+  SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management
+  SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making
+  SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation
+  SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators
+    )
+  #######################################
+  # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability
+  SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+  SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence
+  SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency
+  SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials
+    )
+  #######################################
+  # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals
+  SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
+  SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting
+  SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring
+  SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives
+  SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement
+    )
+  #######################################
+  # Politics & Bureaucratic Capacity - Financing 	(BFIN)
+  #######################################
+  # indicator_values_transpose <- indicator_values_transpose %>%
+  #   mutate(
+  # SE.PRM.BFIN   = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #Politics & Bureaucratic Capacity - Financing
+  # SE.PRM.BFIN.1 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1,#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
+  # SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`), #(Financing) - Adequacy expressed by the per child spending
+  # SE.PRM.BFIN.3 =-999,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
+  # SE.PRM.BFIN.4 =-999,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
+  # SE.PRM.BFIN.5 =-999,#(Financing) - Equity
+  #   )
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
     rownames_to_column(var='Series') %>%

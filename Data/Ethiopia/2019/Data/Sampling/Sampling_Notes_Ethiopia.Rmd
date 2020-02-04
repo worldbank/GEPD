@@ -238,233 +238,92 @@ save(sample_updated, data_set_updated, sample_replace,
 
 ```
 
-
-```{r merge, eval=FALSE, include=FALSE}
-#idenfity common fields
-df_match_list<-sample_random[,c('admincode', 'region', 'zone', 'woreda', 'school')]
-df_2009_match_list<-alt_df[,c( 'school_code', 'region', 'zone', 'woreda', 'school')]
+Update 2/3/2020:  
+There was a concern that some zones posed a security risk for the enumerators.  As a result this list of originally sampled schools was dropped.
 
 
-#Simple merge
-df_merge <- sample_random %>%
-  left_join(alt_df, by=c('region', 'zone', 'school'))
+|    region     |    zone                         |    woreda                |    admincode      |    School                 |
+|---------------|---------------------------------|--------------------------|-------------------|---------------------------|
+|    Oromiya    |    Wallagaa   Lixaa             |    Laaloo   Assaabii     |    S0417150342    |    Seenaa   Jaarsoo       |
+|    Oromiya    |    Wallagaa   Bahaa             |    Ibaantuu              |    S0416080032    |    Agaa   Guddinaa        |
+|    Oromiya    |    Wallagaa   Lixaa             |    Lataa   Sibuu         |    S0417160032    |    Hawaasii   Gittan      |
+|    Oromiya    |    Horroo   Guduru Wallaggaa    |    Horroo   Bulluq       |    S0408070412    |    Saqalaa                |
+|    Oromiya    |    Qellam   Wallaggaa           |    Gawoo   Qebee         |    S0411050282    |    Jogee   Cabal          |
+|    Oromiya    |    Qellam   Wallaggaa           |    Anfilloo              |    S0411010342    |    Dallaa   Shoor         |
+|    Oromiya    |    Wallagaa   Lixaa             |    Boojjii   Coqorsaa    |    S0417070202    |    Manajaartee   Biqir    |
+|    Oromiya    |    Wallagaa   Lixaa             |    Mana   Sibuu          |    S0417170712    |    BAREEDAA   FIRAA       |
+|    Oromiya    |    Wallagaa   Lixaa             |    Najjoo                |    S0417180142    |    Yambal   Guduruu       |
+
+In order to replace these schools, we sample another 9 schools from within the Oromiya region, but from different zones.
+
+```{r security_schools, echo=FALSE}
+
+zone_list<-c('Wallagaa Lixaa', 'Wallagaa Bahaa', 'Horroo Guduru Wallaggaa', 'Qellam Wallaggaa')
+
+security_schools <- data_set_updated %>%
+  filter(is.na(sample)) %>%
+  filter(region=='Oromiya') %>%
+  filter(!(zone %in% zone_list)) %>%
+  sample_n(9) %>%
+  mutate(sampled_security=1)
+
+datatable(security_schools, caption = 'List of New Schools Chosen for Sample Because of Security Reasons') 
+
+#add sample schools back to original database
+data_set_updated <- data_set_updated %>%
+  left_join(security_schools)
+
+#get list of woredas
+sampled_woredas_security <- security_schools %>%
+  group_by(region, zone, woreda) %>% 
+  summarise(sampled_woreda_security=n()
+            )
 
 
-#User purrr with fuzzy match to match within region/zone/woreda
+# select one replacement per woreda
+sample_replace_security <- data_set_updated %>%
+  left_join(sampled_woredas_security) %>%
+  filter(!is.na(sampled_woreda_security)) %>%
+  filter(is.na(sample)) %>%
+  filter(is.na(sampled_security)) %>%
+  group_by(region, zone, woreda) %>% 
+  sample_n(sampled_woreda_security) %>%
+  mutate(sample='Replacement School') %>%
+  arrange(region, zone, woreda) 
 
-#first create nested frame
-df_merge_fuzzy <- sample_random %>%
-  group_by(region, zone, woreda) %>%
-  nest()
-
-#first create nested frame
-df_2009_merge_fuzzy <- alt_df %>%
-  group_by(region, zone, woreda) %>%
-  nest()
-
-join_df <- function(df_nest, df_other) {
-  df_all <- stringdist_inner_join(df_nest, df_other, by=c('school'), max_dist=1)
-  return(df_all)
-}
-
-#Now use map to do fuzzy join
-
-df_merge_fuzzy_joined <- df_merge_fuzzy %>%
-  mutate(merge_data=map(data, ~join_df(.,alt_df)))
+security_schools <- security_schools %>%
+    arrange(region, zone, woreda) 
 
 
-#convert all rows to upper case
-df_match_list[,-1]<- as.data.frame(sapply(df_match_list[,-1], toupper))
-df_2009_match_list[,-1]<- as.data.frame(sapply(df_2009_match_list[,-1], toupper))
-
-#remove punctuation
-df_match_list[,-1]<- as.data.frame(sapply(df_match_list[,-1], function(x) gsub("[[:punct:]]", "", x)))
-df_2009_match_list[,-1]<- as.data.frame(sapply(df_2009_match_list[,-1], function(x) gsub(" ", "", x)))
-
-#remove spaces
-df_match_list[,-1]<- as.data.frame(sapply(df_match_list[,-1], function(x) gsub("[[:punct:]]", "", x)))
-df_2009_match_list[,-1]<- as.data.frame(sapply(df_2009_match_list[,-1], function(x) gsub(" ", "", x)))
+#add in school info for school that will be replaced
+sample_replace_security$replaced_school_code=security_schools$admincode
+sample_replace_security$replaced_school_name=security_schools$school
+sample_replace_security$replaced_region=security_schools$region
+sample_replace_security$replaced_zone=security_schools$zone
+sample_replace_security$replaced_woreda=security_schools$woreda
 
 
+datatable(sample_replace_security, caption = 'List of Replacement Schools Chosen for Sample Because of Security Reasons') 
 
 
-#create comparison
-a <- compare.linkage(df_match_list, df_2009_match_list, blockfld=c( 'region'), strcmp = T, 
-                     strcmpfun = jarowinkler, exclude=c(1))
+write_excel_csv(sample_replace_security, paste(dir_frame, '/sample_replacement_schools_for_security', Sys.Date(),  '.csv', sep=""))
 
-#b<- emWeights(a, cutoff=0.8)  
-b<-epiWeights(a)
+sample_updated<-sample_random %>%
+  filter(!(zone %in% zone_list)) %>%
+  bind_rows(security_schools)
 
-finalPairs <- getPairs(b, max.weight=0.17, min.weight=0)
+write_excel_csv(sample_updated, paste(dir_frame, '/sample_public_schools_', Sys.Date(),  '.csv', sep=""))
 
-```
+sample_replace<-sample_replace %>%
+  filter(!(zone %in% zone_list)) %>%
+  bind_rows(sample_replace_security)
 
+write_excel_csv(sample_replace, paste(dir_frame, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
 
+#save sample
+sample_file_name <- paste(dir_frame,"school_sample_",Sys.Date(),".Rdata", sep="")
 
+save(sample_updated, data_set_updated, sample_replace, sample_replace_security,
+    file=sample_file_name)   
 
-```{r sample_stats, eval=FALSE, include=FALSE}
-
-
-#produce summary stats of public and private sample
-
-sumstats_sample_public <- sample_public %>%
-    ungroup() %>%
-    transmute(num_teachers=Teachers,
-            total_enrollment=enrollment,
-            total_katchi_enrollment=total_katchi_enrollment,
-            total_katchi_enrollment_boys=eng_kachi_b,
-            total_katchi_enrollment_girls=eng_kachi_g,
-            total_ece_enrollment=total_ece_enrollment,
-            total_ece_enrollment_boys=ECEBoys,
-            total_ece_enrollment_gils=ECEGirls,
-            total_1st_enrollment=total_cls1_enrollment,
-            total_1st_enrollment_boys=eng_cls1_b,
-            total_1st_enrollment_girls=eng_cls1_g,          
-            rural=if_else(school_location=="Rural", 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
-  
-sumstats_sample_private <- sample_private %>%
-  ungroup() %>%
-    transmute(num_teachers=TeachingStaffMale + TeachingStaffFemale,
-            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
-            total_pre_primary_enrollment=total_pre_primary,
-            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
-            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
-            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
-            total_1st_enrollment_boys=Enrolment_01_Boys ,
-            total_1st_enrollment_girls= Enrolment_01_Girls,          
-            rural=if_else(urban_rural==1, 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
-
-sumstats_sample <- sumstats_sample_public %>%
-  bind_rows(sumstats_sample_private)
-
-kable(sumstats_sample, caption="Summary Statistics for Sample of Schools" , ) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
-  pack_rows("Public Schools", 1,12) %>%
-  pack_rows("Private Schools", 13,21)
-
-```
-
-
-```{r school_map, eval=FALSE, warning=FALSE, include=FALSE}
-
-
-map_public <- sample_public %>%
-    mutate(longitude=as.character(school_longitude)) %>%
-    mutate(latitude=as.character(school_latitude)) %>%
-    mutate(longitude=as.numeric(longitude)) %>%
-    mutate(latitude=as.numeric(latitude)) %>%
-      mutate(num_teachers=Teachers,
-            total_enrollment=enrollment,
-            total_katchi_enrollment=total_katchi_enrollment,
-            total_katchi_enrollment_boys=eng_kachi_b,
-            total_katchi_enrollment_girls=eng_kachi_g,
-            total_ece_enrollment=total_ece_enrollment,
-            total_ece_enrollment_boys=ECEBoys,
-            total_ece_enrollment_gils=ECEGirls,
-            total_1st_enrollment=total_cls1_enrollment,
-            total_1st_enrollment_boys=eng_cls1_b,
-            total_1st_enrollment_girls=eng_cls1_g,          
-            rural=if_else(school_location=="Rural", 1,0),
-            total_pre_primary_enrollment=case_when(
-      !(is.na(total_katchi_enrollment) | is.na(total_ece_enrollment)) ~ total_katchi_enrollment+total_ece_enrollment,
-        is.na(total_ece_enrollment) ~ total_katchi_enrollment, 
-        is.na(total_katchi_enrollment) ~ total_ece_enrollment,
-      TRUE ~ 0
-        )) %>%
-    select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_katchi_enrollment, total_ece_enrollment, total_1st_enrollment, rural, public_strata, longitude, latitude   )
-
-map_private <- sample_private %>%
-    mutate(longitude=as.character(GPS_East)) %>%
-    mutate(latitude=as.character(GPS_North)) %>%
-    mutate(longitude=as.numeric(longitude)) %>%
-    mutate(latitude=as.numeric(latitude)) %>%
-      mutate(
-            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
-            total_pre_primary_enrollment=total_pre_primary,
-            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
-            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
-            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
-            total_1st_enrollment_boys=Enrolment_01_Boys ,
-            total_1st_enrollment_girls= Enrolment_01_Girls,          
-            rural=if_else(urban_rural==1, 1,0),
-            school_name=SchoolName, 
-            district=DistrictName, 
-            tehsil=TehsilName,
-            emiscode=as.numeric(NA)) %>%
-    select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_1st_enrollment, rural, longitude, latitude   )
-
-
-
-  sample_map_chosen <- map_public %>%
-    bind_rows(map_private, .id='private') %>%
-    mutate(private=if_else(private==2,"Private","Public"))
-
-   
-   
-   pal <- colorFactor(
-     palette = c("red", "green", "blue"),
-     domain = sample_map_chosen$private
-   )
-   
-   # Make a list of icons (from two different icon libraries).
-# We'll index into it based on name.
-popIcons <- awesomeIconList(
-  Private = makeAwesomeIcon(icon='graduation-cap', library='fa', markerColor = 'blue'),
-  Public = makeAwesomeIcon(icon='graduation-cap', library='fa', markerColor = 'red'))
-   
-map <- function(df_input) {    leaflet(df_input) %>% 
-    addTiles()  %>%
-    addAwesomeMarkers( lng=~longitude,  lat=~latitude, icon = ~popIcons[private] ,
-                popup =  paste("School Code: ", sample_map_chosen$emiscode, " <br>",
-                               "School Name: ", sample_map_chosen$school_name, " <br>",
-                                  "District", sample_map_chosen$district, "<br>",
-                                  "Tehsil: ", sample_map_chosen$tehsil, " <br>",
-                                  "Private School:" ,  sample_map_chosen$private, " <br>",
-                                  "School Type:",  sample_map_chosen$public_strata, " <br>",
-                                  "Total # of 1st Graders", sample_map_chosen$total_1st_enrollment, " <br>",
-                                  "Total # of Pre-Primary", sample_map_chosen$total_pre_primary_enrollment, " <br>",
-                                  "Rural Status", sample_map_chosen$rural, " <br>" )) 
-}
-
-
-map2 <- function(df_input) {    leaflet(df_input) %>% 
-    addTiles()  %>%
-    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(private),
-                popup =  paste("School Code: ", sample_map_chosen$emiscode, " <br>",
-                               "School Name: ", sample_map_chosen$school_name, " <br>",
-                                  "District", sample_map_chosen$district, "<br>",
-                                  "Tehsil: ", sample_map_chosen$tehsil, " <br>",
-                                  "Private School:" ,  sample_map_chosen$private, " <br>",
-                                  "School Type:",  sample_map_chosen$public_strata, " <br>",
-                                  "Total # of 1st Graders", sample_map_chosen$total_1st_enrollment, " <br>",
-                                  "Total # of Pre-Primary", sample_map_chosen$total_pre_primary_enrollment, " <br>",
-                                  "Rural Status", sample_map_chosen$rural, " <br>" )) %>%
-  addLegend(position="bottomright", pal=pal, values=~private, title="School Ownership")
-}    
-
-```
-
-```{r country_map2, eval=FALSE, warning=FALSE, include=FALSE}
-linked_df<-SharedData$new(sample_map_chosen)
-
-
-
-bscols(widths=c(3,NA),
-  list(
-  filter_select("school", "School Name", linked_df, ~school_name),
-  filter_select("prov", "District", linked_df, ~district),
-  filter_select("reg", "Tehsil", linked_df, ~tehsil),
-  filter_select("Private", "School Ownership", linked_df, ~private)
-  ),
-  map(linked_df) 
-  )
-  
 ```
