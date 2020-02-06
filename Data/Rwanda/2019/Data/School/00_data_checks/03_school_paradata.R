@@ -90,12 +90,9 @@ close(filecon)
 
 
 #unzip
-if (quest_version==17) {
-  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
-  
-} else {
+
   unzip(file.path(download_folder, tounzip), exdir=download_folder)
-}
+
 
 
 #########################################
