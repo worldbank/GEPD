@@ -249,11 +249,19 @@ school_modules_complete <- para_df_module %>%
   group_by(school_code) %>%
   mutate(interview__key1=first(interview__key),
          interview__key2=nth(interview__key,2),
+         interview__key3=nth(interview__key,3),
+         interview__key4=nth(interview__key,4),
+         interview__key5=nth(interview__key,5),
+         
          responsible1=first(responsible),
-         responsible2=nth(responsible,2)) %>%
+         responsible2=nth(responsible,2),
+         responsible3=nth(responsible,3),
+         responsible4=nth(responsible,4),
+         responsible5=nth(responsible,5)) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(school_code,  
-         responsible1, responsible2, interview__key1, interview__key2, M1, M2, M3, M4, M5, M6, M7, M8,
+  select(school_code, M1, M2, M3, M4, M5, M6, M7, M8,  
+         responsible1, responsible2, responsible3, responsible4, responsible5,  
+         interview__key1, interview__key2, interview__key3, interview__key4, interview__key5,
          school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon) %>%
   arrange(school_code)
   

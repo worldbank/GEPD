@@ -666,10 +666,10 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
 
 
 final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
-  mutate(teach_prof=as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
-         classroom_culture_prof=as.numeric(classroom_culture>=3),
-         instruction_prof=as.numeric(instruction>=3),
-         socio_emotional_skills_prof=as.numeric(socio_emotional_skills>=3)) %>%
+  mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+         classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+         instruction_prof=100*as.numeric(instruction>=3),
+         socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
   group_by(school_code) %>%
   mutate(number_segments=  sum(!is.na(teach_score))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%

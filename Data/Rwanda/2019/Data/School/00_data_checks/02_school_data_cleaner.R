@@ -1319,8 +1319,7 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
 #   - In the selected 4th grade classroom, how many of the pupils have the relevant textbooks? 
 #   Must identify whether or not blackboard was working in a selected 4th grade classroom.
 
-
-
+if (graded_data=='yes') {
 
 #first create a database containing actual values for each question for the principal
 pknw_actual_cont <- final_indicator_data_CONT %>%
@@ -1386,7 +1385,7 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw)
 
 
-
+}
 
 #############################################
 ##### School Principal Management Skills ###########
@@ -2072,13 +2071,13 @@ for (i in indicator_names ) {
 
 
 #add male/female breakdowns to ind_data_list
-
+if (graded_data=='yes') {
 ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
                                 "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
-
+}
 
 #Create list of key indicators
 ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
@@ -2121,7 +2120,7 @@ final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(keep_info, ind_list, everything())
+  select(keep_info, one_of(ind_list), everything())
 
 
 
@@ -2156,7 +2155,7 @@ if (backup_onedrive=="yes") {
   write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
-extra_info='yes'
+extra_info='no'
 
 if (extra_info=='yes') {
 #################################
