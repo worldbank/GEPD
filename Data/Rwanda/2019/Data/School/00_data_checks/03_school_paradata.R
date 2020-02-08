@@ -91,8 +91,16 @@ close(filecon)
 
 #unzip
 
+#unzip
+if (quest_version==17) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+  
+} else if  (quest_version==16) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
+  
+} else {
   unzip(file.path(download_folder, tounzip), exdir=download_folder)
-
+}
 
 
 #########################################
@@ -101,17 +109,13 @@ close(filecon)
 
 #read in data
 
-# if (quest_version!=17) {
-#   para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
-#   para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
-#   
-#   para_df <- para_df %>%
-#     bind_rows(para_df_17)
-# 
-# } else if (quest_version==17) {
-  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
-  
 
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  para_df_16<-read.delim(paste(paste(download_folder,'version_16', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  
+  para_df <-  bind_rows(para_df_17, para_df_16)
+  
 
 
 #label variables
@@ -241,8 +245,8 @@ school_modules_complete <- para_df_module %>%
   ungroup() %>%
   select(-c('ï..interview__id', 'timelength_sec')) %>%
   left_join(school_dta_preamble_id) %>%
-  mutate(val='Yes') %>%
-  pivot_wider(names_from=module, values_from = val) %>%
+  mutate(value='Yes') %>%
+  pivot_wider(names_from=module, values_from = value) %>%
   group_by(school_code) %>%
   mutate(interview__key1=first(interview__key),
          interview__key2=nth(interview__key,2),
