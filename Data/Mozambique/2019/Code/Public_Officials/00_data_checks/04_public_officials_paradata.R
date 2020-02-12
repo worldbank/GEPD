@@ -38,7 +38,7 @@ if (file.exists(pw_file)) {
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://{enter here}.mysurvey.solutions')$res
+server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://gepdmoz.mysurvey.solutions')$res
 
 #questionnaire version
 #e.g. quest_version<-8

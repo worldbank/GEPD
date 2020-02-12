@@ -174,8 +174,8 @@ ecd_dta %>%
 
 #read in 4th grade assessment level file
 assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
-assess_4th_grade_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "fourth_grade_assessment.dta"))
-assess_4th_grade_dta_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "fourth_grade_assessment.dta"))
+#assess_4th_grade_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "fourth_grade_assessment.dta"))
+#assess_4th_grade_dta_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "fourth_grade_assessment.dta"))
 
 
 #Add in assessment metadata
@@ -187,7 +187,7 @@ assess_4th_grade_metadta<-assess_4th_grade_metadta %>%
   left_join(indicators)
 
 #bind version 18 and 17
-assess_4th_grade_dta <- bind_rows(assess_4th_grade_dta, assess_4th_grade_dta_17, assess_4th_grade_dta_16)
+#assess_4th_grade_dta <- bind_rows(assess_4th_grade_dta, assess_4th_grade_dta_17, assess_4th_grade_dta_16)
 
 label(assess_4th_grade_dta) = as.list(as.character(assess_4th_grade_metadta$varlabel))
 

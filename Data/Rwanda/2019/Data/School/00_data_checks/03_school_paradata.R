@@ -114,7 +114,7 @@ if (quest_version==17) {
   para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
   para_df_16<-read.delim(paste(paste(download_folder,'version_16', sep="/"), "paradata.tab", sep="/"), sep="\t")
   
-  para_df <-  bind_rows(para_df_17, para_df_16)
+  para_df <-  bind_rows(para_df,para_df_17, para_df_16)
   
 
 

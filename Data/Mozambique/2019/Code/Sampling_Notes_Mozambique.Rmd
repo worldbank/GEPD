@@ -31,7 +31,7 @@ library(stargazer)
 #sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 
 #Specify the file name containing the sample information
-currentDate<-c("2019-09-09")
+currentDate<-c("2019-02-12")
 sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 load(file=sample_frame_name) 
 load(sample_frame_name)
@@ -69,6 +69,13 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 ## Mozambique  Specific Comments
 
 Our sampled schools come from the list of schools surveyed by the 2018 SDI survey.
+
+Lago (70633) and Chicualacuala (20263) are not accessible because of the rainy season. These schools were replaced.
+
+The Ibo and Quissanga districts in Cabo Delgado were replaced because of security issues.
+
+50 schools were selected to redo the teacher assessment 22 of them were chosen because the school had no information on the teacher assessment.  The other 28 were chosen at random.
+
 
 ```{r department_count, echo=FALSE}
 

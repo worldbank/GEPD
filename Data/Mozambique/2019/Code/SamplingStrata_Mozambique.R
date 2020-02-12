@@ -57,6 +57,10 @@ tabs_strata<-full_sample %>%
 data_set<-full_sample %>%
   filter(stratum_gepd!="no data")
 
+#omit two districts for security reasons
+data_set <- data_set %>%
+  filter(!(district %in% c('Ibo', 'Quissanga')))
+
 
 #create variable ID for strata
 data_set<-data_set %>%
@@ -200,7 +204,8 @@ strata <- strata %>%
       fill(c("STRATUM", "X1", "X2", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "LABEL"))
     
     
-    sample_optimal <- selectSample(dataset, adjustedStrata, writeFiles=FALSE)
+    sample_optimal <- selectSample(dataset, adjustedStrata, writeFiles=FALSE) %>%
+      sample_n(size=168)
     colnames(sample_optimal)<-tolower(colnames(sample_optimal))
     
     #Summary stats of strata from SDI
@@ -234,14 +239,12 @@ data_set_updated %>%
   group_by(sample_dashboard) %>%
   summarise(n=n())
 
-#Save sample file
-currentDate<-Sys.Date()
-sample_file_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".csv", sep="")
-write.csv(sample_final,sample_file_name)
 
-sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
-save(sample_final, data_set_updated,
-     file=sample_frame_name)   
+
+
+
+
+
 
 
 ##################################
@@ -261,7 +264,7 @@ data_set_updated <- df %>%
   mutate(sch_id=codigo) %>% 
   left_join(sample_final) %>%
   mutate(sample_dashboard=ifelse(is.na(sample_dashboard),0,sample_dashboard))
-  dplyr::select(-n_prov)
+  # dplyr::select(-n_prov)
 #This will be done so that 2 replacements in every province are chosen  
 #get a list of  districts sampled
 
@@ -323,22 +326,93 @@ sample_updated<-data_set_updated  %>%
   dplyr::select(-(74:115)) %>%
   dplyr::select(codigo, sample, everything())
 
+  
+
+
+data_set_new <- sample_updated
+#####################################
+# get schools with teacher assessment
+#####################################
+
+load("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_2019-10-31.RData")
+
+
+
+#select schools where we will do teacher assessment
+sample_no_assessment <- data_set_updated %>%
+  filter(sample=="Sampled School") %>%
+  filter(is.na(content_knowledge)) 
+
+sample_selected_assessment <- data_set_updated %>%
+  filter(sample=="Sampled School") %>%
+  filter(!is.na(content_knowledge)) %>%
+  sample_n(size=28) %>%
+  bind_rows(sample_no_assessment) %>%
+  mutate(sample_teacher_assessment=1) 
+
+
+sample_final <- sample_updated %>%
+  left_join(sample_selected_assessment) %>%
+  select(colnames(sample_updated), sample_teacher_assessment) %>%
+  mutate(sample_teacher_assessment=if_else(is.na(sample_teacher_assessment),0,sample_teacher_assessment)) %>%
+  dplyr::select(codigo, sample,sample_teacher_assessment, everything())
+
+
+#drop if school in a unsafe area
+sample_final <- sample_final %>%
+  filter(!orig_distrito %in% c('Ibo', 'Quissanga', 'Lago', 'Chicualacuala'))
+
+#get replacement schools
+sample_optimal_replace <- data_set_new %>%
+  filter(!orig_distrito %in% c('Ibo', 'Quissanga', 'Lago', 'Chicualacuala')) %>%
+  filter(orig_province=="Cabo Delgado") %>%
+  anti_join(sample_final) %>%
+  filter(sample=="Sampled School") %>%
+  sample_n(size=1) %>%
+  mutate(rand_num=  rnorm(1,0,1)) %>%
+  arrange(rand_num) %>%
+  mutate(sample_teacher_assessment=if_else(rand_num==max(rand_num),1,0)) %>%
+  select(-rand_num)
+
+sample_optimal_replace2 <- data_set_new %>%
+  filter(!orig_distrito %in% c('Ibo', 'Quissanga', 'Lago', 'Chicualacuala')) %>%
+  filter(orig_province=="Gaza") %>%
+  anti_join(sample_final) %>%
+  filter(sample=="Sampled School") %>%
+  sample_n(size=1) %>%
+  mutate(rand_num=  rnorm(1,0,1)) %>%
+  arrange(rand_num) %>%
+  mutate(sample_teacher_assessment=if_else(rand_num==max(rand_num),0,1)) %>%
+  select(-rand_num)
+
+sample_optimal_replace3 <- data_set_new %>%
+  filter(!orig_distrito %in% c('Ibo', 'Quissanga', 'Lago', 'Chicualacuala')) %>%
+  filter(orig_province=="Niassa") %>%
+  anti_join(sample_final) %>%
+  filter(sample=="Sampled School") %>%
+  sample_n(size=1) %>%
+  mutate(rand_num=  rnorm(1,0,1)) %>%
+  arrange(rand_num) %>%
+  mutate(sample_teacher_assessment=if_else(rand_num==max(rand_num),0,1)) %>%
+  select(-rand_num)
+
+sample_final <- sample_final %>%
+  bind_rows(sample_optimal_replace,sample_optimal_replace2,sample_optimal_replace3)
+
 #Save sample file
 currentDate<-Sys.Date()
-sample_file_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".csv", sep="")
-write.csv(sample_updated,sample_file_name)
+sample_file_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_replacements_",currentDate,".csv", sep="")
+write.csv(sample_final,sample_file_name)
 
 sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
-save(sample_updated, data_set_updated,
-     file=sample_frame_name)   
-
-
+save(sample_final, sample_updated, data_set_updated,
+     file=sample_frame_name) 
 #################################################
 #Get list of teachers for each school selected based on previous SDI visit
 ################################################
 
 #load SDI data
-load("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/all_modules.Rdata")
+load("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/SDI 2018/all_modules.Rdata")
 
 #create dataset with the teachers selected for teacher assessment
 teacher_dta<-teacher_assessment_dta %>%
