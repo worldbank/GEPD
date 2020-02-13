@@ -309,6 +309,32 @@ interviewed<- public_officials_dta_clean %>%
 
 ```
 
+## Average Score by Enumerator
+
+```{r enumerator_score, echo=FALSE}
+#Plot of average score by enumerator
+
+
+avg_score<-public_officials_dta_clean %>%
+  group_by(enumerator_name) %>% 
+  summarise(responsible=first(enumerator_name),  avg_score_NLG=mean(national_learning_goals),avg_score_QB=mean(quality_bureaucracy),
+            avg_score_ACM=mean(mandates_accountability), avg_score_IDM=mean(impartial_decision_making)) %>%
+  pivot_longer(cols = c(avg_score_NLG, avg_score_QB, avg_score_ACM,avg_score_IDM),
+               names_to="indicator",
+               names_prefix="avg_score_")
+
+
+
+  
+p_score<-ggplot(avg_score, aes(x=responsible, y=value, color=indicator)) +   geom_point() +
+  labs(title='Average Score by Enumerator', x='Enumerator', y='Average Score') + theme_classic() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+
+
+ggplotly(p_score)
+```
+
+
 ## Interactive Map
 In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the offices that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only offices that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
 
@@ -319,7 +345,7 @@ The map is color coded.  Green indicators, for instance, have no missing informa
 ####################################################################
 #######Map of offices with missing offices info#####
 ####################################################################
-public_officials_map <- public_officials_dta_short %>%
+public_officials_map <- public_officials_dta_clean %>%
   filter(!is.na(lat) & !is.na(lon))
 
 #Create indicator of public_officialss with missing values in our indicators

@@ -38,7 +38,7 @@ if (file.exists(pw_file)) {
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://{enter here}.mysurvey.solutions')$res
+server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://gepdrwa.mysurvey.solutions')$res
 
 #questionnaire version
 #e.g. quest_version<-8
@@ -68,13 +68,13 @@ str(content(q))
 
 
 #pull data from version of our Education Policy Dashboard Questionnaire
-POST(paste(server_add,"/api/v1/export/paradata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", approval, sep=""),
+POST(paste(server_add,"/api/v1/export/paradata/c51acfbfe6924fc0aaf0f4ede9c61f83$",quest_version,"/start", approval, sep=""),
      authenticate(user, password))
 
 #sleep for 10 seconds to wait for stata file to compile
 Sys.sleep(10)
 
-dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",approval,sep=""),
+dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/c51acfbfe6924fc0aaf0f4ede9c61f83$", quest_version,"/",approval,sep=""),
                     authenticate(user, password))
 
 redirectURL <- dataDownload$url 

@@ -162,11 +162,6 @@ public_officials_dta <- public_officials_dta %>%
 
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
-  mutate_at(vars(one_of('QB1q2', 'QB1q1','QB4q2','IDM1q3',
-                        'IDM3q1','IDM3q1','IDM3q2','IDM3q3' )), ~case_when(.x==900 ~ as.numeric(NA),
-                                                                           .x==998 ~ as.numeric(NA),
-                                                                           is.na(.x) ~ as.numeric(NA),
-                                                                           TRUE ~  as.numeric(.x))) %>%
   mutate(avg_class_size_guess=QB1q2,
          avg_absence_guess=QB1q1,
          motivation_relative_start=QB4q2, 

@@ -28,11 +28,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'Rwanda'
-country_name <-'Rwanda'
-
+country <-'JOR'
+country_name <- "Jordan"
 year <- '2019'
-
 #########################
 # File paths #
 #########################
@@ -41,12 +39,12 @@ year <- '2019'
 
 if (Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
-  download_folder <-file.path(paste(project_folder,country,year,"Data/raw/Public_Officials", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,year,"Data/clean/Public_Officials", sep="/"))
+  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/Public_Officials", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
   
-  backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/Public_Officials", sep="/"))
+  backup_onedrive="no"
   
 } else if (Sys.getenv("USERNAME") == "wb550666"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
@@ -74,20 +72,12 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
-source('public_officials_api.R', local=TRUE)
-
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data
-source('public_officials_cleaner.R', local=TRUE)
+source('03_public_officials_cleaner.R', local=TRUE)
 
+source('04_public_officials_anonymizer.R', local=TRUE)
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-#launch file to access data from API
-source('public_officials_paradata.R', local=TRUE)
-
-#create R markdown file with quality checks
-rmarkdown::render('public_officials_quality_checks.Rmd',  
-                  output_file =  paste("public_officials_quality_checks_", country,".html", sep=''), 
-                  output_dir = save_folder_onedrive)
