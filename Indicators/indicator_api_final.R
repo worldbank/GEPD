@@ -15,7 +15,7 @@ library(vtable)
 library(readxl)
 library(readr)
 library(WDI)
-
+library(survey)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 ########################

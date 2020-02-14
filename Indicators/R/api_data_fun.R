@@ -31,8 +31,16 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     }
     r <- eval(substitute(variable), stat_df, parent.frame())
     
+    # #set up survey design
+    # stat_df <-stat_df %>%
+    #   filter(!(STRATUM==17 | STRATUM==24) )
+    #   
+    # mydesign <- svydesign(id = ~1, strata = ~STRATUM, data=stat_df, weights=~ipw)
+    # svymean(as.formula(paste('~', substitute(variable), sep=" ")), design = mydesign)
+    # 
+
     weights <- stat_df$ipw
-    
+
     wtd.mean(r, weights=weights, na.rm=T)
     
   } else if (dataset== 'public_officials') {
@@ -64,7 +72,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     #produce weights of 1 for all observations
     stat_df<-stat_df %>%
       mutate(ipw=1)
-    
+        
     weights <- stat_df$ipw
     
     wtd.mean(r, weights=weights, na.rm=T)

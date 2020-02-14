@@ -123,6 +123,8 @@ There were logistical problems for two Woredas, so we excluded those as well
 |---------------|---------------------------------|
 |    SNNP       |    Bena Tsemay                  |          
 |    SNNP       |    Debub Bench                  |  
+|    SNNP       |    Menit Goldya                  |  
+
 
 
 ```{r ownership, echo=FALSE}
@@ -211,7 +213,7 @@ load(sample_file_name)
 #   mutate(sampled_woreda="Sampled Woreda")
 
 
-woreda_list <- c('Bena Tsemay', 'Debub Bench')
+woreda_list <- c('Bena Tsemay', 'Debub Bench', 'Menit Goldya')
 
 sample_woreda_orig <- sample_updated %>%
   filter(!(Woreda %in% woreda_list)) %>%
@@ -231,7 +233,7 @@ sample_woreda_replacements <- df %>%
             n_stud_tot=mean(n_stud_tot)) %>%
     group_by(Region) %>%
   mutate(n_stud_region=sum(n_stud_woreda)) %>%
-  sample_n(size=2) %>%  #choose at least 2 woredas per region
+  sample_n(size=3) %>%  #choose at least 2 woredas per region
   ungroup() %>%
   arrange(Region, Woreda) %>%
   mutate(sampled_woreda="Sampled Woreda") %>%
