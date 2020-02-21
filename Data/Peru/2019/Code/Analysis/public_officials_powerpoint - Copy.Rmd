@@ -288,8 +288,7 @@ infr_urban_rural
                province=!! prov)
     }
 
-      df_reg<-school_dta_short %>%
-        mutate(indicator_labels="Puntaje en la Prueba Directa de 1er Grado")
+      df_reg<-school_dta_short
       
       df_reg<- df_weights_function(df_reg, codigo.modular, total_4th, departamento) 
       
@@ -298,7 +297,6 @@ infr_urban_rural
       regplots<- ggplot(data=df_reg, aes(x=ecd_student_knowledge, y=student_knowledge, color="#ff0000")) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes(weight = school_ipw)) +
-        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(20))) +
         scale_color_manual(labels = c( "Indicador Principal"),  values= c( "#ff0000")) +
         bbc_style() +
         theme(
@@ -307,7 +305,7 @@ infr_urban_rural
         ) +
         expand_limits(x = 0, y = 0) +
         labs(colour = "Indicator") +
-        xlab("Puntaje en la Prueba Directa de 1er Grado") +
+        ylab(paste0("Puntaje en la Prueba Directa de 1er Grado")) +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = 0.2,
                      formula = 'y~x', parse = TRUE, size = 5)
@@ -323,36 +321,6 @@ infr_urban_rural
     
     
 ```
-
-## TEACH
-
-```{r teach, echo=FALSE}
-
-table_tot <- final_indicator_data_PEDG %>%
-  select(timeontask1, tt_low:tt_high) %>%
-  summarize_all(mean, na.rm=TRUE) %>%
-  mutate(timeontask1=100*timeontask1,
-         timeofftask=100-timeontask1) %>%
-  select(timeontask1, timeofftask, everything()) %>%
-  gather(Indicator, Frequency)
-
-kable(table_tot,caption = "Time on Task", digits=1) %>%
-  kable_styling("striped", full_width = F) %>%
-  pack_rows("Teacher provides learning activity",1,2) %>%
-  pack_rows("Students are on task", 3,5)
-
-text_tot <- data.frame(
-  Level = c("Low", "Medium", "High"),
-  Description = c("6 or more students are off task",	
-               "2 to 5 students are off task",
-               "0 or 1 students are off task"))
-
-kable(text_tot) %>%
-  kable_styling(full_width = F) %>%
-  column_spec(1, bold = T, border_right = T) %>%
-  column_spec(2, width = "30em", background = "white")
-```
-
 
 
 ## Do principals know their schools?
@@ -437,17 +405,17 @@ indicator_corr_plot <- round(cor(assess_4th_grade_items , use="complete.obs"), 2
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
-                        'Enseñanza – Atracción ',
-                         'Enseñanza – Selección y Despliegue',
-                         'Enseñanza – Apoyo ', 
-                         'Enseñanza – Evaluación ', 
-                         'Enseñanza – Monitoreo ', 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
                          #'Teaching - Intrinsic Motivation', 
                          # 'Inputs & Infrastructure - Monitoring',
-                         'Gestión Escolar – Atracción ' ,                   
-                         'Gestión Escolar – Selección y Despliegue'  ,      
-                         'Gestión Escolar – Apoyo' ,                      
-                         'Gestión Escolar – Evaluación'
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
 
     )  
     
@@ -489,7 +457,7 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/Expert_Survey"
+    expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
@@ -512,7 +480,7 @@ main_indicator_labels<-c(
             plot.extent.y.sf = 1.3,
             legend.text.size = 3
               ) +
-      ggtitle(str_wrap('Radar de Diferencias entre las Políticas De Facto y De Jure ',60)) +
+      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
       theme_minimal()+
       theme(    axis.title = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
@@ -533,17 +501,17 @@ main_indicator_labels<-c(
 ```{r defacto}
 #get list of de facto indicators
 main_indicator_labels<-c( 
-                        'Enseñanza – Atracción ',
-                         'Enseñanza – Selección y Despliegue',
-                         'Enseñanza – Apoyo ', 
-                         'Enseñanza – Evaluación ', 
-                         'Enseñanza – Monitoreo ', 
-                         'Enseñanza - Motivación intrínseca', 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         'Teaching - Intrinsic Motivation', 
                          # 'Inputs & Infrastructure - Monitoring',
-                         'Gestión Escolar – Atracción ' ,                   
-                         'Gestión Escolar – Selección y Despliegue'  ,      
-                         'Gestión Escolar – Apoyo ' ,                      
-                         'Gestión Escolar – Evaluación'
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
 
     )  
     
@@ -579,9 +547,9 @@ data_defacto <- school_dta_short %>%
   ggplot(data=data_defacto, aes(x=indicator_labels, y=indicator_values, fill='#ff0000')) + #now plot the output in a bar graph
     geom_boxplot(position="dodge") +
     # scale_x_discrete(labels = str_wrap(indicator_labels, width = 25)) + 
-  xlab(str_wrap("Indicadores de Políticas ", width=75))+
-  ylab("Escala (1-5)") +
-  ggtitle(str_wrap("Boxplot de Indicadores de Políticas", width=75)) +
+  xlab(str_wrap("Policy Lever Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Policy Levers", width=75)) +
   scale_fill_discrete(name="Rural Status") +
   theme_bw() +
     theme(legend.position = "none") +
@@ -777,14 +745,14 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     geom_boxplot(position="dodge") +
     geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
-    scale_x_discrete(labels = str_wrap(c("Decisiones Imparciales",
-                                         "Mandatos y Rendición de Cuentas",
-                                         "Objetivos Nacionales de Aprendizaje",
-                                         "Características de la burocracia"), width = 25)) + 
-  xlab(str_wrap("Indicadores de la Encuesta de Funcionarios Públicos", width=75))+
-  ylab("Escala (1-5)") +
-  scale_fill_discrete(name="Nivel de Gobierno",
-                      labels=c('UGEL','MINEDU','DRE' )) +
+    scale_x_discrete(labels = str_wrap(c("Impartial Decision Making",
+                                         "Mandates & Accountability",
+                                         "National Learning Goals",
+                                         "Quality of the Bureaucracy"), width = 25)) + 
+  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
+  scale_fill_discrete(name="Government Level") +
   theme_bw() +
     theme(legend.position = "bottom") 
 

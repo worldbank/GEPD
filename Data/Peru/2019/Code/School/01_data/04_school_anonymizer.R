@@ -72,7 +72,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) %in% c("rural","STRATUM"))])))
+    mutate(province=departamento) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) %in% c("rural","STRATUM", "STRATUM", 
+                                                                                     "province"))])))
 }
 
 
@@ -184,4 +186,4 @@ for (i in data_list ) {
   }
 }
 
-save(list=anon_dta_list, file = file.path(save_folder, "school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list, 'indicators', 'metadta'), file = file.path(save_folder, "school_indicators_data_anon.RData"))

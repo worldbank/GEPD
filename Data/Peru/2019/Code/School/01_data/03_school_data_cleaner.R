@@ -1191,7 +1191,8 @@ teacher_pedagogy_segments <- teach_dta %>%
 #recode scores to be numeric
 
 
-low_medium_high <- c("s_0_1_2",
+low_medium_high <- c(
+                     "s_0_1_2",
                      "s_0_2_2",
                      "s_0_3_2",
                      "s_a2_1",
@@ -1222,15 +1223,14 @@ low_medium_high_na <- c("s_a1_1",
                         "s_a1_4",
                         "s_b4_1",
                         "s_b4_2",
-                        "s_b4_3")
+                        "s_b4_3"
+
+)
 
 
 yes_no <- c("s_0_1_1",
-            "s_0_1_2",
             "s_0_2_1",
-            "s_0_2_2",
-            "s_0_3_1",
-            "s_0_3_2"
+            "s_0_3_1"
 )
 
 overall <- c('s_a1',
@@ -1250,11 +1250,28 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
   mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),.,as.character(NA) ))) %>%
   mutate_at(vars(low_medium_high), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
   mutate_at(vars(low_medium_high_na), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
-  
   mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(str_replace_all(.,"[[:punct:]]",""))) %>%
-  mutate_at(vars(low_medium_high), ~(factor(., levels=c('L','M','H','NA'), labels=c("Low", "Medium", "High", "NA")))) %>%
-  mutate_at(vars(low_medium_high_na), ~(factor(., levels=c('NA','L','M','H'), labels=c("NA", "Low", "Medium", "High")))) %>%
-  mutate_at(vars(yes_no), ~as.numeric(factor(.,levels=c('N','Y'), labels=c("No", "Yes"))))
+  mutate_at(vars(low_medium_high), ~case_when(
+    .=="L" ~ 2,
+    .=="M" ~ 3,
+    .=="H" ~ 4,
+    TRUE ~ as.numeric(NA)
+  )) %>%
+      mutate_at(vars(low_medium_high_na), ~case_when(
+        .=="NA" ~ 1,
+        .=="L" ~ 2,
+        .=="M" ~ 3,
+        .=="H" ~ 4,
+        TRUE ~ as.numeric(NA)
+      )) %>%
+        mutate_at(vars(yes_no), ~case_when(
+          .=="N" ~ 0,
+          .=="Y" ~ 1,
+          TRUE ~ as.numeric(NA)
+        )) %>%
+          mutate_at(vars(low_medium_high), ~(factor(., levels=c(2,3,4), labels=c("Low", "Medium", "High")))) %>%
+          mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
+          mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"))))
 
 
 #create sub-indicators from TEACH
@@ -1271,7 +1288,11 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
 
 teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
   mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
-  mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
+  mutate_at(vars(s_0_1_1, s_0_2_1, s_0_3_1), ~case_when(.=="Yes" ~ 1,
+                                               .=="No" ~ 0,
+                                               TRUE ~ NA_real_)) %>%
+  mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_))
+
 
 #een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
 #replace tt_yes=tt_yes*100
@@ -1281,9 +1302,9 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
 # Time on task - Second measure
 # Proportion of classes where a low number of students are on task, a medium number of students are on task
 teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
-         tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
-         tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
+  mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "Low"),
+         tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "Medium"),
+         tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "High"))
 
 # We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
 
@@ -2065,7 +2086,7 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 
 school_data_SATT <- school_data_SATT %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=12*m7shq2_satt/3011.67	) %>%
+         principal_salary=12*m7shq2_satt/22813.06	) %>%
   mutate(
     principal_salary_score=case_when(
       between(principal_salary,0,0.5) ~ 1,
@@ -2220,7 +2241,7 @@ ind_dta_list<-c()
 
 school_data_preamble_short<-school_data_preamble %>%
   group_by(school_code) %>%
-  select(keep_info) %>%
+  select(all_of(keep_info)) %>%
   summarise_all(~first(na.omit(.)))
 
 final_school_data <- school_data_preamble_short
@@ -2240,9 +2261,9 @@ for (i in indicator_names ) {
     if (!exists('final_school_data')) {
       final_school_data<-temp
       print(i)
-      write_dta(temp, path = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+      write_excel_csv(temp, path = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       if (backup_onedrive=="yes") {
-        write_dta(temp, path = file.path(paste(confidential_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+        write_excel_csv(temp, path = file.path(paste(confidential_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       }
       
     } else {
@@ -2250,9 +2271,9 @@ for (i in indicator_names ) {
         left_join(temp, by='school_code') %>%
         select(-ends_with(".x"), -ends_with(".y"))
       
-      write_dta(temp, path = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+      write_excel_csv(temp, path = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       if (backup_onedrive=="yes") {
-        write_dta(temp, path = file.path(paste(confidential_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+        write_excel_csv(temp, path = file.path(paste(confidential_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       }
     }
   }
@@ -2305,7 +2326,7 @@ final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(keep_info, ind_list, everything())
+  select(all_of(keep_info), ind_list, everything())
 
 
 
@@ -2330,7 +2351,7 @@ for (i in ind_list ) {
 
 
 school_dta_short <- final_school_data %>%
-  select(keep_info,  ind_list)
+  select(all_of(keep_info),  ind_list)
 
 
 write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
@@ -2498,9 +2519,9 @@ save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators
 
 
 names(dta_list) <- dta_list
-mapply(dta_list,  paste(paste0(names(dta_list), '.dta')))
+#mapply(dta_list,  paste(paste0(names(dta_list), '.dta')))
 
-mapply(write_dta, dta_list,  path = file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list), '.dta')))
+#mapply(write_dta, dta_list,  path = file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list), '.dta')))
 names(dta_list) <- dta_list
 for(i in names(dta_list)){
   print( i)

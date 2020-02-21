@@ -590,8 +590,8 @@ acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=studen
           text = element_text(size = 16),
           
         ) +
-        ylab("Proficiency") +
-        xlab("Mandates & Accountability") +
+        ylab("Competencia ") +
+        xlab("Mandatos y Rendición de Cuentas") +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
@@ -604,8 +604,8 @@ qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=student_pro
           text = element_text(size = 16),
           
         ) +
-        ylab("Proficiency") +
-        xlab("Quality of Bureaucracy") +
+        ylab("Competencia ") +
+        xlab("Características de la burocracia") +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
@@ -618,8 +618,8 @@ nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=studen
           text = element_text(size = 16),
           
         ) +
-        ylab("Proficiency") +
-        xlab("National Learning Goals") +
+        ylab("Competencia ") +
+        xlab("Objetivos Nacionales de Aprendizaje") +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
@@ -633,8 +633,8 @@ idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=stud
           text = element_text(size = 16),
           
         ) +
-        ylab("Proficiency") +
-        xlab("Impartial Decision Making") +
+        ylab("Competencia ") +
+        xlab("Decisiones Imparciales") +
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)   
@@ -643,8 +643,8 @@ idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=stud
 patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
-  title = 'Scatterplot of Student 4th Grade Proficiency on Bureaucracy Indicator Scores by Region',
-  caption = 'Regional average of all public officials in that departamento including officials at UGEL level is used for regional score'
+  title = 'Diagrama de los Niveles de la Competencia de estudiantes de 4º Grado y los Indicadores de Burocracia, por Región',
+  caption = str_wrap('Para la puntuación regional se utiliza el promedio regional de todos los funcionarios públicos de ese departamento, incluidos los de la UGEL.',150)
 )
 
 
