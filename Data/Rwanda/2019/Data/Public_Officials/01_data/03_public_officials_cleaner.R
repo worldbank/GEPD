@@ -263,7 +263,7 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
+  mutate(national_learning_goals=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE),
          targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
          monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
          incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
@@ -278,7 +278,7 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
+  mutate(mandates_accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE),
          coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
          transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
          accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
@@ -292,7 +292,7 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
+  mutate(quality_bureaucracy=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE),
          knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
          work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
          merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
@@ -307,7 +307,7 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
+  mutate(impartial_decision_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE),
          politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
          politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
          politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),

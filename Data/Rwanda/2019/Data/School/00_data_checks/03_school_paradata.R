@@ -98,6 +98,9 @@ if (quest_version==17) {
 } else if  (quest_version==16) {
   unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
   
+} else if  (quest_version==18) {
+  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
+  
 } else {
   unzip(file.path(download_folder, tounzip), exdir=download_folder)
 }
@@ -111,10 +114,12 @@ if (quest_version==17) {
 
 
   para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  para_df_18<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+
   para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
   para_df_16<-read.delim(paste(paste(download_folder,'version_16', sep="/"), "paradata.tab", sep="/"), sep="\t")
   
-  para_df <-  bind_rows(para_df,para_df_17, para_df_16)
+  #para_df <-  bind_rows(para_df,para_df_17, para_df_16)
   
 
 

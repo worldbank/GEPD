@@ -690,9 +690,9 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     geom_boxplot(position="dodge") +
     geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
-    scale_x_discrete(labels = str_wrap(c("National Learning Goals",
+    scale_x_discrete(labels = str_wrap(c("Impartial Decision Making",
                                          "Mandates & Accountability",
-                                         "Impartial Decision Making",
+                                         "National Learning Goals",
                                          "Quality of the Bureaucracy"), width = 25)) + 
   xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
   ylab("Scale (1-5)") +

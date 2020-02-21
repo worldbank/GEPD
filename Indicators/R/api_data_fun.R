@@ -215,6 +215,31 @@ api_template <- api_template %>%
   # Teacher Pedagogical Skills	(PEDG)
   #######################################
   
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.PEDG     = 100*indicator_means(teach_score>=3, "school", "PEDG",  "All"),
+      SE.PRM.PEDG.1   = 100*indicator_means(teach_score>=3, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.1.F = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.1.R = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.1.U = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.2   = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "All"),  
+      #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.2.R = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.2.U = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.3   = 100*indicator_means(instruction>=3, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.3.F = 100*indicator_means(instruction>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.3.M = 100*indicator_means(instruction>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.3.R = 100*indicator_means(instruction>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.3.U = 100*indicator_means(instruction>=3, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.4   = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.4.F = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.4.M = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.4.R = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.4.U = indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Urban")
+    )
+  
   #######################################
   # 	Basic Inputs	(INPT)
   #######################################
@@ -662,7 +687,7 @@ api_template <- api_template %>%
   SE.PRM.LNTN.1 =expert_df$iodization,   #(De Jure) Does a national policy to encourage salt iodization exist?                                                     
   SE.PRM.LNTN.2 =100*as.numeric(defacto_dta_learners_final$`Percentage of households with salt testing positive for any iodide among households`), #(De Facto) Percent of households with salt testing positive for any iodide among households                              
   SE.PRM.LNTN.3 =expert_df$iron_fortification, #(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?            
-  SE.PRM.LNTN.4  =100*as.numeric(defacto_dta_learners_final$`Percentage of children age 6-23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day`), #(De Facto) Percent of children age 6-23 months who had at least the minimum dietary diversity and the minimum meal frequ~
+  SE.PRM.LNTN.4  =100*as.numeric(defacto_dta_learners_final[,2]), #(De Facto) Percent of children age 6-23 months who had at least the minimum dietary diversity and the minimum meal frequ~
   SE.PRM.LNTN.5  =expert_df$breastfeeding, #(De Jure) Does a national policy exist to encourage breastfeeding?                                                       
   SE.PRM.LNTN.6  =100*as.numeric(defacto_dta_learners_final$`Percentage of children born in the five (three) years preceding the survey who were ever breastfed`), #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed               
   SE.PRM.LNTN.7  =expert_df$school_feeding, #(De Jure) Is there a publicly funded school feeding program?                                                             
@@ -682,7 +707,7 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   SE.PRM.LHTH.1 =expert_df$immunization, #(De Jure) Are young children required to receive a complete course of childhood immunizations?                           
-  SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final$`Percentage of children who at age: a) 12-23 months had received all basic vaccinations at any time before the survey, b) 24-35 months had received all vaccinations recommended in the national immunization schedule - DTP vaccine proxy`), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
+  SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final[,5]), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
   SE.PRM.LHTH.3 =expert_df$healthcare_young_children, #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
   SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of  children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance                                                      
   SE.PRM.LHTH.5 =expert_df$deworming, #(De Jure) Are deworming pills funded and distributed by the government?                                                  

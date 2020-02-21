@@ -56,7 +56,7 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-currentDate<-c("2019-10-11")
+currentDate<-c("2019-08-30")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
@@ -68,12 +68,17 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   snumber<-enquo(snumber)
   prov<-enquo(prov)
   
+  data_set_updated <- data_set_updated %>%
+    group_by(district_code, urban_rural) %>%
+    mutate(weights=n()) %>%
+    ungroup()
+  
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" |
-                                                        names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory")])))
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" |
+                                                        names(data_set_updated) == "sector" | names(data_set_updated) == "highest_level")])))
 }
 
 
@@ -112,7 +117,7 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, organization_code, total_students_grade_4, governorate)
+      temp <- df_weights_function(temp, sch_id, total_enrolled, district)
     }
     
     #Scrub names, geocodes

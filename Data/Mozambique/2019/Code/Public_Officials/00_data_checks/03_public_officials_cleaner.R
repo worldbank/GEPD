@@ -130,12 +130,14 @@ class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indic
 school_absence <- school_dta_short %>%
   filter(!is.na(school_ipw))
 
-#need to adjust this
 absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE) 
-} else {
-  class_size <-25
-  absence <- 10
-}
+} 
+
+#These values were pulled from the Mozambique SDI report
+#file:///C:/Users/wb469649/OneDrive%20-%20WBG/SDI_Mozambique/markdown/report/report_tables.html
+  class_size <-57.5 
+  absence <- 22.9
+
 ############################
 #Clean up idiosyncratic variables
 #############################
@@ -254,6 +256,36 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
                                                                                                                                 .x==998 ~ as.numeric(NA),
                                                                                                                                 .x>=1 & .x<=5 ~ as.numeric(.x),
                                                                                                                                 is.na(.x) ~ as.numeric(NA)))
+#filter out the director of HR, which isn't specifically asked about indicator questions
+
+public_officials_dta_hr <- public_officials_dta_clean %>%
+  filter(director_hr==1)
+
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  filter(director_hr==0)
+
+
+
+
+####################################
+# Multiple Imputation of missing values
+###################################
+impute='yes'
+
+if (impute=='yes') {
+#use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
+#https://academic.oup.com/aje/article/179/6/764/107562
+impdata<-mice::mice(select(public_officials_dta_clean,starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), , m=1,
+                    method='rf',
+                    maxit = 50, seed = 500)
+
+public_officials_dta_imp <- mice::complete(impdata, 1) 
+  
+
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  select(-starts_with('NLG'), -starts_with('ACM'), -starts_with('QB'), -starts_with('IDM')) %>%
+  bind_cols(public_officials_dta_imp)
+}
 
 ########
 # National Learning Goals
@@ -263,7 +295,7 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
+  mutate(national_learning_goals=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE),
          targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
          monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
          incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
@@ -278,7 +310,7 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
+  mutate(mandates_accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE),
          coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
          transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
          accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
@@ -292,7 +324,7 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
+  mutate(quality_bureaucracy=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE),
          knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
          work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
          merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
@@ -307,7 +339,7 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
+  mutate(impartial_decision_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE),
          politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
          politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
          politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
@@ -330,13 +362,7 @@ public_officials_dta_short <-public_officials_dta_clean %>%
                 , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
 
-#filter out the director of HR, which isn't specifically asked about indicator questions
 
-public_officials_dta_hr <- public_officials_dta_clean %>%
-  filter(director_hr==1)
-
-public_officials_dta_clean <- public_officials_dta_clean %>%
-  filter(director_hr==0)
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))

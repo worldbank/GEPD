@@ -1586,9 +1586,8 @@ output$indicators_table <- DT::renderDataTable({
 # School Survey
     metadata<-metadta
     
-    weights <- df_weights_function(school_dta_short, organization_code, total_students_grade_4, governorate)  
 
-    sch_ipw<-weights$school_ipw 
+    sch_ipw<-merged_df$total_enrolled
     
     if (input$table_weights=="Yes") {
     #add function to produce weighted summary stats

@@ -627,11 +627,11 @@ teacher_pedagogy_segments <- bind_rows(segment1, segment2)
 
 #create sub-indicators from TEACH
 teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(classroom_culture=(s_a1+s_a2)/2,
-         instruction=(s_b3+s_b4+s_b5+s_b6)/4,
-         socio_emotional_skills=(s_c7+s_c8+s_c9)/3
-         ) %>%
-  mutate(teach_score=(classroom_culture+instruction+socio_emotional_skills)/3)
+  mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
+         instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
+         socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
+  ) %>%
+  mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
 
 # Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
 # Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
@@ -1875,8 +1875,9 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 # For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=PE.  
 
 school_data_SATT <- school_data_SATT %>%
+  mutate(m7shq2_satt=if_else(m7shq2_satt==999, as.numeric(NA), m7shq2_satt)) %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=12*m7shq2_satt/22833	) %>%
+         principal_salary=12*m7shq2_satt/665680.02	) %>%
   mutate(
     principal_salary_score=case_when(
       between(principal_salary,0,0.5) ~ 1,
@@ -2145,7 +2146,7 @@ for (i in ind_list ) {
 
 
 school_dta_short <- final_school_data %>%
-  select(keep_info, ind_list)
+  select(keep_info, one_of(ind_list))
 
 write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
 write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)

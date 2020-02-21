@@ -627,11 +627,11 @@ teacher_pedagogy_segments <- bind_rows(segment1, segment2)
 
 #create sub-indicators from TEACH
 teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(classroom_culture=(s_a1+s_a2)/2,
-         instruction=(s_b3+s_b4+s_b5+s_b6)/4,
-         socio_emotional_skills=(s_c7+s_c8+s_c9)/3
-         ) %>%
-  mutate(teach_score=(classroom_culture+instruction+socio_emotional_skills)/3)
+  mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
+         instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
+         socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
+  ) %>%
+  mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
 
 # Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
 # Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
