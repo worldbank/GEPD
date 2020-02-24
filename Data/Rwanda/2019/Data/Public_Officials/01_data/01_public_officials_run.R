@@ -28,9 +28,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'JOR'
-country_name <- "Jordan"
-year <- '2019'
+country <-'RWA'
+country_name <- "Rwanda"
+year <- '2020'
 #########################
 # File paths #
 #########################
@@ -71,11 +71,16 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #move working directory to github main folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
+#main file name:
+po_file<-"public_officials_RWA.dta"
+
+
 #launch file to access data from API
 source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data
 source('03_public_officials_cleaner.R', local=TRUE)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 source('04_public_officials_anonymizer.R', local=TRUE)
 

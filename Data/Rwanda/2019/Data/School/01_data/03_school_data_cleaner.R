@@ -1038,22 +1038,19 @@ if (graded_data!='yes') {
        file = file.path(confidential_folder, "dashboard_ecd_data.RData"))
   
   #calculate % correct for literacy, math, and total
-  final_indicator_data_LCAP <- ecd_dta_anon %>%
-    left_join(school_dta[,c('interview__key',   'm6_class_count', 'm6_instruction_time')]) %>%
+  final_indicator_data_LCAP <- ecd_dta %>%
     group_by(school_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
   #Breakdowns of Male/Female
-  final_indicator_data_LCAP_M <- ecd_dta_anon %>%
-    left_join(school_dta[,c('interview__key',  'm6_class_count', 'm6_instruction_time')]) %>%
+  final_indicator_data_LCAP_M <- ecd_dta %>%
     filter(ecd_student_male==1) %>%
     group_by(school_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
-  final_indicator_data_LCAP_F <- ecd_dta_anon %>%
-    left_join(school_dta[,c('interview__key',  'm6_class_count', 'm6_instruction_time')]) %>%
+  final_indicator_data_LCAP_F <- ecd_dta %>%
     filter(ecd_student_male==0) %>%
     group_by(school_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1301,6 +1298,7 @@ if (graded_data!='yes') {
                                        'teacher_age')
   
   final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
+    left_join(school_data_preamble) %>%
     mutate(n_mssing_ILDR=n_miss_row(.)) %>%
     mutate(classroom_observed=bin_var(m3sdq15_ildr,1),
            classroom_observed_recent=if_else((classroom_observed==1 & m3sdq16_ildr<=12),1,0), #set recent to mean under 12 months
@@ -1567,6 +1565,7 @@ if (graded_data!='yes') {
   
   
   final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
+    left_join(school_data_preamble) %>%
     mutate(n_mssing_TATT=n_miss_row(.)) %>%
     group_by(interview__key) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1614,6 +1613,7 @@ if (graded_data!='yes') {
   
   
   final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%  
+    left_join(school_data_preamble) %>%
     mutate(n_mssing_TSDP=n_miss_row(.)) %>%
     group_by(interview__key) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1695,6 +1695,7 @@ if (graded_data!='yes') {
   
   
   final_indicator_data_TSUP <- teacher_questionnaire_TSUP %>%
+    left_join(school_data_preamble) %>%
     mutate(n_mssing_TSUP=n_miss_row(.)) %>%
     group_by(interview__key) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1744,6 +1745,7 @@ if (graded_data!='yes') {
   
   
   final_indicator_data_TEVL <- teacher_questionnaire_TEVL %>%
+    left_join(school_data_preamble) %>%
     mutate(n_mssing_TEVL=n_miss_row(.)) %>%
     group_by(interview__key) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1803,6 +1805,7 @@ if (graded_data!='yes') {
     mutate(teacher_monitoring=1+attendance_evaluated + 1*attendance_rewarded + 1*attendence_sanctions + (1-miss_class_admin))
   
   final_indicator_data_TMNA <- teacher_questionnaire_TMNA %>%
+    left_join(school_data_preamble) %>%
     mutate(n_mssing_TMNA=n_miss_row(.)) %>%
     group_by(interview__key) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -1836,6 +1839,7 @@ if (graded_data!='yes') {
     dplyr::select(school_code, preamble_info_teacher, m3sdq2_tmna)
   
   final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
+    left_join(school_data_preamble) %>%
     left_join(teacher_questionnaire_TINM2) %>%
     mutate(n_mssing_TINM=n_miss_row(.)) %>%
     mutate(    
@@ -1962,7 +1966,7 @@ if (graded_data!='yes') {
   
   school_data_SATT <- school_data_SATT %>%
     mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-           principal_salary=12*m7shq2_satt/3011.67	) %>%
+           principal_salary=12*m7shq2_satt/665680.02	) %>%
     mutate(
       principal_salary_score=case_when(
         between(principal_salary,0,0.5) ~ 1,
@@ -2117,7 +2121,7 @@ if (graded_data!='yes') {
   
   school_data_preamble_short<-school_data_preamble %>%
     group_by(school_code) %>%
-    select(keep_info) %>%
+    select(all_of(keep_info)) %>%
     summarise_all(~first(na.omit(.)))
   
   final_school_data <- school_data_preamble_short
@@ -2208,7 +2212,7 @@ if (graded_data!='yes') {
     left_join(school_data_preamble_short) %>%
     group_by(school_code) %>%
     summarise_all(~first(na.omit(.))) %>%
-    select(keep_info, one_of(ind_list), everything())
+    select(all_of(keep_info), one_of(ind_list), everything())
   
   
   
@@ -2233,7 +2237,7 @@ if (graded_data!='yes') {
   
   
   school_dta_short <- final_school_data %>%
-    select(keep_info, one_of(ind_list))
+    select(all_of(keep_info), one_of(ind_list))
   
   write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
   write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
@@ -2285,7 +2289,7 @@ school_gdp <- school_dta_short %>%
   mutate(sch_id=as.numeric(school_code_preload)) %>%
   left_join(data_set_updated) %>%
   filter(!is.na(lat) & !is.na(lon)) %>%
-  dplyr::select(school_code, lon, lat)
+  dplyr::select(school_code, total_enrolled, lon, lat)
 
 
 sp::coordinates(school_gdp) <- c("lon","lat")
@@ -2297,7 +2301,7 @@ school_gdp$GDP <- raster::extract(gdp_raster, school_gdp,
 
 school_gdp <- as.data.frame(school_gdp) %>%
   mutate(GDP=as.numeric(GDP)) %>%
-  select(school_code, GDP)
+  select(school_code,total_enrolled, GDP)
 
 ####################################
 # Multiple Imputation of missing values

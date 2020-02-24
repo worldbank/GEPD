@@ -171,16 +171,16 @@ First, we will display the modules with information collected in each school.
 
 datatable(school_modules_complete,
           caption='Modules That Have at Least Some Information for Each School',
-          class='display',
-          extensions = c ('Buttons', 'FixedHeader'), 
+          class='cell-border stripe',
+          extensions = c ('Buttons' ), 
                 options=list(
                   dom = 'Bfrtip',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  buttons = c('copy', 'csv','excel'),
                   pageLength = 60,
-                  scrollX = TRUE, 
-                  paging=FALSE,
                   ordering=F))
 write_excel_csv(school_modules_complete, path = paste(save_folder, "school_modules_complete.csv", sep="/")) 
+
+
 
 ```
 
@@ -293,29 +293,29 @@ school_dta_short <- school_dta_short %>%
   mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)) %>%
   mutate(school_ipw=if_else(is.na(school_ipw), 1, school_ipw))
 
-school_ipw<-school_dta_short$school_ipw 
+sch_ipw<-school_dta_short$school_ipw 
 
 
 #add function to produce weighted summary stats
-skim_with( numeric = list( mean = ~ wtd.mean(.,  w=school_ipw, na.rm=TRUE),
-                                     sd = ~ sqrt(wtd.var(.,  weights=school_ipw, na.rm=TRUE)),
-                                     p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=school_ipw, na.rm=TRUE)),
-                                     p50 = ~ (wtd.quantile(., probs=c(0.5), weights=school_ipw, na.rm=TRUE)),
-                                     p75 = ~ (wtd.quantile(., probs=c(0.75), weights=school_ipw, na.rm=TRUE)),
-                                     complete_count= ~ sum(!is.na(.))))
+          my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                                 sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                                 p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                                 p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                                 p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))
 
 
 
-sumstats_df<-skim(sumstats) %>%
-  select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+sumstats_df<-my_skim(sumstats) %>%
+           yank("numeric") %>%
+           mutate(variable=skim_variable) %>%
+           select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
   mutate(variable=factor(variable, levels=indicator_list,
                          labels=indicator_labels)) %>%
   mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
          ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
   mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-  select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, hist) %>%
   arrange(match(variable, indicator_labels))
 
 #export Indicators sumstats
@@ -326,11 +326,8 @@ write_excel_csv(sumstats_df, paste(save_folder,'GEPD_school_Indicators.csv',sep=
 
 ```{r missings_kable, echo=FALSE}
 
-knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean", "95% Confidence Interval", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"), digits = 2 ) %>%
+knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean", "95% Confidence Interval", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "Histogram"), digits = 2 ) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
-  pack_rows("Outcomes", 1,1) %>%
-  pack_rows("Practices", 2,10) %>%
-  pack_rows("Policies", 11,21) %>%
   footnote(general="Weighted Summary Statistics using School Survey Weights")
 
 ```
@@ -376,7 +373,7 @@ In the following map below, users may click on specific provinces or regions to 
 
 The map is color coded.  Green indicators, for instance, have no missing information on our key indicators: 4th grade student achievement, teacher absence, teacher content knowledge, Capacity for Learning (ECD student knowledge), basic inputs, and basic infrastructure ).  Black indicators are missing all six indicators.  More indicators can be added to this list, but for now in the SDI data this is what we could produce before our data collection.
 
-```{r map_guts, include=FALSE}
+```{r map_guts, warning=FALSE, include=FALSE}
 
 ####################################################################
 #######Map of schools with missing school info#####
@@ -489,7 +486,7 @@ map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>%
 ```
 
 
-```{r map_plot, echo=FALSE}
+```{r map_plot, echo=FALSE, warning=FALSE}
 
 
 linked_df<-SharedData$new(school_map)

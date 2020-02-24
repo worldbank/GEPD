@@ -35,9 +35,13 @@ indicators <- indicators %>%
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag
 
+#Get a list of enumerator names and IDs
+enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
+  transmute(m1s0q1_name_other = id ,
+            enumerator_code=text )
 
 #read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta"))
+public_officials_dta<-read_dta(file.path(download_folder, po_file))
 public_officials_metadata<-makeVlist(public_officials_dta)
 
 vtable(public_officials_dta)
@@ -60,9 +64,9 @@ bin_var <- function(var, val) {
 
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
-  mutate(enumerator_name=m1s0q1_name_other  ,
+  left_join(enumerator_id) %>%
+  mutate(enumerator_name=enumerator_code  ,
          enumerator_number=as.double(m1s0q1_number_other) ,
-         office=office_preload,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
@@ -78,7 +82,7 @@ public_officials_dta<- public_officials_dta %>%
          director=bin_var(DEM1q12n,1), 
          responsible_finance_planning=bin_var(DEM1q5__1,1),
          responsible_hiring_teachers=bin_var(DEM1q5__2,1),
-         responsible_monitoring_perf=bin_var(DEM1q5__3,1),
+         responsible_monitoring_performance=bin_var(DEM1q5__3,1),
          responsible_none=bin_var(DEM1q5__4,1),
          education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
                                                                                    'Middle school',
@@ -93,49 +97,55 @@ public_officials_dta<- public_officials_dta %>%
          gender=DEM1q15,
          salary_differential=DEM1q13,
          private_sector_two_years=bin_var(DEM1q12,1)
-                  )
+  )
 
 
 ###############################
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+school_folder <- file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
 
-load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
-
-currentDate<-c("2019-10-11")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
-
-load(sample_frame_name)
-
-#compare data collected to original sample
-school_dta_short <- school_dta_short %>%
-  mutate(organization_code=as.numeric(school_code_preload)) %>%
-  left_join(data_set_updated) %>%
-  mutate(longitude=as.character(longitude)) %>%
-  mutate(latitude=as.character(latitude)) %>%
-  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
-         lon=if_else(is.na(lon), as.numeric(longitude), lon),
-         school_ipw=weights) %>%
-  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_students_grade_4) %>%
-  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
-
-weights<-school_dta_short %>%
-  group_by(school_code) %>%
-  summarise(school_ipw=mean(school_ipw))
-
-final_indicator_data_INPT <- final_indicator_data_INPT %>%
-  left_join(weights) %>%
-  filter(!is.na(school_ipw))
-
-class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indicator_data_INPT$school_ipw, na.rm=TRUE)
-
-school_absence <- school_dta_short %>%
-  filter(!is.na(school_ipw))
-
-absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE)
+if (exists(paste(school_folder, "school_indicators_data.RData", sep="/"))) {
+  
+  load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
+  
+  currentDate<-c("2019-10-31")
+  sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/Sampling/school_sample_",currentDate,".RData", sep=""))
+  
+  load(sample_frame_name)
+  
+  #compare data collected to original sample
+  school_dta_short <- school_dta_short %>%
+    mutate(codigo=as.numeric(school_code_preload)) %>%
+    left_join(data_set_updated) %>%
+    mutate( school_ipw=weights) %>%
+    mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*orig_n_students) %>%
+    mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+  
+  weights<-school_dta_short %>%
+    group_by(school_code) %>%
+    summarise(school_ipw=mean(school_ipw))
+  
+  final_indicator_data_INPT <- final_indicator_data_INPT %>%
+    left_join(weights) %>%
+    filter(!is.na(school_ipw))
+  
+  #need to adjust this
+  
+  
+  class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indicator_data_INPT$school_ipw, na.rm=TRUE)
+  
+  #need to adjust this
+  school_absence <- school_dta_short %>%
+    filter(!is.na(school_ipw))
+  
+  #need to adjust this
+  absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE) 
+} else {
+  class_size <-25
+  absence <- 10
+}
 ############################
 #Clean up idiosyncratic variables
 #############################
@@ -162,74 +172,80 @@ public_officials_dta <- public_officials_dta %>%
 
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
+  mutate_at(vars(one_of('QB1q2', 'QB1q1','QB4q2','IDM1q3',
+                        'IDM3q1','IDM3q1','IDM3q2','IDM3q3' )), ~case_when(.x==900 ~ as.numeric(NA),
+                                                                           .x==998 ~ as.numeric(NA),
+                                                                           is.na(.x) ~ as.numeric(NA),
+                                                                           TRUE ~  as.numeric(.x))) %>%
+  
   mutate(avg_class_size_guess=QB1q2,
          avg_absence_guess=QB1q1,
          motivation_relative_start=QB4q2, 
-         proportion_reported_underperf=IDM1q3,
+         proportion_reported_underperformance=IDM1q3,
          proportion_broke_rules=IDM3q1,
-         proportion_contracts_pol=IDM3q2,
-         proportion_producement_pol=IDM3q3,
+         proportion_contracts_political=IDM3q2,
+         proportion_producement_political=IDM3q3,
          DEM1q13=as.numeric(DEM1q13)) %>%
   mutate(QB1q2= case_when(
-            between(abs(QB1q2-class_size)/class_size,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-            between(abs(QB1q2-class_size)/class_size,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-            between(abs(QB1q2-class_size)/class_size,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-            between(abs(QB1q2-class_size)/class_size,30,40) ~ 2, #between 30-40% of actual value gets 2 points
-            between(abs(QB1q2-class_size)/class_size,40,100) ~ 1 #between 40-10% of actual value gets 1 points
+    between(abs(QB1q2-class_size)/class_size,0,10) ~ 5, #between 0-10% of actual value gets 5 points
+    between(abs(QB1q2-class_size)/class_size,10,20) ~ 4, #between 10-20% of actual value gets 4 points
+    between(abs(QB1q2-class_size)/class_size,20,30) ~ 3, #between 20-30% of actual value gets 3 points
+    between(abs(QB1q2-class_size)/class_size,30,40) ~ 2, #between 30-40% of actual value gets 2 points
+    between(abs(QB1q2-class_size)/class_size,40,100) ~ 1 #between 40-10% of actual value gets 1 points
   ),
-         QB1q1= case_when(
-            between(abs(QB1q1-absence)/absence,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-            between(abs(QB1q1-absence)/absence,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-            between(abs(QB1q1-absence)/absence,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-            between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
-            between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
+  QB1q1= case_when(
+    between(abs(QB1q1-absence)/absence,0,10) ~ 5, #between 0-10% of actual value gets 5 points
+    between(abs(QB1q1-absence)/absence,10,20) ~ 4, #between 10-20% of actual value gets 4 points
+    between(abs(QB1q1-absence)/absence,20,30) ~ 3, #between 20-30% of actual value gets 3 points
+    between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
+    between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
   ),
-         QB4q2= case_when(
-           QB4q2>=120 ~ 5,
-           QB4q2>=110 ~ 4,
-           QB4q2>=100 ~ 3,
-           QB4q2>=90 ~ 2,
-           QB4q2>=80 ~ 1,
-           TRUE ~ 1),
-         IDM1q3=case_when(
-           (IDM1q3>=0 & IDM1q3<=5) ~ 5,
-           (IDM1q3>5 & IDM1q3<=10) ~ 4,
-           (IDM1q3>10 & IDM1q3<=15) ~ 3,
-           (IDM1q3>15 & IDM1q3<=20) ~ 2,
-           TRUE ~ 1),
-         IDM3q1=case_when(
-           (IDM3q1>=0 & IDM3q1<=5) ~ 5,
-           (IDM3q1>5 & IDM3q1<=10) ~ 4,
-           (IDM3q1>10 & IDM3q1<=15) ~ 3,
-           (IDM3q1>15 & IDM3q1<=20) ~ 2,
-           TRUE ~ 1),
-         IDM3q2=case_when(
-           (IDM3q2>=0 & IDM3q2<=5) ~ 5,
-           (IDM3q2>5 & IDM3q2<=10) ~ 4,
-           (IDM3q2>10 & IDM3q2<=15) ~ 3,
-           (IDM3q2>15 & IDM3q2<=20) ~ 2,
-           TRUE ~ 1),
-         IDM3q3=case_when(
-           (IDM3q3>=0 & IDM3q3<=5) ~ 5,
-           (IDM3q3>5 & IDM3q3<=10) ~ 4,
-           (IDM3q3>10 & IDM3q3<=15) ~ 3,
-           (IDM3q3>15 & IDM3q3<=20) ~ 2,
-           TRUE ~ 1)
+  QB4q2= case_when(
+    QB4q2>=120 ~ 5,
+    QB4q2>=110 ~ 4,
+    QB4q2>=100 ~ 3,
+    QB4q2>=90 ~ 2,
+    QB4q2>=80 ~ 1,
+    TRUE ~ 1),
+  IDM1q3=case_when(
+    (IDM1q3>=0 & IDM1q3<=5) ~ 5,
+    (IDM1q3>5 & IDM1q3<=10) ~ 4,
+    (IDM1q3>10 & IDM1q3<=15) ~ 3,
+    (IDM1q3>15 & IDM1q3<=20) ~ 2,
+    TRUE ~ 1),
+  IDM3q1=case_when(
+    (IDM3q1>=0 & IDM3q1<=5) ~ 5,
+    (IDM3q1>5 & IDM3q1<=10) ~ 4,
+    (IDM3q1>10 & IDM3q1<=15) ~ 3,
+    (IDM3q1>15 & IDM3q1<=20) ~ 2,
+    TRUE ~ 1),
+  IDM3q2=case_when(
+    (IDM3q2>=0 & IDM3q2<=5) ~ 5,
+    (IDM3q2>5 & IDM3q2<=10) ~ 4,
+    (IDM3q2>10 & IDM3q2<=15) ~ 3,
+    (IDM3q2>15 & IDM3q2<=20) ~ 2,
+    TRUE ~ 1),
+  IDM3q3=case_when(
+    (IDM3q3>=0 & IDM3q3<=5) ~ 5,
+    (IDM3q3>5 & IDM3q3<=10) ~ 4,
+    (IDM3q3>10 & IDM3q3<=15) ~ 3,
+    (IDM3q3>15 & IDM3q3<=20) ~ 2,
+    TRUE ~ 1)
   )
-    
+
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'office_preload', 'govt_tier',
+preamble_info <- c('interview__id', 'interview__key', 'office_preload', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
-                   'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_perf','responsible_none',
+                   'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
                    'education','gender', 'director_hr')
 
 
 #include list of constructed variables
-constr_list <- c('avg_class_size_guess', 'avg_absence_guess', 'motivation_relative_start', 'proportion_reported_underperf', 
-                 'proportion_broke_rules', 'proportion_contracts_pol', 'proportion_producement_pol'
+constr_list <- c('avg_class_size_guess', 'avg_absence_guess', 'motivation_relative_start', 'proportion_reported_underperformance', 
+                 'proportion_broke_rules', 'proportion_contracts_political', 'proportion_producement_political'
 )
 
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
@@ -263,7 +279,7 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE),
+  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
          targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
          monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
          incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
@@ -278,7 +294,7 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE),
+  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
          coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
          transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
          accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
@@ -292,7 +308,7 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE),
+  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
          knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
          work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
          merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
@@ -307,7 +323,7 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE),
+  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
          politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
          politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
          politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
@@ -337,6 +353,7 @@ public_officials_dta_hr <- public_officials_dta_clean %>%
 
 public_officials_dta_clean <- public_officials_dta_clean %>%
   filter(director_hr==0)
+
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))

@@ -102,3 +102,6 @@ public_officials_dta <- public_officials_dta %>%
   mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) %>%
   bind_rows(public_officials_dta_7)
 public_officials_metadata<-makeVlist(public_officials_dta)
+
+
+write_dta(public_officials_dta, file.path(download_folder, "public_officials.dta"), version = 14)

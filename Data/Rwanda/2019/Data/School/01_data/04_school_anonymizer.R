@@ -50,8 +50,8 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
-
+               #'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
+               'school_gdp' )
 
 #define function to create weights for summary statistics
 
@@ -69,6 +69,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   prov<-enquo(prov)
   
   data_set_updated <- data_set_updated %>%
+    mutate(province=district) %>%
     group_by(district_code, urban_rural) %>%
     mutate(weights=n()) %>%
     ungroup()
@@ -76,9 +77,10 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
-    mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" |
-                                                        names(data_set_updated) == "sector" | names(data_set_updated) == "highest_level")])))
+    mutate(rural=urban_rural=="RURAL") %>%
+    mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
+                                                         )])))
 }
 
 
@@ -106,7 +108,7 @@ for (i in data_list ) {
   if (exists(i)) {
     #form temp data frame with each schools data
     temp<-get(i) 
-    
+    print(i)
     #add hashed school code if needed
     if ("school_code" %in% colnames(temp)) {
       temp <- temp %>%
@@ -126,7 +128,7 @@ for (i in data_list ) {
       select(-starts_with('m1s0q9')) %>%
       select(-one_of('survey_time', 'lat','lon')) %>% #drop geo-codes
       select(-one_of('total_enrolled', 'm7saq8','m7saq10')) %>% 
-      select(-one_of('m6_class_count')) %>% 
+      #select(-one_of('m6_class_count')) %>% 
       select(-starts_with('enumerators_preload'), -one_of('m1s0q1_name', 'm1s0q1_name_other','m1s0q1_comments')) %>%  #get rid of enumerator names
       select(-one_of('m1saq1_first','m1saq1_last', 'm1saq2', 'm1saq2b')) %>% #drop principal names and phone numbers
       select(-contains('troster')) %>%
@@ -190,4 +192,4 @@ for (i in data_list ) {
   }
 }
 
-save(list=anon_dta_list, file = file.path(save_folder, "school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list, 'metadta', 'indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))

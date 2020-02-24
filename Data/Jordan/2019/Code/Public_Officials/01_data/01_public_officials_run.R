@@ -76,6 +76,7 @@ source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data
 source('03_public_officials_cleaner.R', local=TRUE)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 source('04_public_officials_anonymizer.R', local=TRUE)
 

@@ -56,12 +56,8 @@ server <- function(input, output) {
         
     load(paste("school_indicators_data_anon.RData", sep="/"))
     
-    skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                               complete_count= ~ sum(!is.na(.))))
+
+    
     
     
     
@@ -75,7 +71,7 @@ server <- function(input, output) {
         
         
         df<-school_dta_short_anon  %>%
-            select(contains("student_knowledge"), ipw ) 
+            select(contains("ecd_student_proficiency"), contains("student_knowledge"), ipw ) 
         
         if (input$domain=="Overall") {
         df<- df %>%
@@ -102,27 +98,28 @@ server <- function(input, output) {
         
         
         
-        skim_with( numeric = list( mean = ~ wtd.mean(.,  w=ipw, na.rm=TRUE),
-                                   sd = ~ sqrt(wtd.var(.,  weights=ipw, na.rm=TRUE)),
-                                   p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=ipw, na.rm=TRUE)),
-                                   p50 = ~ (wtd.quantile(., probs=c(0.5), weights=ipw, na.rm=TRUE)),
-                                   p75 = ~ (wtd.quantile(., probs=c(0.75), weights=ipw, na.rm=TRUE)),
-                                   complete_count= ~ sum(!is.na(.))))
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+        
         
         ipw <- sumstats$ipw
         
-        sumstats_df<-skim(sumstats) %>%
-            select(-level, -type, -value) %>%
-            spread(stat, formatted) %>%
-            select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+        sumstats_df<-my_skim(sumstats) %>%
+            yank("numeric") %>%
+            mutate(variable=skim_variable) %>%
+            select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
             filter(grepl('ecd', variable))
         
         
         DT::datatable(sumstats_df, caption=paste("Summary Statistics of ECD Student Scores for Schools above", input$pctl, "Percentile in Overall 4th Grade Score", sep=" "),
-                      colnames=c("Indicator",  "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"),
+                      colnames=c("Indicator",  "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases",  "Histogram"),
                       extensions = 'Buttons', options=list(
                           dom = 'Bfrtip',
-                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                          buttons = c('copy', 'csv', 'excel'),
                           pageLength = 60)) %>%
             formatRound(columns = c('mean', 'sd', 'p0', 
                                     'p25', 'p50', 'p75', 'p100'),
