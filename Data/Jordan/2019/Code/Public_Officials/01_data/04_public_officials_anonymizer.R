@@ -54,7 +54,7 @@ public_officials_dta_short$hashed_office <-as.character(lapply(public_officials_
 
 #save a hashed version of the dataset, to produce a link file
 key<-public_officials_dta_short %>%
-  select(id_code, position, office_preload, hashed_position,  hashed_office) 
+  select(id_code, interview__id, position, office_preload, hashed_position,  hashed_office) 
 
 write_excel_csv(key, file.path(confidential_folder, "public_official_linkfile_hashed.csv"))
 
@@ -183,7 +183,7 @@ for (i in data_list ) {
     #do noise addition (10% of std dev) using sdcMicro and addNoise for income
     if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
       
-      public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
+      #public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
       temp <- temp %>%
         select(-DEM1q14n)
       

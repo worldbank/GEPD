@@ -316,7 +316,7 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
          politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
          politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
          politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
-         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4")], na.rm=T))
+         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4q1")], na.rm=T))
 
 
 #list of Bureaucracy indicators
@@ -454,7 +454,7 @@ for (i in indicator_names ) {
 
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", "public_officials_dta_short", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables

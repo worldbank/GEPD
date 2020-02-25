@@ -532,11 +532,11 @@ server <- function(input, output, session) {
           
         } else if (input$gender=="Female") {
           
-          df<-get(paste("final_indicator_data_",get_tag()[1],"_anon", "_F", sep=""))
+          df<-get(paste("final_indicator_data_",get_tag()[1],"_F","_anon",  sep=""))
           
         } else if (input$gender=="Male") {
           
-          df<-get(paste("final_indicator_data_",get_tag()[1],"_anon", "_M", sep=""))
+          df<-get(paste("final_indicator_data_",get_tag()[1],"_M","_anon",  sep=""))
           
         }
 

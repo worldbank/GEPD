@@ -1,0 +1,34 @@
+---
+title: "Untitled"
+author: "Brian Stacy"
+date: "2/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+- The following chart takes advantage of a question asked on whether the 1st grade students attended kindergarten.
+- Although this estimate is not causal, students receiving Kindergarten score much better than children not receiving kindergarten  
+- This is particularly true for boys who have much lower scores at the bottom end of the distribution when not receiving kindergarten
+
+
