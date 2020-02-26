@@ -2,8 +2,6 @@
 title: "Global Education Policy Dashboard"
 author: "Education Global Practice, World Bank"
 output:
-  word_document:
-    toc: yes
   html_document:
     fig_height: 6
     fig_width: 8
@@ -372,48 +370,27 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
    sumstats_df <- sumstats_df %>%
      select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
    
-  #add in custom column sub-headers
-  sketch = htmltools::withTags(table(
-    class = 'display',
-    thead(
-      tr(
-        th( rowspan = 2, 'Indicator'),
-        th(colspan = 2, 'Overall'),
-        th(colspan = 2, 'Urban'),
-        th(colspan = 2, 'Rural'),
-        th(rowspan = 2, str_wrap('Ratio of Rural to Urban',10))
-      ),
-      tr(
-        lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
-      )
-    )
-  ))
+
   
   
-  # create 19 breaks and 20 rgb color values ranging from white to red
-  
+
   sumstats_df <- sumstats_df %>%
     mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
   
-  brks <- seq(0, max(sumstats_df$ratio, na.rm=T), length.out = 19)
-  clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
-    {paste0("rgb(255,", ., ",", ., ")")}
+
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Jordan 2019 - Urban/Rural",
-                container = sketch, rownames=FALSE,
-                class='cell-border stripe',
-                escape = FALSE,
-                extensions = c ('Buttons', 'FixedHeader'), 
-                options=list(
-                  dom = 'Bfrtip',
-                  buttons = c('copy', 'csv', 'excel'),
-                  pageLength = 60,
-                  scrollX = TRUE, 
-                  paging=FALSE,
-                  ordering=F)) %>%
-    formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural', 'ratio' ),
-                digits=2)  %>% 
-    formatStyle('ratio', backgroundColor = styleInterval(brks, clrs))
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Urban/Rural",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Rural to Urban"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Urban"=2,"Rural"=2, " "=1))
+  
   
 
       
@@ -541,50 +518,25 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       sumstats_df <- sumstats_df %>%
         select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
       
-      #add in custom column sub-headers
-      sketch = htmltools::withTags(table(
-        class = 'display',
-        thead(
-          tr(
-            th( rowspan = 2, 'Indicator'),
-            th(colspan = 2, 'Overall'),
-            th(colspan = 2, 'Non-Evening Schools'),
-            th(colspan = 2, 'Evening Schools'),
-            th(rowspan = 2, str_wrap('Ratio of Non-Evening to Evening',10))
-          ),
-          tr(
-            lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
-          )
-        )
-      ))
+
       
-      
-      # create 19 breaks and 20 rgb color values ranging from white to red
-      
+
       sumstats_df <- sumstats_df %>%
         mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
       
-      brks <- seq(0, max(sumstats_df$ratio, na.rm=T), length.out = 19)
-      clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
-        {paste0("rgb(255,", ., ",", ., ")")}
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Evening Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Non-Evening to Evening"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Non-Evening"=2,"Evening"=2, " "=1))
+  
       
-      DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Jordan 2019 - Evening Schools",
-                    container = sketch, rownames=FALSE,
-                    class='cell-border stripe',
-                    escape = FALSE,
-                    extensions = c ('Buttons', 'FixedHeader'), 
-                    options=list(
-                      dom = 'Bfrtip',
-                      buttons = c('copy', 'csv', 'excel'),
-                      pageLength = 60,
-                      scrollX = TRUE, 
-                      paging=FALSE,
-                      ordering=F)) %>%
-        formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural', 'ratio' ),
-                    digits=2)  %>% 
-        formatStyle('ratio', backgroundColor = styleInterval(brks, clrs))
-
-
         #add function to produce weighted summary stats
         my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
                                                sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
@@ -745,48 +697,28 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       sumstats_df <- sumstats_df %>%
         select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south)
       
-      #add in custom column sub-headers
-      sketch = htmltools::withTags(table(
-        class = 'display',
-        thead(
-          tr(
-            th( rowspan = 2, 'Indicator'),
-            th(colspan = 2, 'Overall'),
-            th(colspan = 2, 'North'),
-            th(colspan = 2, 'Middle'),
-            th(colspan = 2, 'South')
-                      ),
-          tr(
-            lapply(rep(c('Mean', '95% Confident Interval'), 4), th)
-          )
-        )
-      ))
-      
-      
 
+  #create table    
+  sumstats_df %>%
+    # mutate(mean_urban=cell_spec(
+    #   round(mean_urban,1), background = spec_color(mean_urban/mean,  alpha=0.4, option='cividis', direction=-1)
+    # ),
+    # mean_rural=cell_spec(
+    #   round(mean_rural,1), background = spec_color(mean_rural/mean, alpha=0.4, option='cividis', direction=-1)
+    # ),
+    # mean_south=cell_spec(
+    #   round(mean_south,1), background = spec_color(mean_south/mean,  alpha=0.4, option='cividis', direction=-1)
+    # )
+    # ) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Region",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"North"=2,"Middle"=2,"South"=2))
+   
 
-      
-      DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Jordan 2019 - Regions",
-                    container=sketch,rownames=FALSE,
-                    class='cell-border stripe',
-                    escape = FALSE,
-                    extensions = c ('Buttons', 'FixedHeader'), 
-                    options=list(
-                      dom = 'Bfrtip',
-                      buttons = c('copy', 'csv', 'excel'),
-                      pageLength = 60,
-                      scrollX = TRUE, 
-                      paging=FALSE,
-                      ordering=F)) %>%
-        formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural', 'mean_south', 'ci_south' ),
-                    digits=2) 
-      
-      
-      
-      
-    
-    
-    
     
 
     
@@ -1110,7 +1042,7 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
 
 ## Radar plot
 
-```{r radar, eval=FALSE, include=FALSE}
+```{r radar, echo=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
@@ -1136,9 +1068,9 @@ main_indicator_labels<-c(
                        'teacher_monitoring',
                        # 'intrinsic_motivation', 
                        # 'school_monitoring', 
-                       'school_management_attraction', 
-                       'school_selection_deployment', 
-                       'school_support', 
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
                        'principal_evaluation'
 
     )
@@ -1146,13 +1078,13 @@ main_indicator_labels<-c(
     labels_df_radar<-data.frame(indicators=as.character(indicators_list),
                           indicator_labels=as.character(main_indicator_labels))
     
-    school_ipw<-school_dta_short$school_ipw
+    ipw<-school_dta_short_anon$ipw
     
     #get de facto data
-    data_radar <- school_dta_short %>%
-      select(school_code, indicators_list, school_ipw) %>%
+    data_radar <- school_dta_short_anon %>%
+      select(hashed_school_code, indicators_list, ipw) %>%
       #mutate_at(.vars = indicators_list, scales::rescale) %>%
-      summarise_at(.vars = indicators_list, wtd.mean, w=school_ipw, na.rm=TRUE) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=ipw, na.rm=TRUE) %>%
       mutate(group="De Facto") %>%
       select(group=group, everything())
 
@@ -1166,7 +1098,8 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
+    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/Expert_Survey"
+
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
@@ -1207,7 +1140,7 @@ main_indicator_labels<-c(
 
 ## De-Facto Policy
 
-```{r defacto, eval=FALSE, include=FALSE}
+```{r defacto, echo=FALSE}
 #get list of de facto indicators
 main_indicator_labels<-c( 
                         'Teaching - Attraction',
@@ -1232,9 +1165,9 @@ main_indicator_labels<-c(
                        'teacher_monitoring',
                        'intrinsic_motivation', 
                        # 'school_monitoring', 
-                       'school_management_attraction', 
-                       'school_selection_deployment', 
-                       'school_support', 
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
                        'principal_evaluation'
 
     )
@@ -1244,10 +1177,10 @@ main_indicator_labels<-c(
                           indicator_labels=as.character(main_indicator_labels))    
     
     #get de facto data
-data_defacto <- school_dta_short %>%
+data_defacto <- school_dta_short_anon %>%
     mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
     filter(!is.na(rural)) %>%
-      select(school_code,Type, indicators_list, school_ipw) %>%
+      select(hashed_school_code,Type, indicators_list, ipw) %>%
       pivot_longer(cols=indicators_list,
                names_to = "indicators",
                values_to = "indicator_values") %>%
@@ -1311,9 +1244,9 @@ main_indicator_labels<-c(
                         'intrinsic_motivation', 
                        'standards_monitoring',
                         #'school_monitoring', 
-                       'school_management_attraction', 
-                       'school_selection_deployment', 
-                       'school_support', 
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
                        'principal_evaluation',
                        'nutrition_programs',
                        'health_programs',
@@ -1326,18 +1259,18 @@ main_indicator_labels<-c(
     labels_df_radar<-data.frame(indicators=as.character(indicators_list),
                           indicator_labels=as.character(main_indicator_labels))
     
-    school_ipw<-school_dta_short$school_ipw
+    ipw<-school_dta_short_anon$ipw
     
     #get de facto data
-    data_radar <- school_dta_short %>%
+    data_radar <- school_dta_short_anon %>%
             mutate(nutrition_programs=4.1,
              health_programs=3.95,
              ece_programs=3.85,
              financial_capacity=2.3,
              caregiver_skills=4.415) %>% #need to automate this
-      select(school_code, indicators_list, school_ipw) %>%
+      select(hashed_school_code, indicators_list, ipw) %>%
       #mutate_at(.vars = indicators_list, scales::rescale) %>%
-      summarise_at(.vars = indicators_list, wtd.mean, w=school_ipw, na.rm=TRUE) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=ipw, na.rm=TRUE) %>%
       mutate(group="De Facto") %>%
       select(group=group, everything())
 

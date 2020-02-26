@@ -249,33 +249,6 @@ PER_data_2019 <- api_final
 #export Indicators_metatdata section
 write_excel_csv(api_final, 'GEPD_Indicators_API_PER.csv')
 
+write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_PER.csv',sep=""))
 
 
-
-
-
-PER_dummy_data_2019 <- api_dummy('PER', 2019)
-PER_dummy_data_2020 <- api_dummy('PER', 2020)
-PER_dummy_data_2021 <- api_dummy('PER', 2021)
-
-JOR_dummy_data_2019 <- api_dummy('JOR', 2019)
-JOR_dummy_data_2020 <- api_dummy('JOR', 2020)
-JOR_dummy_data_2021 <- api_dummy('JOR', 2021)
-
-
-RWA_dummy_data_2019 <- api_dummy('RWA', 2019)
-RWA_dummy_data_2020 <- api_dummy('RWA', 2020)
-RWA_dummy_data_2021 <- api_dummy('RWA', 2021)
-
-ETH_dummy_data_2019 <- api_dummy('ETH', 2019)
-ETH_dummy_data_2020 <- api_dummy('ETH', 2020)
-ETH_dummy_data_2021 <- api_dummy('ETH', 2021)
-
-
-
-country_dummy_data <- bind_rows(PER_dummy_data_2019, PER_dummy_data_2020, PER_dummy_data_2021,
-                                JOR_dummy_data_2019, JOR_dummy_data_2020, JOR_dummy_data_2021,
-                                RWA_dummy_data_2019, RWA_dummy_data_2020, RWA_dummy_data_2021,
-                                ETH_dummy_data_2019, ETH_dummy_data_2020, ETH_dummy_data_2021)
-
-write_excel_csv(country_dummy_data, 'GEPD_Indicators_dummy.csv')

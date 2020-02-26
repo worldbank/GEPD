@@ -1,0 +1,452 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode=true}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Global Education Policy Dashboard},
+  pdfauthor={Education Global Practice, World Bank},
+  hidelinks,
+}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\title{Global Education Policy Dashboard}
+\author{Education Global Practice, World Bank}
+\date{}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{introduction}{%
+\subsection{Introduction}\label{introduction}}
+
+\begin{table}
+
+\caption{\label{tab:dt}Summary Statistics of Dashboard Indicators - Jordan 2019 - Urban/Rural}
+\centering
+\begin{tabular}[t]{l|r|l|r|l|r|l|l}
+\hline
+\multicolumn{1}{c|}{ } & \multicolumn{2}{c|}{Overall} & \multicolumn{2}{c|}{Urban} & \multicolumn{2}{c|}{Rural} & \multicolumn{1}{c}{ } \\
+\cline{2-3} \cline{4-5} \cline{6-7}
+Indicator & Mean & 95% Confident Interval & Mean & 95% Confident Interval & Mean & 95% Confident Interval & Ratio of Rural to Urban\\
+\hline
+Proficiency on GEPD Assessment & 4.4 & [3.2, 5.6] & 4.0 & [2.58, 5.5] & 5.6 & [3.33, 7.95] & \cellcolor[HTML]{00204D}{1.39}\\
+\hline
+Student Attendance & 97.1 & [96.37, 97.92] & 96.7 & [95.6, 97.84] & 98.6 & [97.72, 99.52] & \cellcolor[HTML]{A19976}{1.02}\\
+\hline
+Teacher Effort & 81.9 & [79.69, 84.11] & 82.8 & [79.95, 85.71] & 78.7 & [74.95, 82.42] & \cellcolor[HTML]{C1B26D}{0.95}\\
+\hline
+Teacher Content Knowledge & 33.8 & [29.82, 37.71] & 33.5 & [27.99, 38.99] & 34.7 & [29.2, 40.24] & \cellcolor[HTML]{999278}{1.04}\\
+\hline
+Teacher Pedagogical Skills & 67.9 & [62.13, 73.66] & 70.9 & [63.09, 78.63] & 57.7 & [48.86, 66.52] & \cellcolor[HTML]{FFEA46}{0.81}\\
+\hline
+Capacity for Learning & 37.2 & [32.49, 41.85] & 36.1 & [29.9, 42.33] & 41.1 & [33.74, 48.45] & \cellcolor[HTML]{707173}{1.14}\\
+\hline
+Basic Inputs & 4.3 & [4.18, 4.38] & 4.3 & [4.17, 4.45] & 4.2 & [4.04, 4.33] & \cellcolor[HTML]{B7AA71}{0.97}\\
+\hline
+Basic Infrastructure & 4.1 & [4.04, 4.2] & 4.2 & [4.05, 4.27] & 4.0 & [3.84, 4.13] & \cellcolor[HTML]{BEAF6F}{0.96}\\
+\hline
+Operational Management & 4.7 & [4.64, 4.74] & 4.7 & [4.66, 4.79] & 4.6 & [4.49, 4.65] & \cellcolor[HTML]{B9AC70}{0.97}\\
+\hline
+Instructional Leadership & 3.0 & [2.94, 3.1] & 3.0 & [2.93, 3.16] & 2.9 & [2.8, 3.03] & \cellcolor[HTML]{BEAF6F}{0.96}\\
+\hline
+Principal Knowledge of School & 3.5 & [3.33, 3.66] & 3.4 & [3.17, 3.64] & 3.8 & [3.6, 4.03] & \cellcolor[HTML]{767676}{1.12}\\
+\hline
+Principal Management Skills & 4.0 & [3.94, 4.06] & 4.0 & [3.89, 4.07] & 4.1 & [3.99, 4.15] & \cellcolor[HTML]{A09877}{1.02}\\
+\hline
+Policy Lever (Teaching) - Attraction & 3.5 & [3.46, 3.58] & 3.5 & [3.43, 3.61] & 3.5 & [3.44, 3.58] & \cellcolor[HTML]{ABA074}{1}\\
+\hline
+Policy Lever (Teaching) - Selection & Deployment & 3.5 & [3.43, 3.6] & 3.5 & [3.39, 3.62] & 3.6 & [3.43, 3.69] & \cellcolor[HTML]{A39A76}{1.02}\\
+\hline
+Policy Lever (Teaching) - Support & 2.6 & [2.48, 2.69] & 2.5 & [2.4, 2.7] & 2.7 & [2.56, 2.85] & \cellcolor[HTML]{8E8A79}{1.06}\\
+\hline
+Policy Lever (Teaching) - Evaluation & 3.6 & [3.49, 3.71] & 3.6 & [3.42, 3.7] & 3.8 & [3.58, 3.93] & \cellcolor[HTML]{918C78}{1.06}\\
+\hline
+Policy Lever (Teaching) - Monitoring & Accountability & 3.1 & [2.99, 3.14] & 3.1 & [2.96, 3.16] & 3.1 & [2.98, 3.2] & \cellcolor[HTML]{A59C76}{1.01}\\
+\hline
+Policy Lever (Teaching) - Intrinsic Motivation & 3.4 & [3.33, 3.45] & 3.4 & [3.34, 3.5] & 3.3 & [3.22, 3.39] & \cellcolor[HTML]{B9AC70}{0.97}\\
+\hline
+Policy Lever (Inputs & Infrastructure) - Standards & 3.8 & [3.58, 3.94] & 3.8 & [3.56, 4.03] & 3.6 & [3.32, 3.91] & \cellcolor[HTML]{C0B16E}{0.95}\\
+\hline
+Policy Lever (Inputs & Infrastructure) - Monitoring & 3.9 & [3.76, 3.98] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Policy Lever (School Management) - Selection & Deployment & 4.6 & [4.51, 4.67] & 4.6 & [4.44, 4.67] & 4.7 & [4.63, 4.82] & \cellcolor[HTML]{999278}{1.04}\\
+\hline
+Policy Lever (School Management) - Support & 3.5 & [3.33, 3.63] & 3.4 & [3.23, 3.65] & 3.6 & [3.41, 3.84] & \cellcolor[HTML]{918C78}{1.05}\\
+\hline
+Policy Lever (School Management) - Evaluation & 3.6 & [3.45, 3.73] & 3.6 & [3.37, 3.76] & 3.7 & [3.47, 3.89] & \cellcolor[HTML]{9A9377}{1.03}\\
+\hline
+Politics & Bureaucratic Capacity - National Learning Goals & 3.6 & [3.48, 3.66] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Politics & Bureaucratic Capacity - Mandates & Accountability & 4.2 & [4.1, 4.28] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Politics & Bureaucratic Capacity - Quality of Bureaucracy & 3.6 & [3.51, 3.65] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Politics & Bureaucratic Capacity - Impartial Decision-Making & 3.1 & [3.03, 3.26] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:dt}Summary Statistics of Dashboard Indicators - Jordan 2019 - Evening Schools}
+\centering
+\begin{tabular}[t]{l|r|l|r|l|r|l|l}
+\hline
+\multicolumn{1}{c|}{ } & \multicolumn{2}{c|}{Overall} & \multicolumn{2}{c|}{Non-Evening} & \multicolumn{2}{c|}{Evening} & \multicolumn{1}{c}{ } \\
+\cline{2-3} \cline{4-5} \cline{6-7}
+Indicator & Mean & 95% Confident Interval & Mean & 95% Confident Interval & Mean & 95% Confident Interval & Ratio of Non-Evening to Evening\\
+\hline
+Proficiency on GEPD Assessment & 4.4 & [3.2, 5.6] & 5.1 & [3.67, 6.53] & 2.4 & [0.51, 4.24] & \cellcolor[HTML]{FFEA46}{0.47}\\
+\hline
+Student Attendance & 97.1 & [96.37, 97.92] & 97.9 & [97.1, 98.61] & 95.1 & [92.69, 97.49] & \cellcolor[HTML]{35466B}{0.97}\\
+\hline
+Teacher Effort & 81.9 & [79.69, 84.11] & 79.7 & [77.18, 82.23] & 88.2 & [84.16, 92.22] & \cellcolor[HTML]{00204D}{1.11}\\
+\hline
+Teacher Content Knowledge & 33.8 & [29.82, 37.71] & 35.4 & [31.02, 39.82] & 29.1 & [20.01, 38.21] & \cellcolor[HTML]{707173}{0.82}\\
+\hline
+Teacher Pedagogical Skills & 67.9 & [62.13, 73.66] & 70.8 & [64.7, 76.82] & 59.4 & [43.62, 75.27] & \cellcolor[HTML]{6A6C71}{0.84}\\
+\hline
+Capacity for Learning & 37.2 & [32.49, 41.85] & 41.9 & [36.71, 47.01] & 23.5 & [13.23, 33.68] & \cellcolor[HTML]{D9C562}{0.56}\\
+\hline
+Basic Inputs & 4.3 & [4.18, 4.38] & 4.4 & [4.29, 4.49] & 4.0 & [3.66, 4.27] & \cellcolor[HTML]{52596C}{0.9}\\
+\hline
+Basic Infrastructure & 4.1 & [4.04, 4.2] & 4.1 & [4.03, 4.22] & 4.1 & [3.92, 4.3] & \cellcolor[HTML]{263F6C}{1}\\
+\hline
+Operational Management & 4.7 & [4.64, 4.74] & 4.7 & [4.66, 4.76] & 4.6 & [4.48, 4.78] & \cellcolor[HTML]{2E436C}{0.98}\\
+\hline
+Instructional Leadership & 3.0 & [2.94, 3.1] & 3.1 & [2.98, 3.16] & 2.9 & [2.66, 3.07] & \cellcolor[HTML]{47516B}{0.93}\\
+\hline
+Principal Knowledge of School & 3.5 & [3.33, 3.66] & 3.5 & [3.34, 3.71] & 3.4 & [3.01, 3.83] & \cellcolor[HTML]{36476B}{0.97}\\
+\hline
+Principal Management Skills & 4.0 & [3.94, 4.06] & 4.0 & [3.93, 4.06] & 4.0 & [3.85, 4.18] & \cellcolor[HTML]{1F3C6D}{1}\\
+\hline
+Policy Lever (Teaching) - Attraction & 3.5 & [3.46, 3.58] & 3.6 & [3.54, 3.68] & 3.3 & [3.16, 3.37] & \cellcolor[HTML]{52596C}{0.91}\\
+\hline
+Policy Lever (Teaching) - Selection & Deployment & 3.5 & [3.43, 3.6] & 3.6 & [3.48, 3.67] & 3.3 & [3.15, 3.54] & \cellcolor[HTML]{46506B}{0.94}\\
+\hline
+Policy Lever (Teaching) - Support & 2.6 & [2.48, 2.69] & 2.6 & [2.47, 2.7] & 2.6 & [2.31, 2.85] & \cellcolor[HTML]{233E6C}{1}\\
+\hline
+Policy Lever (Teaching) - Evaluation & 3.6 & [3.49, 3.71] & 3.7 & [3.59, 3.83] & 3.3 & [3.04, 3.53] & \cellcolor[HTML]{595F6D}{0.88}\\
+\hline
+Policy Lever (Teaching) - Monitoring & Accountability & 3.1 & [2.99, 3.14] & 3.1 & [3.03, 3.2] & 2.9 & [2.78, 3.07] & \cellcolor[HTML]{444F6B}{0.94}\\
+\hline
+Policy Lever (Teaching) - Intrinsic Motivation & 3.4 & [3.33, 3.45] & 3.4 & [3.37, 3.52] & 3.2 & [3.15, 3.34] & \cellcolor[HTML]{424E6B}{0.94}\\
+\hline
+Policy Lever (Inputs & Infrastructure) - Standards & 3.8 & [3.58, 3.94] & 3.9 & [3.67, 4.06] & 3.4 & [3.01, 3.86] & \cellcolor[HTML]{585D6D}{0.89}\\
+\hline
+Policy Lever (Inputs & Infrastructure) - Monitoring & 3.9 & [3.76, 3.98] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Policy Lever (School Management) - Selection & Deployment & 4.6 & [4.51, 4.67] & 4.7 & [4.62, 4.78] & 4.3 & [4.06, 4.49] & \cellcolor[HTML]{51586C}{0.91}\\
+\hline
+Policy Lever (School Management) - Support & 3.5 & [3.33, 3.63] & 3.4 & [3.24, 3.58] & 3.7 & [3.34, 4.02] & \cellcolor[HTML]{002860}{1.08}\\
+\hline
+Policy Lever (School Management) - Evaluation & 3.6 & [3.45, 3.73] & 3.7 & [3.59, 3.89] & 3.2 & [2.79, 3.53] & \cellcolor[HTML]{686A71}{0.85}\\
+\hline
+Politics & Bureaucratic Capacity - National Learning Goals & 3.6 & [3.48, 3.66] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Politics & Bureaucratic Capacity - Mandates & Accountability & 4.2 & [4.1, 4.28] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Politics & Bureaucratic Capacity - Quality of Bureaucracy & 3.6 & [3.51, 3.65] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+Politics & Bureaucratic Capacity - Impartial Decision-Making & 3.1 & [3.03, 3.26] & NA & NA & NA & NA & \cellcolor[HTML]{BBBBBB}{NA}\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:dt}Summary Statistics of Dashboard Indicators - Jordan 2019 - Region}
+\centering
+\begin{tabular}[t]{l|r|l|r|l|r|l|r|l}
+\hline
+\multicolumn{1}{c|}{ } & \multicolumn{2}{c|}{Overall} & \multicolumn{2}{c|}{North} & \multicolumn{2}{c|}{Middle} & \multicolumn{2}{c}{South} \\
+\cline{2-3} \cline{4-5} \cline{6-7} \cline{8-9}
+Indicator & Mean & 95% Confident Interval & Mean & 95% Confident Interval & Mean & 95% Confident Interval & Mean & 95% Confident Interval\\
+\hline
+Proficiency on GEPD Assessment & 4.4 & [3.2, 5.6] & 3.6 & [1.29, 5.87] & 4.3 & [2.52, 6.06] & 5.9 & [3.75, 8.07]\\
+\hline
+Student Attendance & 97.1 & [96.37, 97.92] & 96.5 & [95.02, 97.89] & 97.5 & [96.4, 98.63] & 96.9 & [95.25, 98.56]\\
+\hline
+Teacher Effort & 81.9 & [79.69, 84.11] & 85.7 & [82.81, 88.49] & 82.8 & [79.62, 86] & 74.7 & [68.99, 80.38]\\
+\hline
+Teacher Content Knowledge & 33.8 & [29.82, 37.71] & 27.5 & [20.85, 34.22] & 33.4 & [27.58, 39.2] & 43.4 & [34.97, 51.74]\\
+\hline
+Teacher Pedagogical Skills & 67.9 & [62.13, 73.66] & 52.3 & [41.65, 62.96] & 73.2 & [65.08, 81.3] & 72.4 & [60.44, 84.45]\\
+\hline
+Capacity for Learning & 37.2 & [32.49, 41.85] & 37.3 & [28.78, 45.86] & 31.8 & [25.16, 38.37] & 53.6 & [44.22, 63.01]\\
+\hline
+Basic Inputs & 4.3 & [4.18, 4.38] & 4.0 & [3.81, 4.2] & 4.3 & [4.16, 4.46] & 4.6 & [4.4, 4.7]\\
+\hline
+Basic Infrastructure & 4.1 & [4.04, 4.2] & 3.9 & [3.75, 4.09] & 4.2 & [4.03, 4.27] & 4.3 & [4.13, 4.44]\\
+\hline
+Operational Management & 4.7 & [4.64, 4.74] & 4.7 & [4.64, 4.78] & 4.7 & [4.65, 4.8] & 4.6 & [4.43, 4.69]\\
+\hline
+Instructional Leadership & 3.0 & [2.94, 3.1] & 2.9 & [2.75, 3.05] & 3.1 & [3, 3.23] & 2.9 & [2.7, 3.08]\\
+\hline
+Principal Knowledge of School & 3.5 & [3.33, 3.66] & 3.6 & [3.31, 3.88] & 3.3 & [3.05, 3.56] & 4.0 & [3.71, 4.25]\\
+\hline
+Principal Management Skills & 4.0 & [3.94, 4.06] & 3.8 & [3.66, 3.92] & 4.1 & [4.01, 4.17] & 4.0 & [3.9, 4.1]\\
+\hline
+Policy Lever (Teaching) - Attraction & 3.5 & [3.46, 3.58] & 3.6 & [3.5, 3.72] & 3.4 & [3.31, 3.46] & 3.8 & [3.64, 3.93]\\
+\hline
+Policy Lever (Teaching) - Selection & Deployment & 3.5 & [3.43, 3.6] & 3.4 & [3.25, 3.55] & 3.5 & [3.39, 3.63] & 3.7 & [3.51, 3.91]\\
+\hline
+Policy Lever (Teaching) - Support & 2.6 & [2.48, 2.69] & 2.3 & [2.2, 2.49] & 2.8 & [2.62, 2.92] & 2.3 & [2.07, 2.63]\\
+\hline
+Policy Lever (Teaching) - Evaluation & 3.6 & [3.49, 3.71] & 3.5 & [3.34, 3.72] & 3.6 & [3.45, 3.77] & 3.7 & [3.45, 3.87]\\
+\hline
+Policy Lever (Teaching) - Monitoring & Accountability & 3.1 & [2.99, 3.14] & 2.8 & [2.69, 2.98] & 3.1 & [2.96, 3.17] & 3.4 & [3.31, 3.48]\\
+\hline
+Policy Lever (Teaching) - Intrinsic Motivation & 3.4 & [3.33, 3.45] & 3.3 & [3.19, 3.41] & 3.4 & [3.29, 3.43] & 3.6 & [3.44, 3.78]\\
+\hline
+Policy Lever (Inputs & Infrastructure) - Standards & 3.8 & [3.58, 3.94] & 3.3 & [2.92, 3.66] & 3.7 & [3.48, 3.96] & 4.5 & [4.21, 4.8]\\
+\hline
+Policy Lever (Inputs & Infrastructure) - Monitoring & 3.9 & [3.76, 3.98] & NA & NA & NA & NA & NA & NA\\
+\hline
+Policy Lever (School Management) - Selection & Deployment & 4.6 & [4.51, 4.67] & 4.5 & [4.42, 4.66] & 4.7 & [4.57, 4.79] & 4.4 & [4.17, 4.62]\\
+\hline
+Policy Lever (School Management) - Support & 3.5 & [3.33, 3.63] & 3.5 & [3.18, 3.74] & 3.5 & [3.34, 3.76] & 3.3 & [2.93, 3.67]\\
+\hline
+Policy Lever (School Management) - Evaluation & 3.6 & [3.45, 3.73] & 3.5 & [3.27, 3.79] & 3.5 & [3.31, 3.74] & 3.9 & [3.6, 4.13]\\
+\hline
+Politics & Bureaucratic Capacity - National Learning Goals & 3.6 & [3.48, 3.66] & NA & NA & NA & NA & NA & NA\\
+\hline
+Politics & Bureaucratic Capacity - Mandates & Accountability & 4.2 & [4.1, 4.28] & NA & NA & NA & NA & NA & NA\\
+\hline
+Politics & Bureaucratic Capacity - Quality of Bureaucracy & 3.6 & [3.51, 3.65] & NA & NA & NA & NA & NA & NA\\
+\hline
+Politics & Bureaucratic Capacity - Impartial Decision-Making & 3.1 & [3.03, 3.26] & NA & NA & NA & NA & NA & NA\\
+\hline
+\end{tabular}
+\end{table}
+
+\hypertarget{overall-learning}{%
+\subsection{Overall Learning}\label{overall-learning}}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/learning-1.pdf}
+
+\hypertarget{urbanrural-breakdowns-for-infrastructureinputs}{%
+\subsection{Urban/Rural Breakdowns for
+Infrastructure/Inputs}\label{urbanrural-breakdowns-for-infrastructureinputs}}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/urban_rural-1.pdf}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/urban_rural_input-1.pdf}
+
+\hypertarget{first-grade-assessment-score}{%
+\subsection{First Grade Assessment
+Score}\label{first-grade-assessment-score}}
+
+\begin{itemize}
+\tightlist
+\item
+  The following plots the school level average of the 4th grade
+  assessment scores on the school level average 1st grade assessment
+  score.\\
+\item
+  Note that the children assessed in 4th grade differ from the students
+  assessed in 1st grade\\
+\item
+  The graph is meant to associate levels of student learning in 1st
+  grade with 4th grade student learning.
+\end{itemize}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/1st_grade_plot-1.pdf}
+
+\begin{itemize}
+\tightlist
+\item
+  The following chart takes advantage of a question asked on whether the
+  1st grade students attended kindergarten.
+\item
+  Although this estimate is not causal, students receiving Kindergarten
+  score much better than children not receiving kindergarten\\
+\item
+  This is particularly true for boys who have much lower scores at the
+  bottom end of the distribution when not receiving kindergarten
+\item
+  In our sample, 92 percent of students attended kindergarten
+\end{itemize}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/kindergarten-1.pdf}
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/kindergarten-2.pdf}
+
+\hypertarget{teacher-pedagogical-skill}{%
+\subsection{Teacher Pedagogical Skill}\label{teacher-pedagogical-skill}}
+
+\begin{itemize}
+\tightlist
+\item
+  One of the best predictors of 4th grade student achievement, along
+  with the 1st grade scores, is the teacher's pedagogical score\\
+\item
+  The following plots the school level average of the 4th grade
+  assessment scores on the teacher's pedagogical skill based on the
+  Teach scale.
+\end{itemize}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/teach_plot-1.pdf}
+
+\hypertarget{do-principals-know-their-schools}{%
+\subsection{Do principals know their
+schools?}\label{do-principals-know-their-schools}}
+
+\begin{itemize}
+\tightlist
+\item
+  Adequate Textbooks:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Principals asked, ``In the selected 4th grade classroom, how many of
+    the pupils have the relevant textbooks?''
+  \item
+    We can compare answer to average calculated in our school survey
+  \end{itemize}
+\end{itemize}
+
+\begin{verbatim}
+## Joining, by = c("hashed_school_code", "hashed_school_province", "hashed_school_district", "territory", "governorate", "foundation_period", "rural", "ipw", "province")
+\end{verbatim}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/unnamed-chunk-1-1.pdf}
+
+\hypertarget{radar-plot}{%
+\subsection{Radar plot}\label{radar-plot}}
+
+\begin{verbatim}
+## Note: Using an external vector in selections is ambiguous.
+## i Use `all_of(indicators_list)` instead of `indicators_list` to silence this message.
+## i See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+## This message is displayed once per session.
+\end{verbatim}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/radar-1.pdf}
+
+\hypertarget{de-facto-policy}{%
+\subsection{De-Facto Policy}\label{de-facto-policy}}
+
+\begin{verbatim}
+## Joining, by = "indicators"
+\end{verbatim}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/defacto-1.pdf}
+
+\begin{verbatim}
+##   indicators              MD       
+##  Length:10          Min.   :2.000  
+##  Class :character   1st Qu.:2.850  
+##  Mode  :character   Median :3.000  
+##                     Mean   :3.040  
+##                     3rd Qu.:3.075  
+##                     Max.   :4.300
+\end{verbatim}
+
+\begin{verbatim}
+##   indicators              MD       
+##  Length:10          Min.   :3.200  
+##  Class :character   1st Qu.:3.725  
+##  Mode  :character   Median :4.100  
+##                     Mean   :4.180  
+##                     3rd Qu.:4.850  
+##                     Max.   :5.000
+\end{verbatim}
+
+\begin{verbatim}
+##   indicators              MD      
+##  Length:10          Min.   :0.60  
+##  Class :character   1st Qu.:0.70  
+##  Mode  :character   Median :1.00  
+##                     Mean   :1.13  
+##                     3rd Qu.:1.35  
+##                     Max.   :2.00
+\end{verbatim}
+
+\hypertarget{overall-performance-for-bureuacracy-indicators}{%
+\subsection{Overall performance for Bureuacracy
+Indicators}\label{overall-performance-for-bureuacracy-indicators}}
+
+\includegraphics{findings_powerpoint_Jordan_files/figure-latex/overall-1.pdf}
+
+\end{document}
