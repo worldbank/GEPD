@@ -1658,14 +1658,11 @@ if (graded_data!='yes') {
            pre_training_useful=if_else(m3sdq3_tsup==1,
                                        bin_var(m3sdq4_tsup,1),
                                        0)/2,
-           pre_training_practicum=if_else(m3sdq3_tsup==1,
-                                          bin_var(m3sdq6_tsup,1),
-                                          0)/2,
+           pre_training_practicum=bin_var(m3sdq6_tsup,1)/2,
            pre_training_practicum_lngth=case_when(
              (m3sdq6_tsup==1 & m3sdq7_tsup>=3 & m3sdq8_tsup>=1) ~  0.5,
              (m3sdq6_tsup==1 & (m3sdq7_tsup<3 | m3sdq8_tsup<1))  ~ 0,
              m3sdq6_tsup==2 ~ 0,
-             m3sdq3_tsup==0 ~ 0,
              TRUE ~ 0),
            in_service_exists=bin_var(m3sdq9_tsup,1),
            in_servce_lngth=case_when(

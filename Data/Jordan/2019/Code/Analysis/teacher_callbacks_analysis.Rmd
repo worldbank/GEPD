@@ -2,7 +2,8 @@
 title: "Analysis of Callbacks to Absent Teachers - Jordan 2019"
 author: "Brian Stacy"
 date: "2/26/2020"
-output: html_document
+output:
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -13,6 +14,9 @@ library(DDIwR)
 library(kableExtra)
 library(skimr)
 library(Hmisc)
+library(ggalt)
+library(patchwork)
+
 ```
 
 # Introduction
@@ -123,7 +127,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
                                                         names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory")])))
 }
 
-teacher_questionnaire_present<-df_weights_function(teacher_questionnaire_present, organization_code, total_students_grade_4, governorate)
+teacher_questionnaire_present<-df_weights_function(teacher_questionnaire_present, organization_code, total_primary_teachers, governorate)
 
 
 follow_up<-follow_up %>%
@@ -136,7 +140,8 @@ follow_up<-follow_up %>%
       .x==98 ~ as.numeric(NA),
       is.na(.x) ~ as.numeric(NA),
       TRUE ~  as.numeric(.x))) %>%
-  df_weights_function( organization_code, total_students_grade_4, governorate)
+  mutate(m3saq5=if_else(m3saq5==20012, 2012, m3saq5)) %>% #fix one value for year began teaching
+  df_weights_function( organization_code, total_primary_teachers, governorate)
 
 ```
 
@@ -243,6 +248,137 @@ follow_up_ddi_df %>%
           escape=F) %>%
     kable_styling("striped") %>%
     add_header_above(c(" "=1, "Sampled Teachers"=3, "Sampled Teachers in Follow Up Schools"=3,"Follow Up Teachers"=3))
+
+
+```
+
+
+```{r dumbbell, echo=FALSE, warning=FALSE}
+
+#create appended database for dumbbells
+
+ dumbbell_df <- sumstats_follow_up_df %>%
+   mutate(group="Follow Up Teachers") %>%
+   bind_rows(sumstats_teacher_same_df) %>%
+   mutate(group=if_else(is.na(group), "Sampled Teachers - Same School", group)) %>%
+   mutate(mean=if_else(group=="Follow Up Teachers", mean_follow, mean_same))
+
+
+
+
+# #background
+# background<- ggplot(data=filter(sumstats, row_number()==17 ), aes( y=varlabel)) +
+#   geom_point(data=filter(dumbbell_df, row_number()==17 | row_number()==67 ), aes(x=mean, color=group)) +
+#   geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+#     size=3, color="#e3e2e1",
+#                 colour_x = "#5b8124", colour_xend = "#bad744",
+#                  dot_guide_size=0.25,
+#                 show_legend=T) +
+#   geom_text(color="black", size=3, hjust=-0.5,
+#                   aes(x=round(mean_same,2), label=round(mean_same,2)))+
+#   geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+#                   color="black", size=3, hjust=1.5) +
+#   scale_y_discrete(labels=function(x) str_wrap(x,width=27)) +
+#   scale_color_manual(name="", values=c("#5b8124","#bad744"),
+#                      labels=c(str_wrap("Follow Up Teachers", 20),
+#                               str_wrap("Sampled Teachers - Same School", 20))) +
+#   labs(x='Mean', y=NULL, 
+#         title='Teacher Age' )+
+#   expand_limits(x=20:65) +
+#   theme_bw()
+# background
+
+  
+#motivation
+motiv<- ggplot(data=filter(sumstats, grepl("main motivation", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("main motivation", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_y_discrete(labels=function(x) str_wrap(x,width=27)) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Teacher Motivation',
+        caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60))+
+  theme_bw()
+motiv
+
+
+#consequences
+consequences<- ggplot(data=filter(sumstats, grepl("What happens", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("What happens", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Teacher Consequences for Absence',       
+       caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60) )+
+    scale_y_discrete(labels=function(x) str_wrap(x,width=55)) +
+  theme_bw()
+consequences
+
+#intrinsic motivation
+intrinsic<- ggplot(data=filter(sumstats, grepl("It is acceptable|Students|students", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("It is acceptable|Students|students", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Intrinsic Motivation',
+              caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60))+
+    scale_y_discrete(labels=function(x) str_wrap(x,width=50)) +
+    expand_limits(x=1:5) +
+  theme_bw()
+intrinsic
+
+#teacher satisfaction
+satisfaction<- ggplot(data=filter(sumstats, grepl("How satisfied|If two|Was your", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("How satisfied|If two|Was your", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Teacher Satisfaction',
+       caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60))+
+    scale_y_discrete(labels=function(x) str_wrap(x,width=30)) +
+    expand_limits(x=1:5) +
+  theme_bw()
+satisfaction
 
 
 ```

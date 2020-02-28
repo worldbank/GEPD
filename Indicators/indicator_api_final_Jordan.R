@@ -213,19 +213,19 @@ load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
 load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
 # 
 # 
-# expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', sep="/" ))
-# 
-# #score expert data (this requires a lot of hard coding and transcribing)
-# #read in data
-# defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal') 
-# defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
-# colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
-# 
-# #create indicators
-# defacto_dta_learners_final <- defacto_dta_learners_shaped %>%
-#   rownames_to_column() %>%
-#   filter(rowname=='Scoring') %>%
-#   select(-rowname)
+expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', sep="/" ))
+
+#score expert data (this requires a lot of hard coding and transcribing)
+#read in data
+defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal')
+defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
+colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
+
+#create indicators
+defacto_dta_learners_final <- defacto_dta_learners_shaped %>%
+  rownames_to_column() %>%
+  filter(rowname=='Scoring') %>%
+  select(-rowname)
 # 
 # 
 # 
@@ -249,6 +249,7 @@ JOR_data_2019 <- api_final
 #export Indicators_metatdata section
 write_excel_csv(api_final, 'GEPD_Indicators_API_JOR.csv')
 
+write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_JOR.csv',sep=""))
 
 
 

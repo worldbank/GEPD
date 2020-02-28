@@ -30,7 +30,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(A4),
-         teacher_salary=(414/3012))
+         teacher_salary=(12*414/3012))
 
 #teacher selection and deployment
 #
@@ -203,7 +203,7 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
          healthcare_young_children=read_var(A7),
          deworming=read_var(A8),
          antenatal_skilled_delivery=read_var(A9)) %>%
-  mutate(health_programs=1+immunization + healthcare_young_children + deworming + 0.5*antenatal_skilled_delivery)
+  mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
 
 
 #ECE programs

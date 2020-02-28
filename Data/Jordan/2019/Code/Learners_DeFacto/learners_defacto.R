@@ -1,7 +1,7 @@
 library(tidyverse)
 library(haven)
 #score expert data (this requires a lot of hard coding and transcribing)
-defacto_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Other_Indicators"
+defacto_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/Other_Indicators"
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)

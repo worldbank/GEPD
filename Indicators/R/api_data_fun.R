@@ -797,7 +797,7 @@ api_template <- api_template %>%
   SE.PRM.SCFN.8  =expert_df$supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?    
   SE.PRM.SCFN.9  = 100*indicator_means(student_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
   SE.PRM.SCFN.DF = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),#(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
-  SE.PRM.SCFN.DJ =expert_df$school_management_clarity#(De Jure) Policy Lever (School Management) - Clarity of Functions    
+  SE.PRM.SCFN.DJ =expert_df$sch_management_clarity#(De Jure) Policy Lever (School Management) - Clarity of Functions    
     )
   #######################################
   # Policy Lever (School Management) - Attraction 	(SATT)
@@ -809,7 +809,7 @@ api_template <- api_template %>%
   SE.PRM.SATT.2 = indicator_means(principal_salary		, "school", "SATT",  "All"),  #(De Facto) Average principal salary as percent of GDP per capita                                                          
   SE.PRM.SATT.3  = indicator_means(principal_satisfaction		, "school", "SATT",  "All"),#(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community    
   SE.PRM.SATT.DF = indicator_means(sch_management_attraction		, "school", "SATT",  "All"), #(De Facto) Policy Lever (School Management) - Attraction                                                                  
-  SE.PRM.SATT.DJ =expert_df$school_management_attraction#(De Jure) Policy Lever (School Management) - Attraction  
+  SE.PRM.SATT.DJ =expert_df$sch_management_attraction#(De Jure) Policy Lever (School Management) - Attraction  
     )
   #######################################
   # Policy Lever (School Management) - Selection & Deployment 	(SSLD)
@@ -834,7 +834,7 @@ api_template <- api_template %>%
   SE.PRM.SSLD.8  =  100*indicator_means(m7sgq1_ssld__7		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group 
   SE.PRM.SSLD.9  =  100*indicator_means(m7sgq1_ssld__8		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of~
   SE.PRM.SSLD.DF =  indicator_means(sch_selection_deployment		, "school", "SSLD",  "All"), #(De Facto) Policy Lever (School Management) - Selection & Deployment                                                     
-  SE.PRM.SSLD.DJ =expert_df$school_selection_deployment #(De Jure) Policy Lever (School Management) - Selection & Deployment  
+  SE.PRM.SSLD.DJ =expert_df$sch_selection_deployment #(De Jure) Policy Lever (School Management) - Selection & Deployment  
     )
   #######################################
   # Policy Lever (School Management) - Support 	(SSUP)
@@ -854,7 +854,7 @@ api_template <- api_template %>%
   SE.PRM.SSUP.8  =  100*indicator_means(m7sgq4_ssup__2		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report having received in-service training                                  
   SE.PRM.SSUP.9  =  100*indicator_means(m7sgq4_ssup__3		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals         
   SE.PRM.SSUP.DF   =  indicator_means(sch_support		, "school", "SSUP",  "All"),  #(De Facto) Policy Lever (School Management) - Support                                                             
-  SE.PRM.SSUP.DJ =expert_df$school_support#(De Jure) Policy Lever (School Management) - Support 
+  SE.PRM.SSUP.DJ =expert_df$sch_support#(De Jure) Policy Lever (School Management) - Support 
     )
   #######################################
   # Policy Lever (School Management) - Evaluation 	(SEVL)

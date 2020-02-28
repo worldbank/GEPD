@@ -242,7 +242,7 @@ constr_list <- c('avg_class_size_guess', 'avg_absence_guess', 'motivation_relati
 #Will need to join the school level information with teacher level questionnaire information for some indicators.  This will be done later.
 
 public_officials_dta_clean <-public_officials_dta %>%
-  dplyr::select(preamble_info,constr_list, starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
+  dplyr::select(one_of(preamble_info), one_of(constr_list), starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM')) %>%
   dplyr::select(-starts_with("enumerators_preload"))
 
 

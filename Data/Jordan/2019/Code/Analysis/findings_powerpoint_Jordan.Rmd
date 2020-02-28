@@ -1,15 +1,16 @@
 ---
-title: "Global Education Policy Dashboard"
+title: "Global Education Policy Dashboard - Jordan 2019"
 author: "Education Global Practice, World Bank"
 output:
   html_document:
     fig_height: 6
     fig_width: 8
     toc: yes
+    theme: readable
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 #include packages
 library(tidyverse)
 library(haven)
@@ -22,6 +23,8 @@ library(spatstat)
 library(ggradar)
 library(Hmisc)
 library(ggpmisc)
+library(ggalt)
+
 library(patchwork)
 library(DT)
 # define stle for ggplot based on BBC plotting styles
@@ -85,8 +88,33 @@ bbc_style <- function() {
 
 
 
-## Introduction
+# Introduction
 
+
+
+
+- The Global Education Policy Dashboard  applies framework of WDR 2018 
+
+- Create and collect a concise set of indicators that allow tracking of key determinants of learning.  
+
+- The Dashboard tracks three levels, the three Ps:
+  * Practice
+  * Policies
+  * Politics.
+
+- The data is collected using three surveys: A school survey, an policy survey, and a survey of public officials
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Policy Survey:  The policy survey is conducted by an expert on the laws and regulations of a country.  The experts gather information on De Jure policies in the education system for that country.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+Roadmap:  
+- Below is a set of tables and charts containing findings for the Jordan 2019 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
+- Then we will discuss findings of our Practice Indicators  
+- Finally we will conclude with findings for our Bureaucracy Indicators.  
 
 
 
@@ -391,6 +419,59 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     kable_styling("striped") %>%
     add_header_above(c(" "=1, "Overall"=2,"Urban"=2,"Rural"=2, " "=1))
   
+  
+#urban/rural
+  
+        sumstats_dumbell <- sumstats_school_df_final %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+  
+   dumbbell_df <- sumstats_school_urban_df %>%
+   mutate(group="Urban") %>%
+   bind_rows(sumstats_school_rural_df) %>%
+   mutate(group=if_else(is.na(group), "Rural", group)) %>%
+   mutate(mean=if_else(group=="Urban", mean_urban, mean_rural))
+
+   
+urban_rural1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_urban, xend=mean_rural),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_urban,2), label=round(mean_urban,2)))+
+  geom_text(aes(x=round(mean_rural,2), label=round(mean_rural,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_y_discrete(labels=function(x) str_wrap(x,width=40)) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Urban", 20),
+                              str_wrap("Rural", 20))) +
+  labs(x='Mean', y=NULL)+
+  theme_bw()
+
+urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_urban, xend=mean_rural),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_urban,2), label=round(mean_urban,2)))+
+  geom_text(aes(x=round(mean_rural,2), label=round(mean_rural,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_y_discrete(labels=function(x) str_wrap(x,width=40)) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Urban", 20),
+                              str_wrap("Rural", 20))) +
+  labs(x='Mean', y=NULL
+        )+
+  theme_bw()
+
+# urban_rural1/urban_rural2 +
+#     plot_annotation(title = str_wrap('Differences in Dashboard Indicators Between Urban/Rural Schools',80))
+
   
 
       
@@ -726,9 +807,14 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 
 
+# Practice Indicators
 
+- To begin, we will show a few results from our Practice, or Service Delivery, Indicators collected as part of the school survey.
 
 ## Overall Learning
+
+- We begin with student learning on our assessment of 4th grade students.  
+- We offer breakdowns by Urban/Rural and by Gender
 
 ```{r learning, echo=FALSE}
 
@@ -764,8 +850,45 @@ learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD
 
 ```
 
+- Next we offer breakdowns by whether or not the school survey took place at an Evening School
 
-## Urban/Rural Breakdowns for Infrastructure/Inputs
+```{r learning2, echo=FALSE}
+
+
+
+
+learning_data_plot2 <- final_indicator_data_LERN_anon %>%
+  bind_rows(final_indicator_data_LERN_F_anon, .id="Female") %>%
+  bind_rows(final_indicator_data_LERN_M_anon, .id="Male") %>%
+  mutate(Gender=case_when(
+    Female==1 ~ "All Students",
+    Female==2 ~ "Female",
+    Male==2 ~ "Male",
+    TRUE ~ as.character(NA)
+    )) %>%
+  select(-Female, -Male) %>%
+  mutate(Type=if_else(foundation_period=="Evening", "Evening School", "Non-Evening School"))
+
+
+learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), MD = round(weighted.median(student_knowledge, ipw, na.rm=T),1))
+
+  ggplot(learning_data_plot2, aes(x=Type, y=student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+    geom_boxplot(aes(weight=ipw), position="dodge") +
+    geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, vjust = 1) +
+  ggtitle("4th Grade Student Assessment Scores by Gender and Evening School Status") +
+  xlab(str_wrap("Evening School Status", width=75))+
+  ylab(str_wrap("Fraction Correcton on 4th Grade Assessment",35)) +
+  scale_fill_discrete(name="Gender", 
+                      labels=c('All Students','Girls','Boys' )) +
+  theme_bw() +
+    theme(legend.position = "bottom") 
+
+```
+
+## Breakdowns for Infrastructure/Inputs
+
+- We compare inputs and infrastructure for Urban/Rural schools 
 
 ```{r urban_rural, echo=FALSE}
 
@@ -815,6 +938,63 @@ inpt_urban_rural <- urban_rural %>%
 inpt_urban_rural
 
 ```
+
+- Additionally, We compare Teacher pedagogical skill and infrastructure for Evening versus Non-Evening schools.  
+- Gaps between Evening and Non-Evening schools tend to be larger than the Urban/Rural divide.
+
+```{r evening, echo=FALSE}
+
+
+evening <- school_dta_short_anon %>%
+  mutate(Type=if_else(foundation_period=="Evening", "Evening School", "Non-Evening School"))
+
+
+
+pedg_evening <- evening %>%
+  group_by(Type) %>%
+  mutate(weight=ipw/sum(ipw)) %>%
+  ungroup()
+
+pedgMedian <- summarise(group_by(pedg_evening, Type), MD = round(weighted.median(teach_score, ipw, na.rm=T),1))
+
+
+  
+  ggplot(pedg_evening,aes(x=Type,y=teach_score, fill=Type))  +
+  geom_boxplot(aes(weight=ipw), position="dodge")+
+  geom_text(data = pedgMedian, aes(x=Type, y=MD, label=MD), 
+            position = position_dodge(width = 0.8), size = 3, vjust = 1)  +
+  theme_bw() +
+    scale_fill_discrete(name="Type")+
+  labs(x='Teacher Pedagogical Skill',
+       y='Density')+
+  ggtitle("Teacher Pedagogy (Scale 1-5) in Evening/Non-Evening School")
+  
+
+```
+
+
+```{r evening_input, echo=FALSE}
+
+
+evening_input <- school_dta_short_anon %>%
+  mutate(Type=if_else(foundation_period=="Evening", "Evening School", "Non-Evening School"))
+
+
+
+inpt_evening <- evening_input %>%
+  group_by(Type) %>%
+  mutate(weight=ipw/sum(ipw)) %>%
+  ungroup() %>%
+  ggplot(aes(x=inputs))  +
+    geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
+    theme_bw() +
+  labs(x='Input Index')+
+  ggtitle("Input Across Evening/Non-Evening Schools")
+  
+inpt_evening
+
+```
+
 
 ## First Grade Assessment Score
 
@@ -1004,6 +1184,107 @@ kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighte
     
 ```
 
+## Teacher Content Knowledge
+
+- Regions (North, Middle, South) differ in terms of their service delivery and learning outcomes.  
+- This is particularly true for teacher effort and skill.  
+- Below we plot teacher content knowledge by region to highlight some of these differences.  
+- The South region has teacher content knowledge proficiency levels around 16 points higher than in the North.
+
+```{r content_knowledge_region, echo=FALSE, warning=FALSE}
+
+region_content <- school_dta_short_anon %>%
+  mutate(Type=territory)
+
+
+
+region_content_plot <- region_content %>%
+  group_by(Type) %>%
+  mutate(weight=ipw/sum(ipw)) %>%
+  ungroup() %>%
+  ggplot(aes(x=content_knowledge, y=Type))  +
+    geom_density_ridges(aes(fill=Type , weight=weight), alpha=0.6) +
+    theme_bw() +
+  labs(x='Teacher Content Knowledge')+
+  ggtitle("Teacher Content Knowledge Across Territories")
+  
+region_content_plot <- region_content %>%
+  group_by(Type) %>%
+  mutate(weight=ipw/sum(ipw)) %>%
+  ungroup() %>%
+  ggplot(aes(x=math_content_knowledge))  +
+    geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
+    theme_bw() +
+  labs(caption = "Weighted School Average Content Knowledge Shown in Diagram",
+         x='Teacher Content Knowledge'
+      )+
+  ggtitle("Teacher Content Knowledge Across Territories")
+region_content_plot
+
+#boxplot
+# teacher_absence_final_anon_link<-teacher_absence_final_anon %>%
+#   left_join(school_data_preamble_anon) %>%
+#   select(-interview__key)
+# 
+# region_content2 <- teacher_assessment_dta_anon %>%
+#   mutate(TEACHERS__id=g4_teacher_number) %>%
+#   left_join(teacher_absence_final_anon_link) %>%
+#   mutate(Type=territory,
+#          Gender=if_else(teacher_male==1, "Male", "Female")) %>%
+#   filter(!is.na(Gender)) %>%
+#   mutate(math_content_proficiency=as.numeric(math_content_knowledge>=80),
+#          literacy_content_proficiency=as.numeric(literacy_content_knowledge>=80))
+
+  # contMean <- summarise(group_by(region_content,  Type), MD = round(weighted.mean(literacy_content_proficiency, ipw, na.rm=T),1))
+  # 
+  # p1<-ggplot(region_content, aes(x=Type, y=literacy_content_proficiency, fill=Type)) + #now plot the output in a bar graph
+  #   geom_boxplot(aes(weight=ipw), position="dodge") +
+  #   geom_text(data = contMedian, aes(x=Type, y=MD, label=MD), 
+  #             position = position_dodge(width = 0.8), size = 3, vjust = 1) +
+  # xlab(str_wrap("Territory", width=75))+
+  # ylab(str_wrap("Teacher Content Knowledge",35)) +
+  # theme_bw() +
+  #   theme(legend.position = "bottom") 
+  
+region_content_long <-region_content %>%
+  mutate(overall_content_proficiency=content_proficiency) %>%
+  select(-content_proficiency) %>%
+  pivot_longer(cols=c('overall_content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency'),
+               names_to="Assessment",
+               values_to='content_proficiency') %>%
+  mutate(Assessment=case_when(
+    Assessment=='overall_content_proficiency' ~ "Math + Literacy Combined",
+    Assessment=='literacy_content_proficiency' ~ "Literacy",
+    Assessment=='math_content_proficiency' ~ "Math"
+  ))
+
+
+    contMean <- summarise(group_by(region_content_long,  Type, Assessment), MD = round(weighted.mean(content_proficiency, ipw, na.rm=T),1))
+
+  p1<-ggplot(contMean, aes(x=Assessment, y= MD, fill=Type)) + #now plot the output in a bar graph
+    geom_col( position="dodge") +
+    geom_text(data = contMean, aes(x=Assessment, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, hjust = 1) +
+    geom_text(data = contMean, aes(x=Assessment, y=0, label=Type), 
+              position = position_dodge(width = 0.8), size = 3, hjust = -0.25) +
+  xlab(str_wrap("Subject", width=75))+
+  ylab(str_wrap("Teacher Content Knowledge Proficiency",35)) +
+  scale_fill_discrete(name="Territory") +
+
+  coord_flip() +
+  expand_limits(y=0:100) +
+    theme_bw() +
+    ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Territory", 50)) +
+      theme(
+    legend.position="none"
+  ) 
+p1
+
+
+```
+
+
+
 ## Do principals know their schools?
 
 - Adequate Textbooks:
@@ -1039,10 +1320,16 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
 
 ```
 
+# Policies
 
-## Radar plot
+## Gap between De Facto and De Jure policy
 
-```{r radar, echo=FALSE}
+- The following shows the gaps between the De Jure policy environment as identified by a policy review and the De Facto policy environment as reported by teachers.  
+-  To begin we will show a radar plot of the De Jure and De Facto scores for several teacher and school management policy indicators.  
+- Generally, the policy environment, as indicated by the De Jure, is quite strong.  
+- However, teachers often report a different experience of the policies in practice.
+
+```{r radar, echo=FALSE, warning=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
@@ -1138,7 +1425,10 @@ main_indicator_labels<-c(
 ```
 
 
-## De-Facto Policy
+
+- Next, we explore the De Facto scores for teachers by looking at differences across teachers in how they view the policy environment.  
+- Below are boxplots showing the 25th percentile, median, and 75th percentile ratings of teachers to these policy questions, along with outliers.  
+-  There is significant variation across teachers in how they understand or experience policies.
 
 ```{r defacto, echo=FALSE}
 #get list of de facto indicators
@@ -1202,151 +1492,17 @@ datafirst <- summarise(group_by(data_defacto, indicators), MD = round(quantile(i
 datathird <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE),1))
 
 datagap <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE)-quantile(indicator_values, probs=c(0.25), na.rm=TRUE),1))
-summary(datafirst)
-summary(datathird)
 
+print("Summary Statistics of the Gap between the 75th and 25th Percentiles for Policy Indicators Shown Above.")
 summary(datagap)
 
 ```
 
 
-```{r radar2, eval=FALSE, include=FALSE}
-
-#get list of de facto indicators
-main_indicator_labels<-c( 
-                        'Teaching - Attraction',
-                         'Teaching - Selection & Deployment',
-                         'Teaching - Support', 
-                         'Teaching - Evaluation', 
-                         'Teaching - Monitoring & Accountability', 
-                         'Teaching - Intrinsic Motivation', 
-                         'Inputs & Infrastructure - Standards',
-                         #'Inputs & Infrastructure - Monitoring',
-                         'School Management - Attraction' ,                   
-                         'School Management - Selection & Deployment'  ,      
-                         'School Management - Support' ,                      
-                         'School Management - Evaluation',
-                        'Learners - Nutrition',
-                        'Learners - Heath',
-                        'Learners - Center Based Care',
-                        'Learners - Financial Capacity',
-                        'Learners - Caregiver Skills'
-                        
-
-    )  
-    
-    indicators_list<-c(
-                       'teacher_attraction', 
-                       'teacher_selection_deployment', 
-                       'teacher_support', 
-                       'teaching_evaluation', 
-                       'teacher_monitoring',
-                        'intrinsic_motivation', 
-                       'standards_monitoring',
-                        #'school_monitoring', 
-                       'sch_management_attraction', 
-                       'sch_selection_deployment', 
-                       'sch_support', 
-                       'principal_evaluation',
-                       'nutrition_programs',
-                       'health_programs',
-                       'ece_programs',
-                       'financial_capacity',
-                       'caregiver_skills'
-
-    )
-
-    labels_df_radar<-data.frame(indicators=as.character(indicators_list),
-                          indicator_labels=as.character(main_indicator_labels))
-    
-    ipw<-school_dta_short_anon$ipw
-    
-    #get de facto data
-    data_radar <- school_dta_short_anon %>%
-            mutate(nutrition_programs=4.1,
-             health_programs=3.95,
-             ece_programs=3.85,
-             financial_capacity=2.3,
-             caregiver_skills=4.415) %>% #need to automate this
-      select(hashed_school_code, indicators_list, ipw) %>%
-      #mutate_at(.vars = indicators_list, scales::rescale) %>%
-      summarise_at(.vars = indicators_list, wtd.mean, w=ipw, na.rm=TRUE) %>%
-      mutate(group="De Facto") %>%
-      select(group=group, everything())
 
 
 
-    data_radar2 <- data_radar %>%
-            mutate(nutrition_programs=4.1,
-             health_programs=3.95,
-             ece_programs=3.85,
-             financial_capacity=2.3,
-             caregiver_skills=4.415) %>% #need to automate this
-      mutate_at(.vars=indicators_list, ~as.numeric(sample_n(as_tibble(c(1:5)),1)[1,1])) %>%
-      mutate(group="De Jure") %>%
-      select(group=group, everything())
-
-    
-
-    
-    #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
-
-    expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
-
-    expert_dta_radar <- expert_dta_final %>%
-      mutate(standards_monitoring=inputs_standards) %>%
-      select(colnames(data_radar))
-    
-       data_radar<- data_radar %>%
-      bind_rows(expert_dta_radar)
-       
-   #create radar plot
-    ggradar(data_radar,
-            grid.min=1,
-            grid.mid=3,
-            grid.max=5,
-            values.radar=c("1", "3", "5"),
-            axis.label.size=3,
-            axis.label.offset = 1.25,
-            axis.labels= str_wrap(main_indicator_labels,15),
-            plot.extent.x.sf = 1.5, 
-            plot.extent.y.sf = 1.3,
-            legend.text.size = 3
-              ) +
-      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
-      theme_minimal()+
-      theme(    axis.title = ggplot2::element_blank(),
-    axis.text.x = ggplot2::element_blank(),
-    axis.text.y = ggplot2::element_blank(),
-    axis.ticks = ggplot2::element_blank(),
-    axis.line = ggplot2::element_blank(),
-    panel.grid.minor = ggplot2::element_blank(),
-    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
-    panel.grid.major.x = ggplot2::element_blank()
-
-    )
-    
-    defacto_dejure2<-data_radar %>%
-  pivot_longer(cols=colnames(data_radar)[-1],
-               names_to='Policy',
-               values_to = 'value') %>%
-  arrange(Policy, group) %>%
-  group_by(Policy) %>%
-  summarise(gap=(nth(value,2)-nth(value, 1)))
-
-mean(defacto_dejure2$gap)
-var(defacto_dejure2$gap)
-
-    
-```
-
-
-
-
-
-
-```{r dejure_defacto_gap, eval=FALSE, include=FALSE}
+```{r dejure_defacto_gap, echo=FALSE}
 #calculate gap between de_jure and de_facto
 
 defacto_dejure<-data_radar %>%
@@ -1357,15 +1513,106 @@ defacto_dejure<-data_radar %>%
   group_by(Policy) %>%
   summarise(gap=(nth(value,2)-nth(value, 1)))
 
+print("Below are means and variances of the gap between the De Jure and De Factor for the 10 teacher and school management policies shown above.")
+
 mean(defacto_dejure$gap)
 var(defacto_dejure$gap)
 
 
 ```
 
+- One of the largest gaps between the De Facto and De Jure indicators is in the Teacher Support indicator.  
+- The gap between the De Jure (5 points) and De Facto (2.6 points) is 2.4 points
+- As we show below, while teachers by law are required to complete a practicum few teachers report participating
+- Also, even though professional development programs have professional impliciations for teachers, according to laws, teachers, only 26% of teachers report participating in the last year.
 
+
+
+```{r teacher_support, echo=FALSE, warning=FALSE}
+
+support_indicators <- c(
+                        'pre_service',
+                        'pre_training_exists',
+                        'pre_training_useful',
+                        'practicum',
+                        'pre_training_practicum',
+                        'pre_training_practicum_lngth',
+                        'in_service',
+                        'in_service_exists',
+                        'in_servce_lngth',
+                        'in_service_classroom',
+                        'opportunities_teachers_share'
+                        )
+support_indicators_labels <- c(
+                        'Pre-Service (Induction) Training',
+                        'Had a pre-service training',
+                        'Teacher reported receiving usable skills from training',
+                        'Teacher practicum (teach a class with supervision)',
+                        'Teacher participated in a practicum',
+                        'Practicum lasted more than 3 months and teacher spent more than one hour per day teaching to students.',
+                        'In-Service Training',
+                        'Had an in-service training ',
+                        'In-service training lasted more than 2 total days',
+                        'More than 50% of the in-service training was done in the classroom.',
+                        'Opportunities for teachers to come together to share ways of improving teaching'
+                        )
+support_labels_df <- data.frame(variable=as.character(support_indicators),
+                      varlabels=as.character(support_indicators_labels))
+
+teacher_support_df <- final_indicator_data_TSUP_anon %>%
+  select(one_of(support_indicators)) %>%
+  mutate(
+                        pre_training_exists=pre_training_exists*2,
+                        pre_training_useful=pre_training_useful*2,
+                        pre_training_practicum=pre_training_practicum*2,
+                        pre_training_practicum_lngth=pre_training_practicum_lngth*2)
+
+
+    sch_ipw<-final_indicator_data_TSUP_anon$ipw 
+    
+    #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))
+#creat summary stats
+ teacher_support_stats <-my_skim(teacher_support_df) %>%     
+   yank("numeric") %>%
+   mutate(variable=skim_variable) %>%
+  left_join(support_labels_df) %>%
+   select(variable,varlabels, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
+   mutate(row = row_number()) %>%
+   mutate(group=case_when(
+     row<=3 ~ "Pre Service",
+     row>3 & row<=6 ~ "Practicum",
+     row>6 & row<=10 ~ "In Service",
+     row>10 ~ "Opportunities to Share"
+   ))  #add color codings for graph 
+
+
+  ggplot(teacher_support_stats,aes(y=mean,x=reorder(varlabels,-row), fill=group)) +
+    geom_bar(stat='identity')  +
+    geom_text(color="black", size=3, hjust=1.25,
+                  aes(y=round(mean,2), label=round(mean,2))) +    
+    coord_flip() +
+    labs(x=NULL, y="Score/Fraction of Teachers Reporting", 
+        title='Teacher Support Components')+
+    scale_x_discrete(labels=function(x) str_wrap(x,width=50)) +
+    expand_limits(y=0:1.5) +
+  theme_bw()
+ 
+ 
+ 
+```
+
+# Politics 
 
 ## Overall performance for Bureuacracy Indicators
+
+- Moving to the Bureaucracy Indicators, below we show the averages by Office type for each of our indicators
+- Public officials in the district offices tend to score lower than at the central level
 
 ```{r overall, echo=FALSE}
 

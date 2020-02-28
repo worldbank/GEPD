@@ -1644,14 +1644,11 @@ teacher_questionnaire_TSUP <- teacher_questionnaire_TSUP %>%
          pre_training_useful=if_else(m3sdq3_tsup==1,
                                      bin_var(m3sdq4_tsup,1),
                                      0)/2,
-         pre_training_practicum=if_else(m3sdq3_tsup==1,
-                                        bin_var(m3sdq6_tsup,1),
-                                        0)/2,
+         pre_training_practicum=bin_var(m3sdq6_tsup,1)/2,
          pre_training_practicum_lngth=case_when(
            (m3sdq6_tsup==1 & m3sdq7_tsup>=3 & m3sdq8_tsup>=1) ~  0.5,
            (m3sdq6_tsup==1 & (m3sdq7_tsup<3 | m3sdq8_tsup<1))  ~ 0,
            m3sdq6_tsup==2 ~ 0,
-           m3sdq3_tsup==0 ~ 0,
            TRUE ~ 0),
          in_service_exists=bin_var(m3sdq9_tsup,1),
          in_servce_lngth=case_when(
@@ -2123,9 +2120,9 @@ for (i in indicator_names ) {
     if (!exists('final_school_data')) {
       final_school_data<-temp
       print(i)
-      write_dta(temp, path = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       if (backup_onedrive=="yes") {
-        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       }
       
     } else {
@@ -2133,9 +2130,9 @@ for (i in indicator_names ) {
         left_join(temp, by='school_code') %>%
         select(-ends_with(".x"), -ends_with(".y"))
       
-      write_dta(temp, path = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       if (backup_onedrive=="yes") {
-        write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
+        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
       }
     }
   }
