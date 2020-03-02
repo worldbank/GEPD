@@ -830,6 +830,7 @@ assess_4th_grade_anon <- assess_4th_grade_dta %>%
   select(school_code, interview__key, student_number, student_age, student_male, 
          contains('student_proficient'),
          contains('student_knowledge'),
+         contains('ses'),
          math_items, lit_items)
 
 

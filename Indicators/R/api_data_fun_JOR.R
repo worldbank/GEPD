@@ -28,6 +28,10 @@ indicator_means <- function(variable, dataset, tag,  unit) {
       stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
         filter(rural==FALSE)
       
+    } else if (unit=="Custom") {
+      
+      stat_df<-get(paste(tag)) 
+      
     }
     r <- eval(substitute(variable), stat_df, parent.frame())
     
@@ -683,10 +687,10 @@ api_template <- api_template %>%
   SE.PRM.LNTN.5  =expert_df$breastfeeding, #(De Jure) Does a national policy exist to encourage breastfeeding?
   SE.PRM.LNTN.6  =100*as.numeric(defacto_dta_learners_final$`Percentage of children born in the five (three) years preceding the survey who were ever breastfed`), #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed
   SE.PRM.LNTN.7  =expert_df$school_feeding, #(De Jure) Is there a publicly funded school feeding program?
-  SE.PRM.LNTN.8  =-999 #(De Facto) Percent of schools reporting having publicly funded school feeding program
+  SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
     ) %>%
     mutate(
-      SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6)/300+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
+      SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6 +SE.PRM.LNTN.8)/400+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
       SE.PRM.LNTN.DJ =expert_df$nutrition_programs#(De Jure) Policy Lever (Learners) - Nutrition Programs
   ) %>%
   mutate(

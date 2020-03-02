@@ -1,0 +1,700 @@
+---
+title: "Peru Public Officials Analysis"
+author: "Brian Stacy"
+date: "2/18/2020"
+output:
+  html_document: default 
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(haven)
+library(patchwork)
+library(wbggeo)
+library(wbgmaps)
+library(rgdal)
+library(ggspatial)
+library(kableExtra)
+library(skimr)
+library(DT)
+library(Hmisc)
+library(purrr)
+library(ggpmisc)
+
+knitr::opts_chunk$set(echo = FALSE)
+
+
+# define stle for ggplot based on BBC plotting styles
+bbc_style <- function() {
+  font <- "Helvetica"
+  
+  ggplot2::theme(
+    
+    #Text format:
+    #This sets the font, size, type and colour of text for the chart's title
+    plot.title = ggplot2::element_text(family=font,
+                                       size=28,
+                                       face="bold",
+                                       color="#222222"),
+    #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+    plot.subtitle = ggplot2::element_text(family=font,
+                                          size=22,
+                                          margin=ggplot2::margin(9,0,9,0)),
+    plot.caption = ggplot2::element_blank(),
+    #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+    
+    #Legend format
+    #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+    legend.position = "top",
+    legend.text.align = 0,
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    legend.key = ggplot2::element_blank(),
+    legend.text = ggplot2::element_text(family=font,
+                                        size=18,
+                                        color="#222222"),
+    
+    #Axis format
+    #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_text(family=font,
+                                      size=18,
+                                      color="#222222"),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    
+    #Grid lines
+    #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank(),
+    
+    #Blank background
+    #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+    panel.background = ggplot2::element_blank(),
+    
+    #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+    strip.background = ggplot2::element_rect(fill="white"),
+    strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+
+
+```
+
+```{r data, include=FALSE}
+
+#set directory to bring in data
+
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+
+#load public official data
+load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
+
+#load school data
+load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
+
+#load set of districts that match to schools
+directorate_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/sampling/district_sample_2019-11-05.csv")
+
+#read in merged public officials and school survey data.  Merged by Thomas Nicholas Mosher 
+# merged_df <- read_dta("C:/Users/wb469649/WBG/Daniel Rogger - DataWork/baseround/DataSets/Deidentified/wholemerge_dept.dta" )
+# 
+# po_df <- read_dta("C:/Users/wb469649/WBG/Daniel Rogger - DataWork/EncryptedData/Master public_officials Encrypted/DataSet/A_Confidential_Peru+PO.dta" ) %>%
+#   mutate(id=department_clean) %>%
+#   filter(mandates_accountability!=0)
+
+
+```
+
+
+```{r merge, include=FALSE}
+
+#aggregate to office level
+public_officials_agg <- public_officials_dta_clean %>%
+  filter(govt_tier=='District office (or equivalent)') %>%
+  group_by(office_preload) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+#rename offices to match those in original directorate list
+#first form regular expression with list of directorates
+if (exists('directorate_regex')) {
+  rm('directorate_regex')
+}
+
+
+for (i in directorate_list$directorate) {
+  if (!exists('directorate_regex')) {
+  directorate_regex<-i
+  } else {
+  directorate_regex<-paste(directorate_regex, i, sep="|")
+  }
+}
+
+public_officials_agg <- public_officials_agg %>%
+  mutate(school_district_preload=str_trim(str_extract(office_preload,paste('\\b(',directorate_regex,')\\b', sep="")))) %>%
+  filter(!is.na(school_district_preload)) %>%
+  select(-c("survey_time", "lat", "lon"))
+
+#get list of schools that have a district match
+school_dta_matched <- school_dta_short %>%
+  filter(school_district_preload %in% directorate_list$directorate) %>%
+  left_join(public_officials_agg)
+
+
+
+```
+
+
+
+## Introduction
+
+- This presentation highlights results linking school level data to data from Survey of Public Officials  
+- 206 schools were sampled as part of GEPD school survey  
+- 203 public officials were interviewed.  Excluding HR officials:  
+  - 62 at the Ministry of Education
+  - 60 at the Regional (Departamento) level
+  - 59 at the District (UGEL) level
+
+## Goals
+
+- The goals of this analysis are examine whether areas with high performing public officials have high performing schools  
+  - We recognize that this analysis is descriptive in nature, not necessarily causal
+- We will plot the regional (Departamento level) scores on our bureaucracy indicators on school level measures of performance
+
+## Highest Performing Regions
+
+- The following plots the scores (1-5) of our Bureaucracy indicators by region in which we interviewed public officials
+- The score is the average of all public officials in the region, including at the UGEL level
+
+```{r map_preamble, message=FALSE, warning=FALSE, include=FALSE}
+fgdb <- "C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Dashboard Mockup/maps/2015_GAUL_Dataset_Mod.gdb"
+
+# List all feature classes in a file geodatabase
+subset(ogrDrivers(), grepl("GDB", name))
+fc_list <- ogrListLayers(fgdb)
+print(fc_list)
+
+# Read the feature class
+fc <- readOGR(dsn=fgdb,layer="g2015_2014_1", encoding = "UTF-8", use_iconv = TRUE)
+
+
+#select data just for peru
+fc_peru <- fc[fc@data$ADM0_NAME=="Jordan",]
+
+
+
+#plot base map of Peru with labels for subnational units.  http://rstudio.github.io/leaflet/popups.html
+maps <- fortify(fc_peru, region="ADM1_NAME")
+
+#fix a few region names
+maps <- maps %>%
+  mutate(id=case_when(
+    id=="Apurímac" ~ "Apurimac",
+    id=="Huánuco" ~ "Huanuco",
+    TRUE ~ id
+  ))
+
+#bin our variable of interest
+po_df_collapse <- public_officials_agg %>%
+  group_by(id) %>%
+  summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+
+public_officials_agg_collapse$bins <- supercut(as.numeric(public_officials_agg_collapse$mandates_accountability), c(
+  "1-2" = "[1, 2)",
+  "2-3" = "[2, 3)",
+  "3-4" = "[3, 4)",
+  "4-5" = "[4, 5]"
+))
+  
+
+
+
+```
+
+```{r map, echo=FALSE, warning=FALSE, fig.width=9, fig.height=6}
+
+acm<-  ggplot() +
+    geom_map(data=maps, map=maps,
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", size=0.1, fill='white') +
+    geom_map(data = public_officials_agg_collapse, aes(map_id = id, fill=mandates_accountability), map = maps) + 
+    expand_limits(x = maps$long, y = maps$lat) +
+    scale_fill_viridis_c(limits=c(2.5,5),
+                         name=str_wrap("Mandates & Accountability Score",width=20),
+                      na.value = "grey80",
+                      labels = rename_na("No data")) +
+    coord_equal() +
+    # annotation_north_arrow(location = "bl", which_north = "true", 
+    #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
+    #     style = north_arrow_fancy_orienteering) +
+  theme_bw() +
+    xlab('Longitude') + 
+    ylab('Latitude') + 
+    # ggtitle(str_wrap('Map Survey of Public Officials Scores for Mandates and Accountability by Peruvian Departamento', width=50)) +
+      theme(panel.grid.major = element_line(color = gray(.5), 
+                                            linetype = "dashed", size = 0.5), 
+            panel.background = element_rect(fill = "aliceblue"))
+      
+qb<-  ggplot() +
+    geom_map(data=maps, map=maps,
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", size=0.1, fill='white') +
+    geom_map(data = public_officials_agg_collapse, aes(map_id = id, fill=quality_bureaucracy), map = maps) + 
+    expand_limits(x = maps$long, y = maps$lat) +
+    scale_fill_viridis_c(limits=c(2.5,5),
+                         name=str_wrap("Quality Bureaucracy Score",width=20),
+                      na.value = "grey80",
+                      labels = rename_na("No data")) +
+    coord_equal() +
+    # annotation_north_arrow(location = "bl", which_north = "true", 
+    #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
+    #     style = north_arrow_fancy_orienteering) +
+  theme_bw() +
+    xlab('Longitude') + 
+    ylab('Latitude') + 
+      theme(panel.grid.major = element_line(color = gray(.5), 
+                                            linetype = "dashed", size = 0.5), 
+            panel.background = element_rect(fill = "aliceblue"))
+
+nlg<-  ggplot() +
+    geom_map(data=maps, map=maps,
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", size=0.1, fill='white') +
+    geom_map(data = public_officials_agg_collapse, aes(map_id = id, fill=national_learning_goals), map = maps) + 
+    expand_limits(x = maps$long, y = maps$lat) +
+    scale_fill_viridis_c(limits=c(2.5,5),
+                         name=str_wrap("National Learning Goals Score",width=20),
+                      na.value = "grey80",
+                      labels = rename_na("No data")) +
+    coord_equal() +
+    # annotation_north_arrow(location = "bl", which_north = "true", 
+    #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
+    #     style = north_arrow_fancy_orienteering) +
+  theme_bw() +
+    xlab('Longitude') + 
+    ylab('Latitude') + 
+      theme(panel.grid.major = element_line(color = gray(.5), 
+                                            linetype = "dashed", size = 0.5), 
+            panel.background = element_rect(fill = "aliceblue"))      
+
+idm <- ggplot() +
+    geom_map(data=maps, map=maps,
+                    aes(x=long, y=lat, map_id=id),
+                    color="black", size=0.1, fill='white') +
+    geom_map(data = public_officials_agg_collapse, aes(map_id = id, fill=impartial_decision_making), map = maps) + 
+    expand_limits(x = maps$long, y = maps$lat) +
+    scale_fill_viridis_c(limits=c(2.5,5),
+      name=str_wrap("Impartial Decision Making Score",width=20),
+                      na.value = "grey80",
+                      labels = rename_na("No data")) +
+    coord_equal() +
+    # annotation_north_arrow(location = "bl", which_north = "true", 
+    #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
+    #     style = north_arrow_fancy_orienteering) +
+  theme_bw() +
+    xlab('Longitude') + 
+    ylab('Latitude') + 
+      theme(panel.grid.major = element_line(color = gray(.5), 
+                                            linetype = "dashed", size = 0.5), 
+            panel.background = element_rect(fill = "aliceblue"))   
+
+
+patch_plot <- (idm | acm ) / (nlg | qb )
+
+patch_plot + plot_annotation(
+  title = 'Plots of Bureaucracy Indicators Across Regions',
+  caption = 'Regional shading shows average of all public officials in that departamento including officials at UGEL level'
+)
+```
+
+
+## Table of Summary Statistics by Region
+
+
+
+```{r table, include=FALSE}
+
+public_officials_agg_trim <- public_officials_agg %>%
+  select(id,mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making) %>%
+  group_by(id)
+
+skim_with_defaults()
+
+    sumstats_df<-skim(public_officials_agg_trim) %>%
+      select(-level, -type, -value) %>%
+      spread(stat, formatted) %>%
+      mutate(varlabel=case_when(
+        variable=="mandates_accountability" ~ "Mandates & Accountability",
+        variable=="quality_bureaucracy" ~ "Quality Bureuacracy",
+        variable=="national_learning_goals" ~ "National Learning Goals",
+        variable=="impartial_decision_making" ~ "Impartial Decision Making"
+      )) %>%
+      select(varlabel, mean, sd, p0, p25, p50, p75, p100,  hist) 
+    
+  
+    
+```
+
+```{r table_output, echo=FALSE}
+  knitr::kable(sumstats_df,
+        caption = "Summary Statistics of Bureaucracy Indicators by Region",
+        col.names = c( "Variable", "Mean", "Std Dev", "Min", "25th Percentile", "Median", "75th Percentile", "Max", "Histogram")) %>%
+  kable_styling( bootstrap_options = c("striped", "hover")) %>%
+    pack_rows("Amazonas", 1, 5) %>%
+    pack_rows("Apurimac", 5, 9) %>%
+    pack_rows("Cajamarca", 9, 13) %>%
+    pack_rows("Callao", 13, 17) %>%
+    pack_rows("Cusco", 17, 21) %>%
+    pack_rows("Huanuco", 21, 25) %>%
+    pack_rows("La Libertad", 25, 29) %>%
+    pack_rows("Lima", 29, 33) %>%
+    pack_rows("Loreto", 33, 37) %>%
+    pack_rows("Piura", 37, 41) %>%
+    pack_rows("Tumbes", 41, 44)
+```
+
+## School Level Outcomes by Performance of Region's Bureaucracy
+
+- The following table shows school level outcomes by the region's average bureaucracy indicator scores  
+- The table is broken into four sections:  
+  - Mandates & Accountability
+  - Quality of Bureaucracy
+  - Impartial Decision Making
+  - National Learning Goals
+  
+- In each section, the columns marked Top 50% show the means for regions above the 50th percentile for that indicator  
+-  The column marked Bottom 50% shows the school outcomes for regions below the 50th percentile
+
+```{r po_table_fun, include=FALSE}
+main_indicator_labels<-c("4th Grade Student Proficiency", 
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", 
+                        "Teacher Content Proficiency", 
+                        "1st Grade Assessment Proficiency", 
+                        "Inputs", 
+                        "Infrastructure", 
+                        "Operational Management", 
+                        "Teacher Intrinsic Motivation", 
+                        "Instructional Leadership", 
+                        'Principal Knowledge of School',
+                        'Principal Management Skills', 
+                        'Teacher Attraction (De Facto)',
+                        'Teacher Selection & Deployment (De Facto)',
+                        'Teacher Support (De Facto)', 
+                        'Teacher Evaluation (De Facto)', 
+                        'Teacher Monitoring & Accountability (De Facto)', 
+                        "Inputs and Infrastructure Standards", 
+                        "Inputs and Infrastructure Monitoring", 
+                        "School Management Clarity of Functions", 
+                        "School Management Attraction", 
+                        "School Management Selection & Deployment",
+                        "School Management Support", 
+                        "School Management Evaluation"
+    )  
+    
+    indicators_list<-c('student_proficient',
+                       'student_attendance', 
+                       'presence_rate',
+                       'content_proficiency', 
+                       'ecd_student_proficiency', 
+                       'inputs', 
+                       'infrastructure',
+                       'operational_management', 
+                       'instructional_leadership',
+                       'principal_knowledge_score',
+                       'principal_management', 
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                       'intrinsic_motivation', 
+                       'standards_monitoring',
+                       'sch_monitoring', 
+                       'sch_management_clarity',
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
+                       'principal_evaluation'
+    )
+  
+    labels_df<-data.frame(name=as.character(indicators_list),
+                          varlabel=as.character(main_indicator_labels))
+
+    sch_ipw<-school_dta_matched$total_enrolled 
+
+
+      #add function to produce weighted summary stats
+    #add function to produce weighted summary stats
+    skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                               complete_count= ~ sum(!is.na(.))))
+    
+    school_dta_matched <- school_dta_matched %>%
+    filter(!is.na(total_enrolled))
+  
+  tables_public_officials <- function(po_var) {
+  
+    
+    po_var<-enquo(po_var)
+    
+    sumstats_merged <- school_dta_matched %>%
+      filter(UQ(po_var) == 1 | UQ(po_var) == 0) 
+    
+    sch_ipw<-sumstats_merged$total_enrolled 
+
+        skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                               complete_count= ~ sum(!is.na(.))))
+    
+    sumstats_merged <- sumstats_merged %>%
+      select(one_of(indicators_list) ) 
+  
+  
+
+    
+
+    sumstats_school_dta_matched<-skim(sumstats_merged) %>%
+      select(-level, -type, -value) %>%
+      spread(stat, formatted) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+
+ 
+        sumstats_school_dta_matched <- sumstats_school_dta_matched %>%
+              mutate(name=variable,
+                     indicators=variable) %>%
+              left_join(labels_df) %>%
+                mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+                      ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+              mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+              select(variable, varlabel, mean, ci)
+      
+  
+
+
+      
+    
+     #Now do breakdown by govt_tier
+      #top 50
+      sumstats_merged_top <- school_dta_matched %>%
+        filter(UQ(po_var) == 1) 
+ 
+  
+      sch_ipw<-sumstats_merged_top$total_enrolled 
+      skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                               complete_count= ~ sum(!is.na(.))))
+    
+  
+      sumstats_merged_top <- sumstats_merged_top %>%
+                  select( one_of(indicators_list) ) 
+
+
+      
+      
+      sumstats_merged_top_df<-skim(sumstats_merged_top) %>%
+        select(-level, -type, -value) %>%
+        spread(stat, formatted) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+      
+      
+      #add variable label
+      sumstats_merged_top_df <- sumstats_merged_top_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_top=mean,
+               ci_top=ci) %>%
+        select(variable, varlabel, mean_top, ci_top)
+      
+     #bottom 
+      sumstats_merged_bottom <- school_dta_matched %>%
+        filter(UQ(po_var) %in% c(0))
+  
+      sch_ipw<-sumstats_merged_bottom$total_enrolled 
+      skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                               complete_count= ~ sum(!is.na(.))))
+    
+  
+      sumstats_merged_bottom <- sumstats_merged_bottom %>%
+                select( one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_merged_bottom_df<-skim(sumstats_merged_bottom) %>%
+        select(-level, -type, -value) %>%
+        spread(stat, formatted) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+      
+      
+      #add variable label
+      sumstats_merged_bottom_df <- sumstats_merged_bottom_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_bottom=mean,
+               ci_bottom=ci) %>%
+        select(variable, varlabel, mean_bottom, ci_bottom)
+      
+         
+      
+      #now bind urban/rural with the main results
+      sumstats_school_dta_matched2 <- sumstats_school_dta_matched %>%
+        left_join(sumstats_merged_top_df) %>%
+        left_join(sumstats_merged_bottom_df) 
+  
+    
+    
+  
+    sumstats_df2 <- sumstats_school_dta_matched2 %>%
+      arrange(factor(varlabel, levels=main_indicator_labels))
+    
+  
+     
+     sumstats_df2<-sumstats_df2 %>%
+       select(varlabel,  mean, ci, mean_top, ci_top, mean_bottom, ci_bottom)
+}
+  
+acm_top50<-tables_public_officials(po_var= top50mandates_accountability)
+qb_top50<-tables_public_officials(po_var= top50quality_bureaucracy)
+idm_top50<-tables_public_officials(po_var= top50impartial_decision_making)
+nlg_top50<-tables_public_officials(po_var= top50national_learning_goals)
+
+top_50_table <- bind_rows(
+  acm_top50, qb_top50, idm_top50, nlg_top50
+)
+
+
+   
+```
+
+ 
+    
+   
+
+
+
+```{r datatable2, echo=FALSE}
+ #add in custom column sub-headers
+  
+
+    knitr::kable(top_50_table,
+        caption = "Mean and 95% Confident Interval of School Indicators by Top 50 & Bottom 50 Percentiles of Bureaucracy Indicators",
+        col.names = c( "Variable", "Overall Mean", "Overall CI", "Top 50% Mean", "Top 50% CI", "Bottom 50% Mean", "Bottom 50% CI" )) %>%
+  kable_styling( bootstrap_options = c("striped", "hover")) %>%
+    pack_rows("Mandates & Accountability", 1, 25) %>%
+    pack_rows("Quality of Bureaucracy", 25, 49) %>%
+    pack_rows("Impartial Decision Making", 49, 73) %>%
+    pack_rows("National Learning Goals", 73, 96) 
+
+
+
+
+```
+
+
+
+
+```{r scatters, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
+
+
+merge_df_collapse<-school_dta_matched %>%
+  group_by(g1) %>%
+  select(g1,student_proficient, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
+  summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
+
+
+
+
+acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=student_proficient)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Competencia ") +
+        xlab("Mandatos y Rendición de Cuentas") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=student_proficient)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Competencia ") +
+        xlab("Características de la burocracia") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)
+
+nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=student_proficient)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Competencia ") +
+        xlab("Objetivos Nacionales de Aprendizaje") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)
+
+
+idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=student_proficient)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Competencia ") +
+        xlab("Decisiones Imparciales") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)   
+
+
+patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
+
+patch_scatter + plot_annotation(
+  title = 'Diagrama de los Niveles de la Competencia de estudiantes de 4º Grado y los Indicadores de Burocracia, por Región',
+  caption = str_wrap('Para la puntuación regional se utiliza el promedio regional de todos los funcionarios públicos de ese departamento, incluidos los de la UGEL.',150)
+)
+
+
+
+```
+
+

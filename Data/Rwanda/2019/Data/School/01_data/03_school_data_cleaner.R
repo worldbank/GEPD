@@ -841,6 +841,7 @@ if (graded_data!='yes') {
     select(school_code, interview__key, student_number, student_age, student_male, 
            contains('student_proficient'),
            contains('student_knowledge'),
+           contains('ses'),
            math_items, lit_items)
   
   
@@ -1963,7 +1964,7 @@ if (graded_data!='yes') {
   
   school_data_SATT <- school_data_SATT %>%
     mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-           principal_salary=12*m7shq2_satt/665680.02	) %>%
+           principal_salary=if_else(m7shq2_satt==999, as.numeric(NA),12*m7shq2_satt/665680.02	)) %>%
     mutate(
       principal_salary_score=case_when(
         between(principal_salary,0,0.5) ~ 1,
@@ -1971,6 +1972,9 @@ if (graded_data!='yes') {
         between(principal_salary,0.75,1) ~ 3,
         between(principal_salary,1,1.5) ~ 4,
         between(principal_salary,1.5,5) ~ 5)) %>%
+    mutate(principal_salary_score=if_else(m7shq2b_satt==1,3 ,principal_salary_score)) %>%
+    mutate(principal_salary_score=if_else(m7shq2b_satt==2,4 ,principal_salary_score)) %>%
+    mutate(principal_salary_score=if_else(m7shq2b_satt>2,5 ,principal_salary_score)) %>%
     mutate(sch_management_attraction=(principal_satisfaction+principal_salary_score)/2)
   
   final_indicator_data_SATT <- school_data_SATT %>%
