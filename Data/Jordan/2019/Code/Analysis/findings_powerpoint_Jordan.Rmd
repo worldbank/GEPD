@@ -1002,7 +1002,7 @@ inpt_evening
 - Note that the children assessed in 4th grade differ from the students assessed in 1st grade  
 - The graph is meant to associate levels of student learning in 1st grade with 4th grade student learning.
 
-```{r 1st_grade_plot, echo=FALSE}
+```{r 1st_grade_plot, echo=FALSE, fig_height=8, fig_width=9}
  #############################
     # Create database with just learning outcomes for regressions
     ##############################
@@ -1023,7 +1023,6 @@ inpt_evening
           legend.position='none'
         ) +
         expand_limits(x = 0, y = 0) +
-        ggtitle(str_wrap("Scatterplot of School Average 4th Grade Student Scores against 1st Grade Student Scores",60)) +
         labs(colour = "Indicator") +
         ylab(paste0("4th Grade Score")) +
         xlab(paste0("1st Grade Score")) +
@@ -1032,7 +1031,35 @@ inpt_evening
                      formula = 'y~x', parse = TRUE, size = 5)
       
       
-      regplots
+      regplots2<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#ff0000")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#ff0000")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none',
+          axis.text.y=element_blank(),
+          axis.title.y=element_blank()
+        ) +
+        expand_limits(x = 1, y = 0) +
+        labs(colour = "Indicator") +
+        ylab(paste0("4th Grade Score")) +
+        xlab(paste0("Pedagogy Score")) +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = 0.2,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      regplots +
+          plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against 1st Grade Student Scores",90))
+
+      
+      regplots2 +
+          plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against Teacher Pedagogy Scores",90))
+
+        regplots + regplots2 
+
       
       
       
@@ -1204,6 +1231,7 @@ region_content_plot <- region_content %>%
   ungroup() %>%
   ggplot(aes(x=content_knowledge, y=Type))  +
     geom_density_ridges(aes(fill=Type , weight=weight), alpha=0.6) +
+    geom_vline(xintercept=80) +
     theme_bw() +
   labs(x='Teacher Content Knowledge')+
   ggtitle("Teacher Content Knowledge Across Territories")
@@ -1214,6 +1242,7 @@ region_content_plot <- region_content %>%
   ungroup() %>%
   ggplot(aes(x=math_content_knowledge))  +
     geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
+      geom_vline(xintercept=80) +
     theme_bw() +
   labs(caption = "Weighted School Average Content Knowledge Shown in Diagram",
          x='Teacher Content Knowledge'
@@ -1606,6 +1635,85 @@ teacher_support_df <- final_indicator_data_TSUP_anon %>%
  
  
 ```
+
+## Discuss Results of Teacher Evaluation with Principal
+
+```{r discuss_results, echo=FALSE}
+
+discuss_indicators <- c(
+                        'no_discuss',
+                        'discuss_10',
+                        'discuss_10_30',
+                        'discuss_30'
+                        )
+discuss_indicators_labels <- c(
+                        'No Discussion',
+                        'Discussed less than 10 min',
+                        'Discussed 10-30 min',
+                        'Discussed more than 30 min'
+                        )
+discuss_labels_df <- data.frame(variable=as.character(discuss_indicators),
+                      varlabels=as.character(discuss_indicators_labels))
+
+teacher_discuss_df <- teacher_questionnaire_anon %>%
+  mutate(no_discuss=100*if_else(m3sdq19_ildr==0,1,0),
+         discuss_10=100*case_when(
+           m3sdq19_ildr==0 ~ 0,
+           (m3sdq19_ildr==1 & m3sdq20_ildr!=1) ~ 0,
+           (m3sdq19_ildr==1 & m3sdq20_ildr==1) ~ 1,
+           TRUE ~ as.numeric(NA)
+         ),
+          discuss_10_30=100*case_when(
+           m3sdq19_ildr==0 ~ 0,
+           (m3sdq19_ildr==1 & m3sdq20_ildr!=2) ~ 0,
+           (m3sdq19_ildr==1 & m3sdq20_ildr==2) ~ 1,
+           TRUE ~ as.numeric(NA)
+         ),
+          discuss_30=100*case_when(
+           m3sdq19_ildr==0 ~ 0,
+           (m3sdq19_ildr==1 & m3sdq20_ildr!=3) ~ 0,
+           (m3sdq19_ildr==1 & m3sdq20_ildr==3) ~ 1,
+           TRUE ~ as.numeric(NA)
+         )
+         ) %>%
+  select(one_of(discuss_indicators)) 
+
+
+    sch_ipw<-teacher_questionnaire_anon$ipw 
+    
+    #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))
+#creat summary stats
+ teacher_discuss_stats <-my_skim(teacher_discuss_df) %>%     
+   yank("numeric") %>%
+   mutate(variable=skim_variable) %>%
+  left_join(discuss_labels_df) %>%
+   select(variable,varlabels, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
+   mutate(row = row_number()) 
+
+
+  ggplot(teacher_discuss_stats,aes(y=mean,x=reorder(varlabels,-row), fill='blue')) +
+    geom_bar(stat='identity')  +
+    geom_text(color="black", size=3, hjust=1.25,
+                  aes(y=round(mean,2), label=round(mean,2))) +    
+    coord_flip() +
+    labs(x=NULL, y="Score/Fraction of Teachers Reporting", 
+        title=str_wrap('Did Teacher Discuss Results from Classroom Observation and for How Long?',50))+
+    scale_x_discrete(labels=function(x) str_wrap(x,width=50)) +
+    expand_limits(y=0:1.5) +
+  theme_bw() +
+   theme(legend.position = 'none')
+
+
+
+```
+
+
 
 # Politics 
 

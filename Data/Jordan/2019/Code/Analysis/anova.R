@@ -90,6 +90,36 @@ cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
 robust_multi_se    <- sqrt(diag(cov1_multi))
 
 summary(multi_reg_school)
+
+
+my_formula <- as.formula(paste('math_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg_school<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
+# Adjust standard errors
+cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+summary(multi_reg_school)
+
+my_formula <- as.formula(paste('literacy_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg_school<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
+# Adjust standard errors
+cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+summary(multi_reg_school)
+
+
+nogiraffe_df<-final_indicator_data_LERN_anon %>%
+  left_join(school_dta_short_anon            )
+
+
+my_formula <- as.formula(paste('literacy_student_knowledge_nogiraffe ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg_school<-lm(my_formula, nogiraffe_df, weights = nogiraffe_df$ipw)   
+# Adjust standard errors
+cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+summary(multi_reg_school)
 # 
 # stargazer( multi_reg, type = "html",
 #            se        = list(robust_multi_se),
@@ -141,6 +171,14 @@ covariates<-c( 'presence_rate',
                'principal_evaluation')
 
 my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg<-lm(my_formula, reg_df, weights = reg_df$school_ipw)   
+# Adjust standard errors
+cov1_multi         <- vcovHC(multi_reg, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+summary(multi_reg)
+
+my_formula <- as.formula(paste('literacy_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
 multi_reg<-lm(my_formula, reg_df, weights = reg_df$school_ipw)   
 # Adjust standard errors
 cov1_multi         <- vcovHC(multi_reg, type = "HC1")

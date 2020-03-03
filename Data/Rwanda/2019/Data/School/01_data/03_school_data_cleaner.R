@@ -330,7 +330,7 @@ preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'te
 
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
-  mutate(school_absence_rate=100*case_when(
+  mutate(sch_absence_rate=100*case_when(
     m2sbq6_efft==6 | teacher_available==2 ~ 1,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
@@ -349,7 +349,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
     m2sbq3_efft!=8   ~ 0,
     is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
   mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
-         school_absence_rate=if_else(is.na(school_absence_rate), principal_absence, school_absence_rate ),
+         sch_absence_rate=if_else(is.na(sch_absence_rate), principal_absence, sch_absence_rate ),
          presence_rate=100-absence_rate)
 
 
@@ -1309,7 +1309,7 @@ if (graded_data!='yes') {
              m3sdq18_ildr__3==1 ~ "Monitoring",
              m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
            discussion_30_min=bin_var(m3sdq20_ildr,1),
-           discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3),1,0), #make sure there was discussion and lasted more than 10 min
+           discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>=2),1,0), #make sure there was discussion and lasted more than 10 min
            feedback_observation=if_else((m3sdq21_ildr==1 & (m3sdq22_ildr__1==1 | m3sdq22_ildr__2==1 | m3sdq22_ildr__3==1
                                                             | m3sdq22_ildr__4==1 | m3sdq22_ildr__5==1)),1,0), #got feedback and was specific
            lesson_plan=if_else(m3sdq23_ildr==1,1,0),
