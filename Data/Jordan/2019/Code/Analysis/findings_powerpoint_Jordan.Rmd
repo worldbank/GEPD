@@ -154,7 +154,7 @@ wrapper <- function(x, ...)
 
 ```
 
-
+## Main Indicator Tables by Urban/Rural, Public/Private, Evening/Non-Evening, Regions, Owned/Rented School Property
 
 
 ```{r dt, echo=FALSE, message=FALSE, warning=FALSE}
@@ -162,7 +162,7 @@ wrapper <- function(x, ...)
 #create subset with just main indicators
     indicators_list<-c('student_proficient',
                        'student_attendance', 
-                       'presence_rate',
+                       'sch_absence_rate',
                        'content_proficiency', 
                        'teach_prof',
                        'ecd_student_proficiency', 
@@ -193,7 +193,7 @@ wrapper <- function(x, ...)
  
 main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
                          'Student Attendance',
-                         'Teacher Effort', 
+                         'School Absence Rate', 
                          "Teacher Content Knowledge", 
                          "Teacher Pedagogical Skills",
                          'Capacity for Learning', 
@@ -468,6 +468,153 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
   labs(x='Mean', y=NULL
         )+
   theme_bw()
+
+
+
+#public/private
+  
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+
+      
+      #Now do breakdown by non-evening/Rural
+      #non-evening
+      sumstats_school_nonprivate <- school_dta_short_anon %>%
+        filter(supervisory_authority!="Private") 
+      
+      
+      sch_ipw<-sumstats_school_nonprivate$ipw 
+      
+      sumstats_school_nonprivate <- sumstats_school_nonprivate %>%
+        select(one_of(indicators_list)) 
+      
+      
+      
+      sumstats_school_nonprivate_df<-my_skim(sumstats_school_nonprivate) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_nonprivate_df <- sumstats_school_nonprivate_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=mean,
+               ci_urban=ci) %>%
+        select(varlabel, mean_urban, ci_urban)
+      
+      #private
+      sumstats_school_private <- school_dta_short_anon  %>%
+        filter(supervisory_authority=="Private") 
+      
+      
+      sch_ipw<-sumstats_school_private$ipw 
+      
+      sumstats_school_private <- sumstats_school_private %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_private_df<-my_skim(sumstats_school_private) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_private_df <- sumstats_school_private_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_rural=mean,
+               ci_rural=ci) %>%
+        select(varlabel, mean_rural, ci_rural)
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_nonprivate_df) %>%
+        left_join(sumstats_school_private_df)
+      
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=as.numeric(NA),
+               ci_urban=as.numeric(NA),
+               mean_rural=as.numeric(NA),
+               ci_rural=as.numeric(NA)) %>%
+        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+     
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Public/Private Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Public to Private"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
+  
 
 # urban_rural1/urban_rural2 +
 #     plot_annotation(title = str_wrap('Differences in Dashboard Indicators Between Urban/Rural Schools',80))
@@ -801,6 +948,150 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
    
 
     
+#rented/owned
+  
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+
+      
+      #Now do breakdown by non-evening/Rural
+      #non-evening
+      sumstats_school_nonrented <- school_dta_short_anon %>%
+        filter(property_type!="Tenant") 
+      
+      
+      sch_ipw<-sumstats_school_nonrented$ipw 
+      
+      sumstats_school_nonrented <- sumstats_school_nonrented %>%
+        select(one_of(indicators_list)) 
+      
+      
+      
+      sumstats_school_nonrented_df<-my_skim(sumstats_school_nonrented) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_nonrented_df <- sumstats_school_nonrented_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=mean,
+               ci_urban=ci) %>%
+        select(varlabel, mean_urban, ci_urban)
+      
+      #rented
+      sumstats_school_rented <- school_dta_short_anon  %>%
+        filter(property_type=="Tenant") 
+      
+      
+      sch_ipw<-sumstats_school_rented$ipw 
+      
+      sumstats_school_rented <- sumstats_school_rented %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_rented_df<-my_skim(sumstats_school_rented) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_rented_df <- sumstats_school_rented_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_rural=mean,
+               ci_rural=ci) %>%
+        select(varlabel, mean_rural, ci_rural)
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_nonrented_df) %>%
+        left_join(sumstats_school_rented_df)
+      
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=as.numeric(NA),
+               ci_urban=as.numeric(NA),
+               mean_rural=as.numeric(NA),
+               ci_rural=as.numeric(NA)) %>%
+        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+     
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Owned/Rented Property Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Owned to Rented"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Owned"=2,"Rented"=2, " "=1))
+  
 
     
 ```
@@ -1520,10 +1811,15 @@ dataMedian <- summarise(group_by(data_defacto, indicators), MD = round(median(in
 datafirst <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.25), na.rm=TRUE),1))
 datathird <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE),1))
 
+datafirst
+datathird
+
 datagap <- summarise(group_by(data_defacto, indicators), MD = round(quantile(indicator_values, probs=c(0.75), na.rm=TRUE)-quantile(indicator_values, probs=c(0.25), na.rm=TRUE),1))
 
 print("Summary Statistics of the Gap between the 75th and 25th Percentiles for Policy Indicators Shown Above.")
 summary(datagap)
+
+
 
 ```
 
@@ -1759,3 +2055,952 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     theme(legend.position = "bottom") 
 
 ```
+
+
+# Appendix
+
+## Table of Sub-Indicators by Urban/Rural, Public/Private, Evening/Non-Evening, Regions, Owned/Rented School Property
+
+- Note: In many cases, the sub-indicators are displayed as the fraction (0-1) of respondents answering
+
+```{r dt2, echo=FALSE, message=FALSE, warning=FALSE}
+  
+#create subset with just main indicators
+    indicators_list<- c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient','student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+ 
+main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", "4th Grade Student Proficiency - No Lonely Giraffe","4th Grade Student Proficiency Literacy - No Lonely Giraffe", "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
+                        "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
+                        "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
+                        "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
+                        "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
+                        "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                        "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
+                        'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                        'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                        'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                        'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                        'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 'principal_salary',
+                        "School Management Selection & Deployment",
+                        "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                        "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
+                        "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+                        )
+
+
+labels_df_2<-data.frame(indicators=as.character(indicators_list),
+                      indicator_labels=as.character(main_indicator_labels2))
+
+
+
+# School Survey
+    metadata<-metadta
+    
+
+    sch_ipw<-school_dta_short_anon$ipw 
+    
+    #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))
+
+  
+    sumstats_school <- school_dta_short_anon %>%
+      select(one_of(indicators_list) ) 
+    
+    
+    
+    sumstats_school_df<-my_skim(sumstats_school) %>%
+      yank("numeric") %>%
+      mutate(variable=skim_variable) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_school_df <- sumstats_school_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(labels_df_2) %>%
+      mutate(varlabel=indicator_labels) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      select(varlabel, mean, ci)
+    
+    
+    
+    
+
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+      
+      
+      
+    #Now do breakdown by Urban/Rural
+    #urban
+    sumstats_school_urban <- school_dta_short_anon %>%
+      filter(rural==FALSE) 
+
+    
+    sch_ipw<-sumstats_school_urban$ipw 
+    
+    sumstats_school_urban <- sumstats_school_urban %>%
+      select(one_of(indicators_list)) 
+    
+    
+    
+    sumstats_school_urban_df<-my_skim(sumstats_school_urban) %>%
+      yank("numeric") %>%
+      mutate(variable=skim_variable) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_school_urban_df <- sumstats_school_urban_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(labels_df_2) %>%
+      mutate(varlabel=indicator_labels) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_urban=mean,
+             ci_urban=ci) %>%
+      select(varlabel, mean_urban, ci_urban)
+    
+    #rural
+      sumstats_school_rural <- school_dta_short_anon  %>%
+        filter(rural==TRUE) 
+
+        
+        sch_ipw<-sumstats_school_rural$ipw 
+      
+        sumstats_school_rural <- sumstats_school_rural %>%
+        select(one_of(indicators_list)) 
+      
+
+    sumstats_school_rural_df<-my_skim(sumstats_school_rural) %>%
+      yank("numeric") %>%
+      mutate(variable=skim_variable) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_school_rural_df <- sumstats_school_rural_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(labels_df_2) %>%
+      mutate(varlabel=indicator_labels) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_rural=mean,
+             ci_rural=ci) %>%
+      select(varlabel, mean_rural, ci_rural)
+    
+    #now bind urban/rural with the main results
+    sumstats_school_df_final <- sumstats_school_df %>%
+      left_join(sumstats_school_urban_df) %>%
+      left_join(sumstats_school_rural_df)
+    
+      
+    
+  #Survey of Public Officials
+    metadata<-public_officials_metadata
+    
+    #add function to produce weighted summary stats
+    my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                           complete = ~ sum(!is.na(.))))    
+  
+  
+  sumstats_public_officials <- public_officials_dta_clean_anon %>%
+    select(one_of(indicators_list) ) 
+  
+  
+  
+  sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+  
+  
+  #add variable label
+  sumstats_public_officials_df <- sumstats_public_officials_df %>%
+    mutate(name=variable,
+           indicators=variable) %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+    mutate(mean_urban=as.numeric(NA),
+           ci_urban=as.numeric(NA),
+           mean_rural=as.numeric(NA),
+           ci_rural=as.numeric(NA)) %>%
+    select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+  
+  
+  sumstats_df <- sumstats_school_df_final %>%
+    bind_rows(sumstats_public_officials_df) %>%
+    arrange(factor(varlabel, levels=main_indicator_labels2))
+  
+
+   
+   sumstats_df <- sumstats_df %>%
+     select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+   
+
+  
+  
+
+  sumstats_df <- sumstats_df %>%
+    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+  
+
+  
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Urban/Rural",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Rural to Urban"),
+          digits = 2, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Urban"=2,"Rural"=2, " "=1))
+  
+  
+#urban/rural
+  
+        sumstats_dumbell <- sumstats_school_df_final %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+  
+   dumbbell_df <- sumstats_school_urban_df %>%
+   mutate(group="Urban") %>%
+   bind_rows(sumstats_school_rural_df) %>%
+   mutate(group=if_else(is.na(group), "Rural", group)) %>%
+   mutate(mean=if_else(group=="Urban", mean_urban, mean_rural))
+
+   
+urban_rural1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_urban, xend=mean_rural),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_urban,2), label=round(mean_urban,2)))+
+  geom_text(aes(x=round(mean_rural,2), label=round(mean_rural,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_y_discrete(labels=function(x) str_wrap(x,width=40)) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Urban", 20),
+                              str_wrap("Rural", 20))) +
+  labs(x='Mean', y=NULL)+
+  theme_bw()
+
+urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_urban, xend=mean_rural),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_urban,2), label=round(mean_urban,2)))+
+  geom_text(aes(x=round(mean_rural,2), label=round(mean_rural,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_y_discrete(labels=function(x) str_wrap(x,width=40)) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Urban", 20),
+                              str_wrap("Rural", 20))) +
+  labs(x='Mean', y=NULL
+        )+
+  theme_bw()
+
+
+
+#public/private
+  
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+
+      
+      #Now do breakdown by non-evening/Rural
+      #non-evening
+      sumstats_school_nonprivate <- school_dta_short_anon %>%
+        filter(supervisory_authority!="Private") 
+      
+      
+      sch_ipw<-sumstats_school_nonprivate$ipw 
+      
+      sumstats_school_nonprivate <- sumstats_school_nonprivate %>%
+        select(one_of(indicators_list)) 
+      
+      
+      
+      sumstats_school_nonprivate_df<-my_skim(sumstats_school_nonprivate) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_nonprivate_df <- sumstats_school_nonprivate_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=mean,
+               ci_urban=ci) %>%
+        select(varlabel, mean_urban, ci_urban)
+      
+      #private
+      sumstats_school_private <- school_dta_short_anon  %>%
+        filter(supervisory_authority=="Private") 
+      
+      
+      sch_ipw<-sumstats_school_private$ipw 
+      
+      sumstats_school_private <- sumstats_school_private %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_private_df<-my_skim(sumstats_school_private) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_private_df <- sumstats_school_private_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_rural=mean,
+               ci_rural=ci) %>%
+        select(varlabel, mean_rural, ci_rural)
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_nonprivate_df) %>%
+        left_join(sumstats_school_private_df)
+      
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=as.numeric(NA),
+               ci_urban=as.numeric(NA),
+               mean_rural=as.numeric(NA),
+               ci_rural=as.numeric(NA)) %>%
+        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+     
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Public/Private Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Public to Private"),
+          digits = 2, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
+  
+
+# urban_rural1/urban_rural2 +
+#     plot_annotation(title = str_wrap('Differences in Dashboard Indicators Between Urban/Rural Schools',80))
+
+  
+
+      
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+
+      
+      #Now do breakdown by non-evening/Rural
+      #non-evening
+      sumstats_school_nonevening <- school_dta_short_anon %>%
+        filter(foundation_period!="Evening") 
+      
+      
+      sch_ipw<-sumstats_school_nonevening$ipw 
+      
+      sumstats_school_nonevening <- sumstats_school_nonevening %>%
+        select(one_of(indicators_list)) 
+      
+      
+      
+      sumstats_school_nonevening_df<-my_skim(sumstats_school_nonevening) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_nonevening_df <- sumstats_school_nonevening_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=mean,
+               ci_urban=ci) %>%
+        select(varlabel, mean_urban, ci_urban)
+      
+      #evening
+      sumstats_school_evening <- school_dta_short_anon  %>%
+        filter(foundation_period=="Evening") 
+      
+      
+      sch_ipw<-sumstats_school_evening$ipw 
+      
+      sumstats_school_evening <- sumstats_school_evening %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_evening_df<-my_skim(sumstats_school_evening) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_evening_df <- sumstats_school_evening_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_rural=mean,
+               ci_rural=ci) %>%
+        select(varlabel, mean_rural, ci_rural)
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_nonevening_df) %>%
+        left_join(sumstats_school_evening_df)
+      
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=as.numeric(NA),
+               ci_urban=as.numeric(NA),
+               mean_rural=as.numeric(NA),
+               ci_rural=as.numeric(NA)) %>%
+        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+     
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Evening Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Non-Evening to Evening"),
+          digits = 2, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Non-Evening"=2,"Evening"=2, " "=1))
+  
+      
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+
+      
+      
+      #Now do breakdown by territory
+      #North
+      sumstats_school_north <- school_dta_short_anon %>%
+        filter(territory=="North") 
+      
+      
+      sch_ipw<-sumstats_school_north$ipw 
+      
+      sumstats_school_north <- sumstats_school_north %>%
+        select(one_of(indicators_list)) 
+      
+      
+      
+      sumstats_school_north_df<-my_skim(sumstats_school_north) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_north_df <- sumstats_school_north_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=mean,
+               ci_urban=ci) %>%
+        select(varlabel, mean_urban, ci_urban)
+      
+      #middle
+      sumstats_school_middle <- school_dta_short_anon  %>%
+        filter(territory=="Middle") 
+      
+      
+      sch_ipw<-sumstats_school_middle$ipw 
+      
+      sumstats_school_middle <- sumstats_school_middle %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_middle_df<-my_skim(sumstats_school_middle) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_middle_df <- sumstats_school_middle_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_rural=mean,
+               ci_rural=ci) %>%
+        select(varlabel, mean_rural, ci_rural)
+      
+      #south
+      sumstats_school_south <- school_dta_short_anon  %>%
+        filter(territory=="South") 
+      
+      
+      sch_ipw<-sumstats_school_south$ipw 
+      
+      sumstats_school_south <- sumstats_school_south %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_south_df<-my_skim(sumstats_school_south) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_south_df <- sumstats_school_south_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_south=mean,
+               ci_south=ci) %>%
+        select(varlabel, mean_south, ci_south)
+      
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_north_df) %>%
+        left_join(sumstats_school_middle_df) %>%
+        left_join(sumstats_school_south_df)
+      
+      
+      
+      
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=as.numeric(NA),
+               ci_urban=as.numeric(NA),
+               mean_rural=as.numeric(NA),
+               ci_rural=as.numeric(NA),
+               mean_south=as.numeric(NA),
+               ci_south=as.numeric(NA)) %>%
+        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south)
+      
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south)
+      
+
+  #create table    
+  sumstats_df %>%
+    # mutate(mean_urban=cell_spec(
+    #   round(mean_urban,1), background = spec_color(mean_urban/mean,  alpha=0.4, option='cividis', direction=-1)
+    # ),
+    # mean_rural=cell_spec(
+    #   round(mean_rural,1), background = spec_color(mean_rural/mean, alpha=0.4, option='cividis', direction=-1)
+    # ),
+    # mean_south=cell_spec(
+    #   round(mean_south,1), background = spec_color(mean_south/mean,  alpha=0.4, option='cividis', direction=-1)
+    # )
+    # ) %>%
+    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Region",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"),
+          digits = 2, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"North"=2,"Middle"=2,"South"=2))
+   
+
+    
+#rented/owned
+  
+        #add function to produce weighted summary stats
+        my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                               complete = ~ sum(!is.na(.))))
+
+      
+      #Now do breakdown by non-evening/Rural
+      #non-evening
+      sumstats_school_nonrented <- school_dta_short_anon %>%
+        filter(property_type!="Tenant") 
+      
+      
+      sch_ipw<-sumstats_school_nonrented$ipw 
+      
+      sumstats_school_nonrented <- sumstats_school_nonrented %>%
+        select(one_of(indicators_list)) 
+      
+      
+      
+      sumstats_school_nonrented_df<-my_skim(sumstats_school_nonrented) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_nonrented_df <- sumstats_school_nonrented_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=mean,
+               ci_urban=ci) %>%
+        select(varlabel, mean_urban, ci_urban)
+      
+      #rented
+      sumstats_school_rented <- school_dta_short_anon  %>%
+        filter(property_type=="Tenant") 
+      
+      
+      sch_ipw<-sumstats_school_rented$ipw 
+      
+      sumstats_school_rented <- sumstats_school_rented %>%
+        select(one_of(indicators_list)) 
+      
+      
+      sumstats_school_rented_df<-my_skim(sumstats_school_rented) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_school_rented_df <- sumstats_school_rented_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_rural=mean,
+               ci_rural=ci) %>%
+        select(varlabel, mean_rural, ci_rural)
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_nonrented_df) %>%
+        left_join(sumstats_school_rented_df)
+      
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_urban=as.numeric(NA),
+               ci_urban=as.numeric(NA),
+               mean_rural=as.numeric(NA),
+               ci_rural=as.numeric(NA)) %>%
+        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+     
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Owned/Rented Property Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Owned to Rented"),
+          digits = 2, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"Owned"=2,"Rented"=2, " "=1))
+  
+
+    
+```
+

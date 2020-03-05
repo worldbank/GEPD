@@ -115,6 +115,12 @@ school_data_preamble <- school_dta %>%
   select(interview__key, school_code) %>%
   left_join(school_data_preamble_temp)
 
+
+school_data_preamble_short<-school_data_preamble %>%
+  group_by(school_code) %>%
+  select(all_of(keep_info)) %>%
+  summarise_all(~first(na.omit(.)))
+
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
 #This will make the information for each indicator contained in an independent database
 #Will need to join the school level information with teacher level questionnaire information for some indicators.  This will be done later.
@@ -691,18 +697,20 @@ if (graded_data!='yes') {
   
   write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_score_counts.csv", sep="/"))
   
-  
+}
   #############################################
   ##### 4th Grade Assessment ###########
   #############################################
   
   #read in 4th grade assessment level file
-  assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+  assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment/fourth_grade_assessment.dta"))
   
   #Add school preamble info
   assess_4th_grade_dta <- assess_4th_grade_dta %>%
-    left_join(school_data_preamble) %>%
-    select(preamble_info, everything()) 
+    mutate(school_code=as.numeric(school_code_preload)) %>%
+    select(-school_code_preload, -school_name_preload) %>%
+    select(school_code, everything()) %>%
+    left_join(school_data_preamble_short)
   
   
   #number missing
@@ -744,14 +752,14 @@ if (graded_data!='yes') {
       m8sbq1_number_sense_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])))   %>%
     filter(m8saq2_id_tot>3 | m8saq3_id_tot>3 | m8sbq1_number_sense_tot>3) 
   
-  assess_4th_grade_dta_issues %>%
-    write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues.csv"))
-  
-  assess_4th_grade_dta_issues %>%
-    group_by(school_code) %>%
-    summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-    write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
-  
+  # assess_4th_grade_dta_issues %>%
+  #   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues.csv"))
+  # 
+  # assess_4th_grade_dta_issues %>%
+  #   group_by(school_code) %>%
+  #   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  #   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
+  # 
   
   
   #recode assessment variables to be 1 if student got it correct and zero otherwise
@@ -781,7 +789,7 @@ if (graded_data!='yes') {
               ~call_out_scorer(.,0.8)) %>%
     ungroup() %>%
     mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
-           m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
+           m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)) %>%
     mutate(m8saq2_id=if_else(m8saq2_id<0,0,m8saq2_id), #subtract some letters not assessed and make out of 3 points
            m8saq3_id=if_else(m8saq3_id<0,0,m8saq3_id)) %>%
     mutate(m8saq2_id=if_else(m8saq2_id>1,1,m8saq2_id), #subtract some letters not assessed and make out of 3 points
@@ -856,8 +864,7 @@ if (graded_data!='yes') {
   
   
   #calculate % correct for literacy, math, and total
-  final_indicator_data_LERN <- assess_4th_grade_anon %>%
-    left_join(school_dta[,c('interview__key', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  final_indicator_data_LERN <- assess_4th_grade_dta %>%
     group_by(school_code) %>%
     mutate(n_students=n()) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -865,16 +872,14 @@ if (graded_data!='yes') {
   
   
   #Breakdowns by Male/Female
-  final_indicator_data_LERN_M <- assess_4th_grade_anon %>%
-    left_join(school_dta[,c('interview__key', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  final_indicator_data_LERN_M <- assess_4th_grade_dta %>%
     filter(student_male==1) %>%
     group_by(school_code) %>%
     mutate(n_students=n()) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
   
-  final_indicator_data_LERN_F <- assess_4th_grade_anon %>%
-    left_join(school_dta[,c('interview__key', 'm8_teacher_name', 'm8_teacher_code')]) %>%
+  final_indicator_data_LERN_F <- assess_4th_grade_dta %>%
     filter(student_male==0) %>%
     group_by(school_code) %>%
     mutate(n_students=n()) %>%
@@ -882,7 +887,7 @@ if (graded_data!='yes') {
     select(-ends_with('length'), -ends_with('items') , -starts_with('interview'), -starts_with('enumerator'))
   
   
-}
+
 
   #############################################
   ##### ECD Assessment ###########
@@ -2120,10 +2125,7 @@ if (graded_data!='yes') {
   
   ind_dta_list<-c()
   
-  school_data_preamble_short<-school_data_preamble %>%
-    group_by(school_code) %>%
-    select(all_of(keep_info)) %>%
-    summarise_all(~first(na.omit(.)))
+
   
   final_school_data <- school_data_preamble_short
   

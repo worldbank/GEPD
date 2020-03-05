@@ -74,7 +74,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
     mutate(province=governorate) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" | names(data_set_updated) == "province" |
-                                                        names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory")])))
+                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | 
+                                                      names(data_set_updated) == "property_type" | names(data_set_updated) == "supervisory_authority")])))
 }
 
 

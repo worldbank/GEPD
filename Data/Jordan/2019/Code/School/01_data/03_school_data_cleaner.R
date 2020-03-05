@@ -670,6 +670,8 @@ final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
          classroom_culture_prof=100*as.numeric(classroom_culture>=3),
          instruction_prof=100*as.numeric(instruction>=3),
          socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+  filter(!is.na(teach_score)) %>%
+  write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
   group_by(school_code) %>%
   mutate(number_segments=  sum(!is.na(teach_score))) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%

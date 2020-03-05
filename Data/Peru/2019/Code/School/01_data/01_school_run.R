@@ -63,7 +63,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch file to access data from API
-need_api=1
+need_api=0
 source('02_school_api.R', local=TRUE)
  
 # #launch file to clear data=

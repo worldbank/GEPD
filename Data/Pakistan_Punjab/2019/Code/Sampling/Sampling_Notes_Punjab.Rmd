@@ -42,6 +42,15 @@ date_frame<-c("2019-12-03")
 public_df=read_stata(paste(dir_frame, public_file_frame, sep="/"))
 private_df=read_stata(paste(dir_frame, private_file_frame, sep="/"))
 
+
+#add function to produce weighted summary stats
+my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                           complete = ~ sum(!is.na(.))))    
+
 ```
 
 # Introduction
@@ -154,10 +163,10 @@ sumstats_df_public <- df_public_final %>%
             total_1st_enrollment_boys=eng_cls1_b,
             total_1st_enrollment_girls=eng_cls1_g,          
             rural=if_else(school_location=="Rural", 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100,  hist)
+  my_skim() %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
 
 #########################################################################
 # Private School Frame 
@@ -197,10 +206,10 @@ sumstats_df_private <- df_private_final %>%
             total_1st_enrollment_boys=Enrolment_01_Boys ,
             total_1st_enrollment_girls= Enrolment_01_Girls,          
             rural=if_else(urban_rural==1, 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, hist)
+    my_skim() %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
 
 
 
@@ -429,6 +438,7 @@ sampled_districts_private <- sample_private %>%
 
 
 
+
 # select one replacement per district
 sample_replace_private <- data_set_updated_private %>%
   left_join(sampled_districts_private) %>%
@@ -462,14 +472,11 @@ sample_replace_private$replaced_tehsil=sample_private2$TehsilName
 sample_replace_private$replaced_rural=sample_private2$urban_rural
 
 
-datatable(sample_replace_private, caption = 'List of Replacement Schools Chosen for Private School Sample') 
-
-
-write_excel_csv(sample_replace_private, paste(dir_frame, '/sample_replacement_schools_private_', Sys.Date(),  '.csv', sep=""))
 
 
 
 ```
+
 
 For access reasons, we had to reallocate 46 schools from the Lahore Cantt district to our other districts.  This is just for private schools.
 
@@ -506,13 +513,84 @@ write_excel_csv(sample_private_update,  paste(dir_frame, '/sample_schools_privat
   
 ```
 
+```{r update_dataset_private2, echo=FALSE, message=FALSE, warning=FALSE}
+#define sampled schools in sample dataset
+sample_noncantt_private <- sample_noncantt_private %>%
+  mutate(sample="Sampled School")
+
+#add sample schools back to original database
+data_set_updated_private2 <- df_private_final %>%
+  left_join(sample_noncantt_private) %>%
+  select(-sampled_districts)
+
+#get list of tehsil
+sampled_districts_private2 <- sample_noncantt_private %>%
+  group_by(DistrictName, TehsilName, urban_rural) %>% 
+  summarise(sampled_districts=n()
+            )
+
+
+
+# select one replacement per district
+sample_replace_private2 <- data_set_updated_private2 %>%
+  left_join(sampled_districts_private2) %>%
+  filter(!is.na(sampled_districts)) %>%  
+  filter(is.na(sample)) %>%
+  group_by(DistrictName, TehsilName, urban_rural) %>% 
+  sample_n(2*sampled_districts) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+      mutate(num_teachers=TeachingStaffMale + TeachingStaffFemale,
+            
+            total_pre_primary_enrollment=total_pre_primary,
+            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
+            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
+            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
+            total_1st_enrollment_boys=Enrolment_01_Boys ,
+            total_1st_enrollment_girls= Enrolment_01_Girls,          
+            rural=if_else(urban_rural==1, 1,0)) %>%
+  select(SchoolName, DistrictName, TehsilName, total_pre_primary_enrollment, total_1st_enrollment, urban_rural, sample   ) %>%
+  arrange(DistrictName, TehsilName, urban_rural) 
+
+sample_private2 <- sample_noncantt_private %>%
+    bind_rows(sample_noncantt_private) %>% #add a duplicate observation for matching to two replacement schools
+    select(SchoolName, DistrictName, TehsilName, urban_rural  ) %>%
+    arrange(DistrictName, TehsilName, urban_rural, SchoolName) 
+
+
+#add in school info for school that will be replaced
+sample_replace_private2$replaced_school_name=sample_private2$SchoolName
+sample_replace_private2$replaced_district=sample_private2$DistrictName
+sample_replace_private2$replaced_tehsil=sample_private2$TehsilName
+sample_replace_private2$replaced_rural=sample_private2$urban_rural
+
+
+sample_replace_private_updated <- sample_replace_private %>%
+    filter(TehsilName!="LAHORE CANTT.") %>%
+  bind_rows(sample_replace_private2)
+
+
+
+datatable(sample_replace_private_updated, caption = 'List of Replacement Schools Chosen for Private School Sample') 
+
+
+write_excel_csv(sample_replace_private_updated, paste(dir_frame, '/sample_replacement_schools_private_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
 
 
 # Summary Statistics of Sample
 
 ```{r sample_stats, echo=FALSE}
 
-
+#add function to produce weighted summary stats
+    my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                           complete = ~ sum(!is.na(.))))    
 #produce summary stats of public and private sample
 
 sumstats_sample_public <- sample_public %>%
@@ -529,10 +607,10 @@ sumstats_sample_public <- sample_public %>%
             total_1st_enrollment_boys=eng_cls1_b,
             total_1st_enrollment_girls=eng_cls1_g,          
             rural=if_else(school_location=="Rural", 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+  my_skim() %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
   
 sumstats_sample_private <- sample_private_update %>%
   ungroup() %>%
@@ -545,10 +623,10 @@ sumstats_sample_private <- sample_private_update %>%
             total_1st_enrollment_boys=Enrolment_01_Boys ,
             total_1st_enrollment_girls= Enrolment_01_Girls,          
             rural=if_else(urban_rural==1, 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
+  my_skim() %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
 
 sumstats_sample <- sumstats_sample_public %>%
   bind_rows(sumstats_sample_private)

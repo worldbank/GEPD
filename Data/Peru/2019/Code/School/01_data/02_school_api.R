@@ -12,7 +12,7 @@ library(here)
 ######################################
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
-
+if (need_api==1) {
 #user credentials
 #Check whether password.R file is in Github repo
 pw_file<-here::here("password.R")
@@ -111,7 +111,7 @@ indicators <- indicators %>%
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
-
+}
 #############################
 #Because we switched versions of our survey in the middle, have to append version 17 databases
 ############################
