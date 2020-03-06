@@ -115,6 +115,11 @@ school_data_preamble <- school_dta %>%
   select(interview__key, school_code) %>%
   left_join(school_data_preamble_temp)
 
+keep_info <-       c('school_code',
+                     'school_name_preload', 'school_address_preload', 
+                     'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                     'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                     'survey_time', 'lat', 'lon', 'total_enrolled')
 
 school_data_preamble_short<-school_data_preamble %>%
   group_by(school_code) %>%
@@ -2113,11 +2118,7 @@ if (graded_data!='yes') {
                  'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                  'survey_time', 'lat', 'lon' )
   
-  keep_info <-       c('school_code',
-                       'school_name_preload', 'school_address_preload', 
-                       'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
-                       'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                       'survey_time', 'lat', 'lon', 'total_enrolled')
+
   
   if (exists('final_school_data')) {
     rm('final_school_data')
