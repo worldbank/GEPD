@@ -31,7 +31,7 @@ library(stargazer)
 #sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 
 #Specify the file name containing the sample information
-currentDate<-c("2019-02-12")
+currentDate<-c("2020-02-12")
 sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 load(file=sample_frame_name) 
 load(sample_frame_name)
@@ -82,13 +82,38 @@ The Ibo and Quissanga districts in Cabo Delgado were replaced because of securit
 #summary stats for optimally stratified schools 
   sumstats_rand<-sample_updated %>%
     filter(sample=="Sampled School") %>%
-    group_by(orig_distrito, orig_rural) %>%
+    group_by(orig_province, orig_distrito, orig_rural) %>%
     summarise(N=n()) %>%
-    arrange(orig_distrito, orig_rural)
+    arrange(orig_province,orig_distrito, orig_rural)
 
 sumstats_rand %>%
   kable( caption="Counts of Schools Sampled per District and Urban/Rural Status") %>%
   kable_styling()
+
+```
+
+## Security Issues
+
+For security reasons, enumerators could not access one school in the Nangade district of Cabo Delgado.  We randomly selected a replacement school not in this district, from among the districts in Cabo Delgado.
+
+
+
+```{r security}
+
+
+districts_cabo <- sample_final %>%
+  filter(orig_province=="Cabo Delgado") %>%
+  group_by(orig_province, orig_distrito) %>%
+  summarise(n=n())
+
+districts_cabo_not_selected <- data_set_updated %>%
+  filter(stratum_gepd!="no data") %>%
+  filter(orig_province=="Cabo Delgado") %>%
+  filter(orig_rural=="Rural") %>% #school originally rural
+  filter(!(orig_distrito %in% districts_cabo$orig_distrito)) %>%
+  group_by(orig_province, orig_distrito) %>%
+  summarise(n=n())
+  
 
 ```
 

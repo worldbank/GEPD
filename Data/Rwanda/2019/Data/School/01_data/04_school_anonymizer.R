@@ -133,6 +133,7 @@ for (i in data_list ) {
       select(-one_of('m1saq1_first','m1saq1_last', 'm1saq2', 'm1saq2b')) %>% #drop principal names and phone numbers
       select(-contains('troster')) %>%
       select(-contains('name')) %>%
+      select(-contains('_response')) %>%
       select(-contains('m2saq2')) %>%
       select(-contains('m6s1q1')) %>%
       select(-contains('m8s1q1')) 

@@ -917,7 +917,9 @@ if (graded_data!='yes') {
   #Note:  in the future we could incorporate irt program like mirt
   #number of missing values
   ecd_dta <- ecd_dta %>%
-    mutate(n_mssing_ECD=n_miss_row(.))
+    mutate(n_mssing_ECD=n_miss_row(.)) 
+  
+  
   
   #rename a few key variables up front
   ecd_dta<- ecd_dta %>%
@@ -926,9 +928,14 @@ if (graded_data!='yes') {
            ecd_student_age=m6s1q2,
            ecd_student_male=bin_var(m6s1q3,1),
            ecd_consent=bin_var(m6s1q4,1)
+    ) %>% 
+    rename( #rename this variable to avoid dropping when I run anonymization program later
+      m6s2q6a_nm_writing=m6s2q6a_name_writing,
+      m6s2q6b_nm_writing=m6s2q6b_name_writing
     )
   
-  list_topics<-c("vocabn", "comprehension","letters","words","sentence","name_writing","print",
+  
+  list_topics<-c("vocabn", "comprehension","letters","words","sentence","nm_writing","print",
                  "countingproduce_set","number_ident","number_compare","simple_add",
                  "backward_digit","head_shoulders",
                  "perspective","conflict_resol")
@@ -941,7 +948,7 @@ if (graded_data!='yes') {
                    ends_with("letters"),
                    ends_with("words"),
                    ends_with("sentence"),
-                   ends_with("name_writing"),
+                   ends_with("nm_writing"),
                    ends_with("print"),
                    ends_with("produce_set"),
                    ends_with( "number_ident"),
@@ -972,14 +979,14 @@ if (graded_data!='yes') {
   
   
   lit_items<-colnames(ecd_dta[,str_detect(
-    colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|name_writing|print")])
+    colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing|print")])
   
   ecd_dta$literacy_length<-length(lit_items)
   
   #calculate students lit items correct
   ecd_dta <- ecd_dta %>%
     mutate(ecd_literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
-                                                              pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
+                                                              pattern="vocabn|comprehension|letters|words|sentence|nm_writing|print")], na.rm=TRUE))
   
   ####Math####
   #calculate # of math items
@@ -1982,9 +1989,10 @@ if (graded_data!='yes') {
         between(principal_salary,0.75,1) ~ 3,
         between(principal_salary,1,1.5) ~ 4,
         between(principal_salary,1.5,5) ~ 5)) %>%
-    mutate(principal_salary_score=if_else(m7shq2b_satt==1,3 ,principal_salary_score)) %>%
-    mutate(principal_salary_score=if_else(m7shq2b_satt==2,4 ,principal_salary_score)) %>%
-    mutate(principal_salary_score=if_else(m7shq2b_satt>2,5 ,principal_salary_score)) %>%
+    mutate(principal_salary_score=case_when(m7shq2b_satt==1~3 ,
+                                            m7shq2b_satt==2~4 ,
+                                            m7shq2b_satt>2~5 ,
+                                          TRUE ~ principal_salary_score)) %>%
     mutate(sch_management_attraction=(principal_satisfaction+principal_salary_score)/2)
   
   final_indicator_data_SATT <- school_data_SATT %>%

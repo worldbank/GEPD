@@ -905,13 +905,9 @@ ecd_dta<- ecd_dta %>%
          ecd_student_age=m6s1q2,
          ecd_student_male=bin_var(m6s1q3,1),
          ecd_consent=bin_var(m6s1q4,1)
-  ) %>% 
-  rename( #rename this variable to avoid dropping when I run anonymization program later
-    m6s2q6a_nm_writing=m6s2q6a_name_writing,
-    m6s2q6b_nm_writing=m6s2q6b_name_writing
   )
 
-list_topics<-c("vocabn", "comprehension","letters","words","sentence","nm_writing","print",
+list_topics<-c("vocabn", "comprehension","letters","words","sentence","name_writing","print",
                "countingproduce_set","number_ident","number_compare","simple_add",
                "backward_digit","head_shoulders",
                "perspective","conflict_resol")
@@ -924,7 +920,7 @@ ecd_dta<- ecd_dta %>%
                  ends_with("letters"),
                  ends_with("words"),
                  ends_with("sentence"),
-                 ends_with("nm_writing"),
+                 ends_with("name_writing"),
                  ends_with("print"),
                  ends_with("produce_set"),
                  ends_with( "number_ident"),
@@ -955,14 +951,14 @@ ecd_dta<- ecd_dta %>%
 
 
 lit_items<-colnames(ecd_dta[,str_detect(
-  colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing|print")])
+  colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|name_writing|print")])
 
 ecd_dta$literacy_length<-length(lit_items)
 
 #calculate students lit items correct
 ecd_dta <- ecd_dta %>%
   mutate(ecd_literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
-                                                   pattern="vocabn|comprehension|letters|words|sentence|nm_writing|print")], na.rm=TRUE))
+                                                   pattern="vocabn|comprehension|letters|words|sentence|name_writing|print")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -1019,7 +1015,7 @@ ecd_dta <- ecd_dta %>%
          ecd_literacy_student_proficiency=100*as.numeric(ecd_literacy_student_knowledge>=80),
          ecd_exec_student_proficiency=100*as.numeric(ecd_exec_student_knowledge>=80),
          ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
-  ) 
+  )
 #save ecd data at student level anonymized
 ecd_dta_anon <- ecd_dta %>%
   select(school_code, interview__key, ecd_student_number, ecd_student_age, ecd_student_male, 
