@@ -62,6 +62,11 @@ sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData",
 
 load(sample_frame_name)
 
+#load some auxiliary data to help do sampling weights, because we lacked total enrollment for the districts
+auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
+  mutate(district=str_to_upper(district))
+
+
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
@@ -69,9 +74,11 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   prov<-enquo(prov)
   
   data_set_updated <- data_set_updated %>%
+    left_join(auxillary_frame_info) %>%
     mutate(province=district) %>%
     group_by(district_code, urban_rural) %>%
-    mutate(weights=n()) %>%
+    mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
+    mutate(weights=n()/allocate) %>%
     ungroup()
   
   dataset %>%
@@ -80,7 +87,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(rural=urban_rural=="RURAL") %>%
     mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
-                                                         )])))
+                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region"  )])))
 }
 
 

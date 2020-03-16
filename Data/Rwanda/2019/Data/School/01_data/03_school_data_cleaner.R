@@ -444,32 +444,13 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
 graded_data <- "no"
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
-if (graded_data!='yes') {
+
   teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>%
     left_join(school_data_preamble) %>%
     select(preamble_info, everything()) 
   
-} else if (graded_data=='yes') {
-  #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
-  school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), school_file))
-  
-  school_dta_21<- school_dta_21 %>%
-    mutate(school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code))
-    )
-  
-  preamble_info_21 <- c('school_code' )
-  
-  school_data_preamble_21<- school_dta_21 %>%
-    select(interview__key, preamble_info_21)
-  
-  teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
-  teacher_metadata <- makeVlist(teacher_assessment_dta_21)
-  
-  #Add school preamble info
-  teacher_assessment_dta <- teacher_assessment_dta_21 %>%
-    left_join(school_data_preamble_21) %>%
-    select(preamble_info_21, everything()) 
-  
+
+
   
   #number missing
   teacher_assessment_dta <- teacher_assessment_dta %>%
@@ -577,12 +558,12 @@ if (graded_data!='yes') {
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     
     select(-ends_with('length'), -ends_with('items'), -typetest, -starts_with('interview'), -starts_with('enumerator'),
-           -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+           -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum')) 
   
   #Breakdown by Male/Female
   final_indicator_data_CONT_M <- teacher_assessment_dta %>%
     mutate(TEACHERS__id=g4_teacher_number) %>%
-    left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+    left_join(select(teacher_absence_dta,c('m2saq3','school_code', 'TEACHERS__id')), by=c('school_code', 'TEACHERS__id')) %>%
     filter(m2saq3==1) %>%
     group_by(school_code) %>%
     add_count(school_code,name='m5_teach_count') %>%
@@ -602,11 +583,11 @@ if (graded_data!='yes') {
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
-           -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+           -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum')) 
   
   final_indicator_data_CONT_F <- teacher_assessment_dta %>%
     mutate(TEACHERS__id=g4_teacher_number) %>%
-    left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+    left_join(select(teacher_absence_dta,c('m2saq3','school_code', 'TEACHERS__id')), by=c('school_code', 'TEACHERS__id')) %>%
     filter(m2saq3==2) %>%
     group_by(school_code) %>%
     add_count(school_code,name='m5_teach_count') %>%
@@ -626,15 +607,15 @@ if (graded_data!='yes') {
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'),
-           -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum'))
+           -starts_with('g4_teacher'), -c('teacher_assessment_answers__id', 'm5sb_troster', 'm5sb_tnum')) 
   
   
   
   #############################################
   ### Teacher Pedagogy ###
   #############################################
-  
-  teacher_pedagogy <- school_dta %>%
+  if (graded_data=='yes') {
+    teacher_pedagogy <- school_dta %>%
     select(preamble_info, starts_with('s1'), starts_with('s2'),starts_with('m4s') )
   
   # Generate useful variables
@@ -854,7 +835,7 @@ if (graded_data!='yes') {
     select(school_code, interview__key, student_number, student_age, student_male, 
            contains('student_proficient'),
            contains('student_knowledge'),
-           contains('ses'),
+           contains('ses'), m8_language,
            math_items, lit_items)
   
   
@@ -931,7 +912,7 @@ if (graded_data!='yes') {
     ) %>% 
     rename( #rename this variable to avoid dropping when I run anonymization program later
       m6s2q6a_nm_writing=m6s2q6a_name_writing,
-      m6s2q6b_nm_writing=m6s2q6b_name_writing
+      m6s2q6b_nm_writing_response=m6s2q6b_name_writing
     )
   
   
@@ -951,7 +932,7 @@ if (graded_data!='yes') {
                    ends_with("nm_writing"),
                    ends_with("print"),
                    ends_with("produce_set"),
-                   ends_with( "number_ident"),
+                   ends_with("number_ident"),
                    ends_with("number_compare"),
                    ends_with("simple_add"),
                    ends_with("backward_digit"),
@@ -979,14 +960,14 @@ if (graded_data!='yes') {
   
   
   lit_items<-colnames(ecd_dta[,str_detect(
-    colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing|print")])
+    colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing$|print")])
   
   ecd_dta$literacy_length<-length(lit_items)
   
   #calculate students lit items correct
   ecd_dta <- ecd_dta %>%
     mutate(ecd_literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
-                                                              pattern="vocabn|comprehension|letters|words|sentence|nm_writing|print")], na.rm=TRUE))
+                                                              pattern="vocabn|comprehension|letters|words|sentence|nm_writing$|print")], na.rm=TRUE))
   
   ####Math####
   #calculate # of math items
@@ -1373,7 +1354,7 @@ if (graded_data!='yes') {
   #   Must identify whether or not blackboard was working in a selected 4th grade classroom.
   
   
-  if (graded_data=='yes') {
+
   
   #first create a database containing actual values for each question for the principal
   pknw_actual_cont <- final_indicator_data_CONT %>%
@@ -1409,7 +1390,7 @@ if (graded_data!='yes') {
   
   
   
-  final_indicator_data_PKNW <- school_data_PKNW %>%
+  final_indicator_data_PKNW <- school_data_PKNW %>% 
     group_by(school_code) %>%
     select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, m7_teach_count_pknw, m7saq10) %>%
     summarise_all(~first(na.omit(.))) %>%
@@ -1434,7 +1415,9 @@ if (graded_data!='yes') {
     select(school_code, starts_with('m7sfq5_pknw'),m5s2q1c_number, starts_with('m7sfq6_pknw'), m5s2q1e_number, starts_with('m7sfq7_pknw'), m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
            multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
     select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
-           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10)
+           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10) %>%
+    left_join(school_data_preamble) %>%
+    select(preamble_info, everything())  
   
   
   #Breakdowns by Male/Female
@@ -1445,7 +1428,7 @@ if (graded_data!='yes') {
   final_indicator_data_PKNW_F <- final_indicator_data_PKNW %>%
     filter(m7saq10==2) %>%
     select( -starts_with('interview'), -starts_with('enumerator'))  
-  }
+  
   #############################################
   ##### School Principal Management Skills ###########
   #############################################
@@ -2175,10 +2158,10 @@ if (graded_data!='yes') {
   #add male/female breakdowns to ind_data_list
   
   ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
-                                  #"final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                  "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
                                   "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
-                                  "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F"
-                                  #"final_indicator_data_LERN_M", "final_indicator_data_LERN_F"
+                                  "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F",
+                                  "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"
                                   ))
   
   

@@ -111,6 +111,8 @@ indicators <- indicators %>%
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
+} else {
+  quest_version=18
 }
 #############################
 #Because we switched versions of our survey in the middle, have to append version 17 databases
@@ -169,7 +171,7 @@ ecd_metadta<-ecd_metadta %>%
 
 #bind version 18 and 17
 
-ecd_dta <- bind_rows(ecd_dta, ecd_dta_17, ecd_dta_15)
+# ecd_dta <- bind_rows(ecd_dta, ecd_dta_17, ecd_dta_15)
 label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
 
 ecd_dta %>%

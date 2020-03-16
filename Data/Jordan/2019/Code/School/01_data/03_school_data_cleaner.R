@@ -908,7 +908,7 @@ ecd_dta<- ecd_dta %>%
   ) %>% 
   rename( #rename this variable to avoid dropping when I run anonymization program later
     m6s2q6a_nm_writing=m6s2q6a_name_writing,
-    m6s2q6b_nm_writing=m6s2q6b_name_writing
+    m6s2q6b_nm_writing_response=m6s2q6b_name_writing
   )
 
 list_topics<-c("vocabn", "comprehension","letters","words","sentence","nm_writing","print",
@@ -955,14 +955,14 @@ ecd_dta<- ecd_dta %>%
 
 
 lit_items<-colnames(ecd_dta[,str_detect(
-  colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing|print")])
+  colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing$|print")])
 
 ecd_dta$literacy_length<-length(lit_items)
 
 #calculate students lit items correct
 ecd_dta <- ecd_dta %>%
   mutate(ecd_literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
-                                                   pattern="vocabn|comprehension|letters|words|sentence|nm_writing|print")], na.rm=TRUE))
+                                                   pattern="vocabn|comprehension|letters|words|sentence|nm_writing$|print")], na.rm=TRUE))
 
 ####Math####
 #calculate # of math items
@@ -995,7 +995,7 @@ ecd_dta <- ecd_dta %>%
 ####Socio-Emotional####
 #calculate # of Exec Function items
 
-#NOTE:  Ending persepectives and conflict resolution in $ is a grep trick to make sure columns with training characters aren't included.  
+#NOTE:  Ending persepectives and conflict resolution in $ is a grep trick to make sure columns with trailing characters aren't included.  
 #This means specifically the perspetive_responses conflict_resol_responses columns, which are text and just for quality control.
 soc_items<-colnames(ecd_dta[,str_detect(
   colnames(ecd_dta), "perspective$|conflict_resol$")])

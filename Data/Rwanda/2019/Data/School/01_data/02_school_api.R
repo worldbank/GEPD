@@ -204,9 +204,9 @@ assess_4th_grade_dta %>%
 
 #read in teacher questionnaire level file
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
-teacher_questionnaire_18<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "questionnaire_roster.dta"))
-teacher_questionnaire_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_roster.dta"))
-teacher_questionnaire_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "questionnaire_roster.dta"))
+#teacher_questionnaire_18<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "questionnaire_roster.dta"))
+#teacher_questionnaire_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_roster.dta"))
+#teacher_questionnaire_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "questionnaire_roster.dta"))
 
 #Add in questionnaire metadata
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire) %>%
@@ -237,9 +237,9 @@ teacher_questionnaire %>%
 
 #read in teacher absence file
 teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
-teacher_absence_dta_18<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "TEACHERS.dta"))
-teacher_absence_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "TEACHERS.dta"))
-teacher_absence_dta_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "TEACHERS.dta"))
+#teacher_absence_dta_18<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "TEACHERS.dta"))
+#teacher_absence_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "TEACHERS.dta"))
+#teacher_absence_dta_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "TEACHERS.dta"))
 
 #Add in absemce metadata
 teacher_absence_metadta<-makeVlist(teacher_absence_dta) %>%
@@ -269,10 +269,10 @@ teacher_absence_dta %>%
 
 #read in teacher assessment file
 teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
-teacher_assessment_dta_18<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "teacher_assessment_answers.dta"))
+#teacher_assessment_dta_18<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "teacher_assessment_answers.dta"))
 
-teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
-teacher_assessment_dta_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "teacher_assessment_answers.dta"))
+#teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
+#teacher_assessment_dta_16<-read_dta(file.path(paste(download_folder,'version_16', sep="/"), "teacher_assessment_answers.dta"))
 
 #Add in assessment metadata
 teacher_assessment_metadta<-makeVlist(teacher_assessment_dta) %>%
