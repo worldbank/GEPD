@@ -1,7 +1,7 @@
 ---
-title: "jordan Public Officials Analysis"
+title: "Rwanda Public Officials Analysis"
 author: "Brian Stacy"
-date: "2/18/2020"
+date: "`r Sys.Date()`"
 output:
   html_document: default 
 ---
@@ -87,7 +87,7 @@ bbc_style <- function() {
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/confidential/"
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
@@ -96,12 +96,16 @@ load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", 
 load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
 
 #load set of districts that match to schools
-directorate_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/sampling/district_sample_2019-11-05.csv")
+office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/sampling/district_sample_2019-08-26.csv")
+
+auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/raw/School/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
+  mutate(district=str_to_upper(district)) %>%
+  select(district,region)
 
 #read in merged public officials and school survey data.  Merged by Thomas Nicholas Mosher 
 # merged_df <- read_dta("C:/Users/wb469649/WBG/Daniel Rogger - DataWork/baseround/DataSets/Deidentified/wholemerge_dept.dta" )
 # 
-# po_df <- read_dta("C:/Users/wb469649/WBG/Daniel Rogger - DataWork/EncryptedData/Master public_officials Encrypted/DataSet/A_Confidential_jordan+PO.dta" ) %>%
+# po_df <- read_dta("C:/Users/wb469649/WBG/Daniel Rogger - DataWork/EncryptedData/Master public_officials Encrypted/DataSet/A_Confidential_Rwanda+PO.dta" ) %>%
 #   mutate(id=department_clean) %>%
 #   filter(mandates_accountability!=0)
 
@@ -114,41 +118,46 @@ directorate_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Con
 #aggregate to office level
 public_officials_agg <- public_officials_dta_clean %>%
   filter(govt_tier=='District office (or equivalent)' | govt_tier=='Regional office (or equivalent)') %>%
-  mutate(office_preload=if_else(govt_tier=='Regional office (or equivalent)','عجلون',office_preload)) %>%
   group_by(office_preload) %>%
   mutate(n_interviews=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
 
-#rename offices to match those in original directorate list
-#first form regular expression with list of directorates
-if (exists('directorate_regex')) {
-  rm('directorate_regex')
+#rename offices to match those in original district list
+#first form regular expression with list of districts
+if (exists('district_regex')) {
+  rm('district_regex')
 }
 
 
-for (i in directorate_list$directorate) {
-  if (!exists('directorate_regex')) {
-  directorate_regex<-i
+for (i in office_list$district) {
+  if (!exists('district_regex')) {
+  district_regex<-i
   } else {
-  directorate_regex<-paste(directorate_regex, i, sep="|")
+  district_regex<-paste(district_regex, i, sep="|")
+  }
+}
+
+#rename offices to match those in original sector list
+#first form regular expression with list of sectors
+if (exists('sector_regex')) {
+  rm('sector_regex')
+}
+
+
+for (i in office_list$sector) {
+  if (!exists('sector_regex')) {
+  sector_regex<-i
+  } else {
+  sector_regex<-paste(sector_regex, i, sep="|")
   }
 }
 
 public_officials_agg <- public_officials_agg %>%
-  mutate(school_district_preload=str_trim(str_extract(office_preload,paste('\\b(',directorate_regex,')\\b', sep="")))) %>%
-  filter(!is.na(school_district_preload)) %>%
-  select(-c("survey_time", "lat", "lon")) %>%
-  left_join(directorate_list, by=c("school_district_preload"="directorate")) %>%
-  mutate(id=governorate) %>%
-    mutate(id=case_when(
-    id=="Kerak" ~ "Karak",
-    id=="The Capital Amman" ~ "Amman",
-    id=="Al-Mafraq" ~ "Mafraq",
-    id=="At-Tafilah" ~ "Tafiela",
-    id=="Jerash" ~ "Jarash",
-    govt_tier=='Regional office (or equivalent)' ~ 'Ajloon',
-    TRUE ~ id
+  mutate(school_district_preload=if_else(govt_tier=='Regional office (or equivalent)',
+  str_trim(str_extract(office_preload,paste('\\b(',district_regex,')\\b', sep=""))),
+  str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
   )) %>%
+  filter(!is.na(school_district_preload)) %>%
   mutate(
     top50mandates_accountability=(mandates_accountability>=quantile(public_officials_agg$mandates_accountability, probs=c(0.5))),
     top50quality_bureaucracy=(quality_bureaucracy>=quantile(public_officials_agg$quality_bureaucracy, probs=c(0.5))),
@@ -158,25 +167,17 @@ public_officials_agg <- public_officials_agg %>%
 
 #get list of schools that have a district match
 school_dta_matched <- school_dta_short %>%
-  filter(school_district_preload %in% directorate_list$directorate) %>%
+  filter(school_district_preload %in% office_list$district) %>%
   left_join(public_officials_agg) 
   
 
 public_officials_dta_linked <- public_officials_dta_clean %>%
-  mutate(school_district_preload=str_trim(str_extract(office_preload,paste('\\b(',directorate_regex,')\\b', sep="")))) %>%
+  mutate(school_district_preload=if_else(govt_tier=='Regional office (or equivalent)',
+    str_trim(str_extract(office_preload,paste('\\b(',district_regex,')\\b', sep=""))),
+    str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
+  )) %>%  
   filter(!is.na(school_district_preload)) %>%
   select(-c("survey_time", "lat", "lon")) %>%
-  left_join(directorate_list, by=c("school_district_preload"="directorate")) %>%
-  mutate(id=governorate) %>%
-    mutate(id=case_when(
-    id=="Kerak" ~ "Karak",
-    id=="The Capital Amman" ~ "Amman",
-    id=="Al-Mafraq" ~ "Mafraq",
-    id=="At-Tafilah" ~ "Tafiela",
-    id=="Jerash" ~ "Jarash",
-    id=="Ajloun" ~ "Ajloon",
-    TRUE ~ id
-  )) %>%
   mutate(
     top50mandates_accountability=(mandates_accountability>=quantile(public_officials_agg$mandates_accountability, probs=c(0.5))),
     top50quality_bureaucracy=(quality_bureaucracy>=quantile(public_officials_agg$quality_bureaucracy, probs=c(0.5))),
@@ -185,7 +186,7 @@ public_officials_dta_linked <- public_officials_dta_clean %>%
   )
 
 public_offical_link_key <- public_officials_agg %>%
-  select(office_preload,  governorate, school_district_preload)
+  select(office_preload, school_district_preload)
 
 write_excel_csv(public_offical_link_key, path = paste(work_dir, "public_offical_link_key.csv", sep="") )
 
@@ -201,7 +202,7 @@ write_excel_csv(public_offical_link_key, path = paste(work_dir, "public_offical_
 - 248 schools were sampled as part of GEPD school survey  
 - 200 public officials were interviewed.  Excluding HR officials:  
   - 64 at the Ministry of Education
-  - 118 at the District (Directorate) level
+  - 118 at the District level
 
 ## Goals
 
@@ -226,100 +227,41 @@ print(fc_list)
 fc <- readOGR(dsn=fgdb,layer="g2015_2014_1", encoding = "UTF-8", use_iconv = TRUE)
 
 
-#select data just for jordan
-fc_jordan <- fc[fc@data$ADM0_NAME=="Jordan",]
+#select data just for Rwanda
+fc_Rwanda <- fc[fc@data$ADM0_NAME=="Rwanda",]
 
 
 
-#plot base map of jordan with labels for subnational units.  http://rstudio.github.io/leaflet/popups.html
-maps <- fortify(fc_jordan, region="ADM1_NAME")
+#plot base map of Rwanda with labels for subnational units.  http://rstudio.github.io/leaflet/popups.html
+
+region_regex<-c('North', 'South', 'East','West')
+
+maps <- fortify(fc_Rwanda, region="ADM1_NAME") %>%
+  mutate(id=str_trim(str_split(id,pattern="//",1)))
 
 
 
 #collapse to governorate level for mapping
 po_df_collapse <- public_officials_agg %>%
-  mutate(territory=case_when(
-    id=="Karak" ~ "South",
-    id=="Irbid" ~ "North",
-    id=="Mafraq" ~ "North",
-    id=="Zarqa" ~ "Central",
-    id=="Balqa" ~ "Central",
-    id=="Ma'an" ~ "South",
-    id=="Tafiela" ~ "South",
-    id=="Aqaba" ~ "South",
-    id=="Ajloon" ~ "North",
-    id=="Amman" ~ "Central",
-    id=="Jarash" ~ "North",
-    id=="Madaba" ~ "Central"
-  )) %>%
+  left_join(office_list,  by=c('school_district_preload'='sector')) %>%
+  mutate(district=if_else(govt_tier!='Regional office (or equivalent)',
+                          district,school_district_preload)) %>%
+  left_join(auxillary_frame_info) %>%
+  mutate(id=region) %>%
   group_by(id) %>%
   mutate(n_interviews=sum(n_interviews)) %>%
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
 
 
-# po_df_collapse <- public_officials_agg %>%
-#   mutate(territory=case_when(
-#     id=="Karak" ~ "South",
-#     id=="Irbid" ~ "North",
-#     id=="Mafraq" ~ "North",
-#     id=="Zarqa" ~ "Central",
-#     id=="Balqa" ~ "Central",
-#     id=="Ma'an" ~ "South",
-#     id=="Tafiela" ~ "South",
-#     id=="Aqaba" ~ "South",
-#     id=="Ajloon" ~ "North",
-#     id=="Amman" ~ "Central",
-#     id=="Jarash" ~ "North",
-#     id=="Madaba" ~ "Central"
-#   )) %>%
-#   group_by(id) %>%
-#   select(id, territory) %>%
-#   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,weights = school_dta_matched$ipw, na.rm = TRUE) else first(.))) %>%
-#   left_join(po_df_collapse_pre)
-
 
 
 school_df_collapse <- school_dta_matched %>%
-  mutate(id=if_else(is.na(id), "Madaba", id)) %>%
-    mutate(territory=case_when(
-    id=="Karak" ~ "South",
-    id=="Irbid" ~ "North",
-    id=="Mafraq" ~ "North",
-    id=="Zarqa" ~ "Central",
-    id=="Balqa" ~ "Central",
-    id=="Ma'an" ~ "South",
-    id=="Tafiela" ~ "South",
-    id=="Aqaba" ~ "South",
-    id=="Ajloon" ~ "North",
-    id=="Amman" ~ "Central",
-    id=="Jarash" ~ "North",
-    id=="Madaba" ~ "Central"
-  )) %>%
   mutate(n_interviews=n()) %>%
+  left_join(auxillary_frame_info,by=c('school_district_preload'='district')) %>%
+  mutate(id=region) %>%
   group_by(id) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,weights = school_dta_matched$ipw, na.rm = TRUE) else first(.))) 
 
-
-# school_df_collapse <- school_dta_matched %>%
-#     mutate(id=if_else(is.na(id), "Madaba", id)) %>%
-#     mutate(territory=case_when(
-#     id=="Karak" ~ "South",
-#     id=="Irbid" ~ "North",
-#     id=="Mafraq" ~ "North",
-#     id=="Zarqa" ~ "Central",
-#     id=="Balqa" ~ "Central",
-#     id=="Ma'an" ~ "South",
-#     id=="Tafiela" ~ "South",
-#     id=="Aqaba" ~ "South",
-#     id=="Ajloon" ~ "North",
-#     id=="Amman" ~ "Central",
-#     id=="Jarash" ~ "North",
-#     id=="Madaba" ~ "Central"
-#   )) %>%
-#   group_by(id) %>%
-#   select(id, territory) %>%
-#   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,weights = school_dta_matched$ipw, na.rm = TRUE) else first(.))) %>%
-#   left_join(school_df_collapse_pre)
 
 
 
@@ -344,7 +286,7 @@ acm<-  ggplot() +
   theme_bw() +
     xlab('Longitude') + 
     ylab('Latitude') + 
-    # ggtitle(str_wrap('Map Survey of Public Officials Scores for Mandates and Accountability by jordanvian Departamento', width=50)) +
+    # ggtitle(str_wrap('Map Survey of Public Officials Scores for Mandates and Accountability by Rwandan Districs', width=50)) +
       theme(panel.grid.major = element_line(color = gray(.5), 
                                             linetype = "dashed", size = 0.5), 
             panel.background = element_rect(fill = "aliceblue"))

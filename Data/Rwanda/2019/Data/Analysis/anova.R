@@ -1,11 +1,12 @@
 #anova to examine fraction of variance between and within schools
 library(tidyverse)
-
+library(estimatr)
+library(modelr)
 
 #Country name and year of survey
-country <-'JOR'
-country_name <- "Jordan"
-year <- '2019'
+country <-'RWA'
+country_name <- "Rwanda"
+year <- '2020'
 
 #########################
 # File paths #
@@ -25,12 +26,12 @@ load(paste(data_folder, "School/school_indicators_data_anon.RData", sep="/"))
 # ANOVA
 #################################
 
-anova <- aov(math_student_knowledge~factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
+anova <- aov(student_knowledge~factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
 
 summary(anova)
 print(anova)
-#> 693839391/(693839391+1025043491)
-
+#10336371815/(10336371815+14063203040)
+#[1] 0.4236292
 
 # fit = lm(student_knowledge ~ factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
 # anova(fit)
@@ -60,7 +61,7 @@ school_dta_short_merge <- school_dta_short_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
-               'teach_score',
+               #'teach_score',
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
@@ -84,12 +85,38 @@ covariates<-c( 'presence_rate',
                'principal_evaluation')
 
 my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg_school<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
+multi_reg_school<-lm(my_formula, school_dta_short_anon)   
 # Adjust standard errors
 cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
 robust_multi_se    <- sqrt(diag(cov1_multi))
 
 summary(multi_reg_school)
+
+df_plot_reg <- school_dta_short_anon %>%
+  select(student_knowledge, covariates, ipw) %>%
+  add_predictions(multi_reg_school)
+
+p1<-ggplot(df_plot_reg, aes(x=pred, y=student_knowledge)) + 
+  geom_point() +
+  geom_smooth(method = 'lm')
+p1
+
+my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg_school_weights<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
+# Adjust standard errors
+cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+summary(multi_reg_school_weights)
+
+df_plot_reg_w <- school_dta_short_anon %>%
+  select(student_knowledge, covariates, ipw) %>%
+  add_predictions(multi_reg_school_weights)
+
+p_w<-ggplot(df_plot_reg_w, aes(x=pred, y=student_knowledge)) + 
+  geom_point() +
+  geom_smooth(method = 'lm')
+p_w
 
 
 my_formula <- as.formula(paste('math_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
@@ -147,7 +174,7 @@ reg_df<- assess_4th_grade_anon_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
-               'teach_score',
+               #'teach_score',
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
@@ -171,7 +198,7 @@ covariates<-c( 'presence_rate',
                'principal_evaluation')
 
 my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg<-lm(my_formula, reg_df, weights = reg_df$school_ipw)   
+multi_reg<-lm(my_formula, reg_df, weights = reg_df$ipw)   
 # Adjust standard errors
 cov1_multi         <- vcovHC(multi_reg, type = "HC1")
 robust_multi_se    <- sqrt(diag(cov1_multi))
@@ -179,7 +206,7 @@ robust_multi_se    <- sqrt(diag(cov1_multi))
 summary(multi_reg)
 
 my_formula <- as.formula(paste('literacy_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg<-lm(my_formula, reg_df, weights = reg_df$school_ipw)   
+multi_reg<-lm(my_formula, reg_df, weights = reg_df$ipw)   
 # Adjust standard errors
 cov1_multi         <- vcovHC(multi_reg, type = "HC1")
 robust_multi_se    <- sqrt(diag(cov1_multi))
@@ -196,3 +223,108 @@ summary(multi_reg)
 #                     'GDP measures were produced by researchers at the World Bank DECRG.',  
 #                     'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
 # )
+
+
+
+################
+# Regression by Indicator
+################
+
+mod_fun <- function(df) {
+  lm_robust(student_knowledge ~ .x  , data = school_dta_short_anon, se_type='HC3')
+}
+
+partial_regression <- school_dta_short_anon %>%
+  dplyr::select(student_knowledge, covariates) %>% # just keep indicators for regression on GDP
+  purrr::map(~lm_robust(student_knowledge ~ .x  , data = school_dta_short_anon, se_type='HC3')) %>%
+  purrr::map(coef) %>%
+  map_dbl(".x") %>% 
+  tidy %>% 
+  dplyr::arrange(desc(x)) %>% 
+  rename(.x = x) 
+
+kable(partial_regression)
+
+
+reg_plot_df <- school_dta_short_anon %>%
+  dplyr::select(student_knowledge, covariates) %>% # just keep indicators for regression on GDP
+  pivot_longer(
+    cols=c(             'presence_rate',
+                        'content_knowledge',
+                        #'teach_score',
+                        'student_attendance',
+                        'ecd_student_knowledge',
+                        'inputs',
+                        'infrastructure',
+                        'operational_management',
+                        'instructional_leadership',
+                        'principal_knowledge_score',
+                        'principal_management',
+                        'teacher_attraction', 
+                        'teacher_selection_deployment', 
+                        'teacher_support', 
+                        'teaching_evaluation', 
+                        'teacher_monitoring',
+                        'intrinsic_motivation', 
+                        'standards_monitoring',
+                        'sch_monitoring', 
+                        'sch_management_clarity',
+                        'sch_management_attraction', 
+                        'sch_selection_deployment', 
+                        'sch_support', 
+                        'principal_evaluation'),
+    names_to = "type",
+    values_to="indicators"
+  )
+
+
+mod_fun <- function(df) {      
+  lm_robust(student_knowledge ~ indicators  , data = df, se_type='HC3') 
+}
+
+mod_fun_gdp <- function(df) {      
+  lm_robust(student_knowledge ~ indicators  , data = df, se_type='HC3') 
+}
+
+b_fun <- function(mod)   {   
+  coef(summary(mod))[2,1] 
+}
+
+se_fun <- function(mod)   {   
+  coef(summary(mod))[2,2] 
+}
+
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+knowledge_regs <- reg_plot_df %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(model_gdp=purrr::map(data, mod_fun_gdp)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            se = map_dbl(model, se_fun),
+            r2 = map_dbl(model, r2_fun),
+            beta_gdp = map_dbl(model_gdp, b_fun),
+            se_gdp = map_dbl(model_gdp, se_fun),
+            r2_gdp = map_dbl(model_gdp, r2_fun)) %>%
+  dplyr::select(type, beta, beta_gdp, se, r2,  se_gdp, r2_gdp, everything())
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs, aes(x=type, y=beta)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta-1.96*se),
+                    ymax=(beta+1.96*se))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Regression Without GDP Satellite Controls", 60))
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs, aes(x=type, y=r2)) +
+  geom_point() + 
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("R^2 of Indicators in Regression Without GDP Satellite Controls", 60))
+

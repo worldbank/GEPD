@@ -2322,6 +2322,7 @@ school_dta_short_imp <- mice::complete(impdata, 1)
 
 data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
                "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon')
+
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 
 save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta',  'school_gdp' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
