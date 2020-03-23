@@ -275,18 +275,24 @@ po_df_trim <- po_df %>%
   select(id,mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making) %>%
   group_by(id)
 
-skim_with_defaults()
-
-    sumstats_df<-skim(po_df_trim) %>%
-      select(-level, -type, -value) %>%
-      spread(stat, formatted) %>%
+  my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                                 sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                                 p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                                 p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                                 p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))        
+        
+    sumstats_df<-my_skim(po_df_trim) %>%
+   yank("numeric") %>%
+   mutate(variable=skim_variable) %>%
       mutate(varlabel=case_when(
         variable=="mandates_accountability" ~ "Mandates & Accountability",
         variable=="quality_bureaucracy" ~ "Quality Bureuacracy",
         variable=="national_learning_goals" ~ "National Learning Goals",
         variable=="impartial_decision_making" ~ "Impartial Decision Making"
       )) %>%
-      select(varlabel, mean, sd, p0, p25, p50, p75, p100,  hist) 
+    arrange(id) %>%
+   select(variable, mean, sd, p0, p25, p50, p75, p100,   hist) 
     
   
     
@@ -383,13 +389,12 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
 
       #add function to produce weighted summary stats
     #add function to produce weighted summary stats
-    skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                               complete_count= ~ sum(!is.na(.))))
-    
+          my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                                 sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                                 p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                                 p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                                 p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))
     merged_df <- merged_df %>%
     filter(!is.na(total_enrolled))
   
@@ -403,12 +408,12 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
     
     sch_ipw<-sumstats_merged$total_enrolled 
 
-        skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                               complete_count= ~ sum(!is.na(.))))
+          my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                                 sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                                 p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                                 p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                                 p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))
     
     sumstats_merged <- sumstats_merged %>%
       select(one_of(indicators_list) ) 
@@ -417,10 +422,10 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
 
     
 
-    sumstats_merged_df<-skim(sumstats_merged) %>%
-      select(-level, -type, -value) %>%
-      spread(stat, formatted) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+    sumstats_merged_df<-my_skim(sumstats_merged) %>%
+   yank("numeric") %>%
+   mutate(variable=skim_variable) %>%
+   select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
 
  
         sumstats_merged_df <- sumstats_merged_df %>%
@@ -444,12 +449,12 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
  
   
       sch_ipw<-sumstats_merged_top$total_enrolled 
-      skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                               complete_count= ~ sum(!is.na(.))))
+          my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                                 sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                                 p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                                 p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                                 p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))
     
   
       sumstats_merged_top <- sumstats_merged_top %>%
@@ -458,10 +463,10 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
 
       
       
-      sumstats_merged_top_df<-skim(sumstats_merged_top) %>%
-        select(-level, -type, -value) %>%
-        spread(stat, formatted) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+      sumstats_merged_top_df<-my_skim(sumstats_merged_top) %>%
+   yank("numeric") %>%
+   mutate(variable=skim_variable) %>%
+   select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
       
       
       #add variable label
@@ -481,12 +486,12 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
         filter(UQ(po_var) %in% c(0))
   
       sch_ipw<-sumstats_merged_bottom$total_enrolled 
-      skim_with( numeric = list( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                               sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                               p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                               p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                               p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                               complete_count= ~ sum(!is.na(.))))
+          my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                                 sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                                 p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                                 p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                                 p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))
     
   
       sumstats_merged_bottom <- sumstats_merged_bottom %>%
@@ -494,10 +499,10 @@ main_indicator_labels<-c("4th Grade Student Proficiency",
       
       
       
-      sumstats_merged_bottom_df<-skim(sumstats_merged_bottom) %>%
-        select(-level, -type, -value) %>%
-        spread(stat, formatted) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+      sumstats_merged_bottom_df<-my_skim(sumstats_merged_bottom) %>%
+           yank("numeric") %>%
+          mutate(variable=skim_variable) %>%
+          select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
       
       
       #add variable label
@@ -574,9 +579,48 @@ top_50_table <- bind_rows(
 ```{r scatters, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
 
 
+
+
+    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',  'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+
 merge_df_collapse<-merged_df %>%
+  rename(literacy_student_knowledge=lit_student_knowledge,
+         literacy_student_proficient=lit_student_proficient,
+         politicized_policy_implementation=polit_policy_imp,
+         politicized_personnel_management=polit_pers_manage) %>%
   group_by(g1) %>%
-  select(g1,student_proficient, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
+  select(g1,one_of(ind_list), mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
 
 
@@ -651,4 +695,32 @@ patch_scatter + plot_annotation(
 
 ```
 
+
+```{r save, include=FALSE}
+
+
+#write data file to shared folder
+merge_df_collapse<-merge_df_collapse %>%
+  rename(province=g1) 
+
+write_dta(merge_df_collapse, path="C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Peru/Data/public_officials_school_merged_df_collapsed.dta")
+
+#rename some data frames for saving  
+merge_df_collapse_Peru<-  merge_df_collapse
+top_50_table_Peru<-top_50_table
+sumstats_df_Peru<-sumstats_df
+maps_Peru<-maps 
+po_df_collapse_Peru<-po_df_collapse
+public_officials_dta_clean_Peru <- public_officials_dta_clean
+school_dta_matched_Peru <- merged_df %>%
+  mutate(literacy_student_knowledge=lit_student_knowledge,
+         literacy_student_proficient=lit_student_proficient,
+         politicized_policy_implementation=polit_policy_imp,
+         politicized_personnel_management=polit_pers_manage)
+
+save(list=c('merge_df_collapse_Peru', 'top_50_table_Peru', 'sumstats_df_Peru','maps_Peru','po_df_collapse_Peru',
+            'public_officials_dta_clean_Peru','school_dta_matched_Peru'), 
+     file = file.path("C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Peru/Data/public_officials_school_merged_files.RData"))
+
+```
 

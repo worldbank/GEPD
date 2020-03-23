@@ -35,10 +35,10 @@ indicators <- indicators %>%
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag
 
-#Get a list of enumerator names and IDs
-enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
-  transmute(m1s0q1_name_other = id ,
-            enumerator_code=text )
+# #Get a list of enumerator names and IDs
+# enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
+#   transmute(m1s0q1_name_other = id ,
+#             enumerator_code=text )
 
 #read in public officials interview file
 public_officials_dta<-read_dta(file.path(download_folder, po_file))
@@ -64,7 +64,7 @@ bin_var <- function(var, val) {
 
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
-  left_join(enumerator_id) %>%
+  # left_join(enumerator_id) %>%
   mutate(enumerator_name=enumerator_code  ,
          enumerator_number=as.double(m1s0q1_number_other) ,
          survey_time=m1s0q8,
@@ -279,7 +279,7 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE),
+  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
          targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
          monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
          incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
@@ -294,7 +294,7 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE),
+  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
          coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
          transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
          accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
@@ -308,7 +308,7 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE),
+  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
          knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
          work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
          merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
@@ -323,11 +323,12 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE),
+  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
          politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
          politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
          politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
-         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4q1")], na.rm=T))
+         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4")], na.rm=T))
+
 
 #list of Bureaucracy indicators
 bureau_ind_nlg  <-c( 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement')

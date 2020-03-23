@@ -760,13 +760,43 @@ top_50_table <- bind_rows(
 
 ```{r scatters, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
 
+    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',  'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
 
 merge_df_collapse<-school_dta_matched %>%
   group_by(governorate) %>%
-  select(governorate,student_knowledge, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
+  select(governorate,ind_list, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
-
-
 
 
 acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=student_knowledge)) +
@@ -844,12 +874,6 @@ patch_scatter_alt + plot_annotation(
 ```
 
 ```{r scatters_g1, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
-
-
-merge_df_collapse<-school_dta_matched %>%
-  group_by(governorate) %>%
-  select(governorate,ecd_student_knowledge, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
-  summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
 
 
 
@@ -933,11 +957,6 @@ patch_scatter_alt + plot_annotation(
 ```{r scatters_attendance, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
 
 
-merge_df_collapse<-school_dta_matched %>%
-  group_by(governorate) %>%
-  select(governorate,presence_rate, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
-  summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
-
 
 
 
@@ -1017,3 +1036,29 @@ patch_scatter_alt + plot_annotation(
 
 
 ```
+
+```{r save, include=FALSE}
+
+
+#write data file to shared folder
+merge_df_collapse<-merge_df_collapse %>%
+  rename(province=governorate) 
+
+write_dta(merge_df_collapse, path="C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Jordan/Data/public_officials_school_merged_df_collapsed.dta")
+
+#rename some data frames for saving  
+merge_df_collapse_Jordan<-  merge_df_collapse
+top_50_table_Jordan<-top_50_table
+sumstats_df_Jordan<-sumstats_df
+maps_Jordan<-maps 
+school_df_collapse_Jordan<-school_df_collapse 
+po_df_collapse_Jordan<-po_df_collapse
+public_officials_dta_clean_Jordan <- public_officials_dta_clean
+school_dta_matched_Jordan <- school_dta_matched
+
+save(list=c('merge_df_collapse_Jordan', 'top_50_table_Jordan', 'sumstats_df_Jordan','maps_Jordan','school_df_collapse_Jordan','po_df_collapse_Jordan',
+            'public_officials_dta_clean_Jordan','school_dta_matched_Jordan'), 
+     file = file.path("C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Jordan/Data/public_officials_school_merged_files.RData"))
+
+```
+

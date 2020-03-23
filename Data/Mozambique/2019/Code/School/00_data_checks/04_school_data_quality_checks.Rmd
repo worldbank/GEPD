@@ -171,27 +171,27 @@ First, we will display the modules with information collected in each school.
 
 datatable(school_modules_complete,
           caption='Modules That Have at Least Some Information for Each School',
-          class='display',
-          extensions = c ('Buttons', 'FixedHeader'), 
+          class='cell-border stripe',
+          extensions = c ('Buttons' ), 
                 options=list(
                   dom = 'Bfrtip',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  buttons = c('copy', 'csv','excel'),
                   pageLength = 60,
-                  scrollX = TRUE, 
-                  paging=FALSE,
                   ordering=F))
 write_excel_csv(school_modules_complete, path = paste(save_folder, "school_modules_complete.csv", sep="/")) 
+
+
 
 ```
 
 
-```{r missings, echo=FALSE, error=FALSE, message=FALSE}
+```{r missings, eval=FALSE, error=FALSE, fig.height=13, fig.width=8, message=FALSE, include=FALSE}
 
 load(paste(save_folder, "school_survey_data.RData", sep="/"))
 
 #Load original sample of schools
-currentDate<-c("2019-10-11")
-sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Jordan/2019/Data/Sampling/school_sample_",currentDate,".RData", sep="")
+currentDate<-c("2020-03-09")
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/Sampling/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
 
@@ -213,13 +213,9 @@ orig_colnames<-colnames(school_dta_short)
 
 #compare data collected to original sample
 school_dta_short <- school_dta_short %>%
-  mutate(organization_code=as.numeric(school_code_preload)) %>%
+  mutate(Admin_Code=school_emis_preload) %>%
   left_join(data_set_updated) %>%
-  mutate(longitude=as.character(longitude)) %>%
-  mutate(latitude=as.character(latitude)) %>%
-  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
-         lon=if_else(is.na(lon), as.numeric(longitude), lon),
-         school_ipw=weights)
+  mutate(school_ipw=sum(grd4_total)/grd4_total)
   
  # school_dta_short %>% data_set
  #    group_by(rural) %>%
@@ -234,7 +230,7 @@ gg_miss_var(school_dta_short[,orig_colnames])
 
 Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation, total number of schools, and number of schools with missing information for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
 
-```{r missings2, include=FALSE}
+```{r missings2, eval=FALSE, include=FALSE}
 
 #table of summary stats
 #merge on teacher content knowledge
@@ -243,7 +239,6 @@ indicator_list<-c("student_knowledge",
                   'student_attendance',
                   "absence_rate", 
                   "content_knowledge", 
-                  "teach_score",
                   "ecd_student_knowledge", 
                   "inputs", 
                   "infrastructure", 
@@ -268,7 +263,6 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     "Student Attendance Rate",
                     "Teacher Absence Rate", 
                     "Teacher Content Knowledge", 
-                    "Teacher Pedagogy (TEACH)",
                     "1st Grade Assessment (Fraction Correct)", 
                     "Inputs", 
                     "Infrastructure",
@@ -294,32 +288,32 @@ sumstats<-school_dta_short %>%
 
 #impute missing weights with median
 school_dta_short <- school_dta_short %>%
-  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_students_grade_4) %>%
-  mutate(school_ipw=if_else(is.na(school_ipw), 1, school_ipw)*total_students_grade_4)
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), 1, school_ipw))
 
-school_ipw<-school_dta_short$school_ipw 
+sch_ipw<-school_dta_short$school_ipw 
 
 
 #add function to produce weighted summary stats
-skim_with( numeric = list( mean = ~ wtd.mean(.,  w=school_ipw, na.rm=TRUE),
-                                     sd = ~ sqrt(wtd.var(.,  weights=school_ipw, na.rm=TRUE)),
-                                     p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=school_ipw, na.rm=TRUE)),
-                                     p50 = ~ (wtd.quantile(., probs=c(0.5), weights=school_ipw, na.rm=TRUE)),
-                                     p75 = ~ (wtd.quantile(., probs=c(0.75), weights=school_ipw, na.rm=TRUE)),
-                                     complete_count= ~ sum(!is.na(.))))
+          my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                                 sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                                 p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                                 p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                                 p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                                 complete = ~ sum(!is.na(.))))
 
 
 
-sumstats_df<-skim(sumstats) %>%
-  select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+sumstats_df<-my_skim(sumstats) %>%
+           yank("numeric") %>%
+           mutate(variable=skim_variable) %>%
+           select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
   mutate(variable=factor(variable, levels=indicator_list,
                          labels=indicator_labels)) %>%
   mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
          ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
   mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-  select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, hist) %>%
   arrange(match(variable, indicator_labels))
 
 #export Indicators sumstats
@@ -328,13 +322,10 @@ write_excel_csv(sumstats_df, paste(save_folder,'GEPD_school_Indicators.csv',sep=
 ```
 
 
-```{r missings_kable, echo=FALSE}
+```{r missings_kable, eval=FALSE, include=FALSE}
 
-knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean", "95% Confidence Interval", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"), digits = 2 ) %>%
+knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean", "95% Confidence Interval", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "Histogram"), digits = 2 ) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
-  pack_rows("Outcomes", 1,1) %>%
-  pack_rows("Practices", 2,10) %>%
-  pack_rows("Policies", 11,21) %>%
   footnote(general="Weighted Summary Statistics using School Survey Weights")
 
 ```
@@ -342,7 +333,7 @@ knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables
 
 In the next check, we will asssess whether any schools were not part of the pre-loaded list of schools.
 
-```{r, echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 # We export the observations for which the schools are not part of the pre-loaded list
 # We identify these schools using the variable "school_name_preload", because this variable is not filled in case the school is not on the list
 
@@ -360,7 +351,7 @@ df_school_preloaded <- school_dta_short %>%
 
 These schools are not part of the pre-loaded list of schools (an empty list is good!):
 
-```{r message=FALSE, warning=FALSE, echo=FALSE}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 kable(df_school_preloaded) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
@@ -380,7 +371,7 @@ In the following map below, users may click on specific provinces or regions to 
 
 The map is color coded.  Green indicators, for instance, have no missing information on our key indicators: 4th grade student achievement, teacher absence, teacher content knowledge, Capacity for Learning (ECD student knowledge), basic inputs, and basic infrastructure ).  Black indicators are missing all six indicators.  More indicators can be added to this list, but for now in the SDI data this is what we could produce before our data collection.
 
-```{r map_guts, include=FALSE}
+```{r map_guts, eval=FALSE, warning=FALSE, include=FALSE}
 
 ####################################################################
 #######Map of schools with missing school info#####
@@ -493,7 +484,7 @@ map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>%
 ```
 
 
-```{r map_plot, echo=FALSE}
+```{r map_plot, eval=FALSE, warning=FALSE, include=FALSE}
 
 
 linked_df<-SharedData$new(school_map)
@@ -531,7 +522,7 @@ bscols(widths=c(3,NA),
 
 The following table shows teachers in the teacher questionnaire module who could not be matched back to the original teacher roster based on the name and number.  This doesn't necessarily indicate a problem, because the difference may only be due to spelling, but should be investigated.
 
-```{r orphans, warning=FALSE, include=FALSE}
+```{r orphans, eval=FALSE, warning=FALSE, include=FALSE}
 
 ###
 #Create list of orphan teachers (cant be matched to questionnaire,  or teacher exam files)
@@ -544,55 +535,43 @@ teacher_roster_list<-teacher_roster %>%
   filter(!is.na(questionnaireteachcode2)) %>%
   select( school_code, questionnaireteachcode2,  teacher_number, teacher_name, school_province_preload, school_district_preload, school_name_preload, lat, lon) 
 
-
-orphan_fix_list <- readxl::read_xlsx(path=paste(save_folder, 'Corrections/jordan_orphan_teachers.xlsx', sep="/"), sheet = 'jordan_orphan_teachers') %>%
-  select(school_code, interview__key, m3sb_tnumber, corrected_code) %>%
-  mutate(teacher_number=as.numeric(corrected_code),
-         m3sb_tnumber=as.numeric(m3sb_tnumber),
-         corrected_code=as.numeric(corrected_code)) %>%
-  left_join(teacher_roster_list) %>%
-  mutate(corrected_name=teacher_name) %>%
-  select(school_code, m3sb_tnumber, corrected_name, corrected_code)
-
-orphan_ok_list <- readxl::read_xlsx(path=paste(save_folder, 'orphan teachers.xlsx', sep="/"), sheet = 'matched ok') %>%
-  select(school_code, interview__key, m3sb_tnumber, questionnaireteachcode2) %>%
-  mutate(teacher_number=questionnaireteachcode2) %>%
-  left_join(teacher_roster_list) %>%
-  mutate(corrected_name=teacher_name,
-         corrected_code=as.numeric(questionnaireteachcode2),
-         m3sb_tnumber=as.numeric(m3sb_tnumber)) %>%
-  select(school_code, m3sb_tnumber, corrected_name, corrected_code)
-
-orphan_fixes <- orphan_fix_list %>%
-  bind_rows(orphan_ok_list) %>%
-  filter(!is.na(corrected_name))
+# 
+# orphan_fix_list <- readxl::read_xlsx(path=paste(save_folder, 'Corrections/jordan_orphan_teachers.xlsx', sep="/"), sheet = 'jordan_orphan_teachers') %>%
+#   select(school_code, interview__key, m3sb_tnumber, corrected_code) %>%
+#   mutate(teacher_number=as.numeric(corrected_code),
+#          m3sb_tnumber=as.numeric(m3sb_tnumber),
+#          corrected_code=as.numeric(corrected_code)) %>%
+#   left_join(teacher_roster_list) %>%
+#   mutate(corrected_name=teacher_name) %>%
+#   select(school_code, m3sb_tnumber, corrected_name, corrected_code)
+# 
+# orphan_ok_list <- readxl::read_xlsx(path=paste(save_folder, 'orphan teachers.xlsx', sep="/"), sheet = 'matched ok') %>%
+#   select(school_code, interview__key, m3sb_tnumber, questionnaireteachcode2) %>%
+#   mutate(teacher_number=questionnaireteachcode2) %>%
+#   left_join(teacher_roster_list) %>%
+#   mutate(corrected_name=teacher_name,
+#          corrected_code=as.numeric(questionnaireteachcode2),
+#          m3sb_tnumber=as.numeric(m3sb_tnumber)) %>%
+#   select(school_code, m3sb_tnumber, corrected_name, corrected_code)
+# 
+# orphan_fixes <- orphan_fix_list %>%
+#   bind_rows(orphan_ok_list) %>%
+#   filter(!is.na(corrected_name))
 
 teacher_questionnaire_list<-teacher_questionnaire %>%
-  select(interview__key, school_code, teacher_name, teacher_number, m3sb_troster, m3sb_tnumber) %>%
-  left_join(orphan_fixes) %>%
-  mutate(teacher_number=if_else(!is.na(corrected_code), as.numeric(corrected_code), as.numeric(m3sb_tnumber)),
-         teacher_name=if_else(!is.na(corrected_name), corrected_name, m3sb_troster))
+  select(interview__key, school_code, teacher_name, teacher_number, m3sb_troster, m3sb_tnumber) 
+  # left_join(orphan_fixes) %>%
+  # mutate(teacher_number=if_else(!is.na(corrected_code), as.numeric(corrected_code), as.numeric(m3sb_tnumber)),
+  #        teacher_name=if_else(!is.na(corrected_name), corrected_name, m3sb_troster))
 
 orphans_number_questionnaire <- teacher_questionnaire_list %>%
   anti_join(teacher_roster_list, by=c('teacher_name', 'teacher_number')) %>%
-  select(school_code, teacher_name, teacher_number,  everything()) %>%
-  bind_rows(teacher_roster_list) %>%
-  arrange(school_code) %>%
-  distinct(school_code, teacher_name, teacher_number, .keep_all = T)
+  select(school_code, teacher_name, teacher_number,  everything()) 
 
-non_orphans_number_questionnaire <- teacher_questionnaire_list  %>%
-  left_join(teacher_roster_list) %>%
-  select(school_code, teacher_name, teacher_number,  everything()) %>%
-  bind_rows(teacher_roster_list) %>%
-  arrange(school_code) %>%
-  distinct(school_code, teacher_name, teacher_number, .keep_all = T)
-
-write_excel_csv(orphans_number_questionnaire, path = paste(save_folder, "jordan_orphan_teachers.csv", sep="/")) 
-write_excel_csv(non_orphans_number_questionnaire, path = paste(save_folder, "jordan_non_orphan_teachers_merged.csv", sep="/")) 
 
 ```
 
-```{r orphans2, echo=FALSE}
+```{r orphans2, eval=FALSE, include=FALSE}
 
 datatable(orphans_number_questionnaire,
                    extensions="Scroller", style="bootstrap", class="compact", width="100%",
@@ -602,7 +581,7 @@ datatable(orphans_number_questionnaire,
 ```
 
 
-```{r orphan_map_guts, include=FALSE}
+```{r orphan_map_guts, eval=FALSE, include=FALSE}
 
 ####################################################################
 #######Map of schools with missing school info#####
@@ -676,7 +655,7 @@ map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>%
 ```
 
 
-```{r orphan_map_plot, echo=FALSE}
+```{r orphan_map_plot, eval=FALSE, include=FALSE}
 
 
 linked_df_orphan<-SharedData$new(orphan_map)
@@ -696,46 +675,3 @@ bscols(widths=c(3,NA),
 
 ```
 
-
-## Test of Differences Between Sampling Information in Sampling Frame and Data Collected
-
-In the following, we test for differences in the number of students listed in the school based on EMIS data compared to the number of students reported by the principal when the enumerator visited.  Significant differences could affect the validity of our results, as survey weights are based on the EMIS data.  We plot the two numbers against one another, and also check for a relationship between the discrepancies and our dashboard indicators. 
-
-```{r sampling_frame_test}
-
-frame_test <- school_dta_short %>%
-  mutate(total_enrollment_emis=total_male_students+total_female_students) %>%
-  mutate(total_enrollment_gap=total_enrolled-total_enrollment_emis)
-
-covariates<-indicator_list
-
-my_formula <- as.formula(paste('total_enrollment_gap ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg<-lm(my_formula, frame_test)   
-# Adjust standard errors
-cov1_multi         <- sandwich::vcovHC(multi_reg, type = "HC1")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-
-
-ggplot(frame_test, aes(x=total_enrollment_emis, y=total_enrolled)) +
-  geom_point() +
-  geom_smooth() +
-  xlab("# of Students based on EMIS") +
-  ylab("# of Students based on Survey") +
-  ggtitle(str_wrap('Plot of # of Students based on EMIS data on # of Students based on Survey Data for Dashboard Schools',65)) +
-  theme_bw() 
-  
-
-```
-
-```{r reg_results, results='asis', echo=FALSE}
-stargazer( multi_reg, type = "html",
-           se        = list(robust_multi_se),
-           title = "Regression of Total Enrollment as Collected during School Survey Versus EMIS data",
-           style='aer',
-           notes= c(
-                    'Heteroskedasticity robust standard errors in parenthesis.'
-                    )
-)
-
-```

@@ -1416,8 +1416,8 @@ graded_data <- "no"
            multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
     select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
            multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10) %>%
-    left_join(school_data_preamble) %>%
-    select(preamble_info, everything())  
+    left_join(school_data_preamble_short) %>%
+    select(keep_info, everything())  
   
   
   #Breakdowns by Male/Female

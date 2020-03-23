@@ -35,16 +35,13 @@ indicators <- indicators %>%
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag
 
-#Get a list of enumerator names and IDs
-enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
-  transmute(m1s0q1_name_other = id ,
-            enumerator_code=text )
 
-#read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, po_file))
-public_officials_metadata<-makeVlist(public_officials_dta)
+# #Get a list of enumerator names and IDs
+# enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
+#   transmute(m1s0q1_name_other = id ,
+#          enumerator_code=text )
 
-vtable(public_officials_dta)
+
 
 #Create a function which will generate new binary variable using case_when, but 
 #if value is misisng it will generate binary variable to be missing
@@ -64,9 +61,10 @@ bin_var <- function(var, val) {
 
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
-  left_join(enumerator_id) %>%
-  mutate(enumerator_name=enumerator_code  ,
-         enumerator_number=as.double(m1s0q1_number_other) ,
+  mutate(enumerator_name=Enumerator  ,
+         enumerator_number=Enumerator ,
+         district_code=Woreda,
+         region_code=Region,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
@@ -100,6 +98,7 @@ public_officials_dta<- public_officials_dta %>%
   )
 
 
+
 ###############################
 # Read in School Data for comparison to public officials answers
 ###############################
@@ -108,40 +107,40 @@ school_folder <- file.path(paste(project_folder,country,year,"Data/clean/School"
 
 if (exists(paste(school_folder, "school_indicators_data.RData", sep="/"))) {
   
-  load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
-  
-  currentDate<-c("2019-10-31")
-  sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/Sampling/school_sample_",currentDate,".RData", sep=""))
-  
-  load(sample_frame_name)
-  
-  #compare data collected to original sample
-  school_dta_short <- school_dta_short %>%
-    mutate(codigo=as.numeric(school_code_preload)) %>%
-    left_join(data_set_updated) %>%
-    mutate( school_ipw=weights) %>%
-    mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*orig_n_students) %>%
-    mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
-  
-  weights<-school_dta_short %>%
-    group_by(school_code) %>%
-    summarise(school_ipw=mean(school_ipw))
-  
-  final_indicator_data_INPT <- final_indicator_data_INPT %>%
-    left_join(weights) %>%
-    filter(!is.na(school_ipw))
-  
-  #need to adjust this
-  
-  
-  class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indicator_data_INPT$school_ipw, na.rm=TRUE)
-  
-  #need to adjust this
-  school_absence <- school_dta_short %>%
-    filter(!is.na(school_ipw))
-  
-  #need to adjust this
-  absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE) 
+load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
+
+currentDate<-c("2020-02-14")
+sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/Sampling/school_sample_",currentDate,".RData", sep=""))
+
+load(sample_frame_name)
+
+#compare data collected to original sample
+school_dta_short <- school_dta_short %>%
+  mutate(codigo=as.numeric(school_code_preload)) %>%
+  left_join(data_set_updated) %>%
+  mutate( school_ipw=weights) %>%
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*orig_n_students) %>%
+  mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+
+weights<-school_dta_short %>%
+  group_by(school_code) %>%
+  summarise(school_ipw=mean(school_ipw))
+
+final_indicator_data_INPT <- final_indicator_data_INPT %>%
+  left_join(weights) %>%
+  filter(!is.na(school_ipw))
+
+#need to adjust this
+
+
+class_size <- weighted.mean(final_indicator_data_INPT$m4scq4_inpt, w=final_indicator_data_INPT$school_ipw, na.rm=TRUE)
+
+#need to adjust this
+school_absence <- school_dta_short %>%
+  filter(!is.na(school_ipw))
+
+#need to adjust this
+absence <- weighted.mean(school_absence$absence_rate, w=school_absence$school_ipw, na.rm=TRUE) 
 } else {
   class_size <-25
   absence <- 10
@@ -177,7 +176,7 @@ public_officials_dta <- public_officials_dta %>%
                                                                            .x==998 ~ as.numeric(NA),
                                                                            is.na(.x) ~ as.numeric(NA),
                                                                            TRUE ~  as.numeric(.x))) %>%
-  
+
   mutate(avg_class_size_guess=QB1q2,
          avg_absence_guess=QB1q1,
          motivation_relative_start=QB4q2, 
@@ -232,7 +231,7 @@ public_officials_dta <- public_officials_dta %>%
     (IDM3q3>15 & IDM3q3<=20) ~ 2,
     TRUE ~ 1)
   )
-
+    
 
 
 #list info that will be useful to keep in each indicator dataframe
@@ -279,7 +278,7 @@ public_officials_dta_clean$nlg_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(national_learning_goals=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE),
+  mutate(national_learning_goals=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG")], na.rm=TRUE)/(nlg_length),
          targeting=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG1")], na.rm=T),
          monitoring=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG2")], na.rm=T),
          incentives=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="NLG3")], na.rm=T),
@@ -294,7 +293,7 @@ public_officials_dta_clean$acm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(mandates_accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE),
+  mutate(mandates_accountability=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM")], na.rm=TRUE)/(acm_length),
          coherence=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM2")], na.rm=T),
          transparency=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM3")], na.rm=T),
          accountability=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="ACM4")], na.rm=T))
@@ -308,7 +307,7 @@ public_officials_dta_clean$qb_length<-length(grep(x=colnames(public_officials_dt
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(quality_bureaucracy=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE),
+  mutate(quality_bureaucracy=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="QB")], na.rm=TRUE)/(qb_length),
          knowledge_skills=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB1")], na.rm=T),
          work_environment=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB2")], na.rm=T),
          merit=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="QB3")], na.rm=T),
@@ -323,11 +322,12 @@ public_officials_dta_clean$idm_length<-length(grep(x=colnames(public_officials_d
 
 #calculate item scores
 public_officials_dta_clean <- public_officials_dta_clean %>%
-  mutate(impartial_decision_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE),
+  mutate(impartial_decision_making=rowSums(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM")], na.rm=TRUE)/(idm_length),
          politicized_personnel_management=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM1")], na.rm=T),
          politicized_policy_making=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM2")], na.rm=T),
          politicized_policy_implementation=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM3")], na.rm=T),
-         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4q1")], na.rm=T))
+         employee_unions_as_facilitators=rowMeans(.[grep(x=colnames(public_officials_dta_clean), pattern="IDM4")], na.rm=T))
+
 
 #list of Bureaucracy indicators
 bureau_ind_nlg  <-c( 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement')
@@ -353,25 +353,19 @@ public_officials_dta_hr <- public_officials_dta_clean %>%
 public_officials_dta_clean <- public_officials_dta_clean %>%
   filter(director_hr==0)
 
-
 if (backup_onedrive=="yes") {
-  write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))
-  write_dta(public_officials_dta_short, path = file.path(confidential_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+  write.csv(public_officials_dta_clean, file = file.path(save_folder_onedrive, "public_officials_survey_data.csv"))
+  write_dta(public_officials_dta_clean, path = file.path(save_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
 }
 
 
-write.csv(public_officials_dta_clean, file = file.path(confidential_folder, "public_officials_survey_data.csv"))
+write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_officials_survey_data.csv"))
+write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
-public_officials_dta_clean2 <- public_officials_dta_clean %>%
-  mutate(pol_personnel_management=politicized_personnel_management ,
-         pol_policy_making=politicized_policy_making ,
-         pol_policy_implementation=politicized_policy_implementation)
-write_dta(public_officials_dta_clean2, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
-
-
-keep_info <- c('interview__id', 'office_preload', 'govt_tier',
+keep_info <- c('interview__id','interview__key', 'office_preload', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
+
 
 ###############
 #Aggregate to office level
@@ -380,7 +374,7 @@ keep_info <- c('interview__id', 'office_preload', 'govt_tier',
 public_officials_office_level<- public_officials_dta_clean %>%
   group_by(office_preload, govt_tier) %>%
   select(keep_info,bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm, 
-         starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM'), motivation_relative_start ) %>%
+         starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM') ) %>%
   mutate(count=n() ) %>% 
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
   
@@ -409,7 +403,13 @@ public_officials_office_level<- public_officials_dta_clean %>%
 # public_officials_dta_clean2 <- data.frame(sapply(label_df$name, ff))
 
 
-
+# #now add labels
+# for (row in 1:nrow(label_df)) {
+#   var <- label_df[row, "name"]
+#   lab <- label_df[row, "vallabel"]
+#   
+#   public_officials_dta_clean$var[1] <- 1
+# }
 ################################
 #Store Key Created Datasets
 ################################
@@ -418,7 +418,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
 
 data_list <- c( 'public_officials_dta_clean','public_officials_office_level')
 
-save(data_list, file = file.path(confidential_folder, "public_officials_survey_data.RData"))
+save(data_list, file = file.path(save_folder, "public_officials_survey_data.RData"))
 
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
@@ -465,13 +465,13 @@ for (i in indicator_names ) {
 
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata' ), file = file.path(save_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables
 
 if (backup_onedrive=="yes") {
-  save(data_list, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.RData"))
+  save(data_list, file = file.path(save_folder_onedrive, "public_officials_survey_data.RData"))
 }
 
 

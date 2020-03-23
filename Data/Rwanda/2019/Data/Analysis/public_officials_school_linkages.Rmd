@@ -96,7 +96,7 @@ load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", 
 load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
 
 #load set of districts that match to schools
-office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/sampling/district_sample_2019-08-26.csv")
+office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/sampling/office_list.csv")
 
 auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/raw/School/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
   mutate(district=str_to_upper(district)) %>%
@@ -118,9 +118,13 @@ auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu
 #aggregate to office level
 public_officials_agg <- public_officials_dta_clean %>%
   filter(govt_tier=='District office (or equivalent)' | govt_tier=='Regional office (or equivalent)') %>%
+  mutate(office_preload=str_to_upper(office_preload)) %>%
   group_by(office_preload) %>%
   mutate(n_interviews=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+
+
 
 #rename offices to match those in original district list
 #first form regular expression with list of districts
@@ -153,29 +157,39 @@ for (i in office_list$sector) {
 }
 
 public_officials_agg <- public_officials_agg %>%
-  mutate(school_district_preload=if_else(govt_tier=='Regional office (or equivalent)',
-  str_trim(str_extract(office_preload,paste('\\b(',district_regex,')\\b', sep=""))),
-  str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
-  )) %>%
+  left_join(office_list,  by=c('office_preload'='sector')) %>%
+  mutate(school_district_preload=if_else(govt_tier!='Regional office (or equivalent)',
+                          district,office_preload)) %>%
+  # mutate(school_district_preload=if_else(govt_tier=='Regional office (or equivalent)',
+  # str_trim(str_extract(office_preload,paste('\\b(',district_regex,')\\b', sep=""))),
+  # str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
+  # )) %>%
   filter(!is.na(school_district_preload)) %>%
   mutate(
     top50mandates_accountability=(mandates_accountability>=quantile(public_officials_agg$mandates_accountability, probs=c(0.5))),
     top50quality_bureaucracy=(quality_bureaucracy>=quantile(public_officials_agg$quality_bureaucracy, probs=c(0.5))),
     top50impartial_decision_making=(impartial_decision_making>=quantile(public_officials_agg$impartial_decision_making, probs=c(0.5))),
     top50national_learning_goals=(national_learning_goals>=quantile(public_officials_agg$national_learning_goals, probs=c(0.5)))
-  )
+  ) %>%
+  group_by(school_district_preload) %>%
+  summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-survey_time, -lat, -lon)
 
 #get list of schools that have a district match
 school_dta_matched <- school_dta_short %>%
   filter(school_district_preload %in% office_list$district) %>%
   left_join(public_officials_agg) 
-  
+
 
 public_officials_dta_linked <- public_officials_dta_clean %>%
-  mutate(school_district_preload=if_else(govt_tier=='Regional office (or equivalent)',
-    str_trim(str_extract(office_preload,paste('\\b(',district_regex,')\\b', sep=""))),
-    str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
-  )) %>%  
+  mutate(office_preload=str_to_upper(office_preload)) %>%
+  left_join(office_list,  by=c('office_preload'='sector')) %>%
+  mutate(school_district_preload=if_else(govt_tier!='Regional office (or equivalent)',
+                          district,office_preload)) %>%
+  # mutate(school_district_preload=if_else(govt_tier=='Regional office (or equivalent)',
+  # str_trim(str_extract(office_preload,paste('\\b(',district_regex,')\\b', sep=""))),
+  # str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
+  # )) %>%
   filter(!is.na(school_district_preload)) %>%
   select(-c("survey_time", "lat", "lon")) %>%
   mutate(
@@ -213,7 +227,7 @@ write_excel_csv(public_offical_link_key, path = paste(work_dir, "public_offical_
 ## Highest Performing Regions
 
 - The following plots the scores (1-5) of our Bureaucracy indicators by region in which we interviewed public officials
-- The score is the average of all public officials in the region, including at the Governorate level
+- The score is the average of all public officials in the region, including at the district level
 
 ```{r map_preamble, message=FALSE, warning=FALSE, include=FALSE}
 fgdb <- "C:/Users/WB469649/OneDrive - WBG/Education Policy Dashboard/Dashboard Mockup/maps/2015_GAUL_Dataset_Mod.gdb"
@@ -234,20 +248,23 @@ fc_Rwanda <- fc[fc@data$ADM0_NAME=="Rwanda",]
 
 #plot base map of Rwanda with labels for subnational units.  http://rstudio.github.io/leaflet/popups.html
 
-region_regex<-c('North', 'South', 'East','West')
+region_regex<-c('North', 'South', 'East','West', 'Kigali City')
 
 maps <- fortify(fc_Rwanda, region="ADM1_NAME") %>%
-  mutate(id=str_trim(str_split(id,pattern="//",1)))
+  mutate(id=str_trim(str_extract(id,region_regex))) %>%
+  group_by(group) %>%
+  mutate(id=first(na.omit(id), )) %>%
+  ungroup()
 
 
 
-#collapse to governorate level for mapping
+#collapse to district level for mapping
 po_df_collapse <- public_officials_agg %>%
-  left_join(office_list,  by=c('school_district_preload'='sector')) %>%
   mutate(district=if_else(govt_tier!='Regional office (or equivalent)',
                           district,school_district_preload)) %>%
   left_join(auxillary_frame_info) %>%
   mutate(id=region) %>%
+  mutate(id=if_else(id=="Kigali city", "Kigali City", id)) %>%
   group_by(id) %>%
   mutate(n_interviews=sum(n_interviews)) %>%
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
@@ -259,6 +276,7 @@ school_df_collapse <- school_dta_matched %>%
   mutate(n_interviews=n()) %>%
   left_join(auxillary_frame_info,by=c('school_district_preload'='district')) %>%
   mutate(id=region) %>%
+  mutate(id=if_else(id=="Kigali city", "Kigali City", id)) %>%
   group_by(id) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,weights = school_dta_matched$ipw, na.rm = TRUE) else first(.))) 
 
@@ -361,7 +379,7 @@ achieve <- ggplot() +
                     color="black", size=0.1, fill='white') +
     geom_map(data = school_df_collapse, aes(map_id = id, fill=student_knowledge), map = maps) + 
     expand_limits(x = maps$long, y = maps$lat) +
-    scale_fill_viridis_c(limits=c(35,65),
+    scale_fill_viridis_c(limits=c(0,65),
       name=str_wrap("4th Grade Proficiency",width=20),
                       na.value = "grey80",
                       labels = rename_na("No data")) +
@@ -382,7 +400,7 @@ patch_plot <- (idm | acm ) / (nlg | qb )
 
 patch_plot + plot_annotation(
   title = 'Plots of Bureaucracy Indicators Across Regions',
-  caption = 'Regional shading shows average of all public officials in that Governorate including officials at Directorate level'
+  caption = 'Regional shading shows average of all public officials in that district including officials at Directorate level'
 )
 ```
 
@@ -394,6 +412,11 @@ patch_plot + plot_annotation(
 ```{r table, include=FALSE}
 
 public_officials_agg_trim <- public_officials_dta_linked %>%
+  mutate(district=if_else(govt_tier=='Regional office (or equivalent)',
+                          office_preload, district)) %>%
+  left_join(auxillary_frame_info) %>%
+  mutate(id=region) %>%
+  mutate(id=if_else(id=="Kigali city", "Kigali City", id)) %>%
   select(id,mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making) %>%
   group_by(id)
 
@@ -414,7 +437,7 @@ public_officials_agg_trim <- public_officials_dta_linked %>%
         variable=="impartial_decision_making" ~ "Impartial Decision Making"
       )) %>%
     arrange(id) %>%
-   select(id, variable, mean, sd, p0, p25, p50, p75, p100,   hist) 
+   select(variable, mean, sd, p0, p25, p50, p75, p100,   hist) 
 
     
   
@@ -424,19 +447,14 @@ public_officials_agg_trim <- public_officials_dta_linked %>%
 ```{r table_output, echo=FALSE}
   knitr::kable(sumstats_df,
         caption = "Summary Statistics of Bureaucracy Indicators by Region",
-        col.names = c("ID", "Variable", "Mean", "Std Dev", "Min", "25th Percentile", "Median", "75th Percentile", "Max", "Histogram")) %>%
+        col.names = c( "Variable", "Mean", "Std Dev", "Min", "25th Percentile", "Median", "75th Percentile", "Max", "Histogram")) %>%
   kable_styling( bootstrap_options = c("striped", "hover")) %>%
-    pack_rows("Amman", 1, 5) %>%
-    pack_rows("Aqaba", 5, 9) %>%
-    pack_rows("Balqa", 9, 13) %>%
-    pack_rows("Irbid", 13, 17) %>%
-    pack_rows("Jarash", 17, 21) %>%
-    pack_rows("Karak", 21, 25) %>%
-    pack_rows("Ma'an", 25, 29) %>%
-    pack_rows("Madaba", 29, 33) %>%
-    pack_rows("Mafraq", 33, 37) %>%
-    pack_rows("Tafiela", 37, 41) %>%
-    pack_rows("Zarqa", 41, 44)
+    pack_rows("East", 1, 5, indent=F) %>%
+    pack_rows("Kigal City", 5, 9, indent=F) %>%
+    pack_rows("North", 9, 13, indent=F) %>%
+    pack_rows("South", 13, 17, indent=F) %>%
+    pack_rows("West", 17, 20, indent=F)
+
 ```
 
 ## School Level Outcomes by Performance of Region's Bureaucracy
@@ -703,9 +721,46 @@ top_50_table <- bind_rows(
 ```{r scatters, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
 
 
+    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',  'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+
+
+
+
 merge_df_collapse<-school_dta_matched %>%
-  group_by(governorate) %>%
-  select(governorate,student_knowledge, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
+  mutate(district=school_district_preload) %>%
+  group_by(district) %>%
+  select(district,ind_list, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
 
 
@@ -773,25 +828,20 @@ patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
   title = 'Plot of 4th Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
 )
 
 patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
 
 patch_scatter_alt + plot_annotation(
   title = 'Plot of 4th Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
 )
 
 ```
 
 ```{r scatters_g1, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
 
-
-merge_df_collapse<-school_dta_matched %>%
-  group_by(governorate) %>%
-  select(governorate,ecd_student_knowledge, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
-  summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
 
 
 
@@ -858,14 +908,14 @@ patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
   title = 'Plot of 1st Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
 )
 
 patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
 
 patch_scatter_alt + plot_annotation(
   title = 'Plot of 1st Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
 )
 
 ```
@@ -874,11 +924,6 @@ patch_scatter_alt + plot_annotation(
 
 ```{r scatters_attendance, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
 
-
-merge_df_collapse<-school_dta_matched %>%
-  group_by(governorate) %>%
-  select(governorate,presence_rate, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
-  summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
 
 
 
@@ -945,7 +990,7 @@ patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
   title = 'Plot of Teacher Presence on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
 )
 
 
@@ -953,9 +998,36 @@ patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
 
 patch_scatter_alt + plot_annotation(
   title = 'Plot of Teacher Presence on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
 )
 
 
 
 ```
+
+```{r save, include=FALSE}
+
+
+#write data file to shared folder
+merge_df_collapse<-merge_df_collapse %>%
+  rename(province=district) 
+
+write_dta(merge_df_collapse, path="C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Rwanda/Data/public_officials_school_merged_df_collapsed.dta")
+
+#rename some data frames for saving  
+merge_df_collapse_Rwanda<-  merge_df_collapse
+top_50_table_Rwanda<-top_50_table
+sumstats_df_Rwanda<-sumstats_df
+maps_Rwanda<-maps 
+school_df_collapse_Rwanda<-school_df_collapse 
+po_df_collapse_Rwanda<-po_df_collapse
+public_officials_dta_clean_Rwanda <- public_officials_dta_clean
+school_dta_matched_Rwanda <- school_dta_matched
+
+
+save(list=c('merge_df_collapse_Rwanda', 'top_50_table_Rwanda', 'sumstats_df_Rwanda','maps_Rwanda','school_df_collapse_Rwanda','po_df_collapse_Rwanda',
+            'public_officials_dta_clean_Rwanda','school_dta_matched_Rwanda' ), 
+     file = file.path("C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Rwanda/Data/public_officials_school_merged_files.RData"))
+
+```
+

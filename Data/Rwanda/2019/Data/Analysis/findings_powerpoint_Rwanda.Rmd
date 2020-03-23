@@ -154,7 +154,7 @@ wrapper <- function(x, ...)
 
 ```
 
-## Main Indicator Tables by Urban/Rural, Public/Private, Evening/Non-Evening, Regions
+## Main Indicator Tables by Urban/Rural, Public/Private, Regions
 
 
 ```{r dt, echo=FALSE, message=FALSE, warning=FALSE}
