@@ -349,7 +349,12 @@ kable(peru_stats,
 
 ## Survey Weights
 
-Survey weights are constructed using our original sampling frame for a country.  School Weights are the inverse probability that a 4th grade student in the school is randomly selected for the school survey.  This is calculated by summing the total number of students in each particular school and dividing by the total number of 4th grade students in the sampling frame.  In cases where we have large amounts of non-responses or refusals to enter the school, we will add an adjustment term to account for non-response.  This could happen for instance, if an originally sampled school was selected but refused and the two replacement schools for that school also refused.
+Survey weights are constructed using our original sampling frame for a country.  School Weights are the inverse probability that a 4th grade student in the school is randomly selected for the school survey.  The exact formula depends on the selection procedure for choosing schools.  In nearly all cases, we use some form of stratification, in which case the probabilities referenced above are computed within each stratum.  The weight for school i within stratum j is, where m is a measure of school size and n is the number of schools selected per stratum:
+
+$$ SW_i^j=\frac{\sum_{i=1}^{N_j}m_i}{n*m_i} $$
+
+
+In a simple case where schools are selected at random proportional to size, this is calculated by summing the total number of students in each particular school and dividing by the total number of 4th grade students in the sampling frame.    In cases where we have large amounts of non-responses or refusals to enter the school, we will add an adjustment term to account for non-response.  This could happen for instance, if an originally sampled school was selected but refused and the two replacement schools for that school also refused.
 
 For student level or teacher level data, we will also create an adjustment for the random selection of classrooms, teachers, or students that takes place within schools.  In order to form these weights at the individual level, the school weight is multiplied by the number of units sampled (five teachers for the teacher interview, 10 for the teacher absence module, one for the class of 4th graders, and three for the three randomly selected 1st grade students.).  
 

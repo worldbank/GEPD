@@ -96,8 +96,12 @@ load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", 
 school_dta_short<-read_dta(paste('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v01_RAW/Data/SDI 2018/', "school_indicators_data.dta", sep=""))
 
 #load set of districts that match to schools
-office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v01_RAW/Data/sampling/district_sample_10region_18ugel2019-10-31.csv")
-
+office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v01_RAW/Data/sampling/district_sample_10region_18ugel2019-10-31.csv") %>%
+  mutate(District=if_else(District=="Homo�ne", "Homoine", District )) %>% #fix a few district names
+  mutate(District=if_else(District=="Alto Mol�cu�", "Alto Molocue", District )) 
+  
+#convert names of office list to lowercase
+names(office_list) <- tolower(names(office_list))
 
 
 
@@ -111,7 +115,9 @@ office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confiden
 #aggregate to office level
 public_officials_agg <- public_officials_dta_clean %>%
   filter(govt_tier=='District office (or equivalent)' | govt_tier=='Regional office (or equivalent)') %>%
-  mutate(office_preload=str_to_upper(office_preload)) %>%
+  mutate(office_preload=str_remove(office_preload,pattern='DPEDH|SDEJT')) %>%
+  mutate(office_preload=str_trim(office_preload)) %>%
+  mutate(office_preload=str_to_title(office_preload)) %>% # do some formatting of office names
   group_by(office_preload) %>%
   mutate(n_interviews=n()) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
@@ -150,40 +156,40 @@ for (i in office_list$sector) {
 }
 
 public_officials_agg <- public_officials_agg %>%
-  left_join(office_list,  by=c('office_preload'='sector')) %>%
-  mutate(school_province_preload=if_else(govt_tier!='Regional office (or equivalent)',
+  left_join(office_list,  by=c('office_preload'='district')) %>%
+  mutate(province=if_else(govt_tier!='Regional office (or equivalent)',
                           province,office_preload)) %>%
   # mutate(school_province_preload=if_else(govt_tier=='Regional office (or equivalent)',
   # str_trim(str_extract(office_preload,paste('\\b(',province_regex,')\\b', sep=""))),
   # str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
   # )) %>%
-  filter(!is.na(school_province_preload)) %>%
+  filter(!is.na(province)) %>%
   mutate(
     top50mandates_accountability=(mandates_accountability>=quantile(public_officials_agg$mandates_accountability, probs=c(0.5))),
     top50quality_bureaucracy=(quality_bureaucracy>=quantile(public_officials_agg$quality_bureaucracy, probs=c(0.5))),
     top50impartial_decision_making=(impartial_decision_making>=quantile(public_officials_agg$impartial_decision_making, probs=c(0.5))),
     top50national_learning_goals=(national_learning_goals>=quantile(public_officials_agg$national_learning_goals, probs=c(0.5)))
   ) %>%
-  group_by(school_province_preload) %>%
+  group_by(province) %>%
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   select(-survey_time, -lat, -lon)
 
 #get list of schools that have a province match
 school_dta_matched <- school_dta_short %>%
-  filter(school_province_preload %in% office_list$province) %>%
+  filter(province %in% office_list$province) %>%
   left_join(public_officials_agg) 
 
 
 public_officials_dta_linked <- public_officials_dta_clean %>%
   mutate(office_preload=str_to_upper(office_preload)) %>%
-  left_join(office_list,  by=c('office_preload'='sector')) %>%
-  mutate(school_province_preload=if_else(govt_tier!='Regional office (or equivalent)',
+  left_join(office_list,  by=c('office_preload'='district')) %>%
+  mutate(province=if_else(govt_tier!='Regional office (or equivalent)',
                           province,office_preload)) %>%
-  # mutate(school_province_preload=if_else(govt_tier=='Regional office (or equivalent)',
+  # mutate(province=if_else(govt_tier=='Regional office (or equivalent)',
   # str_trim(str_extract(office_preload,paste('\\b(',province_regex,')\\b', sep=""))),
   # str_trim(str_extract(office_preload,paste('\\b(',sector_regex,')\\b', sep="")))
   # )) %>%
-  filter(!is.na(school_province_preload)) %>%
+  filter(!is.na(province)) %>%
   select(-c("survey_time", "lat", "lon")) %>%
   mutate(
     top50mandates_accountability=(mandates_accountability>=quantile(public_officials_agg$mandates_accountability, probs=c(0.5))),
@@ -193,7 +199,7 @@ public_officials_dta_linked <- public_officials_dta_clean %>%
   )
 
 public_offical_link_key <- public_officials_agg %>%
-  select(office_preload, school_province_preload)
+  select(office_preload, province)
 
 write_excel_csv(public_offical_link_key, path = paste(work_dir, "public_offical_link_key.csv", sep="") )
 
@@ -244,7 +250,7 @@ fc_Mozambique <- fc[fc@data$ADM0_NAME=="Mozambique",]
 region_regex<-c('North', 'South', 'East','West', 'Kigali City')
 
 maps <- fortify(fc_Mozambique, region="ADM1_NAME") %>%
-  mutate(id=str_trim(str_extract(id,region_regex))) %>%
+ # mutate(id=str_trim(str_extract(id,region_regex))) %>%
   group_by(group) %>%
   mutate(id=first(na.omit(id), )) %>%
   ungroup()
@@ -254,10 +260,8 @@ maps <- fortify(fc_Mozambique, region="ADM1_NAME") %>%
 #collapse to province level for mapping
 po_df_collapse <- public_officials_agg %>%
   mutate(province=if_else(govt_tier!='Regional office (or equivalent)',
-                          province,school_province_preload)) %>%
-  left_join(auxillary_frame_info) %>%
-  mutate(id=region) %>%
-  mutate(id=if_else(id=="Kigali city", "Kigali City", id)) %>%
+                          province,province)) %>%
+  mutate(id=province) %>%
   group_by(id) %>%
   mutate(n_interviews=sum(n_interviews)) %>%
   summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
@@ -267,9 +271,7 @@ po_df_collapse <- public_officials_agg %>%
 
 school_df_collapse <- school_dta_matched %>%
   mutate(n_interviews=n()) %>%
-  left_join(auxillary_frame_info,by=c('school_province_preload'='province')) %>%
-  mutate(id=region) %>%
-  mutate(id=if_else(id=="Kigali city", "Kigali City", id)) %>%
+  mutate(id=province) %>%
   group_by(id) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,weights = school_dta_matched$ipw, na.rm = TRUE) else first(.))) 
 
@@ -407,9 +409,7 @@ patch_plot + plot_annotation(
 public_officials_agg_trim <- public_officials_dta_linked %>%
   mutate(province=if_else(govt_tier=='Regional office (or equivalent)',
                           office_preload, province)) %>%
-  left_join(auxillary_frame_info) %>%
-  mutate(id=region) %>%
-  mutate(id=if_else(id=="Kigali city", "Kigali City", id)) %>%
+  mutate(id=province) %>%
   select(id,mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making) %>%
   group_by(id)
 
@@ -430,7 +430,7 @@ public_officials_agg_trim <- public_officials_dta_linked %>%
         variable=="impartial_decision_making" ~ "Impartial Decision Making"
       )) %>%
     arrange(id) %>%
-   select(variable, mean, sd, p0, p25, p50, p75, p100,   hist) 
+   select(id, variable, mean, sd, p0, p25, p50, p75, p100,   hist) 
 
     
   
@@ -440,13 +440,13 @@ public_officials_agg_trim <- public_officials_dta_linked %>%
 ```{r table_output, echo=FALSE}
   knitr::kable(sumstats_df,
         caption = "Summary Statistics of Bureaucracy Indicators by Region",
-        col.names = c( "Variable", "Mean", "Std Dev", "Min", "25th Percentile", "Median", "75th Percentile", "Max", "Histogram")) %>%
-  kable_styling( bootstrap_options = c("striped", "hover")) %>%
-    pack_rows("East", 1, 5, indent=F) %>%
-    pack_rows("Kigal City", 5, 9, indent=F) %>%
-    pack_rows("North", 9, 13, indent=F) %>%
-    pack_rows("South", 13, 17, indent=F) %>%
-    pack_rows("West", 17, 20, indent=F)
+        col.names = c("ID", "Variable", "Mean", "Std Dev", "Min", "25th Percentile", "Median", "75th Percentile", "Max", "Histogram")) %>%
+  kable_styling( bootstrap_options = c("striped", "hover")) 
+    # pack_rows("East", 1, 5, indent=F) %>%
+    # pack_rows("Kigal City", 5, 9, indent=F) %>%
+    # pack_rows("North", 9, 13, indent=F) %>%
+    # pack_rows("South", 13, 17, indent=F) %>%
+    # pack_rows("West", 17, 20, indent=F)
 
 ```
 

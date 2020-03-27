@@ -42,7 +42,6 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
                                 "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
-                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
                                 "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
                                 "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
                                 "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
@@ -50,7 +49,7 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
+               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights' )
 
 #define function to create weights for summary statistics
 
@@ -78,7 +77,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     group_by(district_code, urban_rural) %>%
     mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
     mutate(weights=n()/allocate) %>%
-    ungroup()
+    mutate(unity=1) %>%
+    ungroup() 
+    
   
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
@@ -86,7 +87,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(rural=urban_rural=="RURAL") %>%
     mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
-                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region"  )])))
+                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
 }
 
 
@@ -100,7 +101,8 @@ school_dta_short$hashed_school_district <-as.character(lapply(school_dta_short$s
 
 #save a hashed version of the dataset, to produce a link file
 key<-school_dta_short %>%
-  select(school_code, school_province_preload, school_district_preload, hashed_school_code, hashed_school_province, hashed_school_district, total_enrolled) 
+  select(school_code, school_province_preload, school_district_preload, hashed_school_code, hashed_school_province, hashed_school_district, total_enrolled,
+         g4_stud_weight_component, abs_weight_component, teacher_weight_component, g1_stud_weight_component) 
 
 write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 
@@ -125,7 +127,27 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, sch_id, total_enrolled, district)
+      
+      # G4 students
+      if (i %in% c("final_indicator_data_LERN","final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
+                  "final_indicator_data_ATTD",  "final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F")) {
+        temp <- df_weights_function(temp, sch_id, g4_stud_weight_component, district)
+      # Teacher Questionnaire and content knowledge  
+      } else if (i %in% c("final_indicator_data_TATT",   "final_indicator_data_TSDP", "final_indicator_data_TSUP",
+                          "final_indicator_data_TEVL",   "final_indicator_data_TMNA",   "final_indicator_data_TINM",
+                          "final_indicator_data_CONT","final_indicator_data_CONT_M","final_indicator_data_CONT_F")) {
+        temp <- df_weights_function(temp, sch_id, teacher_weight_component, district)
+      # Teacher Absence  
+      } 
+        else if (i %in% c("final_indicator_data_EFFT","final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F" )) {
+        temp <- df_weights_function(temp, sch_id, abs_weight_component, district)
+      # G1 Assessment  
+      } else if (i %in% c("final_indicator_data_LCAP","final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F" )) {
+        temp <- df_weights_function(temp, sch_id, g1_stud_weight_component, district)
+      # school level  
+      } else {
+        temp <- df_weights_function(temp, sch_id, unity, district)
+      }
     }
     
     #Scrub names, geocodes

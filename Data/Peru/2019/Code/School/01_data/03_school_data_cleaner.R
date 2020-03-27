@@ -2326,21 +2326,71 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
 
 
 
+################################
+# Student & Teacher Weight Components
+################################
+
+g4_stud_weights<-school_dta %>%
+  select(school_code,  m4scq4_inpt ) %>%
+  group_by(school_code) %>%
+  summarise(m4scq4_inpt=mean(m4scq4_inpt, na.rm=T)) %>%
+  mutate(g4_stud_weight_component=1) %>%
+  select(school_code, g4_stud_weight_component)
+
+teacher_absence_weights <-school_dta %>%
+  select(school_code,  numEligible ) %>%
+  group_by(school_code) %>%
+  summarise(numEligible=max(numEligible, na.rm=T)) %>%
+  mutate(abs_weight_component=if_else(numEligible>=10,
+                                      numEligible/10,
+                                      1)) %>%
+  select(school_code, abs_weight_component)
+
+
+teacher_assessment_weights <-school_dta %>%
+  select(school_code,  numEligible4th ) %>%
+  group_by(school_code) %>%
+  summarise(numEligible4th=max(numEligible4th, na.rm=T)) %>%
+  mutate(teacher_weight_component=if_else(numEligible4th>=5,
+                                          numEligible4th/5,
+                                          1)) %>%
+  select(school_code, teacher_weight_component)
+
+g1_stud_weights<-school_dta %>%
+  select(school_code,  m6_class_count ) %>%
+  group_by(school_code) %>%
+  summarise(m6_class_count=mean(m6_class_count, na.rm=T)) %>%
+  mutate(g1_stud_weight_component=if_else(m6_class_count>=3,
+                                          m6_class_count/3,
+                                          1)) %>%
+  select(school_code, g1_stud_weight_component)
+
+school_weights <- g4_stud_weights %>%
+  left_join(teacher_absence_weights) %>%
+  left_join(teacher_assessment_weights) %>%
+  left_join(g1_stud_weights)
+
+
+#weights list
+weights_list<-c('g4_stud_weight_component', 'abs_weight_component', 'teacher_weight_component','g1_stud_weight_component')
 
 
 final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(all_of(keep_info), ind_list, everything())
+  select(all_of(keep_info), one_of(ind_list), everything()) %>%
+  left_join(school_weights)
 
 
 
 write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
 write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
+write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
 if (backup_onedrive=="yes") {
-  write.csv(final_school_data, file = file.path(confidential_folder_onedrive, "final_complete_school_data.csv"))
-  write_dta(final_school_data, path = file.path(confidential_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+  write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
+  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
 
@@ -2357,15 +2407,14 @@ for (i in ind_list ) {
 
 
 school_dta_short <- final_school_data %>%
-  select(all_of(keep_info),  ind_list)
-
+  select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
 
 write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
 write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
-  write.csv(school_dta_short, file = file.path(confidential_folder_onedrive, "final_indicator_school_data.csv"))
-  write_dta(school_dta_short, path = file.path(confidential_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+  write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
+  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
 
