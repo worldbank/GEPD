@@ -50,7 +50,7 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
+               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' , 'school_weights')
 
 
 #define function to create weights for summary statistics

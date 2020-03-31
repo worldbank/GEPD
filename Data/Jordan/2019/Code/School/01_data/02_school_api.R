@@ -12,7 +12,7 @@ library(here)
 ######################################
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
-
+if (need_api==1) {
 #user credentials
 #Check whether password.R file is in Github repo
 pw_file<-here::here("password.R")
@@ -84,6 +84,9 @@ if (quest_version==17) {
   
 } else {
   unzip(file.path(download_folder, tounzip), exdir=download_folder)
+}
+
+
 }
 
 #Create function to save metadata for each question in each module
