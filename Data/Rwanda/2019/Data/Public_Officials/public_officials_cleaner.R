@@ -36,6 +36,12 @@ indicators <- indicators %>%
 indicator_names <- indicators$indicator_tag
 
 
+#Get a list of enumerator names and IDs
+enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
+  transmute(m1s0q1_name_other = id ,
+         enumerator_code=text )
+
+
 
 #Create a function which will generate new binary variable using case_when, but 
 #if value is misisng it will generate binary variable to be missing
@@ -55,7 +61,8 @@ bin_var <- function(var, val) {
 
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
-  mutate(enumerator_name=m1s0q1_name_other  ,
+  left_join(enumerator_id) %>%
+  mutate(enumerator_name=enumerator_code  ,
          enumerator_number=as.double(m1s0q1_number_other) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
@@ -162,6 +169,12 @@ public_officials_dta <- public_officials_dta %>%
 
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
+  mutate_at(vars(one_of('QB1q2', 'QB1q1','QB4q2','IDM1q3',
+                        'IDM3q1','IDM3q1','IDM3q2','IDM3q3' )), ~case_when(.x==900 ~ as.numeric(NA),
+                                                                           .x==998 ~ as.numeric(NA),
+                                                                           is.na(.x) ~ as.numeric(NA),
+                                                                           TRUE ~  as.numeric(.x))) %>%
+
   mutate(avg_class_size_guess=QB1q2,
          avg_absence_guess=QB1q1,
          motivation_relative_start=QB4q2, 

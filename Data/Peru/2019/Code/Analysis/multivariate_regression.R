@@ -16,6 +16,7 @@ reg_df<- assess_4th_grade_anon %>%
 covariates<-c( 'presence_rate',
                'content_knowledge',
                'ecd_student_knowledge',
+
                'inputs',
                'infrastructure',
                'operational_management',
@@ -24,7 +25,7 @@ covariates<-c( 'presence_rate',
                'principal_management')
 
 my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg<-lm(my_formula, reg_df, weights = reg_df$school_ipw)   
+multi_reg<-lm(my_formula, reg_df, weights = reg_df$ipw)   
 # Adjust standard errors
 cov1_multi         <- vcovHC(multi_reg, type = "HC1")
 robust_multi_se    <- sqrt(diag(cov1_multi))

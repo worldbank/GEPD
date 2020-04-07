@@ -45,8 +45,8 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
   
   download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/School", sep="/"))
-  
+  confidential_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/anonymized/School", sep="/"))
   backup_onedrive="yes"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/School", sep="/"))
   
@@ -55,7 +55,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   project_folder  <- "C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
   
   download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/School", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/School", sep="/"))
   
   # This is experimental and not currently in use.
   backup_onedrive="yes"
@@ -63,7 +63,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
-  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  confidential_folder <- choose.dir(default = "", caption = "Select folder to save final data")
   save_folder_onedrive <- choose.dir(default = "", caption = "Select folder to save backed up data to onedrive")
   
 }
@@ -79,7 +79,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source('school_api.R', local=TRUE)
  
 # #launch file to clear data=
-source('school_data_cleaner.R', local=TRUE)
+source('03_school_data_cleaner.R', local=TRUE)
 
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))

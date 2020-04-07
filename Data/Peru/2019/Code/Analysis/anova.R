@@ -73,7 +73,7 @@ school_dta_short_aov<- school_dta_short %>%
 # ANOVA
 #################################
 
-anova <- aov(student_knowledge~factor(school_code), data=assess_4th_grade_anon_aov, weights = school_ipw)
+anova <- aov(math_student_knowledge~factor(school_code), data=assess_4th_grade_anon_aov, weights = school_ipw)
 
 summary(anova)
 print(anova)

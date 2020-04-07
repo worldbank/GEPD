@@ -228,6 +228,7 @@ indicator_list<-c("student_knowledge",
                   "infrastructure", 
                   "operational_management", 
                   "instructional_leadership",
+                  'principal_knowledge_score', 
                   'principal_management',
                   'teacher_attraction',
                   'teacher_selection_deployment',
@@ -251,6 +252,7 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     "Infrastructure",
                     "Operational Management",
                     "Instructional Leadership",
+                    'Principal Knowledge',
                     'Principal Management Skills',
                     'Teacher Attraction (De Facto)',
                     'Teacher Selection & Deployment (De Facto)',
@@ -270,13 +272,13 @@ sumstats<-school_dta_short %>%
 
 #impute missing weights with median
 school_dta_short <- school_dta_short %>%
-  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw))
+  mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th)
 
 school_ipw<-school_dta_short$school_ipw 
 
 
 #add function to produce weighted summary stats
-skim_with( numeric = list( mean = ~ weighted.mean(.,  w=school_ipw, na.rm=TRUE),
+skim_with( numeric = list( mean = ~ wtd.mean(.,  w=school_ipw, na.rm=TRUE),
                                      sd = ~ sqrt(wtd.var(.,  weights=school_ipw, na.rm=TRUE)),
                                      p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=school_ipw, na.rm=TRUE)),
                                      p50 = ~ (wtd.quantile(., probs=c(0.5), weights=school_ipw, na.rm=TRUE)),
@@ -296,6 +298,9 @@ sumstats_df<-skim(sumstats) %>%
   mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
   select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
   arrange(match(variable, indicator_labels))
+
+#export Indicators sumstats
+write_excel_csv(sumstats_df, paste(save_folder,'GEPD_school_Indicators.csv',sep=""))
 
 ```
 
@@ -626,3 +631,55 @@ bscols(widths=c(3,NA),
 )
 
 ```
+
+
+## Test of Differences Between Sampling Information in Sampling Frame and Data Collected
+
+In the following, we test for differences in the number of students listed in the school based on EMIS data compared to the number of students reported by the principal when the enumerator visited.  Significant differences could affect the validity of our results, as survey weights are based on the EMIS data.  We plot the two numbers against one another, and also check for a relationship between the discrepancies and our dashboard indicators.
+
+```{r sampling_frame_test}
+
+frame_test <- school_dta_short %>%
+  mutate(total_enrollment_emis=total.boys+total.girls) %>%
+  mutate(total_enrollment_gap=total_enrolled-total_enrollment_emis) %>%
+  select(school_code, indicator_list, contains('enroll'))
+
+covariates<-indicator_list
+
+my_formula <- as.formula(paste('total_enrollment_gap ~ ', paste(covariates, collapse=" + "), sep=""))
+multi_reg<-lm(my_formula, frame_test)   
+# Adjust standard errors
+cov1_multi         <- sandwich::vcovHC(multi_reg, type = "HC1")
+robust_multi_se    <- sqrt(diag(cov1_multi))
+
+stargazer( multi_reg, type = "html",
+           se        = list(robust_multi_se),
+           title = "Regression of Total Enrollment as Collected during School Survey Versus EMIS data",
+           style='aer',
+           notes= c(
+                    'Heteroskedasticity robust standard errors in parenthesis.'
+                    )
+)
+
+ggplot(frame_test, aes(x=total_enrollment_emis, y=total_enrolled)) +
+  geom_point() +
+  geom_smooth() +
+  xlab("# of Students based on EMIS") +
+  ylab("# of Students based on Survey") +
+  ggtitle(str_wrap('Plot of # of Students based on EMIS data on # of Students based on Survey Data for Dashboard Schools',65)) +
+  theme_bw() 
+  
+
+```
+```{r reg_results, results='asis', echo=FALSE}
+stargazer( multi_reg, type = "html",
+           se        = list(robust_multi_se),
+           title = "Regression of Gap between Total Enrollment as Collected during School Survey and EMIS data on Dashboard Indicators",
+           style='aer',
+           notes= c(
+                    'Heteroskedasticity robust standard errors in parenthesis.'
+                    )
+)
+
+```
+

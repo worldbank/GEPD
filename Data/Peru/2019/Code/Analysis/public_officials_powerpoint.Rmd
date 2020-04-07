@@ -20,6 +20,7 @@ library(scales)
 library(spatstat)
 library(ggradar)
 library(Hmisc)
+library(ggpmisc)
 
 # define stle for ggplot based on BBC plotting styles
 bbc_style <- function() {
@@ -187,7 +188,7 @@ learning_data_plot <- final_indicator_data_LERN %>%
   select(school_code, rural, Gender, student_knowledge.x, school_ipw ) %>%
   mutate(student_knowledge=student_knowledge.x) %>%
   select(-student_knowledge.x) %>%
-    mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+    mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urbano"))) %>%
   filter(!is.na(rural))
 
 learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(weighted.median(student_knowledge, school_ipw, na.rm=T),1))
@@ -196,10 +197,10 @@ learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD
     geom_boxplot(aes(weight=school_ipw), position="dodge") +
     geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
-  xlab(str_wrap("Urban/Rural Status", width=75))+
-  ylab("Fraction Correct on 4th Grade Assessment") +
-  ggtitle(str_wrap("Boxplot of Student Learning by Gender and Urban/Rural", width=75)) +
-  scale_fill_discrete(name="Gender") +
+  xlab(str_wrap("Estatus Rural/Urbano", width=75))+
+  ylab(str_wrap("Fracción de Respuestas Correctas en la Prueba de Aprendizaje de 4º Grado",35)) +
+  scale_fill_discrete(name="Sexto", 
+                      labels=c('Todos los Estudiantes','Niñas','Niños' )) +
   theme_bw() +
     theme(legend.position = "bottom") 
 
@@ -212,13 +213,13 @@ learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD
 
 
 urban_rural <- school_dta_short %>%
-  mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+  mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urbana"))) %>%
   filter(!is.na(rural))
 
 infr_urban_rural <-ggplot(urban_rural, aes(x=infrastructure, y=Type, fill=Type)) +
   geom_density_ridges() +
-  labs(x='Infrastructure Index')+
-  ggtitle("Infrastructure Across Urban/Rural")
+  labs(x='Índice de Infraestructura')+
+  ggtitle("Infraestructura en Zonas Rurales/Urbanas")
 
 infr_urban_rural
 
@@ -229,8 +230,10 @@ infr_urban_rural <- urban_rural %>%
   ggplot(aes(x=infrastructure))  +
     geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
     theme_bw() +
-  labs(x='Infrastructure Index')+
-  ggtitle("Infrastructure Across Urban/Rural")
+    scale_fill_discrete(name="Tipo")+
+  labs(x='Índice de Infraestructura',
+       y='Densidad')+
+  ggtitle("Infraestructura en Zonas Rurales/Urbanas")
   
 infr_urban_rural
 
@@ -264,6 +267,90 @@ infr_urban_rural <- urban_rural %>%
   
 infr_urban_rural
 
+```
+
+## First Grade Assessment Score
+
+```{r 1st_grade_plot}
+ #############################
+    # Create database with just learning outcomes for regressions
+    ##############################
+        #define function to create weights for summary statistics
+    df_weights_function <- function(dataset,scode, snumber, prov) {
+      scode<-enquo(scode)  
+      snumber<-enquo(snumber)
+      prov<-enquo(prov)
+      
+      dataset %>%
+        mutate(!! scode := as.numeric(.data$school_code)) %>%
+        left_join(data_set_updated) %>%
+        mutate(school_ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ,
+               province=!! prov)
+    }
+
+      df_reg<-school_dta_short %>%
+        mutate(indicator_labels="Puntaje en la Prueba Directa de 1er Grado")
+      
+      df_reg<- df_weights_function(df_reg, codigo.modular, total_4th, departamento) 
+      
+      
+      
+      regplots<- ggplot(data=df_reg, aes(x=ecd_student_knowledge, y=student_knowledge, color="#ff0000")) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes(weight = school_ipw)) +
+        facet_wrap(indicator_labels ~ ., scales='free_x' , labeller=labeller(indicator_labels=label_wrap_gen(20))) +
+        scale_color_manual(labels = c( "Indicador Principal"),  values= c( "#ff0000")) +
+        bbc_style() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab("Puntaje en la Prueba Directa de 1er Grado") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = 0.2,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      regplots
+      
+      
+      
+
+    
+
+    
+    
+```
+
+## TEACH
+
+```{r teach, echo=FALSE}
+
+table_tot <- final_indicator_data_PEDG %>%
+  select(timeontask1, tt_low:tt_high) %>%
+  summarize_all(mean, na.rm=TRUE) %>%
+  mutate(timeontask1=100*timeontask1,
+         timeofftask=100-timeontask1) %>%
+  select(timeontask1, timeofftask, everything()) %>%
+  gather(Indicator, Frequency)
+
+kable(table_tot,caption = "Time on Task", digits=1) %>%
+  kable_styling("striped", full_width = F) %>%
+  pack_rows("Teacher provides learning activity",1,2) %>%
+  pack_rows("Students are on task", 3,5)
+
+text_tot <- data.frame(
+  Level = c("Low", "Medium", "High"),
+  Description = c("6 or more students are off task",	
+               "2 to 5 students are off task",
+               "0 or 1 students are off task"))
+
+kable(text_tot) %>%
+  kable_styling(full_width = F) %>%
+  column_spec(1, bold = T, border_right = T) %>%
+  column_spec(2, width = "30em", background = "white")
 ```
 
 
@@ -350,17 +437,17 @@ indicator_corr_plot <- round(cor(assess_4th_grade_items , use="complete.obs"), 2
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
-                        'Teaching - Attraction',
-                         'Teaching - Selection & Deployment',
-                         'Teaching - Support', 
-                         'Teaching - Evaluation', 
-                         'Teaching - Monitoring & Accountability', 
+                        'Enseñanza – Atracción ',
+                         'Enseñanza – Selección y Despliegue',
+                         'Enseñanza – Apoyo ', 
+                         'Enseñanza – Evaluación ', 
+                         'Enseñanza – Monitoreo ', 
                          #'Teaching - Intrinsic Motivation', 
                          # 'Inputs & Infrastructure - Monitoring',
-                         'School Management - Attraction' ,                   
-                         'School Management - Selection & Deployment'  ,      
-                         'School Management - Support' ,                      
-                         'School Management - Evaluation'
+                         'Gestión Escolar – Atracción ' ,                   
+                         'Gestión Escolar – Selección y Despliegue'  ,      
+                         'Gestión Escolar – Apoyo' ,                      
+                         'Gestión Escolar – Evaluación'
 
     )  
     
@@ -402,7 +489,7 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Expert Survey"
+    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/Expert_Survey"
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
@@ -425,7 +512,7 @@ main_indicator_labels<-c(
             plot.extent.y.sf = 1.3,
             legend.text.size = 3
               ) +
-      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+      ggtitle(str_wrap('Radar de Diferencias entre las Políticas De Facto y De Jure ',60)) +
       theme_minimal()+
       theme(    axis.title = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
@@ -446,17 +533,17 @@ main_indicator_labels<-c(
 ```{r defacto}
 #get list of de facto indicators
 main_indicator_labels<-c( 
-                        'Teaching - Attraction',
-                         'Teaching - Selection & Deployment',
-                         'Teaching - Support', 
-                         'Teaching - Evaluation', 
-                         'Teaching - Monitoring & Accountability', 
-                         'Teaching - Intrinsic Motivation', 
+                        'Enseñanza – Atracción ',
+                         'Enseñanza – Selección y Despliegue',
+                         'Enseñanza – Apoyo ', 
+                         'Enseñanza – Evaluación ', 
+                         'Enseñanza – Monitoreo ', 
+                         'Enseñanza - Motivación intrínseca', 
                          # 'Inputs & Infrastructure - Monitoring',
-                         'School Management - Attraction' ,                   
-                         'School Management - Selection & Deployment'  ,      
-                         'School Management - Support' ,                      
-                         'School Management - Evaluation'
+                         'Gestión Escolar – Atracción ' ,                   
+                         'Gestión Escolar – Selección y Despliegue'  ,      
+                         'Gestión Escolar – Apoyo ' ,                      
+                         'Gestión Escolar – Evaluación'
 
     )  
     
@@ -492,9 +579,9 @@ data_defacto <- school_dta_short %>%
   ggplot(data=data_defacto, aes(x=indicator_labels, y=indicator_values, fill='#ff0000')) + #now plot the output in a bar graph
     geom_boxplot(position="dodge") +
     # scale_x_discrete(labels = str_wrap(indicator_labels, width = 25)) + 
-  xlab(str_wrap("Policy Lever Indicators", width=75))+
-  ylab("Scale (1-5)") +
-  ggtitle(str_wrap("Boxplot of Overall Indicators for Policy Levers", width=75)) +
+  xlab(str_wrap("Indicadores de Políticas ", width=75))+
+  ylab("Escala (1-5)") +
+  ggtitle(str_wrap("Boxplot de Indicadores de Políticas", width=75)) +
   scale_fill_discrete(name="Rural Status") +
   theme_bw() +
     theme(legend.position = "none") +
@@ -690,14 +777,14 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     geom_boxplot(position="dodge") +
     geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
-    scale_x_discrete(labels = str_wrap(c("National Learning Goals",
-                                         "Mandates & Accountability",
-                                         "Impartial Decision Making",
-                                         "Quality of the Bureaucracy"), width = 25)) + 
-  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
-  ylab("Scale (1-5)") +
-  ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
-  scale_fill_discrete(name="Government Level") +
+    scale_x_discrete(labels = str_wrap(c("Decisiones Imparciales",
+                                         "Mandatos y Rendición de Cuentas",
+                                         "Objetivos Nacionales de Aprendizaje",
+                                         "Características de la burocracia"), width = 25)) + 
+  xlab(str_wrap("Indicadores de la Encuesta de Funcionarios Públicos", width=75))+
+  ylab("Escala (1-5)") +
+  scale_fill_discrete(name="Nivel de Gobierno",
+                      labels=c('UGEL','MINEDU','DRE' )) +
   theme_bw() +
     theme(legend.position = "bottom") 
 

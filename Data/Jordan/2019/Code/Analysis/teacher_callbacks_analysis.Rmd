@@ -1,0 +1,385 @@
+---
+title: "Analysis of Callbacks to Absent Teachers - Jordan 2019"
+author: "Brian Stacy"
+date: "2/26/2020"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+library(DDIwR)
+library(kableExtra)
+library(skimr)
+library(Hmisc)
+library(ggalt)
+library(patchwork)
+
+```
+
+# Introduction
+
+In Jordan, a number of teachers that we selected to interview were absent, and as a result, we could not collect their information in the school.  In these cases, replacement teachers were selected and these replacement teachers were interviewed.  If a teacher was absent, we asked the enumerators to record their phone numbers, so that we could contact them with a follow up.  The survey firm then contacted randomly 35 teachers and asked them a set of questions.
+
+In what follows, we will explore whether teachers that were absent systematically differ from teachers that were present to answer the survey by comparing their answers to the same set of questions.
+
+
+```{r data, include=FALSE}
+
+#set directory to bring in data
+
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/"
+
+
+#load follow up survey data
+follow_up<-read_dta(paste(work_dir, "raw/Phone_Survey/CallTeacher.dta", sep=""))
+follow_up_code<-  readxl::read_excel(paste(work_dir, "raw/Phone_Survey/[emis]Phone Survey Absent Teachers.xlsx", sep="")) %>% 
+  mutate(emiscode=id,
+         school_code=text)
+
+
+#add school codes back into data
+follow_up <- follow_up %>%
+  left_join(follow_up_code) %>%
+  select(-parentid, -text, -id, -m3seq7_tatt)
+
+#load ddi
+follow_up_ddi<-getMetadata(paste(work_dir, "raw/Phone_Survey/CallTeacher_1_DDI_All/fba968ae612b4c099443a8426f9a2d95$1_ddi.xml", sep=""))$dataDscr
+
+# this converts each set of <record> columns to a data frame
+# after first converting each row to numeric and assigning
+# names to each column (making it easier to do the matrix to data frame conv)
+  follow_up_ddi_df<-follow_up_ddi %>%
+  map_df(~data.frame(unlist(.))[1,])
+  
+  follow_up_ddi_df<-data.frame(t(follow_up_ddi_df)) %>%
+    rownames_to_column() %>%
+    rename(variable=1,
+           varlabel=2)
+
+
+
+
+#load school data for comparisons
+load(paste(work_dir, "confidential/School/school_survey_data.RData", sep=""))
+
+
+teacher_questionnaire_present<- teacher_questionnaire %>%
+  select(school_code, colnames(follow_up)[grep("m3s", colnames(follow_up))]) %>%
+  select(-contains("_other")) %>%
+    mutate_all( ~case_when(
+      .x==900 ~ as.numeric(NA),              
+      .x==998 ~ as.numeric(NA),
+      .x==99 ~ as.numeric(NA),
+      .x==98 ~ as.numeric(NA),
+      is.na(.x) ~ as.numeric(NA),
+      TRUE ~  as.numeric(.x)))
+
+#Create a function which will generate new binary variable using case_when, but 
+#if value is misisng it will generate binary variable to be missing
+#This is done a lot so will create function for it.
+#e.g. school_absent=case_when(
+#         m2sbq6_efft==6  ~ 1,
+#         m2sbq6_efft!=6   ~ 0,
+#         is.na(m2sbq6_efft) ~ as.numeric(NA))
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+#create function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+```
+
+
+```{r sample_weights, include=FALSE}
+#define function to create weights for summary statistics
+project_folder <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD-Confidential/CNT"
+country<-"JOR"
+year<-"2019"
+#Load original sample of schools
+currentDate<-c("2019-10-11")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+
+df_weights_function <- function(dataset,scode, snumber, prov) {
+  scode<-enquo(scode)  
+  snumber<-enquo(snumber)
+  prov<-enquo(prov)
+  
+  dataset %>%
+    mutate(!! scode := as.numeric(.data$school_code)) %>%
+    left_join(data_set_updated) %>%
+    mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
+    mutate(province=governorate) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" | names(data_set_updated) == "province" |
+                                                        names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory")])))
+}
+
+teacher_questionnaire_present<-df_weights_function(teacher_questionnaire_present, organization_code, total_primary_teachers, governorate)
+
+
+follow_up<-follow_up %>%
+  select(school_code, colnames(follow_up)[grep("m3s", colnames(follow_up))]) %>%
+  select(-contains("_other")) %>%
+      mutate_all( ~case_when(
+      .x==900 ~ as.numeric(NA),              
+      .x==998 ~ as.numeric(NA),
+      .x==99 ~ as.numeric(NA),
+      .x==98 ~ as.numeric(NA),
+      is.na(.x) ~ as.numeric(NA),
+      TRUE ~  as.numeric(.x))) %>%
+  mutate(m3saq5=if_else(m3saq5==20012, 2012, m3saq5)) %>% #fix one value for year began teaching
+  df_weights_function( organization_code, total_primary_teachers, governorate)
+
+```
+
+
+# Questions Asked in Follow Up
+
+- Below are the questions asked to teachers by phone as part of the follow up.
+
+```{r questions, echo=FALSE}
+
+follow_up_ddi_df %>%
+  kable(caption="Questions Asked to Teachers in Follow Up Survey",
+        col.names=c("Question ID", "Question Text")) %>%
+  kable_styling("striped")
+
+
+```
+
+# Comparison of Means for Teachers Sampled and Follow up Teachers
+
+
+```{r summary_stats, include=FALSE}
+
+
+
+    #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
+                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
+                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
+                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
+                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))
+
+
+    
+    
+    sch_ipw<-teacher_questionnaire_present$ipw 
+
+    #add variable label
+    sumstats_teacher_df <- my_skim(teacher_questionnaire_present) %>%
+            yank("numeric") %>%
+      mutate(variable=skim_variable) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
+      filter(variable!="school_code") %>%
+      left_join(follow_up_ddi_df) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      select(varlabel, mean, ci, complete)
+ 
+    
+    
+    #now get frame with teachers in same school as follow up teachers
+    teacher_questionnaire_present_same <- teacher_questionnaire_present %>%
+      filter(school_code %in% unique(follow_up$school_code))
+    
+        sch_ipw<-teacher_questionnaire_present_same$ipw 
+
+        sumstats_teacher_same_df <- my_skim(teacher_questionnaire_present_same) %>%
+            yank("numeric") %>%
+      mutate(variable=skim_variable) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
+      filter(variable!="school_code") %>%
+      left_join(follow_up_ddi_df) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_same=mean,
+             ci_same=ci, 
+             complete_same=complete) %>%
+      select(varlabel, mean_same, ci_same, complete_same)
+    
+    sch_ipw<-follow_up$ipw 
+    
+    #add variable label
+    sumstats_follow_up_df <- my_skim(follow_up) %>%
+            yank("numeric") %>%
+      mutate(variable=skim_variable) %>%
+      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
+      filter(variable!="school_code") %>%
+      left_join(follow_up_ddi_df) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_follow=mean,
+             ci_follow=ci, 
+             complete_follow=complete) %>%
+      select(varlabel, mean_follow, ci_follow, complete_follow)    
+      
+    sumstats<-sumstats_teacher_df %>%
+            left_join(sumstats_teacher_same_df) %>%
+      left_join(sumstats_follow_up_df)
+    
+
+```
+
+
+```{r sumstats_table, echo=FALSE}
+
+  sumstats %>%
+    kable(caption = "Summary Statistics of Questions by Teacher Type (Sampled/Follow up)",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Count", "Mean", "95% Confident Interval", "Count", "Mean", "95% Confident Interval", "Count"),
+          digits = 2, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Sampled Teachers"=3, "Sampled Teachers in Follow Up Schools"=3,"Follow Up Teachers"=3))
+
+
+```
+
+
+```{r dumbbell, echo=FALSE, warning=FALSE}
+
+#create appended database for dumbbells
+
+ dumbbell_df <- sumstats_follow_up_df %>%
+   mutate(group="Follow Up Teachers") %>%
+   bind_rows(sumstats_teacher_same_df) %>%
+   mutate(group=if_else(is.na(group), "Sampled Teachers - Same School", group)) %>%
+   mutate(mean=if_else(group=="Follow Up Teachers", mean_follow, mean_same))
+
+
+
+
+# #background
+# background<- ggplot(data=filter(sumstats, row_number()==17 ), aes( y=varlabel)) +
+#   geom_point(data=filter(dumbbell_df, row_number()==17 | row_number()==67 ), aes(x=mean, color=group)) +
+#   geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+#     size=3, color="#e3e2e1",
+#                 colour_x = "#5b8124", colour_xend = "#bad744",
+#                  dot_guide_size=0.25,
+#                 show_legend=T) +
+#   geom_text(color="black", size=3, hjust=-0.5,
+#                   aes(x=round(mean_same,2), label=round(mean_same,2)))+
+#   geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+#                   color="black", size=3, hjust=1.5) +
+#   scale_y_discrete(labels=function(x) str_wrap(x,width=27)) +
+#   scale_color_manual(name="", values=c("#5b8124","#bad744"),
+#                      labels=c(str_wrap("Follow Up Teachers", 20),
+#                               str_wrap("Sampled Teachers - Same School", 20))) +
+#   labs(x='Mean', y=NULL, 
+#         title='Teacher Age' )+
+#   expand_limits(x=20:65) +
+#   theme_bw()
+# background
+
+  
+#motivation
+motiv<- ggplot(data=filter(sumstats, grepl("main motivation", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("main motivation", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_y_discrete(labels=function(x) str_wrap(x,width=27)) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Teacher Motivation',
+        caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60))+
+  theme_bw()
+motiv
+
+
+#consequences
+consequences<- ggplot(data=filter(sumstats, grepl("What happens", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("What happens", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Teacher Consequences for Absence',       
+       caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60) )+
+    scale_y_discrete(labels=function(x) str_wrap(x,width=55)) +
+  theme_bw()
+consequences
+
+#intrinsic motivation
+intrinsic<- ggplot(data=filter(sumstats, grepl("It is acceptable|Students|students", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("It is acceptable|Students|students", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Intrinsic Motivation',
+              caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60))+
+    scale_y_discrete(labels=function(x) str_wrap(x,width=50)) +
+    expand_limits(x=1:5) +
+  theme_bw()
+intrinsic
+
+#teacher satisfaction
+satisfaction<- ggplot(data=filter(sumstats, grepl("How satisfied|If two|Was your", varlabel)), aes( y=varlabel)) +
+  geom_point(data=filter(dumbbell_df, grepl("How satisfied|If two|Was your", varlabel)), aes(x=mean, color=group)) +
+  geom_dumbbell(aes(x=mean_follow, xend=mean_same),
+    size=3, color="#e3e2e1",
+                colour_x = "#5b8124", colour_xend = "#bad744",
+                 dot_guide_size=0.25,
+                show_legend=T) +
+  geom_text(color="black", size=3, hjust=-0.5,
+                  aes(x=round(mean_same,2), label=round(mean_same,2)))+
+  geom_text(aes(x=round(mean_follow,2), label=round(mean_follow,2)), 
+                  color="black", size=3, hjust=1.5) +
+  scale_color_manual(name="", values=c("#5b8124","#bad744"),
+                     labels=c(str_wrap("Follow Up Teachers", 20),
+                              str_wrap("Sampled Teachers - Same School", 20))) +
+  labs(x='Mean', y=NULL, 
+        title='Teacher Satisfaction',
+       caption=str_wrap("Sample includes 35 randomly selected follow up teachers that were absent on day of survey and 97 Sampled Teachers that were present in the same school.",60))+
+    scale_y_discrete(labels=function(x) str_wrap(x,width=30)) +
+    expand_limits(x=1:5) +
+  theme_bw()
+satisfaction
+
+
+```
+

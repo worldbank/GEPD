@@ -228,7 +228,8 @@ public_officials_dta <- public_officials_dta %>%
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'interview__key','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
+preamble_info <- c('interview__id', 'interview__key','school_district_preload', 'school_province_preload',
+                   'region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
@@ -356,7 +357,8 @@ write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_offi
 write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
-keep_info <- c('interview__id','interview__key','region_code', 'district_code', 'district', 'province','location', 'govt_tier',
+keep_info <- c('interview__id','interview__key','school_district_preload', 'school_province_preload',
+               'region_code', 'district_code', 'district', 'province','location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 

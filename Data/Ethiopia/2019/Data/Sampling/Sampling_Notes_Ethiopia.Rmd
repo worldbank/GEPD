@@ -18,6 +18,7 @@ library(skimr)
 library(haven)
 library(crosstalk)
 library(purrr)
+library(dtplyr)
 set.seed(54351324)
 
 #################################
@@ -26,33 +27,58 @@ set.seed(54351324)
 
 #Specify directory where sampling frame located
 #Specify directory where sampling frame located
-dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2019/Data/Sampling/"
+dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2019/Data/Sampling/Primary_schools_STATA/"
 
 #specify name of sampling frame file.  This needs to be a csv file
 file_frame<-"ETH_sampling_data.dta"
 #specify name of sampling frame file.  This needs to be a csv file
-public_file_frame<-"ETH_sampling_data.dta"
-old_file_frame<-"Sampling_Frame_2009.dta"
+public_file_frame<-"Primary_schools_ETH.csv"
 #specify date that sample was created.  This may be useful if you want to access stored results
 #date_frame<-c("2019-07-22")
 
-date_frame<-c("2019-12-23")
+date_frame<-c("2020-02-07")
 
 #################################
 #read in sampling frame from [XXX]
 #################################
 
 
-df=read_stata(paste(dir_frame, public_file_frame, sep="/"))
-alt_df=read_stata(paste(dir_frame, old_file_frame, sep="/"))
+dat=read_csv(paste(dir_frame, public_file_frame, sep="/"))
 
-#change names to lowercase
-colnames(alt_df) <-  tolower(colnames(alt_df))
-#convert to common names
-alt_df<-alt_df %>%
-  mutate(school=school_name,
-         school_code = seq.int(nrow(alt_df))
-)
+
+#reshape frame to be one observation per row
+# do some prep work first
+
+
+
+#drop some observations that are coded Lang==2
+df <- dat %>%
+  filter(Lang=='includes all')
+
+#keep just Grade 4 and Grade 1
+df <- df %>%
+  filter(Grade=="Grade 1" | Grade=="Grade 4")
+
+
+#Database is at the schoolXclass level.  Aggregate to schoolXgrade
+df<- df %>%
+  group_by(Region, Zone, Woreda, School_Name, Sector, owner, Location, Program, Admin_Code, Code_School,  Grade) %>%
+  summarise(
+            M=sum(M),
+            F=sum(F)
+            ) %>%
+  arrange(Admin_Code, Grade) %>%
+  group_by(Admin_Code) %>%
+  mutate(grd4_male=M,
+         grd4_female=F,
+         grd1_male=first(M),
+         grd1_female=first(F)) %>%
+  mutate(grd4_total=grd4_male+grd4_female,
+         grd1_total=grd1_male+grd1_female) %>%
+  filter(Grade=="Grade 4") %>%
+  select(-M, -F)
+  
+
 
 ```
 
@@ -62,46 +88,55 @@ This file outlines the sampling strategy in Ethiopia for the Global Education Po
 
 ## General Notes on Sampling
 
-Overall, we draw a sample of 300 public schools from each region of Ethiopia.  As a comparison to the total number of schools in Ethiopia, this consistutes an approximately 1% sample.  
-
-Our sampling frame contains no school information beyond the ownership, Region, Zone, and Woreda.  Because of this, we take a simple 1% random sample within each region.  See discussion below for how sample weights are constructed.
-
+Overall, we draw a sample of 300 public schools from each of the regions of Ethiopia.  As a comparison to the total number of schools in Ethiopia, this consistutes an approximately 1% sample.  Because of the large size of the country, and because there can be very large distances between Woredas within the same region, we chose a cluster sampling approach.  In this approach, 100 Woredas were chosen with probability proportional to 4th grade size.  Then within each Woreda two rural and one urban school were chosen with probability proportional to 4th grade size.
 
 ## Particular Notes
 
 
 In order to deal with potential refusals and closed schools, a set of replacement schools was also drawn.  Because it is important to match the language of instruction with the replacement school, we select replacement schools from within the same Woreda.  
 
-Detailed information on the number of students from schools is missing from our sampling frame, so we match to an older school census from 2009 for counts of the number of students. This process led to an imperfect number of matches at the school level. For survey weight purposes, we first calculate the number of students at the region level based on the 2009 census.  Then we hand match, when necessary, the list of 300 schools chosen in our sampling frame to the 2009 census to merge the student counts.  The survey weights are then based on the number of 4th grade students in the school from the 2009 census.  If the government provides updated information on the number of students per school, the weights will be updated with this information.  
-
-
-
 
 
 
 ## Sampling Frame
 
-Our school database consists of primarily public schools, with a mix of other ownership types.  We will restrict our sample frame to only public schools in Ethiopia.  The frame includes only school labelled as Primary Education schools.
+Our school database consists of primarily public schools, with a mix of other ownership types.  We will restrict our sample frame to only public and private schools in Ethiopia, omitting religious schools.  Our school sampling frame contains information on region, zone, Woreda, along with ownership, urban/rural status, and the number of students in each grade.  Information on the number of students is based on the 2011 E.C.
 
-Finally, we compare the 2009 census of schools to our current list of schools, which contains no information on the number of students per school.  Overall, the number of schools in our sampling frame exceed the number in the 2009 census by around 3,000 schools (36,466 compared to 33,462).  We then display the number of schools in our current sampling frame by region, the number of schools in the 2009 census by region, and finally the number of 4th grade students by region according to the 2009 census.
+Our sampling frame will be restricted also to schools with at least three 1st grade and at least 3 4th grade students.
 
 
+There was a concern that some zones posed a security risk for the enumerators.  As a result this list of Zones were excluded.
+
+
+|    region     |    zone                         |           
+|---------------|---------------------------------|
+|    Oromiya    |    Wallagaa   Lixaa             |          
+|    Oromiya    |    Wallagaa   Bahaa             |          
+|    Oromiya    |    Horroo   Guduru Wallaggaa    |                   
+|    Oromiya    |    Qellam   Wallaggaa           |           
+|    Oromiya    |    Wallagaa   Lixaa             |       
 
 
 
 ```{r ownership, echo=FALSE}
 
+zone_list<-c('Wallagaa Lixaa', 'Wallagaa Bahaa', 'Horroo Guduru Wallaggaa', 'Qellam Wallaggaa')
 
-#change names to lowercase
-colnames(df) <-  tolower(colnames(df))
 
-#fix a typo in government ownership
-df<- df %>%
-  mutate(ownership=if_else(ownership=="Goverment", "Government", ownership))
+#keep just private and government schools, omitting religious schools
+df <- df %>%
+  filter(owner=="Government" | owner=="Private") %>%
+  filter(grd4_total>=3 & grd1_total>=3) %>%
+  filter(!(Zone %in% zone_list)) 
 
+#keep Woredas with at least three schools
+df <- df %>%
+  group_by(Region, Woreda) %>%
+  filter(n()>=3) %>%
+  ungroup()
 
 #Some summary stats and descriptives
-ggplot(data=df, aes(ownership)) +
+ggplot(data=df, aes(owner)) +
   geom_histogram(stat='count') +
   stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
   coord_flip() +
@@ -110,16 +145,17 @@ ggplot(data=df, aes(ownership)) +
   ggtitle(str_wrap("Counts of the Number of Schools by Ownership Type in Sampling Frame",55))
 
 #Some summary stats and descriptives
-ggplot(data=df, aes(sector)) +
+ggplot(data=df, aes(Location)) +
   geom_histogram(stat='count') +
   stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
   coord_flip() +
   expand_limits(y=40000) +
   theme_bw() +
-  ggtitle(str_wrap("Counts of the Number of Schools by Primary Type in Sampling Frame",55))
+  ggtitle(str_wrap("Counts of the Number of Schools by Urban/Rural Type in Sampling Frame",55))
+
 
 #Some summary stats and descriptives
-ggplot(data=df, aes(region)) +
+ggplot(data=df, aes(Region)) +
   geom_histogram(stat='count') +
   stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
   coord_flip() +
@@ -127,101 +163,138 @@ ggplot(data=df, aes(region)) +
   theme_bw() +
   ggtitle(str_wrap("Counts of the Number of Schools by Region in Sampling Frame",55))
 
-#Some summary stats and descriptives
-ggplot(data=alt_df, aes(region)) +
-  geom_histogram(stat='count') +
-  stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
-  coord_flip() +
-  expand_limits(y=40000) +
-  theme_bw() +
-  ggtitle(str_wrap("Counts of the Number of Schools by Region using 2009 Data",55))
-
 
 #Some summary stats and descriptives
-
-alt_df %>%
-  group_by(region) %>%
-  summarise(enrollment_g4=sum(enrollment_total4, na.rm=T)) %>%
-  ggplot(aes(x=region, y=enrollment_g4)) +
-  geom_bar(stat='identity') +
-  geom_text(aes(label=enrollment_g4),hjust=-.5) +
-  scale_y_continuous(name='4th Grade Enrollment') +
+ggplot(data=df, aes(Region, grd4_total)) +
+  geom_histogram(stat='identity') +
+  stat_summary(fun.y = sum, aes(label = ..y..), geom = "text",hjust=-.5) +
   coord_flip() +
-  expand_limits(y=1100000) +
+  expand_limits(y=1250000) +
   theme_bw() +
-  ggtitle(str_wrap("Counts of the Number of 4th Grade Students by Region using 2009 Data",55))
+  ggtitle(str_wrap("Counts of the Number of Students by Region in Sampling Frame",55))
 
-domains<-df %>% group_by(region_code) %>% summarise(n=n())
+domains<-df %>% group_by(Region) %>% summarise(n=n())
 ```
 
 
-# Sampling of Schools in Districts
+# Sampling of Schools in Woredas
 
 
-Schools (PSUs) will be selected using simple random sampling, where in each region a 0.82% sample is taken.  Simple random sampling is done, rather than probability proportional to size, because no reliable numbers on the number of students per school are available.  The latest information comes from a 2009 census, and we are unable to accurately match all the schools in our current frame to the 2009 census.  
+Schools will be selected using stratified, cluster random sampling.  The sample is stratified by Region and the urban/rural status of the school.  100 Woredas will be selected at random with probability proportional to the 4th grade student population of the Woreda.   Once the Woredas are chosen a sample of 3 schools in each Woreda will be selected, with two of those schools rural and one urban.
 
-```{r school sampling}
+```{r woreda sampling, echo=FALSE}
 
-sample_random <- df %>%
-  group_by(region) %>%
-  sample_frac(size=0.0082) %>%
+
+#create frame with the number of students per woreda
+sample_woredas <- df %>%
+  group_by(Region, Woreda) %>%
+  summarise(n_stud_woreda=sum(grd4_total)) %>%
+  sample_n(size=if_else(0.115*n()>2,0.115*n(),2), weight=n_stud_woreda) %>%  #choose at least 2 woredas per region
   ungroup() %>%
-  sample_n(size=300) %>%
-  mutate(sample='Sampled School')
-
-#Some summary stats and descriptives
-ggplot(data=sample_random, aes(region)) +
-  geom_histogram(stat='count') +
-  stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
-  coord_flip() +
-  expand_limits(y=400) +
-  theme_bw() +
-  ggtitle(str_wrap("Counts of the Number of Schools by Region in Selected Sample of 300 Schools",55))
+  sample_n(size=100, weight=n_stud_woreda) %>% #slightly over sampled so get down to 100 randomly
+  arrange(Region, Woreda) %>%
+  mutate(sampled_woreda="Sampled Woreda")
 
 
-datatable(sample_random, caption = 'List of Public Schools Chosen for Sample') 
 
-write_excel_csv(sample_random, paste(dir_frame, '/sample_public_schools_', Sys.Date(),  '.csv', sep=""))
+datatable(sample_woredas, caption = 'List of Woredas Chosen for Sample') 
+
+write_excel_csv(sample_woredas, paste(dir_frame, '/sample_woredas_', Sys.Date(),  '.csv', sep=""))
 
 ```
+
+The list above shows the 100 Woredas selected for our sample.  Next, we will choose the 3 schools per Woreda using random selection.  Where possible, we will randomly select 2 rural and 1 urban school.  In cases where there are insufficient numbers of urban or rural schools, we will drop this condition and select randomly.
+
+
+```{r school_sample, echo=FALSE}
+
+school_sample_df <- df %>%
+  left_join(sample_woredas) %>%
+  filter(!is.na(sampled_woreda)) %>%
+  group_by(Region, Woreda) %>%
+  mutate(num_urban=sum(Location=="Urban"),
+         num_schools=n() )%>%
+  ungroup()
+
+school_sample_urban <- school_sample_df %>%
+  filter(Location=="Urban") %>%
+  group_by(Region, Woreda) %>%
+  mutate(size_samp=case_when(
+    num_schools-num_urban==0 ~ 3,
+    num_schools-num_urban==1 ~ 2,
+    num_schools-num_urban>=2 ~ 1,
+    num_urban==0 | is.na(num_urban) ~ 0
+  )) %>% #select 1 urban if there are 2 rural, but more if there are less than two rural
+  sample_n(size=size_samp, weight=grd4_total)
+
+school_sample_rural <- school_sample_df %>%
+  filter(Location=="Rural") %>%
+  group_by(Region, Woreda) %>%
+  mutate(size_samp=case_when(
+    (num_urban==0 | is.na(num_urban))   ~ 3,
+    num_schools-num_urban==1 ~ 1,
+    num_schools-num_urban==0 ~ 0,
+    TRUE ~ 2
+  )) %>% #select 2 rural if there is 1 urban, but more if there are less than one urban
+  sample_n(size=size_samp)
+
+#append rural and urban samples together
+
+sample_random <- bind_rows(school_sample_rural, school_sample_urban) %>%
+  arrange(Region, Woreda) %>%
+  mutate(sample="Sampled School") %>%
+  select(-n_stud_woreda, -sampled_woreda, -num_urban, -num_schools, -size_samp)
+
+
+
+
+datatable(sample_random, caption = 'List of Schools Chosen for Sample') 
+
+write_excel_csv(sample_random, paste(dir_frame, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
+```
+
+
 # Replacement Schools
 
-Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the Woreda, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, zone, and woreda of the originally sampled school for which this school serves as a replacement. 
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the Zone, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, zone, and woreda of the originally sampled school for which this school serves as a replacement. 
 
 ```{r update_dataset, echo=FALSE}
+
 #add sample schools back to original database
 data_set_updated <- df %>%
   left_join(sample_random)
 
 #get list of woredas
-sampled_woredas <- sample_random %>%
-  group_by(region, zone, woreda) %>% 
-  summarise(sampled_woreda=n()
+sampled_zone <- sample_random %>%
+  group_by(Region,Zone) %>% 
+  summarise(n_zone=n()
             )
 
 
 # select one replacement per woreda
 sample_replace <- data_set_updated %>%
-  left_join(sampled_woredas) %>%
-  filter(!is.na(sampled_woreda)) %>%
+  left_join(sampled_zone) %>%
+  filter(!is.na(n_zone)) %>%
   filter(is.na(sample)) %>%
-  group_by(region, zone, woreda) %>% 
-  sample_n(sampled_woreda) %>%
+  group_by(Region, Zone) %>% 
+  sample_n(n_zone) %>%
   mutate(sample='Replacement School') %>%
-  arrange(region, zone, woreda) 
+  arrange(Region, Woreda) 
 
 sample_random <- sample_random %>%
-    arrange(region, zone, woreda) 
+    arrange(Region, Woreda) 
 
 
 #add in school info for school that will be replaced
-sample_replace$replaced_school_code=sample_random$admincode
-sample_replace$replaced_school_name=sample_random$school
-sample_replace$replaced_region=sample_random$region
-sample_replace$replaced_zone=sample_random$zone
-sample_replace$replaced_woreda=sample_random$woreda
+sample_replace$replaced_school_code=sample_random$Admin_Code
+sample_replace$replaced_school_name=sample_random$School_Name
+sample_replace$replaced_region=sample_random$Region
+sample_replace$replaced_zone=sample_random$Zone
+sample_replace$replaced_woreda=sample_random$Woreda
 
-datatable(sample_replace, caption = 'List of Replacement Schools Chosen for Sample') 
+
+
+#datatable(sample_replace, caption = 'List of Replacement Schools Chosen for Sample') 
 
 
 write_excel_csv(sample_replace, paste(dir_frame, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
@@ -234,235 +307,4 @@ save(sample_updated, data_set_updated, sample_replace,
     file=sample_file_name)   
 
 
-```
-
-
-```{r merge, eval=FALSE, include=FALSE}
-#idenfity common fields
-df_match_list<-sample_random[,c('admincode', 'region', 'zone', 'woreda', 'school')]
-df_2009_match_list<-alt_df[,c( 'school_code', 'region', 'zone', 'woreda', 'school')]
-
-
-#Simple merge
-df_merge <- sample_random %>%
-  left_join(alt_df, by=c('region', 'zone', 'school'))
-
-
-#User purrr with fuzzy match to match within region/zone/woreda
-
-#first create nested frame
-df_merge_fuzzy <- sample_random %>%
-  group_by(region, zone, woreda) %>%
-  nest()
-
-#first create nested frame
-df_2009_merge_fuzzy <- alt_df %>%
-  group_by(region, zone, woreda) %>%
-  nest()
-
-join_df <- function(df_nest, df_other) {
-  df_all <- stringdist_inner_join(df_nest, df_other, by=c('school'), max_dist=1)
-  return(df_all)
-}
-
-#Now use map to do fuzzy join
-
-df_merge_fuzzy_joined <- df_merge_fuzzy %>%
-  mutate(merge_data=map(data, ~join_df(.,alt_df)))
-
-
-#convert all rows to upper case
-df_match_list[,-1]<- as.data.frame(sapply(df_match_list[,-1], toupper))
-df_2009_match_list[,-1]<- as.data.frame(sapply(df_2009_match_list[,-1], toupper))
-
-#remove punctuation
-df_match_list[,-1]<- as.data.frame(sapply(df_match_list[,-1], function(x) gsub("[[:punct:]]", "", x)))
-df_2009_match_list[,-1]<- as.data.frame(sapply(df_2009_match_list[,-1], function(x) gsub(" ", "", x)))
-
-#remove spaces
-df_match_list[,-1]<- as.data.frame(sapply(df_match_list[,-1], function(x) gsub("[[:punct:]]", "", x)))
-df_2009_match_list[,-1]<- as.data.frame(sapply(df_2009_match_list[,-1], function(x) gsub(" ", "", x)))
-
-
-
-
-#create comparison
-a <- compare.linkage(df_match_list, df_2009_match_list, blockfld=c( 'region'), strcmp = T, 
-                     strcmpfun = jarowinkler, exclude=c(1))
-
-#b<- emWeights(a, cutoff=0.8)  
-b<-epiWeights(a)
-
-finalPairs <- getPairs(b, max.weight=0.17, min.weight=0)
-
-```
-
-
-
-
-```{r sample_stats, eval=FALSE, include=FALSE}
-
-
-#produce summary stats of public and private sample
-
-sumstats_sample_public <- sample_public %>%
-    ungroup() %>%
-    transmute(num_teachers=Teachers,
-            total_enrollment=enrollment,
-            total_katchi_enrollment=total_katchi_enrollment,
-            total_katchi_enrollment_boys=eng_kachi_b,
-            total_katchi_enrollment_girls=eng_kachi_g,
-            total_ece_enrollment=total_ece_enrollment,
-            total_ece_enrollment_boys=ECEBoys,
-            total_ece_enrollment_gils=ECEGirls,
-            total_1st_enrollment=total_cls1_enrollment,
-            total_1st_enrollment_boys=eng_cls1_b,
-            total_1st_enrollment_girls=eng_cls1_g,          
-            rural=if_else(school_location=="Rural", 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
-  
-sumstats_sample_private <- sample_private %>%
-  ungroup() %>%
-    transmute(num_teachers=TeachingStaffMale + TeachingStaffFemale,
-            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
-            total_pre_primary_enrollment=total_pre_primary,
-            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
-            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
-            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
-            total_1st_enrollment_boys=Enrolment_01_Boys ,
-            total_1st_enrollment_girls= Enrolment_01_Girls,          
-            rural=if_else(urban_rural==1, 1,0)) %>%
-  skim() %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, hist)
-
-sumstats_sample <- sumstats_sample_public %>%
-  bind_rows(sumstats_sample_private)
-
-kable(sumstats_sample, caption="Summary Statistics for Sample of Schools" , ) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
-  pack_rows("Public Schools", 1,12) %>%
-  pack_rows("Private Schools", 13,21)
-
-```
-
-
-```{r school_map, eval=FALSE, warning=FALSE, include=FALSE}
-
-
-map_public <- sample_public %>%
-    mutate(longitude=as.character(school_longitude)) %>%
-    mutate(latitude=as.character(school_latitude)) %>%
-    mutate(longitude=as.numeric(longitude)) %>%
-    mutate(latitude=as.numeric(latitude)) %>%
-      mutate(num_teachers=Teachers,
-            total_enrollment=enrollment,
-            total_katchi_enrollment=total_katchi_enrollment,
-            total_katchi_enrollment_boys=eng_kachi_b,
-            total_katchi_enrollment_girls=eng_kachi_g,
-            total_ece_enrollment=total_ece_enrollment,
-            total_ece_enrollment_boys=ECEBoys,
-            total_ece_enrollment_gils=ECEGirls,
-            total_1st_enrollment=total_cls1_enrollment,
-            total_1st_enrollment_boys=eng_cls1_b,
-            total_1st_enrollment_girls=eng_cls1_g,          
-            rural=if_else(school_location=="Rural", 1,0),
-            total_pre_primary_enrollment=case_when(
-      !(is.na(total_katchi_enrollment) | is.na(total_ece_enrollment)) ~ total_katchi_enrollment+total_ece_enrollment,
-        is.na(total_ece_enrollment) ~ total_katchi_enrollment, 
-        is.na(total_katchi_enrollment) ~ total_ece_enrollment,
-      TRUE ~ 0
-        )) %>%
-    select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_katchi_enrollment, total_ece_enrollment, total_1st_enrollment, rural, public_strata, longitude, latitude   )
-
-map_private <- sample_private %>%
-    mutate(longitude=as.character(GPS_East)) %>%
-    mutate(latitude=as.character(GPS_North)) %>%
-    mutate(longitude=as.numeric(longitude)) %>%
-    mutate(latitude=as.numeric(latitude)) %>%
-      mutate(
-            total_enrollment=rowSums(.[grep(x=colnames(df_private_final), pattern="Enrolment_")], na.rm=TRUE),
-            total_pre_primary_enrollment=total_pre_primary,
-            total_pre_primary_enrollment_boys=Enrolment_PN_Boys+ Enrolment_NU_Boys+ Enrolment_PR_Boys,
-            total_pre_primary_enrollment_girls=Enrolment_PN_Girls+ Enrolment_NU_Girls+ Enrolment_PR_Girls,
-            total_1st_enrollment=Enrolment_01_Boys+ Enrolment_01_Girls,
-            total_1st_enrollment_boys=Enrolment_01_Boys ,
-            total_1st_enrollment_girls= Enrolment_01_Girls,          
-            rural=if_else(urban_rural==1, 1,0),
-            school_name=SchoolName, 
-            district=DistrictName, 
-            tehsil=TehsilName,
-            emiscode=as.numeric(NA)) %>%
-    select(emiscode, school_name, district, tehsil, total_pre_primary_enrollment, total_1st_enrollment, rural, longitude, latitude   )
-
-
-
-  sample_map_chosen <- map_public %>%
-    bind_rows(map_private, .id='private') %>%
-    mutate(private=if_else(private==2,"Private","Public"))
-
-   
-   
-   pal <- colorFactor(
-     palette = c("red", "green", "blue"),
-     domain = sample_map_chosen$private
-   )
-   
-   # Make a list of icons (from two different icon libraries).
-# We'll index into it based on name.
-popIcons <- awesomeIconList(
-  Private = makeAwesomeIcon(icon='graduation-cap', library='fa', markerColor = 'blue'),
-  Public = makeAwesomeIcon(icon='graduation-cap', library='fa', markerColor = 'red'))
-   
-map <- function(df_input) {    leaflet(df_input) %>% 
-    addTiles()  %>%
-    addAwesomeMarkers( lng=~longitude,  lat=~latitude, icon = ~popIcons[private] ,
-                popup =  paste("School Code: ", sample_map_chosen$emiscode, " <br>",
-                               "School Name: ", sample_map_chosen$school_name, " <br>",
-                                  "District", sample_map_chosen$district, "<br>",
-                                  "Tehsil: ", sample_map_chosen$tehsil, " <br>",
-                                  "Private School:" ,  sample_map_chosen$private, " <br>",
-                                  "School Type:",  sample_map_chosen$public_strata, " <br>",
-                                  "Total # of 1st Graders", sample_map_chosen$total_1st_enrollment, " <br>",
-                                  "Total # of Pre-Primary", sample_map_chosen$total_pre_primary_enrollment, " <br>",
-                                  "Rural Status", sample_map_chosen$rural, " <br>" )) 
-}
-
-
-map2 <- function(df_input) {    leaflet(df_input) %>% 
-    addTiles()  %>%
-    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(private),
-                popup =  paste("School Code: ", sample_map_chosen$emiscode, " <br>",
-                               "School Name: ", sample_map_chosen$school_name, " <br>",
-                                  "District", sample_map_chosen$district, "<br>",
-                                  "Tehsil: ", sample_map_chosen$tehsil, " <br>",
-                                  "Private School:" ,  sample_map_chosen$private, " <br>",
-                                  "School Type:",  sample_map_chosen$public_strata, " <br>",
-                                  "Total # of 1st Graders", sample_map_chosen$total_1st_enrollment, " <br>",
-                                  "Total # of Pre-Primary", sample_map_chosen$total_pre_primary_enrollment, " <br>",
-                                  "Rural Status", sample_map_chosen$rural, " <br>" )) %>%
-  addLegend(position="bottomright", pal=pal, values=~private, title="School Ownership")
-}    
-
-```
-
-```{r country_map2, eval=FALSE, warning=FALSE, include=FALSE}
-linked_df<-SharedData$new(sample_map_chosen)
-
-
-
-bscols(widths=c(3,NA),
-  list(
-  filter_select("school", "School Name", linked_df, ~school_name),
-  filter_select("prov", "District", linked_df, ~district),
-  filter_select("reg", "Tehsil", linked_df, ~tehsil),
-  filter_select("Private", "School Ownership", linked_df, ~private)
-  ),
-  map(linked_df) 
-  )
-  
 ```

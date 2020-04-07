@@ -1,0 +1,2085 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={GEPD Technical Note},
+            pdfauthor={Brian Stacy},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{GEPD Technical Note}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Brian Stacy}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{1/21/2020}
+
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{background-on-project}{%
+\section{Background on Project}\label{background-on-project}}
+
+Policymakers in low- and middle-income countries who are working to
+improve student learning often find themselves flying blind. They see
+the budget that goes into education and (sometimes) the learning that
+students come out with, but they lack information on the crucial factors
+in between--- the practices, policies, and politics---that drive those
+learning outcomes. The new Global Education Policy Dashboard initiative
+will fill that gap.
+
+\hypertarget{the-challenge-understanding-the-learning-crisis}{%
+\subsection{The Challenge: Understanding the Learning
+Crisis}\label{the-challenge-understanding-the-learning-crisis}}
+
+Many countries, despite having significantly increased access to
+education for their children and youth, now realize that they are facing
+a learning crisis. For instance, when grade 3 students in Nicaragua were
+tested in 2011, only half correctly solved 5 + 6. And in Kenya,
+Tanzania, and Uganda, when grade 3 students were asked recently to read
+a sentence such as ``The name of the dog is Puppy,'' three-quarters
+could not answer what the dog's name was. Examples like these from
+around the world underline that schooling is not the same as
+learning---even though education policy often assumes that it is.
+
+The World Development Report 2018 argued that the learning crisis has
+both micro- and system-level causes: poor service delivery in schools
+and communities, driven by unhealthy politics and low bureaucratic
+capacity, mediated through policies that are not aligned toward learning
+for all. To tackle the crisis and improve student learning at scale,
+countries need to know where they stand on all three of these
+dimensions---practices (or service delivery), policies, and politics.
+
+But providing such a systemwide overview requires better measurement.
+Many of these drivers of learning are not captured by existing
+administrative systems. And although new measurement tools capture some
+of those aspects well, no single instrument pulls together data on all
+these areas. This gap leaves policymakers in the dark about what is
+working and what isn't.
+
+\hypertarget{our-response-shining-a-light-on-the-drivers-of-learning}{%
+\subsection{Our Response: Shining a light on the drivers of
+learning}\label{our-response-shining-a-light-on-the-drivers-of-learning}}
+
+To fill this gap, the World Bank, with support from the Bill and Melinda
+Gates Foundation and the UK's Department for International Development,
+is designing a Global Education Policy Dashboard, which will measure the
+drivers of learning outcomes in basic education around the world. In
+doing so, it will highlight gaps between current practice and what the
+evidence suggests would be most effective in promoting learning, and it
+will give governments a way to set priorities and track progress as they
+work to close those gaps. This collaboration will advance the goals of
+the Human Capital Project, a global effort to accelerate more and better
+investments in people for greater equity and economic growth.
+
+The dashboard will start by focusing attention on education
+outcomes---learning and participation in primary school. The next set of
+indicators will measure the quality of service delivery, focusing on
+four key school-level ingredients of student learning: teaching, school
+management, technology for learning, and learner preparation.
+
+In addition, the dashboard will measure deeper systemic drivers: the
+policies and politics that determine the quality of service delivery.
+The end goal is to have a set of indicators that is comprehensive but
+also focused so stakeholders can pay attention to what is really most
+important.
+
+The dashboard will be implemented in 13 countries in 2019, with a goal
+of rapidly expanding coverage after lessons from the field have been
+incorporated.
+
+\hypertarget{our-approach-how-the-dashboard-will-achieve-this}{%
+\subsection{Our Approach: How the Dashboard will achieve
+this}\label{our-approach-how-the-dashboard-will-achieve-this}}
+
+Develop tools to collect data at all levels of the system on a regular
+basis. Because of the shortcomings of existing data on the drivers of
+learning, in its early stage the dashboard will rely primarily on data
+collected under this initiative, rather than just presenting existing
+data in a new framework. In each participating country, the initiative
+will deploy various new data-collection instruments, including a School
+Survey, an Expert Survey, and a Survey of Public Officials. This
+multilevel approach is necessary to gather data on all the drivers of
+learning, from the level of the learner to the level of the system. The
+aim is to develop lean and cost-effective instruments so the dashboard
+can be inexpensive enough to be applied repeatedly and to be scaled up
+after initial phasing.
+
+Embed innovative measurement approaches in a coherent, system-wide
+framework. The dashboard approach combines the conceptual framework of
+the World Development Report 2018 with indicators derived from
+streamlined versions of the most current measurement tools. These tools
+include the Service Delivery Indicators (SDI) initiative, Systems
+Approach for Better Results (SABER), Global Early Child Development
+Database (GECDD), World Management Survey, Bureaucracy Lab surveys, and
+others.
+
+Present a user-friendly dashboard interface. After gathering data, the
+dashboard initiative will display the indicators in an easy-to-use
+interface, focusing attention on key constraints. The primary audience
+will be policymakers, placing a premium on a visual representation that
+illuminates key relationships and constraints on learning.
+
+Make resources available for implementation in all developing countries.
+Along with developing the dashboard and implementing it in an initial
+set of 13 countries, the World Bank and partners will create tools and
+resources to make it easy for countries to use it to strengthen their
+own administrative systems. Ultimately, this will allow global scale-up
+to all developing countries that find it useful.
+
+\hypertarget{development-of-the-dashboard-instruments}{%
+\section{Development of the Dashboard
+Instruments}\label{development-of-the-dashboard-instruments}}
+
+The dashboard project collects new data in each country using three new
+instruments: A School Survey, a Policy Survey, and a Survey of Public
+Officials. Data collection involves school visits, classroom
+observations, legislative reviews, teacher and student assessments, and
+interviews with teachers, principals, and public officials. In addition,
+the project draws on some existing data sources to complement the new
+data it collects. A major objective of the GEPD project was to develop
+focused, cost-effective instruments and data-collection procedures, so
+that the dashboard can be inexpensive enough to be applied (and
+re-applied) in many countries. The team achieved this by streamlining
+and simplifying existing instruments, and thereby reducing the time
+required for data collection and training of enumerators.
+
+More information pertaining to each of the three instruments can be
+found in the Global Education POlicy Dashboard Booklet.
+
+\hypertarget{proficiency-cutoffs}{%
+\section{Proficiency Cutoffs}\label{proficiency-cutoffs}}
+
+For our learning indicators and our indicator of teaching proficiency,
+we had to set thresholds for minimal proficiency. Below we will discuss
+how these proficiency cutoffs were determined.
+
+\hypertarget{student-learning-assessment}{%
+\subsubsection{Student Learning
+Assessment}\label{student-learning-assessment}}
+
+The SDI student test was designed as a one-on-one evaluation with
+enumerators reading out instructions to students in their mother tongue.
+This was done so as to build up a differentiated picture of students'
+cognitive skills; i.e.~oral one-to-one testing which allows testing
+whether a child can solve a mathematics problem even when his/her
+reading ability is so low that he/she would not be able to attempt the
+problem independently. The language test (implemented in the language of
+instruction: English, French, Swahili, or Portuguese) ranged from simple
+tasks testing letter and word recognition to a more challenging reading
+comprehension test. The mathematics test ranged from recognizing and
+ordering numbers, to addition of one- to three-digit numbers, to one-
+and two-digit subtraction, to single digit multiplication and division.
+
+The sub-domains for the literacy section are:
+
+\begin{itemize}
+\tightlist
+\item
+  Letter Identification
+\item
+  Word Recognition
+\item
+  Reading Comprehension Story I\\
+\item
+  Reading Comprehension Story II
+\end{itemize}
+
+The Reading Comprehension Story II set of items were added to the
+standard SDI assessment by our team, and came from a publicly released
+items from the PIRLS assessment.
+
+The sub-domains for the math section are:
+
+\begin{itemize}
+\tightlist
+\item
+  Number Sense
+\item
+  Arithmetic
+\item
+  Word Problem
+\item
+  Sequences
+\end{itemize}
+
+In order to determine whether or not a child was proficient based on our
+assessment, out team consulted with a set of experts to complete a
+standard setting exercise where each expert was asked to rate whether a
+minimally proficient student in the subject should be able to answer the
+item correctly using the global proficiency framework being designed by
+UIS. The result of that exercise was that we would expect a minimally
+proficient child to answer 20/24 questions correctly on our literacy
+section and 14/17 points on our mathematics assessment. Students scoring
+at least this many points on our assessment are rated as proficient and
+otherwise rated not proficient.
+
+INCLUDE LIST OF EXPERTS WE CONSULTED TO THANK THEM HERE
+
+\hypertarget{teacher-content-knowledge-assessment}{%
+\subsubsection{Teacher Content Knowledge
+Assessment}\label{teacher-content-knowledge-assessment}}
+
+The objective of the teacher test is three-fold. The first objective is
+to examine whether teachers have the mastery of the subjects they are
+teaching. This is interpreted as the minimum knowledge required for the
+teacher to be effective. In addition, the test also examines the extent
+to which teachers demonstrate mastery of subject content skills that are
+above the level they are teaching at and finally, mastery of pedagogic
+skills.
+
+To simplify the administration of the test it was designed as a marking
+exercise, in which teachers are asked to mark and correct a hypothetical
+student's exam. The Language test was administered to teachers teaching
+language, or language and other subjects, and the mathematics test was
+administered to teacher teaching mathematics, or mathematics and other
+subjects. The test was validated against 13 Sub-Saharan primary
+curricula.\footnote{The countries included for the review were:
+  Botswana, Ethiopia, Gambia, Kenya, Magadascar, Mauritius, Namibia,
+  Nigeria, Rwanda, Seychelles, South Africa, Tanzania and Uganda. See
+  David Johnson, Andrew Cunningham and Rachel Dowling (2012) ``Teaching
+  Standards and Curriculum Review'', prepared as background document for
+  the SDI Survey.} \footnote{While some SDI countries were not part of
+  the review, before doing the SDI survey the SDI team verified that the
+  school curriculum was compatible with the SDI teacher and student
+  test. For more information see SDI Technical report for each specific
+  country.}
+
+The language test consisted of two sections. The first section asked
+teachers to assess pupil language literacy by correcting a primary
+school pupil language test. The teachers have to correct whether the
+``student answer'' is correct, and in case it is incorrect, has to write
+the correct answer. The second section asks teachers to correct a letter
+written by a child in 4th grade. The teachers have to correct the letter
+for grammar, punctuation (between sentences and within sentences),
+spelling, syntax, and salutation by circling the mistakes and writing
+the correction on the line. The mathematics test asks teachers to assess
+pupil numeracy literacy by correcting a primary school pupil mathematic
+test. The teachers have to correct whether the ``student answer'' is
+correct, and in case it is incorrect it has to write the correct answer.
+
+The pedagogy test consists of three sections designed to capture all the
+skills teachers would routinely be asked to apply when teaching. The
+first section asks teachers to prepare a lesson plan about road
+accidents based on a simple information given a text they had read. The
+second task asks teachers to assess children's writing on the basis of
+two sample letters (written by grade 4 children). Teachers have to point
+out the strengths and weaknesses on the student's letters, by evaluating
+pupil's ability to write simple letters, use sentence structures
+correctly including past and present tenses, use a range of vocabulary,
+and use both within and between sentence punctuation. The final task
+asks teachers to inspect test scores of 10 children, aggregate them and
+make some statements about learning patterns.
+
+We set a threshold of 80\% on the math and language assessment for a
+teacher being minimally proficient. This standard was used in the
+Service Delivery Indicators initiative, and we are using it as a
+benchmark as well.
+
+\hypertarget{st-grade-assessment}{%
+\subsubsection{1st Grade Assessment}\label{st-grade-assessment}}
+
+Our first grade assessment tool was derived mostly from the MELQO
+assessment developed as an open source tool to measure early childhood
+development in the domains of numeracy, literacy, socio-emotional skills
+and numeracy. For more details on the development of this initiative
+see:
+
+\url{https://unesdoc.unesco.org/ark:/48223/pf0000248053}
+
+The MELQO instrument was designed to measure development of children
+around the age of six years old. Our target group, 1st graders, is
+slightly older and we did some adaptation in which we removed some items
+and added items on simple sentence reading to better match what is
+expected of older children.
+
+The sub-domains for the literacy section are:
+
+\begin{itemize}
+\tightlist
+\item
+  Expressive Vocabulary
+\item
+  Letter Identification
+\item
+  Word Recognition
+\item
+  Sentence Reading
+\item
+  Listening Comprehension Story
+\item
+  Name Writing
+\item
+  Print Awareness
+\end{itemize}
+
+The sub-domains for the math section are:
+
+\begin{itemize}
+\tightlist
+\item
+  Verbal Counting
+\item
+  Producing a Set
+\item
+  Number Identification
+\item
+  Number Comparison
+\item
+  Simple Addition
+\end{itemize}
+
+The sub-domains for the socio-emotional section are:
+
+\begin{itemize}
+\tightlist
+\item
+  Perspective Taking/Empathy
+\item
+  Conflict Resolution
+\end{itemize}
+
+The sub-domains for the executive functioning section are:
+
+\begin{itemize}
+\tightlist
+\item
+  Working Memory/Backward Digit Spans
+\item
+  Follow Instructions/Head, Toes, Knees, Shoulders Task
+\end{itemize}
+
+Our threshold for proficiency on our 1st grade assessment is to score at
+least 80\% of the items correctly. We validated this approach by
+calculating the percent correct in the top 25\% highest scoring schools
+in Peru on our 4th grade dashboard assessment and found that students in
+these schools answered around this percentage of items correct.
+
+\hypertarget{stop-light-scoring-system}{%
+\section{Stop Light Scoring System}\label{stop-light-scoring-system}}
+
+We use the following system for categorizing our main indicators into
+three levels: On Target, Caution, and Needs Improvement.
+
+For our indicators ranging from 0-100, we use the following system:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  On Target - Values at least 90\%\\
+\item
+  Caution - Values between 70-90\\
+\item
+  Needs improvement - Values under 70\%
+\end{enumerate}
+
+For our indicators ranging 1-5, we use the following system:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  On Target - Values at least 4\\
+\item
+  Caution - Values between 2 and 4\\
+\item
+  Needs improvement - Values 2 and under
+\end{enumerate}
+
+\hypertarget{sampling}{%
+\section{Sampling}\label{sampling}}
+
+\hypertarget{general-notes-on-sampling}{%
+\subsection{General Notes on Sampling}\label{general-notes-on-sampling}}
+
+The aim of the Global Education Policy Dashboard school survey is to
+produce nationally representative estimates, which will be able to
+detect changes in the indicators over time at a minimum power of 80\%
+and with a 0.05 significance level. We also wish to detect differences
+by urban/rural location.
+
+For our school survey, we will employ a two-stage random sample design,
+where in the first stage a sample of typically around 200 schools, based
+on local conditions, is drawn, chosen in advance by the Bank staff. In
+the second stage, a sample of teachers and students will be drawn to
+answer questions from our survey modules, chosen in the field. A total
+of 10 teachers will be sampled for absenteeism. Five teachers will be
+interviewed and given a content knowledge exam. Three 1st grade students
+will be assessed at random, and a classroom of 4th grade students will
+be assessed at random. Stratification will be based on the school's
+urban/rural classification and based on region. When stratifying by
+region, we will work with our partners within the country to make sure
+we include all relevant geographical divisions.
+
+For our Survey of Public Officials, we will sample a total of 200 public
+officials. Roughly 60 officials are typically surveyed at the federal
+level, while 140 officials will be surveyed at the regional/district
+level. For selection of officials at the regional and district level, we
+will employ a cluster sampling strategy, where roughly 10 regional
+offices (or whatever the secondary administrative unit is called) are
+chosen at random from among the regions in which schools were sampled.
+Then among these 10 regions, we also typically select around 10
+districts (tertiary administrative level units) from among the districts
+in which schools werer sampled. The result of this sampling approach is
+that for 10 clusters we will have links from the school to the district
+office office to the regional office to the central office. Within the
+regions/districts, five or six officials will be sampled, including the
+head of organization, HR director, two division directors from finance
+and planning, and one or two randomly selected professional employees
+among the finance, planning, and one other service related department
+chosen at random. At the federal level, we will interview the HR
+director, finance director, planning director, and three randomly
+selected service focused departments. In addition to the directors of
+each of these departments, a sample of 9 professional employees will be
+chosen in each department at random on the day of the interview.
+
+\hypertarget{detailed-sampling-notes}{%
+\subsection{Detailed Sampling Notes}\label{detailed-sampling-notes}}
+
+Our team consulted with several sampling experts at the World Bank to
+discuss strategies for sampling schools. As mentioned, the goal of our
+survey is to be able to detect differences across time and by
+urban/rural location. The result of our consultation with experts was to
+use an optimal stratification strategy based on the optimal stratified
+sampling technique in Barcaroli (2014) which uses the genetic algorithm
+to produce an optimal number of strata and an optimal number of units
+within strata. Optimal stratification can lead to reduced sampling error
+compared to alternative approaches such as cluster sampling or simple
+random sampling.
+
+Before producing the sample using the optimal stratification approach,
+we would define the sampling frame. Typically, we would take all schools
+with at least three 1st grade and at least three 4th grade students,
+according to the latest school census, for inclusion in the frame. A
+minimum of three 1st grade and 4th grade students was set to ensure that
+a sufficient number of teachers in primary school and students would be
+interviewed. In order to do this, we work with the World Bank country
+teams and the country government to compile an up to date and detailed
+database containing information on schools. Depending on the country, we
+may or may not include private schools in the sampling frame depending
+on the particular country context. The decision to include private
+schools is usually determined by the share of private schools that make
+up the total student enrollment and the ease with which we are able to
+enter private schools in the country. We work with the government and
+the local World Bank team in making this decision. In Peru, we included
+only public schools in the sampling frame, because private schools make
+up only a small percentage of total student enrollment.
+
+In our stratified sampling approach, we typically use a countries 1st or
+2nd level administative division (which usually is a province or
+department) depending on the country and the urban/rural status of the
+school as stratification variables. For example, in Peru, the
+Departamento and urban/rural status of the school made up the
+stratification variables. In cases, where private schools are also
+included in the sampling frame, the public/private status of the school
+is also included as a stratification variable.
+
+The optimal stratification apporach is particularly useful if previous
+surveys have been done in the country which collect information similar
+to the information collected in our Dashboard. The optimal
+stratification algorith will assign extra units to a stratum that has a
+particularly variance in our target variables. For instance in Peru, we
+used data from a previous nationally representative survey which used
+the MELQO instrument to test Early Childhoold skills. We were able to
+calculate the mean and standard deviation of the student level test
+scores by departamento, and we were able to assign extra sampling units
+to stratum with relatively high variances in these outcomes. To the
+extent that regions with a high variance in the MELQO test also have a
+high variance in our other outcomes (such as the 4th grade test scores,
+teacher knowledge, principal practices), we would expect this sampling
+approach to improve precision in these measures as well.
+
+A quick introduction to the technical aspects of the opimal
+stratification approach can be found here.
+
+\url{https://cran.r-project.org/web/packages/SamplingStrata/vignettes/SamplingStrata.html}
+
+In all cases, where the optimal stratification algorithm was applied, we
+also in paralell ran a sampling approach based on a more simple
+stratified sampling approach where units were broken into strata and the
+number of units per strata was proportionate to the stratum size.
+Typically, we did not find major differences in the summary statistics
+of the sample (in terms of average numbers of students per school, or
+number of schools per region) based on the optimal stratification
+approach compared to a more simple stratification approach.
+
+Barcaroli G (2014). ``SamplingStrata: An R Package for the Optimization
+of Stratified Sampling.'' Journal of Statistical Software, 61(4), 1--24.
+\url{http://www.jstatsoft.org/v61/i04/}.
+
+\hypertarget{peru-specific-comments}{%
+\subsubsection{Peru Specific Comments}\label{peru-specific-comments}}
+
+MELQO data was merged with the Peru school frame in order to optimally
+stratify. We stratified on the basis of urban/rual and department. There
+are 25 departments in Peru. In 2017, Peru conducted an examination of
+around 4,500 children between 5 and 8 years old, with a median age of 6.
+The MELQO exam is quite similar to our ECD examination module. We are
+able to use data from this 2017 survey to choose the number of schools
+in each province optimally by calculating means and standard deviations
+by province and feeding this information into the optimal stratification
+algorithm. See
+\url{https://cran.r-project.org/web/packages/SamplingStrata/vignettes/SamplingStrata.html}.
+Provinces with low standard deviations among students in terms of their
+MELQO development scores are allocated fewer schools compared to an
+allocation that is simply based on population, and provinces with high
+standard deviations are allocated more schools.
+
+205 schools were chosen for our survey after optimally stratifying.
+
+To see more detailed notes on our sampling approach in Peru, please see:
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Peru/2019/Data/sampling/Sampling_Notes_Peru.html}
+
+and
+
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Peru/2019/Data/sampling/SamplingStrata_Peru_shared.R}
+
+\hypertarget{jordan-specific-comments}{%
+\subsubsection{Jordan Specific
+Comments}\label{jordan-specific-comments}}
+
+For our school survey, we select only schools that are supervised by the
+Minsitry or Education or are Private schools. No schools supervised by
+the Ministry of Defense, Ministry of Endowments, Ministry of Higher
+Education , or Ministry of Social Development are included. This left us
+with a sampling frame containing 3,330 schools, with 1297 private
+schools and 2003 schools managed by the Minsitry of Education. The
+schools must also have at least 3 grade 1 students, 3 grade 4 students,
+and 3 teachers.
+
+We oversampled Southern schools to reach a total of 50 Southern schools
+for regional comparisons. Additionally, we oversampled Evening schools,
+for a total of 40 evening schools.
+
+To see more detailed notes on our sampling approach, please see:
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Jordan/2019/Sampling/Sampling_Notes_Jordan.html}
+and
+
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Jordan/2019/Sampling/SamplingStrata_v2.R}
+
+\hypertarget{mozambique-specific-comments}{%
+\subsubsection{Mozambique Specific
+Comments}\label{mozambique-specific-comments}}
+
+Our sampled schools come from the list of schools surveyed by the 2018
+SDI survey. Because we were supplementing data that was collected as
+part of the 2018 SDI, we chose from among the schools sampled for this
+survey. For public officials, the sampling was similar as described
+above.
+
+To see more detailed notes on our sampling approach, please see:
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Mozambique/2019/Code/Sampling_Notes_Mozambique.html}
+
+and
+
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Mozambique/2019/Code/SamplingStrata_Mozambique.R}
+
+\hypertarget{rwanda-specific-comments}{%
+\subsubsection{Rwanda Specific
+Comments}\label{rwanda-specific-comments}}
+
+In order to visit two schools per day, we clustered at the sector level
+choosing two schools per cluster. With a sample of 200 schools, this
+means that we had to allocate 100 PSUs. We combined this clustering with
+stratification by district and by the urban rural status of the schools.
+The number of PSUs allocated to each stratum is proportionate to the
+number of schools in each stratum (i.e.~the district X urban/rural
+status combination).
+
+To see more detailed notes on our sampling approach, please see:
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Rwanda/2019/Data/Sampling/Sampling_Notes.html}
+
+and
+
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Rwanda/2019/Data/Sampling/SamplingStrata.R}
+
+\hypertarget{punjab-specific-comments}{%
+\subsubsection{Punjab Specific
+Comments}\label{punjab-specific-comments}}
+
+The survey in Pubjab is a combined effort of the Early Learning
+Partnership project and of the Global Education Policy Dashboard
+project.
+
+Overall, we draw a sample of 200 public schools, 200 private schools and
+200 public-private partnership (PPP) schools. We stratified by
+urban/rural.
+
+At this stage it is important to note, that there are certain districts
+which we may not be able to visit due to security concerns, these are:
+
+\begin{itemize}
+\tightlist
+\item
+  Mianwali
+\item
+  Dera Ghazi Khan (DG Khan)
+\item
+  Rajan Pur
+\item
+  Bhakkar
+\end{itemize}
+
+We have removed these districts from the sampling frame.
+
+Out of the 200 public schools to be surveyed we would like approximately
+100 of these schools to be schools that are meeting ECE quality
+standards (in the data set this corresponds to public\_strata==1). Out
+of the remaining public schools to be sampled, 50 schools will be
+schools that have ECE but do not meet quality standards
+(public\_strata==2) and 50 will be schools that have no ECE at all, and
+have only have katchi classes (public\_strata==3).
+
+Due to operational constraints, we did not draw a random sample of all
+schools at province level. We selected six districts for the survey (out
+of 32). The survey team drew a convenience sample of 6 districts that is
+representative of North, Central and South Punjab, which includes both
+richer and poorer districts. A convenience sample was appropriate due to
+security and operational constraints of working in Punjab. The selected
+districts were:
+
+\begin{itemize}
+\tightlist
+\item
+  Attock
+\item
+  Faisalabad
+\item
+  Lahore
+\item
+  Muzaffargarh
+\item
+  Rahimyar Khan
+\item
+  Sargodha
+\end{itemize}
+
+In order to deal with potential refusals and closed schools, a set of
+replacement schools was also drawn. Within the final strata, schools
+were sampled proportional to size (number of total enrolled children in
+pre-primary).
+
+To see more detailed notes on our sampling approach, please see:
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Pakistan_Punjab/2019/Code/Sampling/Sampling_Notes_Punjab.html}
+
+and
+
+\url{https://github.com/worldbank/GEPD/blob/develop/Data/Pakistan_Punjab/2019/Code/Sampling/SamplingStrata.R}
+
+\hypertarget{power-considerations}{%
+\subsection{Power Considerations}\label{power-considerations}}
+
+In order to assess the likely detectable effect sizes for some of our
+key indicators, we incorporated data from previous surveys that used a
+similar methodology as the Global Education Policy Dashboard. We
+examined the likely detectable effect sizes for the following
+indicators: absenteeism, teacher content knowledge, 4th grade student
+knowledge, Early Childhood Development, and Teacher pedagogical skills.
+
+For absenteeism, we used data previously collected as part of the
+Service Delivery Indicators (SDI) survey
+(\url{https://www.sdindicators.org/}). Data came from the countries of
+Afghanistan (SABER SD), Tanzania, Kenya, Mozambique, Nigeria, Uganda,
+and Senegal. In each country, data on teacher presence was collected
+using a very similar questionnaire. One difference is that for the SDI
+survey absence was collected during a second unannounced visit to the
+school. In our case, we notify the school that a team of enumerators
+will be coming by the school over a two week period, but do not give
+them the exact day. Setting aside this difference, we were able to
+calculate the intra-class correlation (ICC) in absence for teachers
+within the same school for each country and using these ICCs exame
+expected detectable effect sizes by \# of schools sampled. With a
+benchmark of around 200 schools, we expected to detect differences
+between two years of between 0.06-0.08 percentage points in absenteeism.
+
+\includegraphics{C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/absence_power_schools.png}
+
+For teacher content knowledge, we used the same data sources and a
+similar methodology. Assuming a range of intra-class correlations which
+were found in previous SDI countries, we expected to detect a change in
+Teacher Content Knowledge of better than 0.05 standard deviations of
+teacher knowledge over two years.
+
+\includegraphics{C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/know_power_schools.png}
+
+For our 1st grade assessment, we used direct assessment data from the
+MELQO survey of Kindergarten students in four countries: Ethiopia, Peru,
+Mongolia, and Tanzania. ICCs for these countries ranged from 0.05 in
+Mongolia to 0.43 in Tanzania. Assuming a sample size of 200, we would
+expect to detect a change in Early Learner Knowledge of around 0.14 -0.2
+standard deviations.
+
+\includegraphics{C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/ecd_power_schools.png}
+Finally, for teacher pedagogical skills, we used prior data from the
+TEACH survey in Mozambique and the Punjab province of Pakistan. Based on
+data from these countries, we expected to detect a change in Teacher
+Pedagogy of around 0.16-0.18 units on the 1-5 scale of teacher
+pedagogical performance using our sample of 200 schools.\\
+\includegraphics{C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/teach_power_schools.png}
+
+\hypertarget{validation-of-power-calculations-using-peru-data}{%
+\subsection{Validation of Power Calculations using Peru
+Data}\label{validation-of-power-calculations-using-peru-data}}
+
+We can begin to test the assumptions of our power analysis by comparing
+the precision implied in our power calculations to data actually
+collected from our Survey in Peru in 2019. Our Peru sample is discussed
+in greater detail above, but briefly we visited 205 schools. While our
+power analyis was primarily concerned with the detectable effect size
+over a two year period, we can still use data from one year of data
+collection to assess whether our projects were on target.
+
+Our power analysis aimed to assess the detectable effect size across two
+years. Making an assumption that the sampling variance for our
+indicators is constant across time, we can project the detectable effect
+size under this assmption. Let the following be the standard error of
+the difference in means of one of our indicators, where \(\bar X_j\) is
+the sample mean for year j and \(\hat \sigma^2_j\) is the sample
+variance for year j.
+
+\(SE(\bar X_1-\bar X_0)=\sqrt(\hat \sigma^2_1/N_1 + \hat \sigma^2_0/N0)\)
+
+and if we assume equal variances \(\sigma^2_1=\sigma^2_0\) and that the
+sample sizes will be the same \(N_1=N_2\), the our Standard Error of the
+difference of the means of the two samples is:
+
+\(SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)\)
+
+For teacher absenteeism, we were able to assess the absence of 1461
+teachers in our sampled schools. This produced a mean absenteeism rate
+of 90.68 and a standard error of 0.98. Therefore the standard error for
+our two mean difference is just \(\sqrt 2\) times this standard error.
+Therefore, our standard error for our two mean difference will be 1.39
+
+Finally, to determine our detectable effect, we will be able to reject
+the null of an identical mean for teacher absenteeism if our absenteeism
+measure in the second Peru survey exceeds plus or minus: 2.73 percentage
+points from our original mean of 90.68 .
+
+This actually suggests that in the case of Peru, our forecast of
+detectable effect sizes were too pessimistic, as we were expecting
+somewhere in the range of 6-8 percentage points. This could be
+attributed to lower than typical intra-class correlations in Peru for
+absence or to improved precision resulting from our optimal
+stratification technique.
+
+For teacher content knowledge, we will omit the same full exercise as
+with absence, but will only say that we will be able to reject the null
+of an identical mean for teacher content knowledge if our measure in the
+second Peru survey exceeds plus or minus: 5.25 percentage points from
+our original mean.
+
+For our Early Childhood assessment, can say that we will be able to
+reject the null of an identical mean for ECE if our measure in the
+second Peru survey exceeds plus or minus: 8.02 percentage points from
+our original mean.
+
+\hypertarget{full-tabulation-of-means-and-confidence-intervals-for-peru}{%
+\subsection{Full Tabulation of Means and Confidence Intervals for
+Peru}\label{full-tabulation-of-means-and-confidence-intervals-for-peru}}
+
+Means and 95\% Confidence Intervals are available for all of our primary
+indicators collected using our surveys below.
+
+\begin{longtable}[]{@{}llrlrlrl@{}}
+\caption{Table 1: Summary Statistics and Confidence Intervals for
+Dashboard Indicators - Peru 2019}\tabularnewline
+\toprule
+Indicator & Value Range & Overall Mean & 95\% CI & Urban Mean & 95\% CI
+& Rural Mean & 95\% CI\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Indicator & Value Range & Overall Mean & 95\% CI & Urban Mean & 95\% CI
+& Rural Mean & 95\% CI\tabularnewline
+\midrule
+\endhead
+Proficiency on GEPD Assessment & 0-100 & 51.54 & {[}47.69, 55.39{]} &
+57.17 & {[}52.15, 62.19{]} & 27.64 & {[}22.6, 32.68{]}\tabularnewline
+Student Attendance & 0-100 & 93.01 & {[}91.58, 94.44{]} & 93.34 &
+{[}91.52, 95.16{]} & 91.63 & {[}88.86, 94.4{]}\tabularnewline
+Teacher Effort & 0-100 & 90.68 & {[}88.75, 92.61{]} & 90.69 & {[}88.27,
+93.11{]} & 90.65 & {[}86.83, 94.47{]}\tabularnewline
+Teacher Content Knowledge & 0-100 & 38.69 & {[}34.98, 42.4{]} & 40.90 &
+{[}35.64, 46.16{]} & 29.19 & {[}24.1, 34.28{]}\tabularnewline
+Capacity for Learning & 0-100 & 52.65 & {[}46.98, 58.32{]} & 58.44 &
+{[}50.33, 66.55{]} & 27.76 & {[}21.64, 33.88{]}\tabularnewline
+Basic Inputs & 0-5 & 4.06 & {[}3.93, 4.19{]} & 4.13 & {[}3.94, 4.32{]} &
+3.78 & {[}3.59, 3.97{]}\tabularnewline
+Basic Infrastructure & 0-5 & 3.75 & {[}3.62, 3.88{]} & 3.99 & {[}3.84,
+4.14{]} & 2.74 & {[}2.55, 2.93{]}\tabularnewline
+Operational Management & 1-5 & 4.30 & {[}4.24, 4.36{]} & 4.31 & {[}4.22,
+4.4{]} & 4.26 & {[}4.18, 4.34{]}\tabularnewline
+Instructional Leadership & 1-5 & 3.70 & {[}3.58, 3.82{]} & 3.77 &
+{[}3.6, 3.94{]} & 3.42 & {[}3.24, 3.6{]}\tabularnewline
+Principal Knowledge of School & 1-5 & 3.62 & {[}3.43, 3.81{]} & 3.57 &
+{[}3.3, 3.84{]} & 3.81 & {[}3.55, 4.07{]}\tabularnewline
+Principal Management Skills & 1-5 & 4.64 & {[}4.58, 4.7{]} & 4.68 &
+{[}4.6, 4.76{]} & 4.50 & {[}4.37, 4.63{]}\tabularnewline
+Policy Lever (Teaching) - Attraction & 1-5 & 3.57 & {[}3.52, 3.62{]} &
+3.57 & {[}3.5, 3.64{]} & 3.59 & {[}3.52, 3.66{]}\tabularnewline
+Policy Lever (Teaching) - Selection \& Deployment & 1-5 & 3.65 &
+{[}3.57, 3.73{]} & 3.62 & {[}3.5, 3.74{]} & 3.78 & {[}3.65,
+3.91{]}\tabularnewline
+Policy Lever (Teaching) - Support & 1-5 & 3.06 & {[}2.96, 3.16{]} & 3.05
+& {[}2.91, 3.19{]} & 3.11 & {[}2.97, 3.25{]}\tabularnewline
+Policy Lever (Teaching) - Evaluation & 1-5 & 3.96 & {[}3.88, 4.04{]} &
+4.00 & {[}3.88, 4.12{]} & 3.76 & {[}3.65, 3.87{]}\tabularnewline
+Policy Lever (Teaching) - Monitoring \& Accountability & 1-5 & 2.80 &
+{[}2.73, 2.87{]} & 2.81 & {[}2.71, 2.91{]} & 2.75 & {[}2.65,
+2.85{]}\tabularnewline
+Policy Lever (Teaching) - Intrinsic Motivation & 1-5 & 4.59 & {[}4.55,
+4.63{]} & 4.60 & {[}4.55, 4.65{]} & 4.54 & {[}4.48,
+4.6{]}\tabularnewline
+Policy Lever (Inputs \& Infrastructure) - Standards & 1-5 & 3.75 &
+{[}3.56, 3.94{]} & 3.66 & {[}3.38, 3.94{]} & 4.14 & {[}3.89,
+4.39{]}\tabularnewline
+Policy Lever (Inputs \& Infrastructure) - Monitoring & 1-5 & 3.68 &
+{[}3.56, 3.8{]} & 3.71 & {[}3.55, 3.87{]} & 3.56 & {[}3.37,
+3.75{]}\tabularnewline
+Policy Lever (School Management) - Clarity of Functions & 1-5 & 4.95 &
+{[}4.91, 4.99{]} & 4.96 & {[}4.91, 5.01{]} & 4.91 & {[}4.84,
+4.98{]}\tabularnewline
+Policy Lever (School Management) - Attraction & 1-5 & 4.39 & {[}4.31,
+4.47{]} & 4.45 & {[}4.35, 4.55{]} & 4.12 & {[}4, 4.24{]}\tabularnewline
+Policy Lever (School Management) - Selection \& Deployment & 1-5 & 4.38
+& {[}4.27, 4.49{]} & 4.38 & {[}4.22, 4.54{]} & 4.42 & {[}4.27,
+4.57{]}\tabularnewline
+Policy Lever (School Management) - Support & 1-5 & 3.52 & {[}3.38,
+3.66{]} & 3.61 & {[}3.42, 3.8{]} & 3.14 & {[}2.92,
+3.36{]}\tabularnewline
+Policy Lever (School Management) - Evaluation & 1-5 & 4.36 & {[}4.26,
+4.46{]} & 4.42 & {[}4.28, 4.56{]} & 4.12 & {[}3.95,
+4.29{]}\tabularnewline
+Politics \& Bureaucratic Capacity - National Learning Goals & 1-5 & 3.01
+& {[}2.92, 3.1{]} & NA & NA & NA & NA\tabularnewline
+Politics \& Bureaucratic Capacity - Mandates \& Accountability & 1-5 &
+4.17 & {[}4.09, 4.25{]} & NA & NA & NA & NA\tabularnewline
+Politics \& Bureaucratic Capacity - Quality of Bureaucracy & 1-5 & 3.96
+& {[}3.89, 4.03{]} & NA & NA & NA & NA\tabularnewline
+Politics \& Bureaucratic Capacity - Impartial Decision-Making & 1-5 &
+3.33 & {[}3.21, 3.45{]} & NA & NA & NA & NA\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{survey-weights}{%
+\subsection{Survey Weights}\label{survey-weights}}
+
+Survey weights are constructed using our original sampling frame for a
+country. School Weights are the inverse probability that a 4th grade
+student in the school is randomly selected for the school survey. This
+is calculated by summing the total number of students in each particular
+school and dividing by the total number of 4th grade students in the
+sampling frame. In cases where we have large amounts of non-responses or
+refusals to enter the school, we will add an adjustment term to account
+for non-response. This could happen for instance, if an originally
+sampled school was selected but refused and the two replacement schools
+for that school also refused.
+
+For student level or teacher level data, we will also create an
+adjustment for the random selection of classrooms, teachers, or students
+that takes place within schools. In order to form these weights at the
+individual level, the school weight is multiplied by the number of units
+sampled (five teachers for the teacher interview, 10 for the teacher
+absence module, one for the class of 4th graders, and three for the
+three randomly selected 1st grade students.).
+
+\hypertarget{data-collection}{%
+\section{Data Collection}\label{data-collection}}
+
+Below, we will briefly discuss the data collection protocols and
+processes used by our team. In short, we use Survey Solutions, which is
+a tablet based, free, open source survey tool designed by the World
+Bank. The data flow then is as follows:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Data is collected by an enumerator\\
+\item
+  The enumerator or their supervisor then uploads the collected data to
+  our secure server (typically a server generated by the Survey
+  Solutions team)\\
+\item
+  The data is encrypted on the server\\
+\item
+  The Global Education Policy Dashboard Team then downloads the
+  encrypted data using the Survey Solutions API
+\item
+  Our data is stored in a secure folder
+\item
+  We clean the data, create unique IDs for students, teachers,
+  principals, schools, and public officials using cryptographic hashing
+\item
+  A number of data quality checks are run to minimize missing values,
+  identify enumerator errors, and ensure accurate coding\\
+\item
+  The data is then anonymized removing all PII information\\
+\item
+  Our final indicators are then aggregated to the National level, as
+  well as offering breakdowns by Urban/Rural and Gender\\
+\item
+  This aggregated data is then uploaded to the World Bank open data
+  platform Edstats\\
+\item
+  The Global Education Policy Dashboard website then pulls the data from
+  EdStats using the EdStats API system
+\end{enumerate}
+
+\hypertarget{survey-solutions}{%
+\subsection{Survey Solutions}\label{survey-solutions}}
+
+Survey Solutions is a free, open source data collection platform
+designed by World Bank staff.
+
+The raw data will be hosted on a secure server, which is certified by
+several dozen well known international bodies, including the EU Data
+Protection Directive. More information on the certifications can be
+found here:
+\url{https://support.mysurvey.solutions/faq/how-secure-is-the-world-bank-cloud-/}.
+
+\hypertarget{anonymization}{%
+\subsection{Anonymization}\label{anonymization}}
+
+Immediately following download of data from Survey Solutions, we remove
+the following and save as an anonymized version of the data: 1.Drop
+Enumerator name\\
+2. Drop school name, address, official school codes (EMIS codes)\\
+3. Drop principal name, phone numbers\\
+4. Drop Geo-code info\\
+5. Drop unique responses, such as when respondent is asked to specify
+other as a choice
+
+The following are produced: 1. Produce Crypto-hashed School ID, Province
+ID, District ID
+
+We convert the following variables into categorical data: 2. Respondent
+age 3. Year began teaching 4. Number of students in school/class 5.
+Top-coded variables: 6. Educational degrees
+
+\hypertarget{data-quality-checks}{%
+\section{Data Quality Checks}\label{data-quality-checks}}
+
+While survey data is collected, we run daily quality checks to ensure
+the data is high quality. These include both built in checks available
+through the survey solutions HeadQuarters app, and also a custom
+designed data quality check tool.
+
+Survey Solutions has several built in quality checks. These include a
+mapping tool based on the geocoordinates enterred by the enumerators
+during data collection and an interview management system where
+supervisors or the headquarters can see whether all questions that
+should have been completed by the enumerator are completed. Supervisors
+then have the option to send feedback to the enumerator and reject the
+interview until the data is sucessfully collected.
+
+Additionally, our team has designed a set of custom tools for our Survey
+of Public Officials and School Survey. All code for our data quality
+checks can be found on our Global Education POlicy Dashboard github site
+(\url{https://github.com/worldbank/GEPD}). These tools allow the field
+team to calculate our final primary indicators in real time and check
+for any anomalies including missing values, data enterred at strange
+times (e.g.~after regular business hours), and to look at data collected
+for specific enumerators.
+
+\hypertarget{indicator-construction}{%
+\section{Indicator Construction}\label{indicator-construction}}
+
+\begin{longtable}[]{@{}lll@{}}
+\caption{Table 2: High Level Description of How Each Indicator is
+Scored}\tabularnewline
+\toprule
+Indicator Name & Values & How Indicator is Scored\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Indicator Name & Values & How Indicator is Scored\tabularnewline
+\midrule
+\endhead
+Proficiency on GEPD Assessment & 0-100 & The fraction of students
+scoring at least 20/24 points on 4th grade language and 14/17 points on
+the math student assessment. Our team consulted several content experts
+to advise on how many of our math and language items a minimally
+proficient 4th grade student should be able to get correct to decide
+these thresholds.\tabularnewline
+Participation & 0-100 & Based on adjusted net enrollment data. Not based
+on survey data\tabularnewline
+Teacher Effort & 0-100 & School survey. Percent of teachers present.
+Teacher is coded absent if they are: - not in school - in school but
+absent from the class.\tabularnewline
+Teacher Content Knowledge & 0-100 & School survey. The fraction of
+teachers scoring at least 80\% on the teacher content knowledge exam on
+mathematics and language.\tabularnewline
+Teacher Pedagogical Skills & 1-5 & School survey. Based on TEACH ratings
+from classroom observations\tabularnewline
+Basic Inputs & 0-5 & School survey. Total score is the sum of whether a
+school has: - Functional blackboard - Pens, pencils, exercise books -
+Textbooks - Fraction of students in class with a desk - Used ICT in
+class and have access to ICT in the school.\tabularnewline
+Basic Infrastructure & 0-5 & School survey. Total score is the sum of
+whether a school has: - Access to adequate drinking water -Functional
+toilets that are separate for boys/girls, private, useable, and have
+hand washing facilities - Electricity - Internet - School is accessible
+for those with disabilities (road access, a school ramp for wheelchairs,
+an entrance wide enough for wheelchairs, ramps to classrooms where
+needed, accessible toilets, and disability screening for seeing,
+hearing, and learning disabilities with partial credit for having 1 or 2
+or the 3).)\tabularnewline
+Capacity for Learning & 0-100 & School survey. The average of Fraction
+correct on the literacy, numeracy, socio-emotional, and executive
+functioning components of the early childhood assessment given to
+students in school.\tabularnewline
+Student Attendance & 0-100 & School Survey. Percent of 4th grade
+students who are present during an unannounced visit.\tabularnewline
+Operational Management & 1-5 & School Survey. Principals/head teachers
+are given two vignettes: - One on solving the problem of a hypothetical
+leaky roof - One on solving a problem of inadequate numbers of
+textbooks. Each vignette is worth 2 points. The indicator will measure
+two things: presence of functions and quality of functions. In each
+vignette: - 0.5 points are awarded for someone specific having the
+responsibility to fix - 0.5 point is awarded if the school can fully
+fund the repair, 0.25 points is awarded if the school must get partial
+help from the community, and 0 points are awarded if the full cost must
+be born by the community - 1 point is awarded if the problem is fully
+resolved in a timely manner, with partial credit given if problem can
+only be partly resolved.\tabularnewline
+Instructional Leadership & 1-5 & School survey. Total score starts at 1
+and points added are the sum of whether a teacher has: - Had a classroom
+observation in past year - Had a discussion based on that observation
+that lasted longer than 30 min - Received actionable feedback from that
+observation - Teacher had a lesson plan and discussed it with another
+person\tabularnewline
+Principal Knowledge of School & 1-5 & The aim of this indicator is to
+measure the extent to which principals have the knowledge about their
+own schools that is necessary for them to be effective managers. A score
+from 1 to 5 capturing the extent to which the principal is familiar with
+certain key aspects of the day-to-day workings of the school (in schools
+that have principals). Principal receives points in the following way: -
+5 points. Principal gets all 90-100\% of questions within accuracy
+bounds (defined below). - 4 points. Principal gets 80-90\% of question
+within accuracy bounds. - 3 points. Principal gets 70-80\% of question
+within accuracy bounds. - 2 points. Principal gets 60-70\% of question
+within accuracy bounds. - 1 points. Principal gets under 60\% of
+question within accuracy bounds. Accuracy bounds for each question. Got
+80\% of teachers correct or within 1 teacher/student for each of the
+following: - Out of these XX teachers, how many do you think would be
+able to correctly add triple digit numbers (i.e.~343+215+127)? - Out of
+these XX teachers, how many do you think would be able to correctly to
+multiply double digit numbers (i.e.~37 x 13)? - Out of these XX
+teachers, how many do you think would be able to complete sentences with
+the correct world (i.e.~The accident \_\_\_\_\_ (see, saw, had seen, was
+seen) by three people)? - Any of these XX teachers have less than 3
+years of experience? - Out of these XX teachers, which ones have less
+than 3 years of experience as a teacher? Got 80\% of students correct or
+within 2 students for each of the following: - In the selected 4th grade
+classroom, how many of the pupils have the relevant textbooks? Must
+identify whether or not blackboard was working in a selected 4th grade
+classroom.\tabularnewline
+Principal Management Skills & 1-5 & Score of 1-5 based on sum of
+following: - 1 Point. School Goals Exists - 1 Point. School goals are
+clear to school director, teachers, students, parents, and other members
+of community (partial credit available) - 1 Point. Specific goals
+related to improving student achievement ( improving test scores,
+improving pass rates, reducing drop out, reducing absenteeism, improving
+pedagogy, more resources for infrastructure, more resources for inputs)
+- 1 Point. School has defined system to measure goals (partial credit
+available)\tabularnewline
+Policy Lever (Teaching) - Attraction & 1-5 & In the school survey, a
+number of De Facto questions on teacher attraction are asked. 0.8 points
+is awarded for each of the following: - 0.8 Points. Teacher satisfied
+with job - 0.8 Points. Teacher satisfied with status in community - 0.8
+Points. Would better teachers be promoted faster? - 0.8 Points. Do
+teachers receive bonuses? - 0.8 Points. One minus the fraction of months
+in past year with a salary delay.\tabularnewline
+Policy Lever (Teaching) - Selection \& Deployment & 1-5 & School Survey.
+The De Facto portion of the Teacher Selection and Deployment Indicator
+considers two issues: how teachers are selected into the profession and
+how teachers are assigned to positions (transferred) once in the
+profession. Research shows that degrees and years of experience explain
+in little variation in teacher quality, so more points are assigned for
+systems that also base hiring on content knowledge or pedagogical skill.
+2 points are available for the way teachers are selected and 2 points
+are available for deployment. Selection - 0 Points. None of the below -
+1 point. Teachers selected based on completion of coursework,
+educational qualifications, graduating from tertiary program (including
+specialized programs), selected based on experience - 2 points. Teacher
+recruited based on passing written content knowledge test, passed
+interview stage assessment, passed an assessment conducted by supervisor
+based on practical experience, conduct during mockup class. Deployment -
+0 Points. None of the below - 1 point. Teachers deployed based on years
+of experience or job title hierarchy or other criteria - 2 points.
+Teacher deployed based on performance assessed by school authority,
+colleagues, or external evaluator, results of interview.\tabularnewline
+Policy Lever (Teaching) - Support & 1-5 & School survey. Our teaching
+support indicator asks teachers about participation and the experience
+with several types of formal/informal training: Pre-Service (Induction)
+Training: - 0.5 Points. Had a pre-service training - 0.5 Points. Teacher
+reported receiving usable skills from training Teacher practicum (teach
+a class with supervision) - 0.5 Points. Teacher participated in a
+practicum - 0.5 Points. Practicum lasted more than 3 months and teacher
+spent more than one hour per day teaching to students. In-Service
+Training: - 0.5 Points. Had an in-service training - 0.25 Points.
+In-service training lasted more than 2 total days - 0.125 Points. More
+than 25\% of the in-service training was done in the classroom. - 0.125
+Points. More than 50\% of the in-service training was done in the
+classroom. Opportunities for teachers to come together to share ways of
+improving teaching: - 1 Point if such opportunities
+exist.\tabularnewline
+Policy Lever (Teaching) - Evaluation & 1-5 & School survey. This policy
+lever measures whether there is a teacher evaluation system in place,
+and if so, the types of decisions that are made based on the evaluation
+results. Score is the sum of the following: - 1 Point. Was teacher
+formally evaluated in past school year? - 1 Point total. 0.2 points for
+each of the following: Evaluation included evaluation of attendance,
+knowledge of subject matter, pedagogical skills in the classroom,
+students' academic achievement, students' socio-emotional development -
+1 Point. Consequences exist if teacher receives 2 or more negative
+evaluations - 1 Point. Rewards exist if teacher receives 2 or more
+positive evaluations\tabularnewline
+Policy Lever (Teaching) - Monitoring \& Accountability & 1-5 & School
+Survey. This policy lever measures the extent to which teacher presence
+is being monitored, whether attendance is rewarded, and whether there
+are consequences for chronic absence. Score is the sum of the following:
+- 1 Point. Teachers evaluated by some authority on basis of absence. - 1
+Point. Good attendance is rewarded. - 1 Point. There are consequences
+for chronic absence (more than 30\% absence). - 1 Point. One minus the
+fraction of teachers that had to miss class because of any of the
+following: collect paycheck, school administrative procedure, errands or
+request of the school district office, other administrative
+tasks.\tabularnewline
+Policy Lever (Teaching) - Intrinsic Motivation & 1-5 & School Survey.
+This lever measures whether teachers are intrinsically motivated to
+teach. The question(s) aim to address this phenomenon by measuring the
+level of intrinsic motivation among teachers as well as teacher values
+that may be relevant for ensuring that the teacher is motivated to focus
+on all children and not just some. Score is sum of the following - Max
+0.8 Points.. Average response to battery of questions on whether
+teachers considers it acceptable to be absent in certain situations.
+Average response scores scaled to be continuous score between 0-1. - Max
+10.8 Points.. Average response to battery of questions on whether
+teachers consider some students to be more deserving of attention.
+Average response scores scaled to be continuous score between 0-1. - Max
+0.8 point. Average response to battery of questions on teachers growth
+mindset regarding students. Average response scores scaled to be
+continuous score between 0-1. - 0.8 Points. Binary response to whether
+teacher said they became teacher, because teaching offered steady
+career. Teacher scored 0 points if they reported wanting to teach for a
+steady career. -0.8 Points. Binary response of whether there is a
+probationary period for teachers.\tabularnewline
+Policy Lever (Inputs \& Infrastructure) - Standards & 1-5 & School
+Survey. This lever measures the extent to which there is a monitoring
+system in place to ensure that the inputs that must be available at the
+schools are in fact available at the schools. This set of questions will
+include three aspects: - 0.5 Points for each. Are there standards in
+place to monitor blackboard and chalk, pens and pencils, basic classroom
+furniture, computers, textbooks, exercise books, toilets, electricity,
+drinking water, accessibility for those with disabilities? (partial
+credit available)\tabularnewline
+Policy Lever (Inputs \& Infrastructure) - Monitoring & 1-5 & School
+Survey. This lever measures the extent to which there is a monitoring
+system in place to ensure that the inputs that must be available at the
+schools are in fact available at the schools. This set of questions will
+include three aspects: - 1.5 Point. Are all input items (functioning
+blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade
+classrooms, basic classroom furniture, and at least one computer in the
+schools) being monitored? (partial credit available) - 1.5 Point. Are
+all infrastructure items (functioning toilets, electricity, drinking
+water, and accessibility for people with disabilities) being monitored?
+(partial credit available) - 1 Point. Is the community involved in the
+monitoring?\tabularnewline
+Policy Lever (Learners) - Nutrition Programs & 1-5 & Policy
+Survey.\tabularnewline
+Policy Lever (Learners) - Health & 1-5 & Policy Survey.\tabularnewline
+Policy Lever (Learners) - Center-Based Care & 1-5 & Policy
+Survey.\tabularnewline
+Policy Lever (Learners) - Caregiver Capacity - Financial Capacity & 1-5
+& Policy Survey.\tabularnewline
+Policy Lever (Learners) - Caregiver Capacity - Skills Capacity & 1-5 &
+Policy Survey.\tabularnewline
+Policy Lever (School Management) - Clarity of Functions & 1-5 & Policy
+Survey.\tabularnewline
+Policy Lever (School Management) - Attraction & 1-5 & This policy lever
+measures whether the right candidates are being attracted to the
+profession of school principals. The questions will aim to capture the
+provision of benefits to attract and maintain the best people to serve
+as principals. Scoring: - For now, score is between 1-5 based on how
+satisfied the principal is with status in community. We will also add in
+component based on Principal salaries.\tabularnewline
+Policy Lever (School Management) - Selection \& Deployment & 1-5 & This
+policy lever measures whether the right candidates being selected. These
+questions will probe what the recruitment process is like to ensure that
+these individuals are getting the positions. The question would
+ultimately be based on: 1) there is a standard approach for selecting
+principals, 2) that approach relies on professional/academic
+requirements, and 3) those requirements are common in practice. Scoring:
+- 1 (lowest score) Most important factor is political affiliations or
+ethnic group. - 2 Political affiliations or ethnic group is a
+consideration, but other factors considered as well. - 3 Most important
+factor is years of experience, good relationship with owner/education
+department, and does not factor in quality teaching, demonstrated
+management qualities, or knowledge of local community. - 4 Quality
+teaching, demonstrated management qualities, or knowledge of local
+community is a consideration in hiring, but not the most important
+factor - 5 Quality teaching, demonstrated management qualities, or
+knowledge of local community is the most important factor in
+hiring.\tabularnewline
+Policy Lever (School Management) - Support & 1-5 & This policy lever
+measures the extent to which principals receive training and/or exposure
+to other professional opportunities that could help them be better
+school leaders. The questions aim to figure out if such programs are
+provided, and if they are, their level of quality. Scoring (sum of
+components below): - 1 Point. Principal has received formal training on
+managing school. - 1/3 Point. Had management training for new
+principals. - 1/3 Point. Had management in-service training. - 1/3
+Point. Had mentoring/coaching by experienced principals. - 1 Point. Have
+used skills gained at training. - 1 Point. Principals offered training
+at least once per year\tabularnewline
+Policy Lever (School Management) - Evaluation & 1-5 & School Survey.
+This policy lever measures the extent to which principal performance is
+being monitored and enforced via accountability measures. The idea is
+that the indicator will be based on: 1) there is a legislation outlining
+the need to monitor, 2) principals are being evaluated, 3) principals
+are being evaluated on multiple things, and 4) there the accountability
+mechanisms in place. Score is the sum of the following: - 1 Point. Was
+principal formally evaluated in past school year? - 1 Point. Evaluation
+based on multiple components. Partial Credit available. 1/3 point for
+just one component, 2/3 points for 2-5 components, 1 point for more than
+5 components. - 1 Point. Consequences exist if principal receives 2 or
+more negative evaluations - 1 Point. Rewards exist if principal receives
+2 or more positive evaluations\tabularnewline
+Politics \& Bureaucratic Capacity - Quality of Bureaucracy & 1-5 &
+Survey of Public officials. This indicator assesses the quality of the
+bureaucracy, which is the implementing machinery of the government for
+achieving national learning goals and ensuring that the policies created
+to promote learning are enforced. Average score (1 (worst) - 5 (best) )
+on items given to public officials. Some specific comments: - On QB1q2 -
+What is the average class size in a typical 4th-grade class of the
+country? - I assigned 5 points if the guess was within 10\% of the
+correct answer, 4 points if between 10-20\% of the correct answer, 3 if
+between 20 and 30\%, 2 if between 30 and 40\%, and 1 if more than 40\%
+away from correct answer. - On QB1q1 - What percent of their time do you
+think teachers are absent without providing justification? - this
+question is scored similar as above. - for QB4q2 - Imagine that when you
+started your motivation was 100. What number would you say your
+motivation was now relative to that? - We score over 120\% as a 5,
+110-120\% as a 4, 100-110\% as a 3, 90-100 as a 2, and below 90 as a
+1\tabularnewline
+Politics \& Bureaucratic Capacity - Impartial Decision-Making & 1-5 &
+Survey of Public officials. This module assesses the extent to which
+bureaucrats implement policies in an impartial way, meaning that
+decisions are free from political clientelism or undue influence from
+any single interest group. Average score (1 (worst) - 5 (best)) on items
+given to public officials.\tabularnewline
+Politics \& Bureaucratic Capacity - Mandates \& Accountability & 1-5 &
+Survey of Public officials. The aim of this indicator is to measure the
+extent to which the mandates are clearly defined and allocated in the
+legislation, as well as whether such allocation is reflected in
+practice. Average score (1 (worst) - 5 (best)) on items given to public
+officials.\tabularnewline
+Politics \& Bureaucratic Capacity - National Learning Goals & 1-5 &
+Survey of Public officials. The aim of this indicator is to capture the
+extent to which there is a goal and/or strategy that encapsulates a
+desire and a path to reach higher learning outcomes. This is what
+ultimately drives the work of the ministry and district offices that
+together, with the support of other stakeholders and civil society, work
+towards achieving that goal. Average score (1 (worst) - 5 (best)) on
+items given to public officials.\tabularnewline
+Politics \& Bureaucratic Capacity - Financing & 1-5 & Policy
+Survey.\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{appendix}{%
+\section{Appendix}\label{appendix}}
+
+\hypertarget{detailed-indicator-construction}{%
+\subsection{Detailed Indicator
+Construction}\label{detailed-indicator-construction}}
+
+Below is a list of the primary indicators and sub-indicators used to
+construct our final indicators.
+
+\begin{longtable}[]{@{}lll@{}}
+\caption{Table 3: Detailed Documentation of Indicators \&
+Sub-Indicators}\tabularnewline
+\toprule
+Variable & How Was Data Collected? & Details on Scoring\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Variable & How Was Data Collected? & Details on Scoring\tabularnewline
+\midrule
+\endhead
+4th Grade Student Knowledge & 4th Grade Student Assessment & Fraction
+correct on our 4th grade assessment\tabularnewline
+4th Grade Math Knowledge & 4th Grade Student Assessment & Fraction
+correct on our 4th grade math assessment\tabularnewline
+4th Grade Literacy Knowledge & 4th Grade Student Assessment & Fraction
+correct on our 4th grade language assessment\tabularnewline
+4th Grade Student Proficiency & 4th Grade Student Assessment & Whether
+or not student reached 34/41 items correct\tabularnewline
+4th Grade Student Proficiency Literacy & 4th Grade Student Assessment &
+Whether or not student reached 20/24 items correct\tabularnewline
+4th Grade Student Proficiency Math & 4th Grade Student Assessment &
+Whether or not student reached 14/17 items correct\tabularnewline
+4th Grade Student Proficiency at 70\% threshold & 4th Grade Student
+Assessment & 4th Grade Student Proficiency at 70\%
+threshold\tabularnewline
+4th Grade Student Proficiency at 75\% threshold & 4th Grade Student
+Assessment & 4th Grade Student Proficiency at 75\%
+threshold\tabularnewline
+Student Attendance Rate & Student Roster and Classroom Observation & \#
+of students present divided by \# according to class list\tabularnewline
+Teacher Classroom Presence Rate & Teacher Roster and School Inspection &
+Fraction of teachers out of 10 that were in class and school during
+attendance check\tabularnewline
+Teacher Classroom Absence Rate & Teacher Roster and School Inspection &
+Fraction of teacher not in class or school during attendance
+check\tabularnewline
+Teacher School Absence Rate & Teacher Roster and School Inspection &
+Fraction of teacher not in school during attendance check\tabularnewline
+Teacher Content Proficiency & Teacher Assessment & Fraction of teachers
+scoring 80\% of higher on overall content assessment\tabularnewline
+Teacher Content Proficiency Literacy & Teacher Assessment & Fraction of
+teachers scoring 80\% of higher on literacy content
+assessment\tabularnewline
+Teacher Content Proficiency Math & Teacher Assessment & Fraction of
+teachers scoring 80\% of higher on math content
+assessment\tabularnewline
+Teacher Content Proficiency at 70\% threshold & Teacher Assessment &
+Teacher Content Proficiency at 70\% threshold\tabularnewline
+Teacher Content Proficiency at 75\% threshold & Teacher Assessment &
+Teacher Content Proficiency at 75\% threshold\tabularnewline
+Teacher Content Knowledge & Teacher Assessment & Average score at school
+level on math and literacy portion of content exam\tabularnewline
+Teacher Math Content Knowledge & Teacher Assessment & Fraction correct
+on overall math assessment\tabularnewline
+Teacher Literacy Content Knowledge & Teacher Assessment & Fraction
+correct on overall literacy assessment\tabularnewline
+Grammar & Teacher Assessment & Fraction correct on grammar task of
+content assessment\tabularnewline
+Cloze Task & Teacher Assessment & Fraction correct on cloze task of
+content assessment\tabularnewline
+Read Passage & Teacher Assessment & Fraction correct on read a passage
+task of content assessment\tabularnewline
+Arithmetic \& Number Relations & Teacher Assessment & Fraction correct
+on arithmetic and number relations task of content
+assessment\tabularnewline
+Geometry & Teacher Assessment & Fraction correct on geometry task of
+content assessment\tabularnewline
+Interpret Data & Teacher Assessment & Fraction correct on interpretting
+data task of content assessment\tabularnewline
+1st Grade Assessment Score & 1st Grade Direct Assessment & Average of
+the fraction correct in numeracy, literacy, socio-emotional, and
+executive functioning\tabularnewline
+1st Grade Numeracy Score & 1st Grade Direct Assessment & 1st Grade
+Numeracy Fraction Correct\tabularnewline
+1st Grade Literacy Score & 1st Grade Direct Assessment & 1st Grade
+Literacy Fraction Correct\tabularnewline
+1st Grade Executive Functioning Score & 1st Grade Direct Assessment &
+1st Grade Executive Functioning Fraction Correct\tabularnewline
+1st Grade Socio-Emotional Score & 1st Grade Direct Assessment & 1st
+Grade Socio-Emotional Fraction Correct\tabularnewline
+1st Grade Assessment Proficiency & 1st Grade Direct Assessment & Marked
+as proficient if student could score at least 80\% of items
+correct\tabularnewline
+1st Grade Numeracy Proficiency & 1st Grade Direct Assessment & Marked as
+proficient if student could score at least 90\% of math items
+correct\tabularnewline
+1st Grade Literacy Proficiency & 1st Grade Direct Assessment & Marked as
+proficient if student could score at least 80\% of literacyitems
+correct\tabularnewline
+1st Grade Executive Functioning Proficiency & 1st Grade Direct
+Assessment & Marked as proficient if student could score at least 70\%
+of executive functiong items correct\tabularnewline
+1st Grade Socio-Emotional Proficiency & 1st Grade Direct Assessment &
+Marked as proficient if student could score at least 80\% of
+socio-emotional items correct\tabularnewline
+Inputs & Classroom Observation & Total of whether there is functional
+blackboard, materials, desks, and ICT\tabularnewline
+Functioning Blackboard (Based on classroom observation: Is there a
+blackboard, Is there chalk, and Is there sufficient light & Classroom
+Observation & Functioning Blackboard (Based on classroom observation: Is
+there a blackboard, Is there chalk, and Is there sufficient
+light\tabularnewline
+Classroom Materials (Pens, Pencils, Exercise Books) & Classroom
+Observation & \# of Classroom Materials (Pens, Pencils, Exercise Books)
+divided by \# of students in class\tabularnewline
+Textbooks & Classroom Observation & \# of Classroom Textbooks divided by
+\# of students in class\tabularnewline
+Desks & Classroom Observation & \# of Classroom Desks divided by \# of
+students in class\tabularnewline
+ICT Usage & Teacher Inverview & Whether or not teacher reported using
+ICT\tabularnewline
+ICT Access & School Inspection & Whether tablets/computers were working
+and had internet connectivity\tabularnewline
+Infrastructure & School Inspection & Infrastructure\tabularnewline
+Clean Drinking Water & School Inspection & Enumerators assess whether
+water comes from piped water, protected well, packaged bottle water, or
+tanker truck. No credit for unprotected sources\tabularnewline
+Functioning Toilets & School Inspection & Toilets exist, separate for
+boys/girls, clean, private, useable, handwashing
+available\tabularnewline
+Internet & School Inspection & 1 point if internet working, 0.5 if
+doesn't work well, 0 if not at all\tabularnewline
+Electricity & School Inspection & Enuermator assessment of whether
+electricity worked in randomly selected class\tabularnewline
+Disability Accessibility & School Inspection & Accessibility from road,
+has ramp with accessible entrance for school and
+classrooms\tabularnewline
+Operational Management & Principal Interview & Operational
+Management\tabularnewline
+Operational Management - Vignette 1 & Principal Interview & Leaky roof
+vignette: 0.5 points are awarded for someone specific having the
+responsibility to fix,0.5 point is awarded if the school can fully fund
+the repair, 0.25 points is awarded if the school must get partial help
+from the community, and 0 points are awarded if the full cost must be
+born by the community, 1 point is awarded if the problem is fully
+resolved in a timely manner, with partial credit given if problem can
+only be partly resolved.\tabularnewline
+Operational Management - Vignette 2 & Principal Interview & Inadequate
+number of textbooks vignette: 0.5 points are awarded for someone
+specific having the responsibility to fix,0.5 point is awarded if the
+school can fully address, 0.25 points is awarded if the school must get
+partial help from the community, and 0 points are awarded if the full
+cost must be born by the community, 1 point is awarded if the problem is
+fully resolved in a timely manner, with partial credit given if problem
+can only be partly resolved.\tabularnewline
+Teacher Intrinsic Motivation & Teacher Interview & Teacher Intrinsic
+Motivation\tabularnewline
+Scores on set of questions to teachers on whether it is ever acceptable
+to be absent & Teacher Interview & Scores on set of questions to
+teachers on whether it is ever acceptable to be absent\tabularnewline
+Scores on set of questions to teachers on whether some students deserve
+more attention than others & Teacher Interview & Scores on set of
+questions to teachers on whether some students deserve more attention
+than others\tabularnewline
+Scores on questions related to growth mindset & Teacher Interview &
+Scores on questions related to growth mindset\tabularnewline
+Motivation to teach based on whether teacher joined teaching just for
+job security & Teacher Interview & Motivation to teach based on whether
+teacher joined teaching just for job security\tabularnewline
+Instructional Leadership & Teacher Interview & Instructional
+Leadership\tabularnewline
+Whether or not classroom has been observed & Teacher Interview & Whether
+or not classroom has been observed\tabularnewline
+Whether observation took place in last 12 months & Teacher Interview &
+Whether observation took place in last 12 months\tabularnewline
+Whether teacher discussed classroom observation with principal/head
+teacher & Teacher Interview & Whether teacher discussed classroom
+observation with principal/head teacher\tabularnewline
+Whehter feedback was given on classroom observation and converation
+lasted more than 30 min & Teacher Interview & Whehter feedback was given
+on classroom observation and converation lasted more than 30
+min\tabularnewline
+Whether teacher had feedback on lesson plan & Teacher Interview &
+Whether teacher had feedback on lesson plan\tabularnewline
+Principal Knowledge of School & Principal Interview & Principal
+Knowledge of School\tabularnewline
+Correct on \# of Teachers correct on Triple Digit Addition & Principal
+Interview & Correct on \# of Teachers correct on Triple Digit
+Addition\tabularnewline
+Correct on \# of Teachers correct on Double Digit Multiplication &
+Principal Interview & Correct on \# of Teachers correct on Double Digit
+Multiplication\tabularnewline
+Correct on \# of Teachers correct on Completing Sentence Question &
+Principal Interview & Correct on \# of Teachers correct on Completing
+Sentence Question\tabularnewline
+Correct on \# of Teachers Under 3 Years Experience & Principal Interview
+& Correct on \# of Teachers Under 3 Years Experience\tabularnewline
+Correct on \# of Students with Textbooks & Principal Interview & Correct
+on \# of Students with Textbooks\tabularnewline
+Correct on Functional Blackboard & Principal Interview & Correct on
+Functional Blackboard\tabularnewline
+Principal Management Skills & Principal Interview & Principal Management
+Skills\tabularnewline
+According to Principal: School Goals Exist & Principal Interview &
+According to Principal: School Goals Exist\tabularnewline
+According to Principal: to Principal: School Goals Clear & Principal
+Interview & According to Principal: to Principal: School Goals
+Clear\tabularnewline
+According to Principal: School Goals Relevant & Principal Interview &
+According to Principal: School Goals Relevant\tabularnewline
+According to Principal: School Goals Measured & Principal Interview &
+According to Principal: School Goals Measured\tabularnewline
+Teacher Attraction (De Facto) & Teacher Interview & Teacher Attraction
+(De Facto)\tabularnewline
+Teacher Satisfied with Job & Teacher Interview & Teacher Satisfied with
+Job\tabularnewline
+Teachers Satisfied with Status in Community & Teacher Interview &
+Teachers Satisfied with Status in Community\tabularnewline
+Teacher perceives that better teachers more likely to be promoted &
+Teacher Interview & Teacher perceives that better teachers more likely
+to be promoted\tabularnewline
+Teacher received bonus in past year & Teacher Interview & Teacher
+received bonus in past year\tabularnewline
+Salary Delays reported by teacher & Teacher Interview & Salary Delays
+reported by teacher\tabularnewline
+Teacher Selection \& Deployment (De Facto) & Teacher Interview & Teacher
+Selection \& Deployment (De Facto)\tabularnewline
+Teacher recruited based on passing written content knowledge test,
+passed interview stage assessment, passed an assessment conducted by
+supervisor based on practical experience, conduct during mockup class &
+Teacher Interview & Teacher recruited based on passing written content
+knowledge test, passed interview stage assessment, passed an assessment
+conducted by supervisor based on practical experience, conduct during
+mockup class\tabularnewline
+Teacher deployed based on performance assessed by school authority,
+colleagues, or external evaluator, results of interview. & Teacher
+Interview & Teacher deployed based on performance assessed by school
+authority, colleagues, or external evaluator, results of
+interview.\tabularnewline
+Teacher Support (De Facto) & Teacher Interview & Teacher Support (De
+Facto)\tabularnewline
+Had pre-service training and teacher reported finding it useful &
+Teacher Interview & Had pre-service training and teacher reported
+finding it useful\tabularnewline
+Had a practicum and training lasted multiple days & Teacher Interview &
+Had a practicum and training lasted multiple days\tabularnewline
+Had in-service training that lasted more than 2 days and had a component
+that took place in classroom & Teacher Interview & Had in-service
+training that lasted more than 2 days and had a component that took
+place in classroom\tabularnewline
+Whether teacher reported having opportunities to come together and share
+ways of improving teaching & Teacher Interview & Whether teacher
+reported having opportunities to come together and share ways of
+improving teaching\tabularnewline
+Teacher Evaluation (De Facto) & Teacher Interview & Teacher Evaluation
+(De Facto)\tabularnewline
+Teacher reported being formally evaluated & Teacher Interview & Teacher
+reported being formally evaluated\tabularnewline
+Evaluation had multiple components & Teacher Interview & Evaluation had
+multiple components\tabularnewline
+Teacher reported negative consequences would occur if received 2 or more
+negative evaluations & Teacher Interview & Teacher reported negative
+consequences would occur if received 2 or more negative
+evaluations\tabularnewline
+Teacher reported positive consequences would occur if received 2 or more
+positive evaluations & Teacher Interview & Teacher reported positive
+consequences would occur if received 2 or more positive
+evaluations\tabularnewline
+Teacher Monitoring \& Accountability (De Facto) & Teacher Interview &
+Teacher Monitoring \& Accountability (De Facto)\tabularnewline
+Teachers evaluated by some authority on basis of absence & Teacher
+Interview & Teachers evaluated by some authority on basis of
+absence\tabularnewline
+Teacher reported good attendance is rewarded. & Teacher Interview &
+Teacher reported good attendance is rewarded.\tabularnewline
+Teacher reported there are consequences for chronic absence (more than
+30\% absence) & Teacher Interview & Teacher reported there are
+consequences for chronic absence (more than 30\% absence)\tabularnewline
+Teacher reported having to miss class for administrative reasons &
+Teacher Interview & Teacher reported having to miss class for
+administrative reasons\tabularnewline
+Inputs and Infrastructure Standards & Principal Interview & Inputs and
+Infrastructure Standards\tabularnewline
+Inputs and Infrastructure Monitoring & Principal Interview & Inputs and
+Infrastructure Monitoring\tabularnewline
+Fraction of inputs Principal reported being monitored (functioning
+blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade
+classrooms, basic classroom furniture, and at least one computer in the
+schools) & Principal Interview & Fraction of inputs Principal reported
+being monitored (functioning blackboard, chalk, pens, pencils,
+textbooks, exercise books in 4th grade classrooms, basic classroom
+furniture, and at least one computer in the schools)\tabularnewline
+Fraction of infrastructure elements Principal reported being monitored
+(functioning toilets, electricity, drinking water, and accessibility for
+people with disabilities) & Principal Interview & Fraction of
+infrastructure elements Principal reported being monitored (functioning
+toilets, electricity, drinking water, and accessibility for people with
+disabilities)\tabularnewline
+Principal reports community involved in the monitoring & Principal
+Interview & Principal reports community involved in the
+monitoring\tabularnewline
+School Management Clarity of Functions & Principal Interview & School
+Management Clarity of Functions\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Maintenance of
+Infrastructure & Principal Interview & Do you know if the policies
+governing schools assign responsibility for the implementation of each
+of the following: Maintenance of Infrastructure\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Procurement of materials &
+Principal Interview & Do you know if the policies governing schools
+assign responsibility for the implementation of each of the following:
+Procurement of materials\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Teacher hiring and
+assignment & Principal Interview & Do you know if the policies governing
+schools assign responsibility for the implementation of each of the
+following: Teacher hiring and assignment\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Teacher supervision,
+training, and coaching & Principal Interview & Do you know if the
+policies governing schools assign responsibility for the implementation
+of each of the following: Teacher supervision, training, and
+coaching\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Student Learning
+Assessments & Principal Interview & Do you know if the policies
+governing schools assign responsibility for the implementation of each
+of the following: Student Learning Assessments\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Principal hiring and
+assignment & Principal Interview & Do you know if the policies governing
+schools assign responsibility for the implementation of each of the
+following: Principal hiring and assignment\tabularnewline
+Do you know if the policies governing schools assign responsibility for
+the implementation of each of the following: Principal Supervision and
+training & Principal Interview & Do you know if the policies governing
+schools assign responsibility for the implementation of each of the
+following: Principal Supervision and training\tabularnewline
+School Management Attraction & Principal Interview & School Management
+Attraction\tabularnewline
+Principal satisfied with status in community & Principal Interview &
+Principal satisfied with status in community\tabularnewline
+Principal reported salary as fraction of GDP & Principal Interview &
+Principal reported salary as fraction of GDP\tabularnewline
+School Management Selection \& Deployment & Principal Interview & School
+Management Selection \& Deployment\tabularnewline
+School Management Support & Principal Interview & School Management
+Support\tabularnewline
+Principal reported receiving formal training on managing school &
+Principal Interview & Principal reported receiving formal training on
+managing school\tabularnewline
+Principal had received the following training (1/3 point for each):
+Management training for new principals, in-service training, mentoring
+coaching & Principal Interview & Principal had received the following
+training (1/3 point for each): Management training for new principals,
+in-service training, mentoring coaching\tabularnewline
+Principal reported using skills from training & Principal Interview &
+Principal reported using skills from training\tabularnewline
+Principal reported offered training at least once per year & Principal
+Interview & Principal reported offered training at least once per
+year\tabularnewline
+School Management Evaluation & Principal Interview & School Management
+Evaluation\tabularnewline
+Principal reported being formally evaluated & Principal Interview &
+Principal reported being formally evaluated\tabularnewline
+Principal evaluation based on multiple components (at least 5 components
+for full credit & Principal Interview & Principal evaluation based on
+multiple components (at least 5 components for full
+credit\tabularnewline
+Principal reported negative consequences would occur if received 2 or
+more negative evaluations & Principal Interview & Principal reported
+negative consequences would occur if received 2 or more negative
+evaluations\tabularnewline
+Principal reported negative consequences would occur if received 2 or
+more negative evaluations & Principal Interview & Principal reported
+negative consequences would occur if received 2 or more negative
+evaluations\tabularnewline
+National Learning Goals & Public Official Interview & Average of
+Targeting, Monitoring, Incentives, and Community Engagement
+components\tabularnewline
+Targeting & Public Official Interview & Questions on whether learning
+goals exist, are measurable, whether tasks aligned\tabularnewline
+Monitorinig & Public Official Interview & Questions on how well
+performance goals tracked, EMIS system, how info reviewed\tabularnewline
+Incentives & Public Official Interview & Are rewards given for high
+performance, rewards for excellence in contributing to learning goals,
+does information inform budgets\tabularnewline
+Community Engagement & Public Official Interview & Most common means of
+getting feedback from parents, is feedback used for
+evaluation/budgets\tabularnewline
+Mandates and Accountability & Public Official Interview & Average of
+coherence, transparency, accountability of public
+officials\tabularnewline
+Coherence & Public Official Interview & Is organizational
+responsibilities clear\tabularnewline
+Transparency & Public Official Interview & Are achievements related to
+performance targets made public, is transparency
+beneficial\tabularnewline
+Accountability of Public Officials & Public Official Interview & What
+would happen to public officials in cases of malfeasance\tabularnewline
+Quality of Bureaucracy & Public Official Interview & Average score of
+knowledge and skills, work environment, merit, movitation and
+attitudes\tabularnewline
+Knowledge and Skills & Public Official Interview & Public officials
+asked if they know numbers on average class size, teacher
+absences\tabularnewline
+Work Environment & Public Official Interview & Do employees trust one
+another, gifts to public officials, encouragement of new
+ideas\tabularnewline
+Merit & Public Official Interview & How is selection and deployment
+done\tabularnewline
+Motivation and Attitudes & Public Official Interview & How satisfied are
+public officials, how motivated, is it OK for teachers to be absent, ok
+for some students get less attention\tabularnewline
+Motivation Relative to Starting Public Service & Public Official
+Interview & Motivation Relative to Starting Public
+Service\tabularnewline
+Impartial Decision Making & Public Official Interview & Impartial
+Decision Making\tabularnewline
+Politicized personnel management & Public Official Interview & Are
+hiring/promotion decisions/evaluations based on public
+influence\tabularnewline
+Politicized policy-making & Public Official Interview & Are
+budget,procurement, curriculum decisions affected by
+politics?\tabularnewline
+Politicized policy-implementation & Public Official Interview & What
+proportion of public officials broken rules, are contracts/procuements
+subject to politics\tabularnewline
+Employee unions as facilitators & Public Official Interview & Does union
+membership affect teacher hiring, do public official union members get
+preferential treatment, are new practices influence by
+unions?\tabularnewline
+\bottomrule
+\end{longtable}
+
+We will show a working example of how each indicator is scored in the
+case of Peru.
+
+\hypertarget{teacher-absence}{%
+\subsubsection{Teacher Absence}\label{teacher-absence}}
+
+Teacher absence is defined as whether or not the teacher was absenct
+from the school or classroom during an unannounced visit. For a working
+example, see below. The basis for the question is the following below:
+
+What was the teacher doing when you located him/ her on the first
+visit?\\
+1= In classroom- teaching\\
+2= In classroom- not teaching\\
+3= At school- teaching outdoors\\
+4= At school not his/her shift/not her class\\
+5= At school- not in classroom\\
+6= Absent from school
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{teacher_absence_ex<-teacher_roster_anon }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(teacher_number, m2sbq6_efft, teacher_available, m2sbq3_efft) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(m2sbq6_efft) }\OperatorTok{|}\StringTok{ }\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(m2sbq3_efft) )}
+
+
+\CommentTok{#create indicator for whether each teacher was absent from school}
+\NormalTok{teacher_absence_ex <-}\StringTok{ }\NormalTok{teacher_absence_ex }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sch_absence_rate=}\DecValTok{100}\OperatorTok{*}\KeywordTok{case_when}\NormalTok{(}
+\NormalTok{    m2sbq6_efft}\OperatorTok{==}\DecValTok{6} \OperatorTok{|}\StringTok{ }\NormalTok{teacher_available}\OperatorTok{==}\DecValTok{2} \OperatorTok{~}\StringTok{ }\DecValTok{1}\NormalTok{,}
+\NormalTok{    m2sbq6_efft}\OperatorTok{!=}\DecValTok{6}   \OperatorTok{~}\StringTok{ }\DecValTok{0}\NormalTok{,}
+    \KeywordTok{is.na}\NormalTok{(m2sbq6_efft) }\OperatorTok{~}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\OtherTok{NA}\NormalTok{)))}
+
+\CommentTok{#create indicator for whether each teacher was absent from classroom or school}
+\NormalTok{teacher_absence_ex <-}\StringTok{ }\NormalTok{teacher_absence_ex }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{absence_rate=}\DecValTok{100}\OperatorTok{*}\KeywordTok{case_when}\NormalTok{(}
+\NormalTok{    m2sbq6_efft}\OperatorTok{==}\DecValTok{6} \OperatorTok{|}\StringTok{ }\NormalTok{m2sbq6_efft}\OperatorTok{==}\DecValTok{5} \OperatorTok{|}\StringTok{  }\NormalTok{teacher_available}\OperatorTok{==}\DecValTok{2} \OperatorTok{~}\StringTok{ }\DecValTok{1}\NormalTok{,}
+\NormalTok{    m2sbq6_efft}\OperatorTok{==}\DecValTok{1} \OperatorTok{|}\StringTok{ }\NormalTok{m2sbq6_efft}\OperatorTok{==}\DecValTok{3} \OperatorTok{|}\StringTok{ }\NormalTok{m2sbq6_efft}\OperatorTok{==}\DecValTok{2} \OperatorTok{|}\StringTok{ }\NormalTok{m2sbq6_efft}\OperatorTok{==}\DecValTok{4}  \OperatorTok{~}\StringTok{ }\DecValTok{0}\NormalTok{,}
+    \KeywordTok{is.na}\NormalTok{(m2sbq6_efft) }\OperatorTok{~}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\OtherTok{NA}\NormalTok{)) )}
+
+\CommentTok{#create indicator for whether each principal was absent from school}
+\NormalTok{teacher_absence_ex <-}\StringTok{ }\NormalTok{teacher_absence_ex }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{principal_absence=}\DecValTok{100}\OperatorTok{*}\KeywordTok{case_when}\NormalTok{(}
+\NormalTok{    m2sbq3_efft}\OperatorTok{==}\DecValTok{8}  \OperatorTok{~}\StringTok{ }\DecValTok{1}\NormalTok{,}
+\NormalTok{    m2sbq3_efft}\OperatorTok{!=}\DecValTok{8}   \OperatorTok{~}\StringTok{ }\DecValTok{0}\NormalTok{,}
+    \KeywordTok{is.na}\NormalTok{(m2sbq3_efft) }\OperatorTok{~}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\OtherTok{NA}\NormalTok{))) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{absence_rate=}\KeywordTok{if_else}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(absence_rate), principal_absence, absence_rate ),}
+         \DataTypeTok{sch_absence_rate=}\KeywordTok{if_else}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(sch_absence_rate), principal_absence, sch_absence_rate ),}
+         \DataTypeTok{presence_rate=}\DecValTok{100}\OperatorTok{-}\NormalTok{absence_rate)}
+
+  \CommentTok{#produce caption for table}
+\NormalTok{absence_captioner<-}\KeywordTok{tab_num}\NormalTok{(}\DataTypeTok{name=}\StringTok{"absence_cap"}\NormalTok{, }\DataTypeTok{caption=}\StringTok{"Data Example of How Absence Scored"}\NormalTok{)}
+\KeywordTok{kable}\NormalTok{(}\KeywordTok{head}\NormalTok{(teacher_absence_ex, }\DataTypeTok{n=}\DecValTok{5}\NormalTok{),}
+      \DataTypeTok{caption=}\NormalTok{absence_captioner)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}cccccccc@{}}
+\toprule
+teacher\_number & m2sbq6\_efft & teacher\_available & m2sbq3\_efft &
+sch\_absence\_rate & absence\_rate & principal\_absence &
+presence\_rate\tabularnewline
+\midrule
+\endhead
+1 & 6 & 1 & NA & 100 & 100 & NA & 0\tabularnewline
+2 & 1 & 1 & NA & 0 & 0 & NA & 100\tabularnewline
+3 & 1 & 1 & NA & 0 & 0 & NA & 100\tabularnewline
+4 & 1 & 1 & NA & 0 & 0 & NA & 100\tabularnewline
+5 & 1 & 1 & NA & 0 & 0 & NA & 100\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{label}\NormalTok{(teacher_absence_ex}\OperatorTok{$}\NormalTok{m2sbq3_efft)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "What was the Principal doing when you located him/ her on the visit?"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{label}\NormalTok{(teacher_absence_ex}\OperatorTok{$}\NormalTok{m2sbq6_efft)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "What was the teacher doing when you located him/ her on the visit?"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{label}\NormalTok{(teacher_absence_ex}\OperatorTok{$}\NormalTok{teacher_available)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Is the teacher available for interview"
+\end{verbatim}
+
+\hypertarget{student-attendance}{%
+\subsubsection{Student Attendance}\label{student-attendance}}
+
+Student attendance is based on the classroom observation of a randomly
+selected fourth grade class. The teacher is asked for the class roster
+and the enumerator then takes a count of the students in the classroom.
+A working example is below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#############################################}
+\CommentTok{##### Student Attendance ###########}
+\CommentTok{#############################################}
+
+\CommentTok{#Percent of 4th grade students who are present during an unannounced visit.}
+
+\NormalTok{school_data_INPT_ex<-}\StringTok{ }\NormalTok{school_dta_anon }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(m4scq4_inpt, m4scq12_inpt )  }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(m4scq4_inpt) }\OperatorTok{&}\StringTok{ }\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(m4scq12_inpt)) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{student_attendance=}\NormalTok{m4scq4_inpt}\OperatorTok{/}\NormalTok{m4scq12_inpt) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{student_attendance=}\DecValTok{100}\OperatorTok{*}\NormalTok{student_attendance) }
+  
+\CommentTok{#produce caption for table}
+\NormalTok{attendance_cap<-}\KeywordTok{tab_num}\NormalTok{(}\DataTypeTok{name=}\StringTok{"attendance_cap"}\NormalTok{, }\DataTypeTok{caption=}\StringTok{"Data Example of How Student Attendance Scored"}\NormalTok{)}
+\KeywordTok{kable}\NormalTok{(}\KeywordTok{head}\NormalTok{(school_data_INPT_ex, }\DataTypeTok{n=}\DecValTok{5}\NormalTok{),}
+      \DataTypeTok{caption=}\NormalTok{attendance_cap)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}ccc@{}}
+\toprule
+m4scq4\_inpt & m4scq12\_inpt & student\_attendance\tabularnewline
+\midrule
+\endhead
+20 & 21 & 95.23810\tabularnewline
+30 & 33 & 90.90909\tabularnewline
+18 & 20 & 90.00000\tabularnewline
+28 & 28 & 100.00000\tabularnewline
+10 & 10 & 100.00000\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{label}\NormalTok{(school_data_INPT_ex}\OperatorTok{$}\NormalTok{m4scq4_inpt)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "How many pupils are in the room?"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{label}\NormalTok{(school_data_INPT_ex}\OperatorTok{$}\NormalTok{m4scq12_inpt)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "How many students are in the class, according to the class list?"
+\end{verbatim}
+
+\hypertarget{teacher-knowledge}{%
+\subsubsection{Teacher Knowledge}\label{teacher-knowledge}}
+
+The teacher content knowledge score is based on a teacher assessment
+given to teachers. The assessment is described in more detail above.
+Math teachers were given a mathematics exam and Language teachers were
+given a separate language exam. In cases where a teacher taught both
+subjects, the teacher is randomly given either the math or language
+exam. The knowledge score is the sum of the items answered correctly out
+of the total number of items, based on either the math or language
+assessment as is given. A detailed scoring example is omitted, because
+of space, but details on scoring are provided in the GEPD github repo:
+
+\url{https://github.com/worldbank/GEPD}
+
+\hypertarget{th-grade-assessment}{%
+\subsubsection{4th Grade Assessment}\label{th-grade-assessment}}
+
+Students in a randomly chosen class were given an assessment containing
+math and language items based on the SDI examination. More details on
+this examination is above. A students score is the sum of the literacy
+sub-score and the math sub-score. The literacy score is constructed so
+that each literacy item is given the same weight and is the sum of
+individual literacy items. Math scores are calculated similarly. The
+final content knowledge score is then the sum of the two components. A
+detailed scoring example is omitted, because of space, but details on
+scoring are provided in the GEPD github repo:
+
+Proficiency is then based on whether the student correctly answered a
+set number of questions (12/13 in literacy, 14/17 in math), which was
+determined by consulting a set of experts on whether a minimally
+proficient 4th grader should be able to answer the questions correctly.
+
+\hypertarget{ece-assessment}{%
+\subsubsection{ECE Assessment}\label{ece-assessment}}
+
+A randomly selected set of three 1st grade students are given an
+assessment of early literacy, numeracy, executive functioning and
+socio-emotional skills. The assessment was created based on items from
+the MELQO assessment. A students score is the sum of the literacy
+sub-score, the math sub-score, the executive functioning score, and the
+socio-emotional score. Each domain (literacy, numeracy, executive
+functioning and socio-emotional skills) is given equal weight. Within
+each domain scores are based on the number of items correct in each
+domain.
+
+\hypertarget{psychometric-properties-of-4th-grade-assessment}{%
+\subsection{Psychometric Properties of 4th Grade
+Assessment}\label{psychometric-properties-of-4th-grade-assessment}}
+
+For a full report on the psychometric properties of our assessment in
+Peru, see:
+
+\url{https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EeI0nmjm-MlLl3OyPAfOzdsB0VBT7v-Q1JHrwig3H2FMEw?e=Pq2Fzg}
+
+\hypertarget{psychometric-properties-of-1st-grade-assessment}{%
+\subsection{Psychometric Properties of 1st Grade
+Assessment}\label{psychometric-properties-of-1st-grade-assessment}}
+
+For a full report on the psychometric properties of our assessment in
+Peru, see:
+
+\url{https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EcwUNOUuTE1Ltjow7o10AUQBulnO_kKRPR0Oh8yTv5l7MA?e=miiiZU}
+
+\hypertarget{psychometric-properties-of-teacher-assessment}{%
+\subsection{Psychometric Properties of Teacher
+Assessment}\label{psychometric-properties-of-teacher-assessment}}
+
+For a full report on the psychometric properties of our assessment in
+Peru, see:
+
+\url{https://worldbankgroup-my.sharepoint.com/:u:/g/personal/bstacy_worldbank_org/EbHd7iWaxGhJspphCXLqkfwBAlzQ0hUjtUb8uT151CxL-A?e=82bgKE}
+
+
+\end{document}

@@ -28,8 +28,8 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'Mozambique'
-country_name <-'Mozambique'
+country <-'Rwanda'
+country_name <-'Rwanda'
 
 year <- '2019'
 
