@@ -1264,7 +1264,7 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
 - Generally, the policy environment, as indicated by the De Jure, is quite strong.  
 - However, teachers often report a different experience of the policies in practice.
 
-```{r radar, eval=FALSE, warning=FALSE, include=FALSE}
+```{r radar, echo=FALSE, warning=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
@@ -1365,7 +1365,7 @@ main_indicator_labels<-c(
 - Below are boxplots showing the 25th percentile, median, and 75th percentile ratings of teachers to these policy questions, along with outliers.  
 -  There is significant variation across teachers in how they understand or experience policies.
 
-```{r defacto, eval=FALSE, include=FALSE}
+```{r defacto, echo=FALSE}
 #get list of de facto indicators
 main_indicator_labels<-c( 
                         'Teaching - Attraction',
@@ -1442,7 +1442,7 @@ summary(datagap)
 
 
 
-```{r dejure_defacto_gap, eval=FALSE, include=FALSE}
+```{r dejure_defacto_gap, echo=FALSE}
 #calculate gap between de_jure and de_facto
 
 defacto_dejure<-data_radar %>%
@@ -1468,7 +1468,7 @@ var(defacto_dejure$gap)
 
 
 
-```{r teacher_support, eval=FALSE, warning=FALSE, include=FALSE}
+```{r teacher_support, echo=FALSE, warning=FALSE}
 
 support_indicators <- c(
                         'pre_service',
