@@ -20,6 +20,10 @@ library(captioner)
 #produce caption for tables/figures
   tab_num<-captioner(prefix="Table")
   fig_num<-captioner(prefix="Figure")
+  
+
+code_inclusion=FALSE  
+  
 ```
 
 
@@ -1026,54 +1030,9 @@ kable(labels_df,
 
 ```
 
-## Working Indicator Examples
+## Details on Indicator Construction
 
-We will show a working example of how each indicator is scored in the case of Peru.
-
-```{r peru_data_load, include=FALSE}
-
-#load relevant libraries
-
-library(skimr)
-library(naniar)
-library(vtable)
-library(digest)
-library(tidyverse)
-library(haven)
-library(stringr)
-library(Hmisc)
-
-#Country name
-country <-'PER'
-country_name <- "Peru"
-year <- '2019'
-
-#########################
-# File paths #
-#########################
-#The download_folder will be the location of where raw data is downloaded from the API
-#The save_folder will be the location of where cleaned data is stored
-
-
-
-
-  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/"
-
-  read_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/School", sep="/"))
-  
-
-  read_folder <-'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/clean/School'
-  
-  backup_onedrive="no"
-
-
-
-
-
-load(paste(read_folder,"school_indicators_data_anon.RData", sep="/"))
-
-
-```
+Below we will show exact code, written in R, to produce our indicator values.  Code is lightly edited for clarity and length.
 
 ### Teacher Absence
 
@@ -1089,7 +1048,7 @@ What was the teacher doing when you located him/ her on the first visit?
 6= Absent from school  
 
 
-```{r absence}
+```{r absence, eval=FALSE, include=code_inclusion}
 
 teacher_absence_ex<-teacher_roster_anon %>%
   select(teacher_number, m2sbq6_efft, teacher_available, m2sbq3_efft) %>%
@@ -1120,14 +1079,6 @@ teacher_absence_ex <- teacher_absence_ex %>%
          sch_absence_rate=if_else(is.na(sch_absence_rate), principal_absence, sch_absence_rate ),
          presence_rate=100-absence_rate)
 
-  #produce caption for table
-absence_captioner<-tab_num(name="absence_cap", caption="Data Example of How Absence Scored")
-kable(head(teacher_absence_ex, n=5),
-      caption=absence_captioner)
-
-label(teacher_absence_ex$m2sbq3_efft)
-label(teacher_absence_ex$m2sbq6_efft)
-label(teacher_absence_ex$teacher_available)
 
 
 ```
@@ -1135,7 +1086,7 @@ label(teacher_absence_ex$teacher_available)
 
 Student attendance is based on the classroom observation of a randomly selected fourth grade class.  The teacher is asked for the class roster and the enumerator then takes a count of the students in the classroom.  A working example is below.
 
-```{r Student_Attendance }
+```{r Student_Attendance, eval=FALSE, include=code_inclusion }
 #############################################
 ##### Student Attendance ###########
 #############################################
@@ -1148,12 +1099,7 @@ school_data_INPT_ex<- school_dta_anon %>%
   mutate(student_attendance=m4scq4_inpt/m4scq12_inpt) %>%
   mutate(student_attendance=100*student_attendance) 
   
-#produce caption for table
-attendance_cap<-tab_num(name="attendance_cap", caption="Data Example of How Student Attendance Scored")
-kable(head(school_data_INPT_ex, n=5),
-      caption=attendance_cap)
 
-label(school_data_INPT_ex$m4scq4_inpt)
 label(school_data_INPT_ex$m4scq12_inpt)
 ```
 
@@ -1164,7 +1110,7 @@ The teacher content knowledge score is based on a teacher assessment given to te
 
 https://github.com/worldbank/GEPD
 
-```{r Teacher_Knowledge, eval=FALSE, include=FALSE}
+```{r Teacher_Knowledge, eval=FALSE, include=code_inclusion}
 #############################################
 ##### Teacher Knowledge ###########
 #############################################
@@ -1195,10 +1141,6 @@ teacher_assessment_dta_ex <- teacher_assessment_dta_ex %>%
          geometry=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="geometric")], na.rm=TRUE),
          interpret_data=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_ex), pattern="data")], na.rm=TRUE))
 
-#produce caption for table
-cont_cap<-tab_num(name="cont_cap", caption="Data Example of How Teacher Knowledge Scored")
-kable(head(teacher_assessment_dta_ex, n=5),
-      caption=cont_cap)
 
 
 ```
@@ -1211,12 +1153,301 @@ Students in a randomly chosen class were given an assessment containing math and
 
 Proficiency is then based on whether the student correctly answered a set number of questions (12/13 in literacy, 14/17 in math), which was determined by consulting a set of experts on whether a minimally proficient 4th grader should be able to answer the questions correctly.  
 
+```{r grd4_assess, eval=FALSE, include=code_inclusion}
+
+ ####Literacy####
+  #calculate # of literacy items
+  #note: grep is a tool for searching text with specified pattern.  In our case, we are looking for m8s1q, which is the prefix of literacy items
+  assess_4th_grade_dta$literacy_length<-length(grep(x=colnames(assess_4th_grade_dta), pattern="m8saq"))
+  
+  lit_items<-colnames(assess_4th_grade_dta[,grep(x=colnames(assess_4th_grade_dta), pattern="m8saq")])
+  
+  
+  #calculate students lit items correct
+  assess_4th_grade_dta <- assess_4th_grade_dta %>%
+    mutate(literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq")], na.rm=TRUE),
+           literacy_student_knowledge_nogiraffe=100*rowMeans(.[c('m8saq4_id', 'm8saq5_story', 'm8saq6_story', 'm8saq7_word_choice', 'm8saq2_id', 'm8saq3_id')], na.rm=TRUE))
+  
+  ####Math####
+  #calculate # of math items
+  assess_4th_grade_dta$math_length<-length(grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq"))
+  
+  math_items<-colnames(assess_4th_grade_dta[,grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq")])
+  
+  
+  #calculate students math items correct
+  assess_4th_grade_dta <- assess_4th_grade_dta %>%
+    mutate(math_student_knowledge=100*rowMeans(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq")], na.rm=TRUE))
+  
+  ####Total score####
+  #calculate students percent correct
+  assess_4th_grade_dta <- assess_4th_grade_dta %>%
+    mutate(student_knowledge=(math_student_knowledge+literacy_student_knowledge)/2) %>%
+    mutate(student_proficient=100*as.numeric(student_knowledge>=82.9), #34/41
+           literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=83.3), #20/24 points
+           math_student_proficient=100*as.numeric(math_student_knowledge>=82) #14/17 points
+)
+
+```
 
 
 ### ECE Assessment
 
 A randomly selected set of three 1st grade students are given an assessment of early literacy, numeracy, executive functioning and socio-emotional skills.  The assessment was created based on items from the MELQO assessment.  A students score is the sum of the literacy sub-score, the math sub-score, the executive functioning score, and the socio-emotional score.  Each domain (literacy, numeracy, executive functioning and socio-emotional skills) is given equal weight.  Within each domain scores are based on the number of items correct in each domain.  
 
+
+```{r ece, eval=FALSE, include=code_inclusion}
+
+ ####Literacy####
+  #calculate # of literacy items
+  #note: grep is a tool for searching text with specified pattern.  In our case, we are looking for m8s1q, which is the prefix of literacy items
+  
+  
+  lit_items<-colnames(ecd_dta[,str_detect(
+    colnames(ecd_dta), "vocabn|comprehension|letters|words|sentence|nm_writing$|print")])
+  
+  ecd_dta$literacy_length<-length(lit_items)
+  
+  #calculate students lit items correct
+  ecd_dta <- ecd_dta %>%
+    mutate(ecd_literacy_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
+                                                              pattern="vocabn|comprehension|letters|words|sentence|nm_writing$|print")], na.rm=TRUE))
+  
+  ####Math####
+  #calculate # of math items
+  
+  math_items<-colnames(ecd_dta[,str_detect(
+    colnames(ecd_dta), "counting|produce_set|number_ident|number_compare|simple_add")])
+  
+  ecd_dta$math_length<-length(math_items)
+  
+  
+  #calculate students math items correct
+  ecd_dta <- ecd_dta %>%
+    mutate(ecd_math_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
+                                                          pattern="counting|produce_set|number_ident|number_compare|simple_add")], na.rm=TRUE))
+  
+  ####Executive Functioning####
+  #calculate # of Exec Function items
+  
+  exec_items<-colnames(ecd_dta[,str_detect(
+    colnames(ecd_dta), "backward_digit|head_shoulders")])
+  
+  ecd_dta$exec_length<-length(exec_items)
+  
+  
+  #calculate students excec items correct
+  ecd_dta <- ecd_dta %>%
+    mutate(ecd_exec_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
+                                                          pattern="backward_digit|head_shoulders")], na.rm=TRUE))
+  
+  ####Socio-Emotional####
+  #calculate # of Socio Function items
+  
+  soc_items<-colnames(ecd_dta[,str_detect(
+    colnames(ecd_dta), "perspective$|conflict_resol$")])
+  
+  ecd_dta$soc_length<-length(soc_items)
+  
+  
+  #calculate students excec items correct
+  ecd_dta <- ecd_dta %>%
+    mutate(ecd_soc_student_knowledge=100*rowMeans(.[grep(x=colnames(ecd_dta), 
+                                                         pattern="perspective$|conflict_resol$")], na.rm=TRUE))
+  
+  
+  ####Total score####
+  #calculate students percent correct
+  ecd_dta <- ecd_dta %>%
+    mutate(ecd_student_knowledge=(ecd_math_student_knowledge+ecd_literacy_student_knowledge+
+                                    ecd_exec_student_knowledge + ecd_soc_student_knowledge)/4) %>%
+    mutate(ecd_student_proficiency=100*as.numeric(ecd_student_knowledge>=80),
+           ecd_math_student_proficiency=100*as.numeric(ecd_math_student_knowledge>=80),
+           ecd_literacy_student_proficiency=100*as.numeric(ecd_literacy_student_knowledge>=80),
+           ecd_exec_student_proficiency=100*as.numeric(ecd_exec_student_knowledge>=80),
+           ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
+    )
+
+```
+
+
+### School Inputs
+
+  School survey. Total score starts at 1 and points added are the sum of whether a school has:    
+  - Functional blackboard     
+  - Pens, pencils, textbooks, exercise books    
+  - Fraction of students in class with a desk     
+  - Used ICT in class and have access to ICT in the school.   
+  
+```{r inputs, eval=FALSE, include=code_inclusion}
+ 
+  #functioning blackboard and chalk
+  school_data_INPT <- school_data_INPT %>%
+    mutate(blackboard_functional=case_when(
+      m4scq10_inpt==1 & m4scq9_inpt==1 & m4scq8_inpt==1  ~ 1,
+      m4scq10_inpt==0 | m4scq9_inpt==0 | m4scq8_inpt==0 ~ 0)) 
+  
+  #pens, pencils, textbooks, exercise books
+  school_data_INPT <- school_data_INPT %>%
+    mutate(share_textbook=(m4scq5_inpt)/(m4scq4_inpt)) %>%
+    mutate(share_pencil=(m4scq6_inpt)/(m4scq4_inpt)) %>%
+    mutate(share_exbook=(m4scq7_inpt)/(m4scq4_inpt)) %>%
+    mutate(pens_etc=case_when(
+      share_pencil>=0.9 & share_exbook>=0.9  ~ 1,
+      share_pencil<0.9 | share_exbook<0.9 ~ 0),
+      textbooks=case_when(
+        share_textbook>=0.9   ~ 1,
+        share_textbook<0.9  ~ 0)) 
+  
+  #basic classroom furniture
+  school_data_INPT <- school_data_INPT %>%
+    mutate(share_desk=1-(m4scq11_inpt)/(m4scq4_inpt))
+  
+  
+  #Used ICT 
+  school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
+    group_by(school_code) %>%
+    summarise(used_ict_pct=mean(m3sbq4_inpt, na.rm=TRUE))
+  
+  school_data_INPT <- school_data_INPT %>%
+    mutate(used_ict_num=case_when(
+      m1sbq12_inpt==0  ~ 0,
+      (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
+      (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
+    ))
+  
+  #access to ICT
+  school_data_INPT <- school_data_INPT %>%
+    mutate(access_ict=case_when(
+      m1sbq12_inpt==0 | m1sbq13_inpt==0 ~ 0,
+      (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 1,
+      (m1sbq12_inpt>=1 & m1sbq13_inpt==1 ) ~ 0.5, #Internet didn't work when tested
+      (is.na(m1sbq12_inpt==0) | is.na(m1sbq13_inpt) ) ~ as.numeric(NA)
+    ))
+  
+  
+  
+  inpt_list<-c('blackboard_functional', 'pens_etc', 'textbooks', 'share_desk',  'used_ict', 'access_ict')
+  
+  final_indicator_data_INPT <- school_data_INPT %>%
+    left_join(school_teacher_questionnaire_INPT) %>%
+    mutate(used_ict=if_else((used_ict_pct>=0.5 & used_ict_num>=3), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
+    group_by(school_code) %>%
+    select(preamble_info, inpt_list, contains('INPT')) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_INPT=n_miss_row(.)) %>%
+    mutate(inputs=textbooks+blackboard_functional + pens_etc + share_desk +  0.5*used_ict + 0.5*access_ict) %>%
+    select(preamble_info, inputs, everything()) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))
+  
+```
+  
+
+### School Infrastructure
+
+  School survey. Total score starts at 1 and points added are the sum of whether a school has:    
+   - Access to adequate drinking water    
+   -Functional toilets.  Extra points available if are separate for boys/girls, private, useable, and have hand washing facilities    
+   - Electricity  in the classroom    
+   - Internet   
+   - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)
+  
+
+```{r infrastructure, eval=FALSE, include=code_inclusion}
+
+
+  #drinking water
+  school_data_INFR <- school_data_INFR %>%
+    #
+    mutate(drinking_water=if_else((m1sbq9_infr==1 | m1sbq9_infr==2 | m1sbq9_infr==5 | m1sbq9_infr==6), 1,0, as.numeric(NA) ))
+  
+  #functioning toilets
+  school_data_INFR <- school_data_INFR %>%
+    mutate(toilet_exists=if_else(m1sbq1_infr==7 ,0,1),
+           toilet_separate=if_else((m1sbq2_infr==1 | m1sbq2_infr==3),1,0),
+           toilet_private=as.numeric(m1sbq4_infr),
+           toilet_usable=as.numeric(m1sbq5_infr),
+           toilet_handwashing=as.numeric(m1sbq7_infr),
+           toilet_soap=as.numeric(m1sbq8_infr)) %>%
+    mutate(functioning_toilet=case_when(
+      # exist, separate for boys/girls, clean, private, useable,  handwashing available
+      toilet_exists==1 & toilet_usable==1 & toilet_separate==1  & toilet_private==1  & toilet_handwashing==1 ~ 1,
+      toilet_exists==0 | toilet_usable==0 | toilet_separate==0  | toilet_private==0  | toilet_handwashing==0 ~ 0
+    )) 
+  
+  #visibility
+  school_data_INFR <- school_data_INFR %>%
+    left_join(select(school_data_INPT, interview__key, m4scq8_inpt, m4scq9_inpt, m4scq10_inpt, m1sbq15_inpt )) %>%
+    mutate(visibility=case_when(
+      m4scq10_inpt==1 &  m4scq8_inpt==1  ~ 1,
+      m4scq10_inpt==0 & m4scq8_inpt==1 ~ 0)) 
+  
+  #electricity
+  school_data_INFR <- school_data_INFR %>%
+    mutate(class_electricity=if_else(m1sbq11_infr==1,1,0)) 
+  
+  
+  #accessibility for people with disabilities
+  final_indicator_data_INFR <- school_data_INFR %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(
+      disab_road_access=bin_var(m1s0q2_infr,1),
+      disab_school_ramp=case_when(
+        m1s0q3_infr==0 ~ 1,
+        (m1s0q4_infr	==1 & m1s0q3_infr	==1) ~ 1,
+        (m1s0q4_infr	==0 & m1s0q3_infr	==1) ~ 0,
+        is.na(m4scq1_infr) ~ as.numeric(NA)),
+      disab_school_entr=bin_var(m1s0q5_infr,1),
+      disab_class_ramp=case_when(
+        m4scq1_infr==0 ~ 1,
+        (m4scq1_infr==1 & m4scq1_infr==1) ~ 1,
+        (m4scq1_infr==0 & m4scq1_infr==1) ~ 0,
+        is.na(m4scq1_infr) ~ as.numeric(NA)),
+      disab_class_entr=bin_var(m4scq3_infr,1),
+      disab_screening=rowMeans(select(.,m1sbq17_infr__1,m1sbq17_infr__2,m1sbq17_infr__3), na.rm = TRUE),
+      #sum up all components for overall disability accessibility score
+      disability_accessibility=(disab_road_access+disab_school_ramp+disab_school_entr+
+                                  disab_class_ramp+disab_class_entr+
+                                  if_else(m1sbq1_infr==7,0,as.numeric(m1sbq6_infr))+
+                                  disab_screening)/7
+    ) %>%
+    mutate(internet=case_when(
+      m1sbq15_inpt==2  ~ 1,
+      m1sbq15_inpt==1  ~ 0.5,
+      m1sbq15_inpt==0   ~ 0,
+      is.na(as.numeric(m1sbq15_inpt)) ~ 0,
+      TRUE ~ 0) ) # 1 point if internet working, 0.5 if doesn't work well, 0 if not at all
+  
+  
+  infr_list<-c('drinking_water', 'functioning_toilet', 'internet',  'class_electricity', 'disability_accessibility')
+  
+  final_indicator_data_INFR <- final_indicator_data_INFR %>%
+    mutate(n_mssing_INFR=n_miss_row(.)) %>%
+    mutate(infrastructure=(drinking_water+ functioning_toilet+ internet + class_electricity+ disability_accessibility)) %>%
+    select(preamble_info, infrastructure, everything()) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
+  
+
+```
+
+### School Operational Management
+
+Princials/head teachers are given two vignettes:    
+  - One on solving the problem of a hypothetical leaky roof     
+  - One on solving a problem of inadequate numbers of textbooks.      
+  Each vignette is worth 2 points.      
+  
+  The indicator will measure two things: presence of functions and quality of functions. In each vignette:    
+  - 0.5 points are awarded for someone specific having the responsibility to fix    
+  - 0.5 point is awarded if the school can fully fund the repair, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community    
+  - 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved.
+  
+```{r operational_management, eval=FALSE, include=code_inclusion}
+
+```
+  
+  
 
 ## Psychometric Properties of 4th Grade Assessment
 For a full report on the psychometric properties of our assessment in Peru, see:
