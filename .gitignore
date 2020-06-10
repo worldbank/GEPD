@@ -76,6 +76,7 @@
 !/**/**/*.md
 
 # csv files
+!/**/indicators_details.csv
 
 #Powerpoint files
 

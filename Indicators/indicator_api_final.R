@@ -68,7 +68,7 @@ names(indicators)<-make.names(names(indicators), unique=TRUE)
 
 #get metadata on indicators
 #Read in list of indicators
-indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
+indicator_choices <- read_delim(here::here('Indicators','indicators_choices.csv'), delim=",", trim_ws=TRUE)
 indicator_choices <- indicator_choices %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
