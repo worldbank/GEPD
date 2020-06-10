@@ -60,7 +60,7 @@
 !/**/**/*.Rmd
 
 # HTML files
-
+!/**/*item_analysis.html
 
 # LaTeX
 !/**/**/*.tex
