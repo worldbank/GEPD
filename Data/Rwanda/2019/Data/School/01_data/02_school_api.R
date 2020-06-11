@@ -12,7 +12,7 @@ library(here)
 ######################################
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
-
+if (need_api==1) {
 #user credentials
 #Check whether password.R file is in Github repo
 pw_file<-here::here("password.R")
@@ -90,6 +90,9 @@ if (quest_version==17) {
   unzip(file.path(download_folder, tounzip), exdir=download_folder)
 }
 
+} else {
+  quest_version=18
+}
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
@@ -298,6 +301,5 @@ metadta<-bind_rows(school_metadta,  ecd_metadta, assess_4th_grade_metadta, teach
 
 metadta %>%
   writexl::write_xlsx( path=file.path(download_folder, "metadata.xlsx"))
-
 
 

@@ -90,6 +90,11 @@ unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
 }
 
+
+} else {
+  quest_version=18
+}
+
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
@@ -111,9 +116,7 @@ indicators <- indicators %>%
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
-} else {
-  quest_version=18
-}
+
 #############################
 #Because we switched versions of our survey in the middle, have to append version 17 databases
 ############################

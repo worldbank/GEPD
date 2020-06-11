@@ -115,7 +115,10 @@ for (i in indicator_names ) {
 }
 
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+school_dta_raw <- school_dta
 
 #########################################
 #read in teacher questionnaire level file
@@ -215,6 +218,11 @@ for (i in indicator_names ) {
   }
 }
 
+
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+teacher_questionnaire_raw <- teacher_questionnaire
 
 
 #############################################
@@ -335,7 +343,10 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
 
 teacher_absence_final<- teacher_absence_dta %>%
-  select(preamble_info_absence, contains('absent'))
+  select(preamble_info, preamble_info_absence, contains('absent')) %>%
+  group_by(school_code, teacher_number) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+  
 
 
 
@@ -439,7 +450,10 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
   mutate(n_mssing_CONT=n_miss_row(.))
 
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+teacher_assessment_dta_raw <- teacher_assessment_dta
 
 
 #Drop columns that end in "mistake".  THis is not necessary for computing indicator
@@ -649,6 +663,11 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          student_male=bin_var(m8s1q3,1),
   )
 
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+assess_4th_grade_dta_raw <- assess_4th_grade_dta
+
 # create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
 # This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
 # In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
@@ -673,7 +692,7 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
                  starts_with("m8sbq5"),
                  starts_with("m8sbq6"),
   ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq4_id=if_else(m8saq4_id==5,4,m8saq4_id)) %>% #fix case where some enumerators recorded the pre-filled answer.
+  mutate(m8saq4_id=if_else(m8saq4_id==5,4,as.numeric(m8saq4_id))) %>% #fix case where some enumerators recorded the pre-filled answer.
   group_by(school_code) %>%
   mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
             ~call_out_scorer(.,0.8)) %>%
@@ -823,7 +842,10 @@ list_topics<-c("vocabn", "comprehension","letters","words","sentence","nm_writin
                "backward_digit","head_shoulders",
                "perspective","conflict_resol")
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+ecd_dta_raw <- ecd_dta
 
 #recode ECD variables to be 1 if student got it correct and zero otherwise
 ecd_dta<- ecd_dta %>%
@@ -2377,8 +2399,6 @@ weights_list<-c('g4_stud_weight_component', 'abs_weight_component', 'teacher_wei
 
 final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
-  group_by(school_code) %>%
-  summarise_all(~first(na.omit(.))) %>%
   select(all_of(keep_info), one_of(ind_list), everything()) %>%
   left_join(school_weights)
 

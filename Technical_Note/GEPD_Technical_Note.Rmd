@@ -3,10 +3,10 @@ title: "GEPD Technical Note"
 author: "Global Education Policy Dashboard Team"
 date: "1/27/2020"
 output:
-  word_document:
-    toc: yes
   html_document:
     df_print: paged
+    toc: yes
+  word_document:
     toc: yes
   pdf_document:
     toc: yes
@@ -287,11 +287,17 @@ Finally, for teacher pedagogical skills, we used prior data from the TEACH surve
 
 ```{r confidence_intervals_peru, message=FALSE, warning=FALSE, include=FALSE}
 
-peru_stats<-read_csv("C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/Global Education Policy DashboardGEPD Data Explorer.csv") %>%
+peru_stats<-read_csv("C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/Global Education Policy DashboardGEPD Data Explorer-Peru.csv") %>%
   select(-c("Ratio of Rural to Urban")) %>%
   rename(CI=4)
 
+Jordan_stats<-read_csv("C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/Global Education Policy DashboardGEPD Data Explorer-Jordan.csv") %>%
+  select(-c("Ratio of Rural to Urban")) %>%
+  rename(CI=4)
 
+Rwanda_stats<-read_csv("C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/Global Education Policy DashboardGEPD Data Explorer-Rwanda.csv") %>%
+  select(-c("Ratio of Rural to Urban")) %>%
+  rename(CI=4)
 
 
 
@@ -321,6 +327,55 @@ This actually suggests that in the case of Peru, our forecast of detectable effe
 For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[4],str_length(peru_stats$CI[4])-5,str_length(peru_stats$CI[4])-1))-peru_stats$Mean[4])/1.96,2)` percentage points from our original mean.
 
 For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[5],str_length(peru_stats$CI[5])-5,str_length(peru_stats$CI[5])-1))-peru_stats$Mean[5])/1.96,2)` percentage points from our original mean.
+
+## Validation of Power Calculations using Jordan Data
+
+We can begin to test the assumptions of our power analysis by comparing the precision implied in our power calculations to data actually collected from our Survey in Jordan in 2019.  Our Jordan sample is discussed in greater detail above, but briefly we visited 205 schools.  While our power analyis was primarily concerned with the detectable effect size over a two year period, we can still use data from one year of data collection to assess whether our projects were on target.  
+
+Our power analysis aimed to assess the detectable effect size across two years.  Making an assumption that the sampling variance for our indicators is constant across time, we can project the detectable effect size under this assmption.  Let the following be the standard error of the difference in means of one of our indicators, where $\bar X_j$ is the sample mean for year j and $\hat \sigma^2_j$ is the sample variance for year j.
+
+$SE(\bar X_1-\bar X_0)=\sqrt(\hat \sigma^2_1/N_1 + \hat \sigma^2_0/N0)$ 
+
+and if we assume equal variances $\sigma^2_1=\sigma^2_0$ and that the sample sizes will be the same $N_1=N_2$, the our Standard Error of the difference of the means of the two samples is:
+
+$SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$ 
+
+
+
+For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(Jordan_stats$Mean[3],2)` and a standard error of `r round((as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)`
+
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)` percentage points from our original mean of `r round(Jordan_stats$Mean[3],2)` .
+
+This actually suggests that in the case of Jordan, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Jordan for absence or to improved precision resulting from our optimal stratification technique.
+
+For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[4],str_length(Jordan_stats$CI[4])-5,str_length(Jordan_stats$CI[4])-1))-Jordan_stats$Mean[4])/1.96,2)` percentage points from our original mean.
+
+For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[5],str_length(Jordan_stats$CI[5])-5,str_length(Jordan_stats$CI[5])-1))-Jordan_stats$Mean[5])/1.96,2)` percentage points from our original mean.
+
+
+## Validation of Power Calculations using Rwanda Data
+
+We can begin to test the assumptions of our power analysis by comparing the precision implied in our power calculations to data actually collected from our Survey in Rwanda in 2019.  Our Rwanda sample is discussed in greater detail above, but briefly we visited 205 schools.  While our power analyis was primarily concerned with the detectable effect size over a two year period, we can still use data from one year of data collection to assess whether our projects were on target.  
+
+Our power analysis aimed to assess the detectable effect size across two years.  Making an assumption that the sampling variance for our indicators is constant across time, we can project the detectable effect size under this assmption.  Let the following be the standard error of the difference in means of one of our indicators, where $\bar X_j$ is the sample mean for year j and $\hat \sigma^2_j$ is the sample variance for year j.
+
+$SE(\bar X_1-\bar X_0)=\sqrt(\hat \sigma^2_1/N_1 + \hat \sigma^2_0/N0)$ 
+
+and if we assume equal variances $\sigma^2_1=\sigma^2_0$ and that the sample sizes will be the same $N_1=N_2$, the our Standard Error of the difference of the means of the two samples is:
+
+$SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$ 
+
+
+
+For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(Rwanda_stats$Mean[3],2)` and a standard error of `r round((as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)`
+
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)` percentage points from our original mean of `r round(Rwanda_stats$Mean[3],2)` .
+
+This actually suggests that in the case of Rwanda, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Rwanda for absence or to improved precision resulting from our optimal stratification technique.
+
+For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[4],str_length(Rwanda_stats$CI[4])-5,str_length(Rwanda_stats$CI[4])-1))-Rwanda_stats$Mean[4])/1.96,2)` percentage points from our original mean.
+
+For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[5],str_length(Rwanda_stats$CI[5])-5,str_length(Rwanda_stats$CI[5])-1))-Rwanda_stats$Mean[5])/1.96,2)` percentage points from our original mean.
 
 ## Full Tabulation of Means and Confidence Intervals for Peru
 Means and 95% Confidence Intervals are available for all of our primary indicators collected using our surveys below.

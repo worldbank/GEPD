@@ -139,7 +139,10 @@ for (i in indicator_names ) {
   }
 }
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+school_dta_raw <- school_dta
 
 
 #########################################
@@ -244,7 +247,10 @@ for (i in indicator_names ) {
   }
 }
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+teacher_questionnaire_raw <- teacher_questionnaire
 
 #############################################
 ##### Teacher Absence ###########
@@ -365,7 +371,9 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
 
 teacher_absence_final<- teacher_absence_dta %>%
-  select(preamble_info_absence, contains('absent'))
+  select(preamble_info, preamble_info_absence, contains('absent')) %>%
+  group_by(interview__id, teacher_number) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 
@@ -457,7 +465,10 @@ graded_data <- "no"
     mutate(n_mssing_CONT=n_miss_row(.))
   
   
-  
+  #####################
+  #create one copy of each dataframe that never gets touched and is carried forward to public folder
+  #####################
+  teacher_assessment_dta_raw <- teacher_assessment_dta
   
   
   #Drop columns that end in "mistake".  THis is not necessary for computing indicator
@@ -715,6 +726,11 @@ graded_data <- "no"
            student_male=bin_var(m8s1q3,1),
     )
   
+  #####################
+  #create one copy of each dataframe that never gets touched and is carried forward to public folder
+  #####################
+  assess_4th_grade_dta_raw <- assess_4th_grade_dta
+  
   # create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
   # This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
   # In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
@@ -921,7 +937,10 @@ graded_data <- "no"
                  "backward_digit","head_shoulders",
                  "perspective","conflict_resol")
   
-  
+  #####################
+  #create one copy of each dataframe that never gets touched and is carried forward to public folder
+  #####################
+  ecd_dta_raw <- ecd_dta
   
   #recode ECD variables to be 1 if student got it correct and zero otherwise
   ecd_dta<- ecd_dta %>%
@@ -953,6 +972,7 @@ graded_data <- "no"
                                                       is.na(.x) ~ as.numeric(NA)))
   
   
+
   
   ####Literacy####
   #calculate # of literacy items
@@ -2254,8 +2274,6 @@ graded_data <- "no"
   
   final_school_data <- final_school_data %>%
     left_join(school_data_preamble_short) %>%
-    group_by(school_code) %>%
-    summarise_all(~first(na.omit(.))) %>%
     select(all_of(keep_info), one_of(ind_list), everything()) %>%
     left_join(school_weights)
   
