@@ -447,71 +447,71 @@ for (i in indicators_list) {
     mutate(CI=paste("[",round(Mean_low,2),", ", round(Mean_upp,2),"]", sep="")) %>%
     select(varlabel, Mean, CI)
 
-# 
-# #####
-# #### Jordan
-# #####
-# load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/School/school_indicators_data_anon.RData")
-# 
-# 
-# #teacher absence
-# df_presence_rate <- school_dta_short_anon %>% 
-#   left_join(school_weights_anon ) %>% 
-#   mutate(ipw=if_else(is.na(abs_weight_component),ipw, ipw*abs_weight_component)) %>% 
-#   as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
-#   summarise(Mean = survey_mean(presence_rate, vartype = "ci", na.rm=T)) %>%
-#   mutate(indicators='presence_rate')
-# 
-# #content knowledge
-# df_content_proficiency <- teacher_assessment_dta_anon %>% 
-#   left_join(school_weights_anon ) %>% 
-#   mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
-#   mutate(
-#          
-#          ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
-#          content_knowledge=if_else(is.na(literacy_content_knowledge), math_content_knowledge, literacy_content_knowledge),
-#          content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
-#   as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
-#   summarise(Mean = survey_mean(content_proficiency, vartype = "ci", na.rm=T)) %>%
-#   mutate(indicators='content_proficiency')
-# 
-# #1st grade assessment
-# df_ecd_student_proficiency <- ecd_dta_anon_anon   %>% 
-#   left_join(school_weights_anon ) %>% 
-#   mutate(ipw=if_else(is.na(g1_stud_weight_component),ipw*median(g1_stud_weight_component, na.rm=T), ipw*g1_stud_weight_component)) %>% 
-#   as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
-#   summarise(Mean = survey_mean(ecd_student_proficiency, vartype = "ci", na.rm=T)) %>%
-#   mutate(indicators='ecd_student_proficiency')
-# 
-# 
-# #create combined dataset
-# if (exists('sumstats_school_df')) {
-#   rm('sumstats_school_df')
-# }
-# 
-# for (i in indicators_list) {
-#   if (exists(paste('df',i, sep="_"))) {
-#     #form temp data frame with each  data
-#    
-#     if (!exists('sumstats_school_df')) {
-#       temp <- get(paste('df',i, sep="_")) 
-#     
-#       sumstats_school_df<-temp
-#     } else {
-#     temp <- get(paste('df',i, sep="_")) 
-#     sumstats_school_df <- sumstats_school_df %>%
-#       bind_rows(temp)
-#     }
-#   } 
-# }
-# 
-#   #add variable label
-#   Jordan_stats <- sumstats_school_df %>%
-#     left_join(labels_df_2) %>%
-#     mutate(varlabel=indicator_labels) %>%
-#     mutate(CI=paste("[",round(Mean_low,2),", ", round(Mean_upp,2),"]", sep="")) %>%
-#     select(varlabel, Mean, CI)
-# 
+
+#####
+#### Jordan
+#####
+load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/School/school_indicators_data_anon.RData")
+
+
+#teacher absence
+df_presence_rate <- school_dta_short_anon %>%
+  left_join(school_weights_anon ) %>%
+  mutate(ipw=if_else(is.na(abs_weight_component),ipw, ipw*abs_weight_component)) %>%
+  as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
+  summarise(Mean = survey_mean(presence_rate, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='presence_rate')
+
+#content knowledge
+df_content_proficiency <- teacher_assessment_dta_anon %>%
+  left_join(school_weights_anon ) %>%
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>%
+  mutate(
+
+         ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+         content_knowledge=if_else(is.na(literacy_content_knowledge), math_content_knowledge, literacy_content_knowledge),
+         content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
+  summarise(Mean = survey_mean(content_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='content_proficiency')
+
+#1st grade assessment
+df_ecd_student_proficiency <- ecd_dta_anon_anon   %>%
+  left_join(school_weights_anon ) %>%
+  mutate(ipw=if_else(is.na(g1_stud_weight_component),ipw*median(g1_stud_weight_component, na.rm=T), ipw*g1_stud_weight_component)) %>%
+  as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
+  summarise(Mean = survey_mean(ecd_student_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='ecd_student_proficiency')
+
+
+#create combined dataset
+if (exists('sumstats_school_df')) {
+  rm('sumstats_school_df')
+}
+
+for (i in indicators_list) {
+  if (exists(paste('df',i, sep="_"))) {
+    #form temp data frame with each  data
+
+    if (!exists('sumstats_school_df')) {
+      temp <- get(paste('df',i, sep="_"))
+
+      sumstats_school_df<-temp
+    } else {
+    temp <- get(paste('df',i, sep="_"))
+    sumstats_school_df <- sumstats_school_df %>%
+      bind_rows(temp)
+    }
+  }
+}
+
+  #add variable label
+  Jordan_stats <- sumstats_school_df %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(CI=paste("[",round(Mean_low,2),", ", round(Mean_upp,2),"]", sep="")) %>%
+    select(varlabel, Mean, CI)
+
 
 
 
@@ -602,13 +602,13 @@ $SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$
 
 
 
-For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(peru_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)`
+For teacher presence, we were able to assess the presence of 1461 teachers in our sampled schools.  This produced a mean presence rate of `r round(peru_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)`
 
-Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(peru_stats$Mean[1],2)` .
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher presence if our presence measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(peru_stats$Mean[1],2)` .
 
-This actually suggests that in the case of Peru, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Peru for absence or to improved precision resulting from our optimal stratification technique.
+This actually suggests that in the case of Peru, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Peru for presence or to improved precision resulting from our optimal stratification technique.
 
-For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[2],str_length(peru_stats$CI[2])-5,str_length(peru_stats$CI[2])-1))-peru_stats$Mean[2])/1.96,2)` percentage points from our original mean.
+For teacher content knowledge, we will omit the same full exercise as with presence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[2],str_length(peru_stats$CI[2])-5,str_length(peru_stats$CI[2])-1))-peru_stats$Mean[2])/1.96,2)` percentage points from our original mean.
 
 For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)` percentage points from our original mean.
 
@@ -626,15 +626,15 @@ $SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$
 
 
 
-For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(Jordan_stats$Mean[3],2)` and a standard error of `r round((as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)`
+For teacher presence, we were able to assess the presence of 1461 teachers in our sampled schools.  This produced a mean presence rate of `r round(Jordan_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(Jordan_stats$CI[1],str_length(Jordan_stats$CI[1])-5,str_length(Jordan_stats$CI[1])-1))-Jordan_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Jordan_stats$CI[1],str_length(Jordan_stats$CI[1])-5,str_length(Jordan_stats$CI[1])-1))-Jordan_stats$Mean[1])/1.96,2)`
 
-Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)` percentage points from our original mean of `r round(Jordan_stats$Mean[3],2)` .
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher presence if our presence measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[1],str_length(Jordan_stats$CI[1])-5,str_length(Jordan_stats$CI[1])-1))-Jordan_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(Jordan_stats$Mean[1],2)` .
 
-This actually suggests that in the case of Jordan, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Jordan for absence or to improved precision resulting from our optimal stratification technique.
+This actually suggests that in the case of Jordan, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Jordan for presence or to improved precision resulting from our optimal stratification technique.
 
-For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[4],str_length(Jordan_stats$CI[4])-5,str_length(Jordan_stats$CI[4])-1))-Jordan_stats$Mean[4])/1.96,2)` percentage points from our original mean.
+For teacher content knowledge, we will omit the same full exercise as with presence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[2],str_length(Jordan_stats$CI[2])-5,str_length(Jordan_stats$CI[2])-1))-Jordan_stats$Mean[2])/1.96,2)` percentage points from our original mean.
 
-For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[5],str_length(Jordan_stats$CI[5])-5,str_length(Jordan_stats$CI[5])-1))-Jordan_stats$Mean[5])/1.96,2)` percentage points from our original mean.
+For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Jordan survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Jordan_stats$CI[3],str_length(Jordan_stats$CI[3])-5,str_length(Jordan_stats$CI[3])-1))-Jordan_stats$Mean[3])/1.96,2)` percentage points from our original mean.
 
 
 ## Validation of Power Calculations using Rwanda Data
@@ -651,13 +651,13 @@ $SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$
 
 
 
-For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(Rwanda_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)`
+For teacher presence, we were able to assess the presence of 1461 teachers in our sampled schools.  This produced a mean presence rate of `r round(Rwanda_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)`
 
-Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(Rwanda_stats$Mean[1],2)` .
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher presence if our presence measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(Rwanda_stats$Mean[1],2)` .
 
-This actually suggests that in the case of Rwanda, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Rwanda for absence or to improved precision resulting from our optimal stratification technique.
+This actually suggests that in the case of Rwanda, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Rwanda for presence or to improved precision resulting from our optimal stratification technique.
 
-For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[2],str_length(Rwanda_stats$CI[2])-5,str_length(Rwanda_stats$CI[2])-1))-Rwanda_stats$Mean[2])/1.96,2)` percentage points from our original mean.
+For teacher content knowledge, we will omit the same full exercise as with presence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[2],str_length(Rwanda_stats$CI[2])-5,str_length(Rwanda_stats$CI[2])-1))-Rwanda_stats$Mean[2])/1.96,2)` percentage points from our original mean.
 
 For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)` percentage points from our original mean.
 
