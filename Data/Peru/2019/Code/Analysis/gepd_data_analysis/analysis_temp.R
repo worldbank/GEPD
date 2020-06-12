@@ -3,7 +3,6 @@ library(skimr)
 library(srvyr)
 library(DT)
 library(Hmisc)
-
 load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_RAW/Data/anonymized/School/school_indicators_data_anon.RData")
 
 
@@ -90,74 +89,240 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 
 #Build list of dataframes to append together
-df_student_proficient <- assess_4th_grade_anon_anon
-df_student_attendance <- school_dta_short_anon
-df_presence_rate <- teacher_absence_final_anon
-df_content_proficiency <- teacher_assessment_dta_anon
-df_teach_prof <- school_dta_short_anon
-df_ecd_student_proficiency <- ecd_dta_anon_anon
-df_inputs <- school_dta_short_anon
-df_infrastructure  <- school_dta_short_anon
-df_operational_management   <- school_dta_short_anon
-df_instructional_leadership  <- school_dta_short_anon
-df_principal_knowledge_score  <- school_dta_short_anon
-df_principal_management  <- school_dta_short_anon
-df_teacher_attraction  <- school_dta_short_anon
-df_teacher_selection_deployment  <- school_dta_short_anon
-df_teacher_support  <- school_dta_short_anon
-df_teaching_evaluation  <- school_dta_short_anon
-df_teacher_monitoring  <- school_dta_short_anon
-df_intrinsic_motivation  <- school_dta_short_anon 
-df_standards_monitoring  <- school_dta_short_anon
-df_sch_monitoring  <- school_dta_short_anon
-df_sch_management_clarity  <- school_dta_short_anon
-df_sch_management_attraction  <- school_dta_short_anon 
-df_sch_selection_deployment  <- school_dta_short_anon
-df_sch_support  <- school_dta_short_anon
-df_principal_evaluation  <- school_dta_short_anon
-df_national_learning_goals <- public_officials_dta_clean_anon
-df_mandates_accountability <- public_officials_dta_clean_anon
-df_quality_bureaucracy <- public_officials_dta_clean_anon
-df_impartial_decision_making  <- public_officials_dta_clean_anon
+df_student_proficient <- assess_4th_grade_anon_anon %>% 
+  mutate(student_proficient=100*as.numeric(student_knowledge>=86.6)) %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(g4_stud_weight_component),ipw, ipw*g4_stud_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(student_proficient, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='student_proficient')
 
-  
+#student attendance
+df_student_attendance <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(student_attendance, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='student_attendance')
+
+#teacher absence
+df_presence_rate <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(abs_weight_component),ipw, ipw*abs_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(presence_rate, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='presence_rate')
+
+#content knowledge
+df_content_proficiency <- teacher_assessment_dta_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else((STRATUM==24|is.na(STRATUM)),17,as.numeric(STRATUM)),
+         hashed_school_code=if_else(is.na(hashed_school_code),'abcde',hashed_school_code),
+         ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+         content_knowledge=if_else(is.na(literacy_content_knowledge), math_content_knowledge, literacy_content_knowledge),
+         content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(content_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='content_proficiency')
+
+#TEACH
+df_teach_prof <- school_dta_short_anon  %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(teach_prof, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='teach_prof')
+
+#1st grade assessment
+df_ecd_student_proficiency <- ecd_dta_anon_anon   %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(g1_stud_weight_component),ipw, ipw*g1_stud_weight_component)) %>% 
+  mutate(STRATUM=if_else((STRATUM==24|STRATUM==5|STRATUM==22),17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(ecd_student_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='ecd_student_proficiency')
+
+#inputs
+df_inputs <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(inputs, vartype = "ci", na.rm=T))  %>%
+  mutate(indicators='inputs')
+
+#infrastructure
+df_infrastructure  <- school_dta_short_anon  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(infrastructure, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='infrastructure')
+
+#operational management
+df_operational_management   <- school_dta_short_anon  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(operational_management, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='operational_management')
+
+#instructional leadership
+df_instructional_leadership  <- school_dta_short_anon  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(instructional_leadership, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='instructional_leadership')
+
+#principal knowledge
+df_principal_knowledge_score  <- school_dta_short_anon  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(principal_knowledge_score, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='principal_knowledge_score')
+
+#principal management
+df_principal_management  <- school_dta_short_anon  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(principal_management, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='principal_management')
+
+#teacher attraction
+df_teacher_attraction  <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(teacher_attraction, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='teacher_attraction')
+
+#teacher_selection_deployment
+df_teacher_selection_deployment  <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(teacher_selection_deployment, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='teacher_selection_deployment')
+
+#teacher_support
+df_teacher_support  <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(teacher_support, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='teacher_support')
+
+#teaching_evaluation
+df_teaching_evaluation  <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>%
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(teaching_evaluation, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='teaching_evaluation')
+
+#teacher_monitoring
+df_teacher_monitoring  <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(teacher_monitoring, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='teacher_monitoring')
+
+#intrinsic_motivation
+df_intrinsic_motivation  <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component))  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(intrinsic_motivation, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='intrinsic_motivation')
+
+#standards_monitoring
+df_standards_monitoring  <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(standards_monitoring, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='standards_monitoring')
+
+#sch_monitoring
+df_sch_monitoring  <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(sch_monitoring, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='sch_monitoring')
+
+#sch_management_clarity
+df_sch_management_clarity  <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(sch_management_clarity, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='sch_management_clarity')
+
+#sch_management_attraction
+df_sch_management_attraction  <- school_dta_short_anon  %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(sch_management_attraction, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='sch_management_attraction')
+
+#sch_selection_deployment
+df_sch_selection_deployment  <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(sch_selection_deployment, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='sch_selection_deployment')
+
+#sch_support
+df_sch_support  <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(sch_support, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='sch_support')
+
+# principal_evaluation
+df_principal_evaluation <- school_dta_short_anon %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(mean = survey_mean(principal_evaluation, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='principal_evaluation')
+
+
+#create combined dataset
+if (exists('sumstats_school_df')) {
+  rm('sumstats_school_df')
+}
+
+for (i in indicators_list) {
+  if (exists(paste('df',i, sep="_"))) {
+    #form temp data frame with each  data
+   
+    if (!exists('sumstats_school_df')) {
+      temp <- get(paste('df',i, sep="_")) 
+    
+      sumstats_school_df<-temp
+    } else {
+    temp <- get(paste('df',i, sep="_")) 
+    sumstats_school_df <- sumstats_school_df %>%
+      bind_rows(temp)
+    }
+  } 
+}
+
   # School Survey
   metadata<-metadta
   
   
-  sch_ipw<-school_dta_short_anon$ipw 
-  
 
-    #add function to produce weighted summary stats
-    my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                                           sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                                           p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                                           p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                                           p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                                           complete = ~ sum(!is.na(.))))
-
-  
-  
-  sumstats_school <- school_dta_short_anon %>%
-    select(one_of(indicators_list) ) 
-  
-  
-  
-  sumstats_school_df<-my_skim(sumstats_school) %>%
-    yank("numeric") %>%
-    mutate(variable=skim_variable) %>%
-    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-  
   
   #add variable label
   sumstats_school_df <- sumstats_school_df %>%
-    mutate(name=variable,
-           indicators=variable) %>%
     left_join(labels_df_2) %>%
     mutate(varlabel=indicator_labels) %>%
-    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+    mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
     select(varlabel, mean, ci)
   
   #Now do breakdown by Urban/Rural

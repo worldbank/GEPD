@@ -346,7 +346,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
 teacher_absence_final<- teacher_absence_dta %>%
   select(preamble_info, preamble_info_absence, contains('absent')) %>%
-  group_by(interview__id, teacher_number) %>%
+  group_by(school_code, teacher_number) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 

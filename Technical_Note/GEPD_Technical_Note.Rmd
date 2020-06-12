@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
 library(captioner)
+library(srvyr)
 #produce caption for tables/figures
   tab_num<-captioner(prefix="Table")
   fig_num<-captioner(prefix="Figure")
@@ -304,6 +305,289 @@ Rwanda_stats<-read_csv("C:/Users/wb469649/Documents/Github/GEPD/Technical_Note/G
 
 ```
 
+
+```{r confidence_intervals, message=FALSE, warning=FALSE, include=FALSE}
+
+#create subset with just main indicators
+indicators_list<-c('student_proficient',
+                   'student_attendance', 
+                   'presence_rate',
+                   'content_proficiency', 
+                   'teach_prof',
+                   'ecd_student_proficiency', 
+                   'inputs', 
+                   'infrastructure',
+                   'operational_management', 
+                   'instructional_leadership',
+                   'principal_knowledge_score',
+                   'principal_management', 
+                   'teacher_attraction', 
+                   'teacher_selection_deployment', 
+                   'teacher_support', 
+                   'teaching_evaluation', 
+                   'teacher_monitoring',
+                   'intrinsic_motivation', 
+                   'standards_monitoring',
+                   'sch_monitoring', 
+                   'sch_management_clarity',
+                   'sch_management_attraction', 
+                   'sch_selection_deployment', 
+                   'sch_support', 
+                   'principal_evaluation', 
+                   'national_learning_goals',
+                   'mandates_accountability',
+                   'quality_bureaucracy',
+                   'impartial_decision_making'
+)
+
+
+main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
+                          'Student Attendance',
+                          'Teacher Effort', 
+                          "Teacher Content Knowledge", 
+                          "Teacher Pedagogical Skills",
+                          'Capacity for Learning', 
+                          'Basic Inputs', 
+                          'Basic Infrastructure', 
+                          'Operational Management', 
+                          'Instructional Leadership', 
+                          'Principal Knowledge of School',
+                          'Principal Management Skills', 
+                          'Policy Lever (Teaching) - Attraction',
+                          'Policy Lever (Teaching) - Selection & Deployment',
+                          'Policy Lever (Teaching) - Support', 
+                          'Policy Lever (Teaching) - Evaluation', 
+                          'Policy Lever (Teaching) - Monitoring & Accountability', 
+                          'Policy Lever (Teaching) - Intrinsic Motivation', 
+                          'Policy Lever (Inputs & Infrastructure) - Standards',
+                          'Policy Lever (Inputs & Infrastructure) - Monitoring',
+                          "Policy Lever (School Management) - Clarity of Functions", 
+                          'Policy Lever (School Management) - Attraction' ,                   
+                          'Policy Lever (School Management) - Selection & Deployment'  ,      
+                          'Policy Lever (School Management) - Support' ,                      
+                          'Policy Lever (School Management) - Evaluation'    , 
+                          'Politics & Bureaucratic Capacity - National Learning Goals' ,
+                          'Politics & Bureaucratic Capacity - Mandates & Accountability'   ,  
+                          'Politics & Bureaucratic Capacity - Quality of Bureaucracy'    ,    
+                          'Politics & Bureaucratic Capacity - Impartial Decision-Making'    
+                          
+                          
+) 
+
+
+labels_df_2<-data.frame(indicators=as.character(indicators_list),
+                        indicator_labels=as.character(main_indicator_labels2))
+##########################
+
+
+#####
+#### Peru
+#####
+load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/School/school_indicators_data_anon.RData")
+
+
+#teacher absence
+df_presence_rate <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(abs_weight_component),ipw, ipw*abs_weight_component)) %>% 
+  mutate(STRATUM=if_else(STRATUM==24,17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(Mean = survey_mean(presence_rate, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='presence_rate')
+
+#content knowledge
+df_content_proficiency <- teacher_assessment_dta_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(STRATUM=if_else((STRATUM==24|is.na(STRATUM)),17,as.numeric(STRATUM)),
+         hashed_school_code=if_else(is.na(hashed_school_code),'abcde',hashed_school_code),
+         ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+         content_knowledge=if_else(is.na(literacy_content_knowledge), math_content_knowledge, literacy_content_knowledge),
+         content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(Mean = survey_mean(content_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='content_proficiency')
+
+#1st grade assessment
+df_ecd_student_proficiency <- ecd_dta_anon_anon   %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(g1_stud_weight_component),ipw, ipw*g1_stud_weight_component)) %>% 
+  mutate(STRATUM=if_else((STRATUM==24|STRATUM==5|STRATUM==22),17,as.numeric(STRATUM))) %>%
+  as_survey_design(ids = hashed_school_code, strata=STRATUM, weights=ipw ) %>%
+  summarise(Mean = survey_mean(ecd_student_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='ecd_student_proficiency')
+
+
+
+#create combined dataset
+if (exists('sumstats_school_df')) {
+  rm('sumstats_school_df')
+}
+
+for (i in indicators_list) {
+  if (exists(paste('df',i, sep="_"))) {
+    #form temp data frame with each  data
+   
+    if (!exists('sumstats_school_df')) {
+      temp <- get(paste('df',i, sep="_")) 
+    
+      sumstats_school_df<-temp
+    } else {
+    temp <- get(paste('df',i, sep="_")) 
+    sumstats_school_df <- sumstats_school_df %>%
+      bind_rows(temp)
+    }
+  } 
+}
+
+  #add variable label
+  peru_stats <- sumstats_school_df %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(CI=paste("[",round(Mean_low,2),", ", round(Mean_upp,2),"]", sep="")) %>%
+    select(varlabel, Mean, CI)
+
+# 
+# #####
+# #### Jordan
+# #####
+# load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/School/school_indicators_data_anon.RData")
+# 
+# 
+# #teacher absence
+# df_presence_rate <- school_dta_short_anon %>% 
+#   left_join(school_weights_anon ) %>% 
+#   mutate(ipw=if_else(is.na(abs_weight_component),ipw, ipw*abs_weight_component)) %>% 
+#   as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
+#   summarise(Mean = survey_mean(presence_rate, vartype = "ci", na.rm=T)) %>%
+#   mutate(indicators='presence_rate')
+# 
+# #content knowledge
+# df_content_proficiency <- teacher_assessment_dta_anon %>% 
+#   left_join(school_weights_anon ) %>% 
+#   mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+#   mutate(
+#          
+#          ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+#          content_knowledge=if_else(is.na(literacy_content_knowledge), math_content_knowledge, literacy_content_knowledge),
+#          content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+#   as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
+#   summarise(Mean = survey_mean(content_proficiency, vartype = "ci", na.rm=T)) %>%
+#   mutate(indicators='content_proficiency')
+# 
+# #1st grade assessment
+# df_ecd_student_proficiency <- ecd_dta_anon_anon   %>% 
+#   left_join(school_weights_anon ) %>% 
+#   mutate(ipw=if_else(is.na(g1_stud_weight_component),ipw*median(g1_stud_weight_component, na.rm=T), ipw*g1_stud_weight_component)) %>% 
+#   as_survey_design(ids = hashed_school_code, strata=c('governorate', 'foundation_period', 'supervisory_authority'), weights=ipw ) %>%
+#   summarise(Mean = survey_mean(ecd_student_proficiency, vartype = "ci", na.rm=T)) %>%
+#   mutate(indicators='ecd_student_proficiency')
+# 
+# 
+# #create combined dataset
+# if (exists('sumstats_school_df')) {
+#   rm('sumstats_school_df')
+# }
+# 
+# for (i in indicators_list) {
+#   if (exists(paste('df',i, sep="_"))) {
+#     #form temp data frame with each  data
+#    
+#     if (!exists('sumstats_school_df')) {
+#       temp <- get(paste('df',i, sep="_")) 
+#     
+#       sumstats_school_df<-temp
+#     } else {
+#     temp <- get(paste('df',i, sep="_")) 
+#     sumstats_school_df <- sumstats_school_df %>%
+#       bind_rows(temp)
+#     }
+#   } 
+# }
+# 
+#   #add variable label
+#   Jordan_stats <- sumstats_school_df %>%
+#     left_join(labels_df_2) %>%
+#     mutate(varlabel=indicator_labels) %>%
+#     mutate(CI=paste("[",round(Mean_low,2),", ", round(Mean_upp,2),"]", sep="")) %>%
+#     select(varlabel, Mean, CI)
+# 
+
+
+
+#####
+#### Rwanda
+#####
+load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/School/school_indicators_data_anon.RData")
+
+
+#teacher absence
+df_presence_rate <- school_dta_short_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(abs_weight_component),ipw, ipw*abs_weight_component)) %>% 
+  as_survey_design(ids = hashed_school_district, strata=hashed_school_province, weights=ipw ) %>%
+  summarise(Mean = survey_mean(presence_rate, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='presence_rate')
+
+#content knowledge
+df_content_proficiency <- teacher_assessment_dta_anon %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(teacher_weight_component),ipw, ipw*teacher_weight_component)) %>% 
+  mutate(
+         
+         ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+         content_knowledge=if_else(is.na(literacy_content_knowledge), math_content_knowledge, literacy_content_knowledge),
+         content_proficiency=100*as.numeric(content_knowledge>=80)) %>%
+  as_survey_design(ids = hashed_school_district, strata=hashed_school_province, weights=ipw ) %>%
+  summarise(Mean = survey_mean(content_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='content_proficiency')
+
+#1st grade assessment
+df_ecd_student_proficiency <- ecd_dta_anon_anon   %>% 
+  left_join(school_weights_anon ) %>% 
+  mutate(ipw=if_else(is.na(g1_stud_weight_component),ipw*median(g1_stud_weight_component, na.rm=T), ipw*g1_stud_weight_component)) %>% 
+  filter(!is.na(hashed_school_code))  %>%
+  as_survey_design(ids = hashed_school_district, strata=hashed_school_province, weights=ipw ) %>%
+  summarise(Mean = survey_mean(ecd_student_proficiency, vartype = "ci", na.rm=T)) %>%
+  mutate(indicators='ecd_student_proficiency')
+
+
+#create combined dataset
+if (exists('sumstats_school_df')) {
+  rm('sumstats_school_df')
+}
+
+for (i in indicators_list) {
+  if (exists(paste('df',i, sep="_"))) {
+    #form temp data frame with each  data
+   
+    if (!exists('sumstats_school_df')) {
+      temp <- get(paste('df',i, sep="_")) 
+    
+      sumstats_school_df<-temp
+    } else {
+    temp <- get(paste('df',i, sep="_")) 
+    sumstats_school_df <- sumstats_school_df %>%
+      bind_rows(temp)
+    }
+  } 
+}
+
+  #add variable label
+  Rwanda_stats <- sumstats_school_df %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(CI=paste("[",round(Mean_low,2),", ", round(Mean_upp,2),"]", sep="")) %>%
+    select(varlabel, Mean, CI)
+
+
+
+
+
+
+
+```
+
 ## Validation of Power Calculations using Peru Data
 
 We can begin to test the assumptions of our power analysis by comparing the precision implied in our power calculations to data actually collected from our Survey in Peru in 2019.  Our Peru sample is discussed in greater detail above, but briefly we visited 205 schools.  While our power analyis was primarily concerned with the detectable effect size over a two year period, we can still use data from one year of data collection to assess whether our projects were on target.  
@@ -318,15 +602,15 @@ $SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$
 
 
 
-For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(peru_stats$Mean[3],2)` and a standard error of `r round((as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)`
+For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(peru_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)`
 
-Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)` percentage points from our original mean of `r round(peru_stats$Mean[3],2)` .
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[1],str_length(peru_stats$CI[1])-5,str_length(peru_stats$CI[1])-1))-peru_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(peru_stats$Mean[1],2)` .
 
 This actually suggests that in the case of Peru, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Peru for absence or to improved precision resulting from our optimal stratification technique.
 
-For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[4],str_length(peru_stats$CI[4])-5,str_length(peru_stats$CI[4])-1))-peru_stats$Mean[4])/1.96,2)` percentage points from our original mean.
+For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[2],str_length(peru_stats$CI[2])-5,str_length(peru_stats$CI[2])-1))-peru_stats$Mean[2])/1.96,2)` percentage points from our original mean.
 
-For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[5],str_length(peru_stats$CI[5])-5,str_length(peru_stats$CI[5])-1))-peru_stats$Mean[5])/1.96,2)` percentage points from our original mean.
+For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Peru survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(peru_stats$CI[3],str_length(peru_stats$CI[3])-5,str_length(peru_stats$CI[3])-1))-peru_stats$Mean[3])/1.96,2)` percentage points from our original mean.
 
 ## Validation of Power Calculations using Jordan Data
 
@@ -367,20 +651,20 @@ $SE(X_1-X_0)=\sqrt(2* \hat \sigma^2_0/N0)$
 
 
 
-For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(Rwanda_stats$Mean[3],2)` and a standard error of `r round((as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)`
+For teacher absenteeism, we were able to assess the absence of 1461 teachers in our sampled schools.  This produced a mean absenteeism rate of `r round(Rwanda_stats$Mean[1],2)` and a standard error of `r round((as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)`. Therefore the standard error for our two mean difference is just $\sqrt 2$ times this standard error.  Therefore, our standard error for our two mean difference will be `r round(2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)`
 
-Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)` percentage points from our original mean of `r round(Rwanda_stats$Mean[3],2)` .
+Finally, to determine our detectable effect, we will be able to reject the null of an identical mean for teacher absenteeism if our absenteeism measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[1],str_length(Rwanda_stats$CI[1])-5,str_length(Rwanda_stats$CI[1])-1))-Rwanda_stats$Mean[1])/1.96,2)` percentage points from our original mean of `r round(Rwanda_stats$Mean[1],2)` .
 
 This actually suggests that in the case of Rwanda, our forecast of detectable effect sizes were too pessimistic, as we were expecting somewhere in the range of 6-8 percentage points.  This could be attributed to lower than typical intra-class correlations in Rwanda for absence or to improved precision resulting from our optimal stratification technique.
 
-For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[4],str_length(Rwanda_stats$CI[4])-5,str_length(Rwanda_stats$CI[4])-1))-Rwanda_stats$Mean[4])/1.96,2)` percentage points from our original mean.
+For teacher content knowledge, we will omit the same full exercise as with absence, but will only say that we will be able to reject the null of an identical mean for teacher content knowledge if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[2],str_length(Rwanda_stats$CI[2])-5,str_length(Rwanda_stats$CI[2])-1))-Rwanda_stats$Mean[2])/1.96,2)` percentage points from our original mean.
 
-For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[5],str_length(Rwanda_stats$CI[5])-5,str_length(Rwanda_stats$CI[5])-1))-Rwanda_stats$Mean[5])/1.96,2)` percentage points from our original mean.
+For our Early Childhood assessment, can say that we will be able to reject the null of an identical mean for ECE if our measure in the second Rwanda survey exceeds plus or minus: `r round(1.96*2^(1/2)*(as.numeric(substr(Rwanda_stats$CI[3],str_length(Rwanda_stats$CI[3])-5,str_length(Rwanda_stats$CI[3])-1))-Rwanda_stats$Mean[3])/1.96,2)` percentage points from our original mean.
 
 ## Full Tabulation of Means and Confidence Intervals for Peru
 Means and 95% Confidence Intervals are available for all of our primary indicators collected using our surveys below.
 
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 
 #caption
 peru_cap<-tab_num(name="peru_cap", caption="Summary Statistics and Confidence Intervals for Dashboard Indicators - Peru 2019")
