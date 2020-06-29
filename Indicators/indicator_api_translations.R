@@ -56,12 +56,12 @@ api_converter <- function(language) {
   
   df<-indicators %>%
     left_join(subquestions) %>%
-    mutate(Indicator.Name=Indicator) %>%
-    select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
+    select(Series, indicator_tag, Indicator, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
   
   
   
   df_overall <- df %>%
+    mutate(Indicator.Name=Indicator) %>%
     select(Series, Indicator.Name ) 
     
   
@@ -94,7 +94,7 @@ api_converter <- function(language) {
     pivot_longer(cols=c(    "Column_2", "Column_3", "Column_4","Column_5", "Column_6"),
       values_to='urban_rural_gender',
       names_to = 'urban_rural_gender_name')  %>%
-    select(-urban_rural_gender_name) %>%
+    #select(-urban_rural_gender_name) %>%
     filter(urban_rural_gender!="") 
   
   #break up name into two components
@@ -106,15 +106,18 @@ api_converter <- function(language) {
     separate(name, c("type", "num"), "_") %>%
     mutate(Series=paste(Series, num, sep="."))  %>% #add tag for subindicators
     mutate(Series=case_when( #add tag for urban/rural gender
-      ( urban_rural_gender=="Overall") ~ Series,
-      ( urban_rural_gender!="Overall") ~ paste(Series, substr(urban_rural_gender,1,1), sep="."),
+      ( urban_rural_gender_name=="Column_2") ~ Series,
+      ( urban_rural_gender_name=="Column_3") ~ paste(Series, 'R', sep="."),
+      ( urban_rural_gender_name=="Column_4") ~ paste(Series, 'U', sep="."),
+      ( urban_rural_gender_name=="Column_5") ~ paste(Series, 'F', sep="."),
+      ( urban_rural_gender_name=="Column_6") ~ paste(Series, 'M', sep="."),
       TRUE ~ Series  )) %>%
     mutate(Indicator.Name= short_desc) %>%
     mutate(Indicator.Name=case_when( #add tag for urban/rural gender for indicator name
-      (urban_rural_gender=="Overall") ~ Indicator.Name,
-      (urban_rural_gender!="Overall") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
+      (urban_rural_gender_name=="Column_2") ~ Indicator.Name,
+      (urban_rural_gender_name!="Column_2") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
       TRUE ~ Indicator.Name  )) %>%
-    select(-Column_1, -type, -num, -indicator_tag, -urban_rural_gender) 
+    select(-Column_1, -type, -num, -indicator_tag, -starts_with('urban_rural_gender')) 
     
   api_final  <- df_overall %>%
     bind_rows(df_defacto_dejure) %>%
