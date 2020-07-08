@@ -237,6 +237,27 @@ maps <- fortify(fc_jordan, region="ADM1_NAME")
 
 
 #collapse to governorate level for mapping
+po_df_collapse_mns <- public_officials_agg %>%
+  mutate(territory=case_when(
+    id=="Karak" ~ "South",
+    id=="Irbid" ~ "North",
+    id=="Mafraq" ~ "North",
+    id=="Zarqa" ~ "Central",
+    id=="Balqa" ~ "Central",
+    id=="Ma'an" ~ "South",
+    id=="Tafiela" ~ "South",
+    id=="Aqaba" ~ "South",
+    id=="Ajloon" ~ "North",
+    id=="Amman" ~ "Central",
+    id=="Jarash" ~ "North",
+    id=="Madaba" ~ "Central"
+  )) %>%
+  group_by(territory) %>%
+  mutate(n_interviews_region=sum(n_interviews)) %>%
+  select(-id) %>%
+  summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+
 po_df_collapse <- public_officials_agg %>%
   mutate(territory=case_when(
     id=="Karak" ~ "South",
@@ -253,8 +274,9 @@ po_df_collapse <- public_officials_agg %>%
     id=="Madaba" ~ "Central"
   )) %>%
   group_by(id) %>%
-  mutate(n_interviews=sum(n_interviews)) %>%
-  summarise_all(list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+  summarise(
+            territory=first(territory)) %>%
+  left_join(po_df_collapse_mns)
 
 
 # po_df_collapse <- public_officials_agg %>%
@@ -336,7 +358,8 @@ acm<-  ggplot() +
     scale_fill_viridis_c(limits=c(2,5),
                          name=str_wrap("Mandates & Accountability Score",width=20),
                       na.value = "grey80",
-                      labels = rename_na("No data")) +
+                      labels = rename_na("No data"),
+                      values=scales::rescale()) +
     coord_equal() +
     # annotation_north_arrow(location = "bl", which_north = "true", 
     #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
@@ -358,7 +381,8 @@ qb<-  ggplot() +
     scale_fill_viridis_c(limits=c(2,5),
                          name=str_wrap("Quality Bureaucracy Score",width=20),
                       na.value = "grey80",
-                      labels = rename_na("No data")) +
+                      labels = rename_na("No data"),
+                      values=scales::rescale()) +
     coord_equal() +
     # annotation_north_arrow(location = "bl", which_north = "true", 
     #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
@@ -379,7 +403,8 @@ nlg<-  ggplot() +
     scale_fill_viridis_c(limits=c(2,5),
                          name=str_wrap("National Learning Goals Score",width=20),
                       na.value = "grey80",
-                      labels = rename_na("No data")) +
+                      labels = rename_na("No data"),
+                      values=scales::rescale()) +
     coord_equal() +
     # annotation_north_arrow(location = "bl", which_north = "true", 
     #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
@@ -400,7 +425,8 @@ idm <- ggplot() +
     scale_fill_viridis_c(limits=c(2,5),
       name=str_wrap("Impartial Decision Making Score",width=20),
                       na.value = "grey80",
-                      labels = rename_na("No data")) +
+                      labels = rename_na("No data"),
+                      values=scales::rescale()) +
     coord_equal() +
     # annotation_north_arrow(location = "bl", which_north = "true", 
     #     pad_x = unit(0.25, "in"), pad_y = unit(0.25, "in"),
@@ -440,7 +466,7 @@ patch_plot <- (idm | acm ) / (nlg | qb )
 
 patch_plot + plot_annotation(
   title = 'Plots of Bureaucracy Indicators Across Regions',
-  caption = 'Regional shading shows average of all public officials in that Governorate including officials at Directorate level'
+  caption = 'Regional shading shows average of all public officials in that Region including officials at Governorate or Directorate level'
 )
 ```
 
@@ -793,13 +819,18 @@ top_50_table <- bind_rows(
                 'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
     )
 
-merge_df_collapse<-school_dta_matched %>%
+merge_df_collapse_reg<-school_dta_matched %>%
+  group_by(province) %>%
+  select(province,ind_list, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
+  summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
+
+merge_df_collapse_gov<-school_dta_matched %>%
   group_by(governorate) %>%
   select(governorate,ind_list, mandates_accountability, quality_bureaucracy, national_learning_goals, impartial_decision_making , total_enrolled) %>%
   summarise_all(list(~if(is.numeric(.)) wtd.mean(.,w=total_enrolled, na.rm = TRUE) else first(.)))
 
 
-acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=student_knowledge)) +
+acm_scatter<-  ggplot(merge_df_collapse_gov, aes(x=mandates_accountability, y=student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -813,7 +844,7 @@ acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=studen
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
       
-qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=student_knowledge)) +
+qb_scatter<-  ggplot(merge_df_collapse_gov, aes(x=quality_bureaucracy, y=student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -827,7 +858,7 @@ qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=student_kno
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
 
-nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=student_knowledge)) +
+nlg_scatter<-  ggplot(merge_df_collapse_gov, aes(x=national_learning_goals, y=student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -842,7 +873,7 @@ nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=studen
                      formula = 'y~x', parse = TRUE, size = 5)
 
 
-idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=student_knowledge)) +
+idm_scatter <- ggplot(merge_df_collapse_gov, aes(x=impartial_decision_making, y=student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -878,7 +909,7 @@ patch_scatter_alt + plot_annotation(
 
 
 
-acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=ecd_student_knowledge)) +
+acm_scatter<-  ggplot(merge_df_collapse_gov, aes(x=mandates_accountability, y=ecd_student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -892,7 +923,7 @@ acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=ecd_st
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
       
-qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=ecd_student_knowledge)) +
+qb_scatter<-  ggplot(merge_df_collapse_gov, aes(x=quality_bureaucracy, y=ecd_student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -906,7 +937,7 @@ qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=ecd_student
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
 
-nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=ecd_student_knowledge)) +
+nlg_scatter<-  ggplot(merge_df_collapse_gov, aes(x=national_learning_goals, y=ecd_student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -921,7 +952,7 @@ nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=ecd_st
                      formula = 'y~x', parse = TRUE, size = 5)
 
 
-idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=ecd_student_knowledge)) +
+idm_scatter <- ggplot(merge_df_collapse_gov, aes(x=impartial_decision_making, y=ecd_student_knowledge)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -960,7 +991,7 @@ patch_scatter_alt + plot_annotation(
 
 
 
-acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=presence_rate)) +
+acm_scatter<-  ggplot(merge_df_collapse_gov, aes(x=mandates_accountability, y=presence_rate)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -974,7 +1005,7 @@ acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=presen
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
       
-qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=presence_rate)) +
+qb_scatter<-  ggplot(merge_df_collapse_gov, aes(x=quality_bureaucracy, y=presence_rate)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -988,7 +1019,7 @@ qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=presence_ra
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)
 
-nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=presence_rate)) +
+nlg_scatter<-  ggplot(merge_df_collapse_gov, aes(x=national_learning_goals, y=presence_rate)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -1003,7 +1034,7 @@ nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=presen
                      formula = 'y~x', parse = TRUE, size = 5)
 
 
-idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=presence_rate)) +
+idm_scatter <- ggplot(merge_df_collapse_gov, aes(x=impartial_decision_making, y=presence_rate)) +
         geom_point() +
         geom_smooth(method='lm', mapping = aes()) +
         theme_bw() +
@@ -1016,6 +1047,7 @@ idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=pres
         stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)   
+
 
 
 patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
@@ -1033,15 +1065,20 @@ patch_scatter_alt + plot_annotation(
   caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
 )
 
+patch_scatter3 <- idm_scatter 
 
+patch_scatter3 + plot_annotation(
+  title = 'Plot of Teacher Presence on Impartial Decision Making Bureaucracy Indicators, by Region',
+  caption = str_wrap('Regional average of all public officials in that Governorate including officials at Directorate level',150)
+)
 
 ```
 
-```{r save, include=FALSE}
+```{r save, eval=FALSE, include=FALSE}
 
 
 #write data file to shared folder
-merge_df_collapse<-merge_df_collapse %>%
+merge_df_collapse<-merge_df_collapse_gov %>%
   rename(province=governorate) 
 
 write_dta(merge_df_collapse, path="C:/Users/wb469649/OneDrive - WBG/Dashboard - School - Public Officials - Confidential/Countries/Jordan/Data/public_officials_school_merged_df_collapsed.dta")

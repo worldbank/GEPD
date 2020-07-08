@@ -64,6 +64,31 @@ sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData",
 load(sample_frame_name)
 
 
+
+# Create a variable for Syrian Schools
+# These are typically evening schools, but the survey firm has provided a list 
+data_set_updated <- data_set_updated %>%
+  mutate(Syrian_school=(foundation_period=="Evening")) %>%
+  mutate(Syrian_school=case_when(
+    organization_code==110138 ~ FALSE,
+    organization_code==110547 ~ FALSE,
+    organization_code==110611 ~ FALSE,
+    organization_code==110803 ~ FALSE,
+    organization_code==112490 ~ FALSE,
+    organization_code==112634 ~ FALSE,
+    organization_code==113185 ~ FALSE,
+    organization_code==113621 ~ FALSE,
+    organization_code==113651 ~ FALSE,
+    organization_code==113804 ~ FALSE,
+    organization_code==113887 ~ FALSE,
+    organization_code==114110 ~ FALSE,
+    organization_code==160268 ~ FALSE,
+    organization_code==160271 ~ FALSE,
+    TRUE ~ Syrian_school
+  ))
+
+
+
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
   snumber<-enquo(snumber)
@@ -75,7 +100,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
     mutate(province=governorate) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" | names(data_set_updated) == "province" |
-                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | 
+                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | names(data_set_updated) == "Syrian_school" |
                                                       names(data_set_updated) == "property_type" | names(data_set_updated) == "supervisory_authority")])))
 }
 

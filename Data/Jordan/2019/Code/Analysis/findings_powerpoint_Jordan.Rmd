@@ -631,10 +631,10 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
                                                complete = ~ sum(!is.na(.))))
 
       
-      #Now do breakdown by non-evening/Rural
-      #non-evening
+      #Now do breakdown by non-syrian/syrian
+      #non-syrian
       sumstats_school_nonevening <- school_dta_short_anon %>%
-        filter(foundation_period!="Evening") 
+        filter(Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_nonevening$ipw 
@@ -665,7 +665,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       
       #evening
       sumstats_school_evening <- school_dta_short_anon  %>%
-        filter(foundation_period=="Evening") 
+        filter(Syrian_school==TRUE) 
       
       
       sch_ipw<-sumstats_school_evening$ipw 
@@ -756,13 +756,13 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Evening Schools",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Syrian Schools",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
-          , "Mean", "95% Confident Interval", "Ratio of Non-Evening to Evening"),
+          , "Mean", "95% Confident Interval", "Ratio of Non-Syrian to Syrian"),
           digits = 1, 
           escape=F) %>%
     kable_styling("striped") %>%
-    add_header_above(c(" "=1, "Overall"=2,"Non-Evening"=2,"Evening"=2, " "=1))
+    add_header_above(c(" "=1, "Overall"=2,"Non-Syrian"=2,"Syrian"=2, " "=1))
   
       
         #add function to produce weighted summary stats
@@ -778,7 +778,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       #Now do breakdown by territory
       #North
       sumstats_school_north <- school_dta_short_anon %>%
-        filter(territory=="North") 
+        filter(territory=="North" & Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_north$ipw 
@@ -809,7 +809,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       
       #middle
       sumstats_school_middle <- school_dta_short_anon  %>%
-        filter(territory=="Middle") 
+        filter(territory=="Middle" & Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_middle$ipw 
@@ -839,7 +839,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       
       #south
       sumstats_school_south <- school_dta_short_anon  %>%
-        filter(territory=="South") 
+        filter(territory=="South" & Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_south$ipw 
@@ -938,7 +938,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
     #   round(mean_south,1), background = spec_color(mean_south/mean,  alpha=0.4, option='cividis', direction=-1)
     # )
     # ) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Region",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2019 - Region (excludes Syrian Schools)",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"),
           digits = 1, 
@@ -1141,7 +1141,7 @@ learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD
 
 ```
 
-- Next we offer breakdowns by whether or not the school survey took place at an Evening School
+- Next we offer breakdowns by whether or not the school survey took place at a Syrian School
 
 ```{r learning2, echo=FALSE}
 
@@ -1158,7 +1158,7 @@ learning_data_plot2 <- final_indicator_data_LERN_anon %>%
     TRUE ~ as.character(NA)
     )) %>%
   select(-Female, -Male) %>%
-  mutate(Type=if_else(foundation_period=="Evening", "Evening School", "Non-Evening School"))
+  mutate(Type=if_else(Syrian_school==TRUE, "Syrian School", "Non-Syrian School"))
 
 
 learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), MD = round(weighted.median(student_knowledge, ipw, na.rm=T),1))
@@ -1167,8 +1167,8 @@ learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), M
     geom_boxplot(aes(weight=ipw), position="dodge") +
     geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
-  ggtitle("4th Grade Student Assessment Scores by Gender and Evening School Status") +
-  xlab(str_wrap("Evening School Status", width=75))+
+  ggtitle("4th Grade Student Assessment Scores by Gender and Syrian School Status") +
+  xlab(str_wrap("Syrian School Status", width=75))+
   ylab(str_wrap("Fraction Correcton on 4th Grade Assessment",35)) +
   scale_fill_discrete(name="Gender", 
                       labels=c('All Students','Girls','Boys' )) +
@@ -1230,14 +1230,14 @@ inpt_urban_rural
 
 ```
 
-- Additionally, We compare Teacher pedagogical skill and infrastructure for Evening versus Non-Evening schools.  
-- Gaps between Evening and Non-Evening schools tend to be larger than the Urban/Rural divide.
+- Additionally, We compare Teacher pedagogical skill and infrastructure for Syrian versus Non-Syrian schools.  
+- Gaps between Syrian and Non-Syrian schools tend to be larger than the Urban/Rural divide.
 
 ```{r evening, echo=FALSE}
 
 
 evening <- school_dta_short_anon %>%
-  mutate(Type=if_else(foundation_period=="Evening", "Evening School", "Non-Evening School"))
+  mutate(Type=if_else(Syrian_school==TRUE, "Syrian School", "Non-Syrian School"))
 
 
 
@@ -1258,7 +1258,7 @@ pedgMedian <- summarise(group_by(pedg_evening, Type), MD = round(weighted.median
     scale_fill_discrete(name="Type")+
   labs(x='Teacher Pedagogical Skill',
        y='Density')+
-  ggtitle("Teacher Pedagogy (Scale 1-5) in Evening/Non-Evening School")
+  ggtitle("Teacher Pedagogy (Scale 1-5) in Syrian/Non-Syrian School")
   
 
 ```
@@ -1268,7 +1268,7 @@ pedgMedian <- summarise(group_by(pedg_evening, Type), MD = round(weighted.median
 
 
 evening_input <- school_dta_short_anon %>%
-  mutate(Type=if_else(foundation_period=="Evening", "Evening School", "Non-Evening School"))
+  mutate(Type=if_else(Syrian_school==TRUE, "Syrian School", "Non-Syrian School"))
 
 
 
@@ -1280,7 +1280,7 @@ inpt_evening <- evening_input %>%
     geom_density(aes(fill=Type , weight=weight), alpha=0.6) +
     theme_bw() +
   labs(x='Input Index')+
-  ggtitle("Input Across Evening/Non-Evening Schools")
+  ggtitle("Input Across Syrian/Non-Syrian Schools")
   
 inpt_evening
 
@@ -1365,9 +1365,11 @@ inpt_evening
 
 ```{r kg_pre, include=FALSE}
 kg_df <- ecd_dta_anon %>%
+  as.tibble() %>%
+  zap_labels() %>%
   mutate(attend_kg_num = case_when(
-    m6s1kg==1 ~ 1,
-    m6s1kg==0 ~ 0,
+    m6s1kg==1 ~ as.numeric(1),
+    m6s1kg==0 ~ as.numeric(0),
     TRUE ~ as.numeric(NA)
   )) %>%
   mutate(attend_kg = case_when(
@@ -1393,9 +1395,9 @@ kg_df <- ecd_dta_anon %>%
 
 
 #overall
-kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighted.median(ecd_student_knowledge, ipw, na.rm=T),1))
+kg_dfMedian <- summarise(group_by(kg_df,  attend_kg), MD = round(weighted.median(ecd_student_knowledge, ipw, na.rm=T),1))
 
-  ggplot(kg_df, aes(x=attend_kg, y=ecd_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+  ggplot(kg_df, aes(x=attend_kg, y=ecd_student_knowledge, fill='#0081a8')) + #now plot the output in a bar graph
     geom_boxplot(aes(weight=ipw), position="dodge") +
     geom_text(data = kg_dfMedian, aes(x=attend_kg, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
@@ -1403,53 +1405,53 @@ kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighte
   xlab(str_wrap("Kindergarten Status", width=75))+
   ylab(str_wrap("Fraction Correcton on 1st Grade Assessment",35)) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "none") 
 
 #literacy
-  kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighted.median(ecd_literacy_student_knowledge, ipw, na.rm=T),1))
+  kg_dfMedian <- summarise(group_by(kg_df,  attend_kg), MD = round(weighted.median(ecd_literacy_student_knowledge, ipw, na.rm=T),1))
 
-  p1<-ggplot(kg_df, aes(x=attend_kg, y=ecd_literacy_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+  p1<-ggplot(kg_df, aes(x=attend_kg, y=ecd_literacy_student_knowledge, fill='#0081a8')) + #now plot the output in a bar graph
     geom_boxplot(aes(weight=ipw), position="dodge") +
     geom_text(data = kg_dfMedian, aes(x=attend_kg, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
   xlab(str_wrap("Kindergarten Status", width=75))+
   ylab(str_wrap("Literacy",35)) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "none") 
 
 #math
-    kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighted.median(ecd_math_student_knowledge, ipw, na.rm=T),1))
+    kg_dfMedian <- summarise(group_by(kg_df,  attend_kg), MD = round(weighted.median(ecd_math_student_knowledge, ipw, na.rm=T),1))
 
-  p2<-ggplot(kg_df, aes(x=attend_kg, y=ecd_math_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+  p2<-ggplot(kg_df, aes(x=attend_kg, y=ecd_math_student_knowledge, fill='#0081a8')) + #now plot the output in a bar graph
     geom_boxplot(aes(weight=ipw), position="dodge") +
     geom_text(data = kg_dfMedian, aes(x=attend_kg, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
   xlab(str_wrap("Kindergarten Status", width=75))+
   ylab(str_wrap("Numeracy ",35)) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "none") 
 #executive functioning
-    kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighted.median(ecd_exec_student_knowledge, ipw, na.rm=T),1))
+    kg_dfMedian <- summarise(group_by(kg_df,  attend_kg), MD = round(weighted.median(ecd_exec_student_knowledge, ipw, na.rm=T),1))
 
-  p3<-ggplot(kg_df, aes(x=attend_kg, y=ecd_exec_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+  p3<-ggplot(kg_df, aes(x=attend_kg, y=ecd_exec_student_knowledge, fill='#0081a8')) + #now plot the output in a bar graph
     geom_boxplot(aes(weight=ipw), position="dodge") +
     geom_text(data = kg_dfMedian, aes(x=attend_kg, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
   xlab(str_wrap("Kindergarten Status", width=75))+
   ylab(str_wrap("Executive Functioning",35)) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "none") 
 #socio-emotional  
-  kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighted.median(ecd_soc_student_knowledge, ipw, na.rm=T),1))
+  kg_dfMedian <- summarise(group_by(kg_df,  attend_kg), MD = round(weighted.median(ecd_soc_student_knowledge, ipw, na.rm=T),1))
 
-  p4<-ggplot(kg_df, aes(x=attend_kg, y=ecd_soc_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
+  p4<-ggplot(kg_df, aes(x=attend_kg, y=ecd_soc_student_knowledge, fill='#0081a8')) + #now plot the output in a bar graph
     geom_boxplot(aes(weight=ipw), position="dodge") +
     geom_text(data = kg_dfMedian, aes(x=attend_kg, y=MD, label=MD), 
               position = position_dodge(width = 0.8), size = 3, vjust = 1) +
   xlab(str_wrap("Kindergarten Status", width=75))+
   ylab(str_wrap("Socio-Emotional",35)) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "none") 
 
   
   (p1 + p2) / (p3+p4) + 
@@ -1506,13 +1508,14 @@ kg_dfMedian <- summarise(group_by(kg_df, Gender , attend_kg), MD = round(weighte
 
 - Regions (North, Middle, South) differ in terms of their service delivery and learning outcomes.  
 - This is particularly true for teacher effort and skill.  
-- Below we plot teacher content knowledge by region to highlight some of these differences.  
-- The South region has teacher content knowledge proficiency levels around 16 points higher than in the North.
+- Below we plot teacher content knowledge by region to highlight some of these differences (Syrian schools are excluded).  
+- The South region has teacher content knowledge proficiency levels around 13 points higher than in the North.
 
 ```{r content_knowledge_region, echo=FALSE, warning=FALSE}
 
 region_content <- school_dta_short_anon %>%
-  mutate(Type=territory)
+  mutate(Type=territory) %>%
+  filter(Syrian_school==FALSE)
 
 
 
@@ -1952,6 +1955,8 @@ discuss_labels_df <- data.frame(variable=as.character(discuss_indicators),
                       varlabels=as.character(discuss_indicators_labels))
 
 teacher_discuss_df <- teacher_questionnaire_anon %>%
+  as.tibble() %>%
+  zap_labels() %>%
   mutate(no_discuss=100*if_else(m3sdq19_ildr==0,1,0),
          discuss_10=100*case_when(
            m3sdq19_ildr==0 ~ 0,
@@ -2540,9 +2545,9 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
 
       
       #Now do breakdown by non-evening/Rural
-      #non-evening
+      #non-syrian
       sumstats_school_nonevening <- school_dta_short_anon %>%
-        filter(foundation_period!="Evening") 
+        filter(Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_nonevening$ipw 
@@ -2571,9 +2576,9 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
                ci_urban=ci) %>%
         select(varlabel, mean_urban, ci_urban)
       
-      #evening
+      #syrian
       sumstats_school_evening <- school_dta_short_anon  %>%
-        filter(foundation_period=="Evening") 
+        filter(Syrian_school==TRUE) 
       
       
       sch_ipw<-sumstats_school_evening$ipw 
@@ -2664,13 +2669,13 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Evening Schools",
+    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Syrian Schools",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
-          , "Mean", "95% Confident Interval", "Ratio of Non-Evening to Evening"),
+          , "Mean", "95% Confident Interval", "Ratio of Non-Syrian to Syrian"),
           digits = 2, 
           escape=F) %>%
     kable_styling("striped") %>%
-    add_header_above(c(" "=1, "Overall"=2,"Non-Evening"=2,"Evening"=2, " "=1))
+    add_header_above(c(" "=1, "Overall"=2,"Non-Syrian"=2,"Syrian"=2, " "=1))
   
       
         #add function to produce weighted summary stats
@@ -2686,7 +2691,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       #Now do breakdown by territory
       #North
       sumstats_school_north <- school_dta_short_anon %>%
-        filter(territory=="North") 
+        filter(territory=="North" & Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_north$ipw 
@@ -2717,7 +2722,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       
       #middle
       sumstats_school_middle <- school_dta_short_anon  %>%
-        filter(territory=="Middle") 
+        filter(territory=="Middle" & Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_middle$ipw 
@@ -2747,7 +2752,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       
       #south
       sumstats_school_south <- school_dta_short_anon  %>%
-        filter(territory=="South") 
+        filter(territory=="South" & Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_south$ipw 
@@ -2846,7 +2851,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
     #   round(mean_south,1), background = spec_color(mean_south/mean,  alpha=0.4, option='cividis', direction=-1)
     # )
     # ) %>%
-    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Region",
+    kable(caption = "Summary Statistics of Dashboard Sub-Indicators - Jordan 2019 - Region (excludes Syrian Schools)",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"),
           digits = 2, 
