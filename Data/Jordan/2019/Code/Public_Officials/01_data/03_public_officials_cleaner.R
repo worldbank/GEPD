@@ -260,6 +260,44 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
                                                                                                                                 .x>=1 & .x<=5 ~ as.numeric(.x),
                                                                                                                                 is.na(.x) ~ as.numeric(NA)))
 
+#filter out the director of HR, which isn't specifically asked about indicator questions
+
+public_officials_dta_hr <- public_officials_dta_clean %>%
+  filter(director_hr==1)
+
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  filter(director_hr==0)
+
+
+
+####################################
+# Multiple Imputation of missing values
+###################################
+impute='yes'
+
+if (impute=='yes') {
+  #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
+  #https://academic.oup.com/aje/article/179/6/764/107562
+  impdata<-mice::mice(select(public_officials_dta_clean,starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), , m=1,
+                      method='rf',
+                      maxit = 50, seed = 500)
+  
+  public_officials_dta_imp <- mice::complete(impdata, 1) 
+  
+  
+  public_officials_dta_clean <- public_officials_dta_clean %>%
+    select(-starts_with('NLG'), -starts_with('ACM'), -starts_with('QB'), -starts_with('IDM')) %>%
+    bind_cols(public_officials_dta_imp)
+} else if (impute=='manual') {
+  
+  public_officials_dta_clean <-public_officials_dta_clean %>%
+    mutate_at(vars(starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')), ~case_when(is.na(.x) ~ 1,
+                                                                                                                                  TRUE ~ as.numeric(.x)))
+  
+}
+
+
+
 ########
 # National Learning Goals
 ########
@@ -335,13 +373,6 @@ public_officials_dta_short <-public_officials_dta_clean %>%
                 , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
 
 
-#filter out the director of HR, which isn't specifically asked about indicator questions
-
-public_officials_dta_hr <- public_officials_dta_clean %>%
-  filter(director_hr==1)
-
-public_officials_dta_clean <- public_officials_dta_clean %>%
-  filter(director_hr==0)
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))

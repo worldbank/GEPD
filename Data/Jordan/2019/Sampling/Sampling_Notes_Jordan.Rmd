@@ -276,7 +276,7 @@ sample_map <- sample_updated %>%
    )
    
 map <- function(df_input) {    leaflet(df_input) %>% 
-    addTiles()  %>%
+    addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
     addMarkers( lng=~longitude,  lat=~latitude,
                 popup =  paste("School Code: ", sample_map_chosen$organization_code, " <br>",
                                "School Name: ", sample_map_chosen$school_name, " <br>",

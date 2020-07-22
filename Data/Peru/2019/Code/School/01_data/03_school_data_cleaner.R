@@ -1295,9 +1295,9 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
           .=="Y" ~ 1,
           TRUE ~ as.numeric(NA)
         )) %>%
-          mutate_at(vars(low_medium_high), ~(factor(., levels=c(2,3,4), labels=c("Low", "Medium", "High")))) %>%
-          mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
-          mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"))))
+          mutate_at(vars(low_medium_high), ~(factor(., levels=c(2,3,4), labels=c("NA","Low", "Medium", "High"), ordered=T))) %>%
+          mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High"), ordered=T))) %>%
+          mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"), ordered=T)))
 
 
 #create sub-indicators from TEACH

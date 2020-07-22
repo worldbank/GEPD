@@ -12,6 +12,9 @@ library(here)
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
+
+if (api!="no") {
+
 #user credentials
 #Check whether password.R file is in Github repo
 pw_file<-here::here("password.R")
@@ -76,6 +79,12 @@ close(filecon)
 
 #unzip
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
+} else {
+  tounzip <- paste("mydata-",'2020-02-28', ".zip" ,sep="")
+  
+  unzip(file.path(download_folder, tounzip), exdir=download_folder)
+  
+}
 
 
 #Create function to save metadata for each question in each module
