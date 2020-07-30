@@ -58,6 +58,7 @@
 # R-scrips and Rmarkdown-scripts
 !/**/**/*.R
 !/**/**/*.Rmd
+!/**/**/*.Rproj
 
 # HTML files
 !/**/*item_analysis.html
