@@ -74,18 +74,22 @@ library(httr)
 library(jsonlite)
 library(wbstats)
 library(ggrepel)
+library(here)
 #########################
 # Launch Code
 ########################
 #move working directory to github main folder
-#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
+here()
+
+setwd(here())
 #Set the country name here
 country_file_name <- "PER"
 country <- "Peru"
 country_uc <- "PERU"
 year <- "2019"
 #load API file
-input <- read_csv(paste("GEPD_Indicators_API_",country_file_name,".csv",sep=""))
+input <- read_csv(paste("./Data/GEPD_Indicators_API_",country_file_name,".csv",sep=""))
 #Modify file to add indicator labels for de-facto de-jure comparison indicators required
 input <- input %>%
   mutate(value = if_else(value<=5.5, round(value, digits = 1), round(value, digits = 0))) %>%
@@ -224,7 +228,7 @@ GEPD uses 3 data collection instruments to report on nearly 40 indicators that o
 
 #### Figure 1. GEPD framework (practices, policies and politics), expanding on WDR 2018 framework ####
 ```{r out.width = "80%", fig.align = "center", echo=FALSE}
-figure1a <- paste("full_circle.png")
+figure1a <- paste(here(),"/Data/full_circle.png", sep="")
 knitr::include_graphics(figure1a)
 ```
 ### **INSTRUMENTS OF DATA** ###  
