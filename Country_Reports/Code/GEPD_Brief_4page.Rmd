@@ -195,6 +195,10 @@ learning_pov_indicators<- 'SE.LPV.PRIM' # Pupils below minimum reading proficien
 cache_list<-wbstats::wbcache()
 country_list <- wbstats::wbcountries()
 
+#get region and income group of the country
+region_label <- country_list[which(country_list$iso3c==country_file_name),]$admin
+income_label <- country_list[which(country_list$iso3c==country_file_name),]$income
+
 #set reference year to 2019 (Year of survey)
 reference_year<-as.numeric(year)
 
@@ -213,7 +217,7 @@ learning_poverty_df <-wbstats::wb(country="all", #by specifying all, we can get 
     filter(as.numeric(date)==max(as.numeric(date))) %>% #group by country to create one observation per country which is the latest value
       mutate(tab = 0 , 
            SE.LPV.PRIM = as.numeric(SE.LPV.PRIM),
-           ID = case_when(iso3c %in% c(country_file_name,'LAC','UMC') ~ iso3c),
+           ID = case_when(iso3c %in% c(country_file_name,region_label,income_label) ~ iso3c),
            grx = SE.LPV.PRIM/100)
 ```
 
@@ -381,8 +385,8 @@ lp_figure <-   learning_poverty_df %>%
     theme(legend.position = "none")
 
 lp_num_country <- round(input$value[input$Series=="SE.LPV.PRIM"], digits = 0)
-lp_region <- round(learning_poverty_df$`SE.LPV.PRIM`[learning_poverty_df$iso3c == 'LAC'], digits = 0)
-lp_category <- round(learning_poverty_df$SE.LPV.PRIM[learning_poverty_df$iso3c == 'UMC'], digits = 0)
+lp_region <- round(learning_poverty_df$`SE.LPV.PRIM`[learning_poverty_df$iso3c == region_label], digits = 0)
+lp_category <- round(learning_poverty_df$SE.LPV.PRIM[learning_poverty_df$iso3c == income_label], digits = 0)
 diff_lp_regionval <- if_else(lp_num_country>lp_region, lp_num_country-lp_region, lp_region-lp_num_country)
 diff_lp_regionval_vf <- diff_lp_regionval[1]
 diff_lp_regiontext <- if_else(lp_num_country>lp_region, glue("{diff_lp_regionval_vf}% points worse"), glue("{diff_lp_regionval_vf}% points better"))
