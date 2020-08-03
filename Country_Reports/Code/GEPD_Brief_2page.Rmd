@@ -78,6 +78,10 @@ library(here)
 here()
 setwd(here())
 
+country_file_name <- "JOR"
+country <- "Jordan"
+country_uc <- "JOR"
+year <- "2019"
 
 #load API file
 input <- read_csv(paste("./Data/GEPD_Indicators_API_",country_file_name,".csv",sep=""))
@@ -170,10 +174,12 @@ The **Policy Survey** collects information via interviews with ~200 officials pe
 The **Survey of public officials** collects information about the capacity and orientation of the bureaucracy and political factors affecting education outcomes. This survey is an education-focused version of the civil-servant surveys from the Bureaucracy Lab, WBG.  
 
 ### **KEY TAKEAWAYS, `r country_uc`, `r year`** ###  
-
-`r paste(takeaway)`
-
-
+- 52% learning poverty is observed at grade 4 level
+- Overall Grade 4 student proficiency (>80% student knowledge) is only `r round(input$value[input$Series=="SE.PRM.LERN"],digits=0)`%, attributed to low numeracy proficiency `r round(input$value[input$Series=="SE.PRM.LERN.3"], digits=0)`%).
+- Low teacher content knowledge attributed to poor teacher support and lack of strong instructional leadership (especially principal feedback on classroom observation)
+- Low capacity for learning in Grade 1 (particularly socio-emotional knowledge) is attributed to low enrolment in early childhood programs (13%)
+- A ~0.8 point difference exists in the policy de-jure and de-facto indicators on a 5 point scale for teaching and school management. Major gaps are seen in teacher support, teacher motivation and evaluation of school management
+- Bureaucracy scores high on mandates and accountability but low on impartial decision making
 
 ```{r color_codes, echo=FALSE, message = FALSE, warning = FALSE}
 

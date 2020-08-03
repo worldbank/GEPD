@@ -36,7 +36,7 @@ header-includes: \usepackage{fancyhdr}
 ---
 \newcommand{\greynote}[1]{
     {\scriptsize
-    \textcolor{darkgray}{\textit{Source:} #1}
+    \textcolor{darkgray}{\textit{Notes:} #1}
   }
 }
 
@@ -61,6 +61,7 @@ header-includes: \usepackage{fancyhdr}
 \newcommand*{\tabindent}{\hspace{1mm}}
 
 ```{r setup, include=FALSE}
+
 #include packages
 library(tidyverse)
 library(haven)
@@ -75,24 +76,60 @@ library(jsonlite)
 library(wbstats)
 library(ggrepel)
 library(here)
+
 #########################
 # Launch Code
 ########################
 #anchor directory to correct place
 here()
 setwd(here())
+knitr::opts_knit$set(root.dir = here())
 
 country_file_name <- "JOR"
 country <- "Jordan"
-country_uc <- "JOR"
 year <- "2019"
-
+country_uc <- "JOR"
 #load API file
 input <- read_csv(paste("./Data/GEPD_Indicators_API_",country_file_name,".csv",sep=""))
 #Modify file to add indicator labels for de-facto de-jure comparison indicators required
 input <- input %>%
   mutate(value = if_else(value<=5.5, round(value, digits = 1), round(value, digits = 0))) %>%
-  mutate(label = case_when(
+  mutate(
+lern_label = case_when(
+Series == "SE.PRM.LERN.1.U" ~ "Urban",
+Series == "SE.PRM.LERN.1.R" ~ "Rural",
+Series == "SE.PRM.LERN.1.F" ~ "Female",
+Series == "SE.PRM.LERN.1.M" ~ "Male",
+Series == "SE.PRM.LERN.2" ~ "Literacy",
+Series == "SE.PRM.LERN.3" ~ "Numeracy"),
+gr = case_when(
+Series == "SE.PRM.LERN.1.U" ~ "rural",
+Series == "SE.PRM.LERN.1.R" ~ "rural",
+Series == "SE.PRM.LERN.1.F" ~ "gender",
+Series == "SE.PRM.LERN.1.M" ~ "gender",
+Series == "SE.PRM.LERN.2" ~ "subject",
+Series == "SE.PRM.LERN.3" ~ "subject"),
+label = case_when(
+Series == "SE.PRM.LCAP.2" ~ "Numeracy score",   
+Series == "SE.PRM.LCAP.3" ~ "Literacy score",   
+Series == "SE.PRM.LCAP.4" ~ "Executive funcion score",   
+Series == "SE.PRM.LCAP.5" ~ "Socio-emotional score",
+Series == "SE.PRM.LCBC" ~ "Center-Based Care",    
+Series == "SE.PRM.LFCP" ~ "Caregiver Financial Capacity",    
+Series == "SE.PRM.LHTH" ~ "Health Programs",    
+Series == "SE.PRM.LNTN" ~ "Nutrition Programs",    
+Series == "SE.PRM.LSKC" ~ "Caregiver Skills Capacity",
+Series == "SE.PRM.INPT.2" ~ "Percent of classrooms with a functional blackboard and chalk",
+Series == "SE.PRM.INPT.3" ~ "Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",
+Series == "SE.PRM.INPT.4" ~ "Percent of classrooms with basic classroom furniture",
+Series == "SE.PRM.INPT.5" ~ "Percent of schools with access to EdTech",
+Series == "SE.PRM.INFR.2" ~ "Percent of schools with drinking water",
+Series == "SE.PRM.INFR.3" ~ "Percent of schools with functioning toilets",
+Series == "SE.PRM.INFR.4" ~ "Percent of schools with access to electricity",
+Series == "SE.PRM.INFR.5" ~ "Percent of schools with access to internet",
+Series == "SE.PRM.INFR.6" ~ "Percent of schools accessible to children with special needs",
+Series == "SE.PRM.IMON" ~ "Inputs & Infrastructure - Monitoring",    
+Series == "SE.PRM.ISTD" ~ "Inputs & Infrastructure - Standards",
 Series == "SE.PRM.SATT" ~ "Management-Attraction",
 Series == "SE.PRM.SCFN" ~ "Management-Clarity of functions",
 Series == "SE.PRM.SEVL" ~ "Management-Evaluation",
@@ -180,50 +217,6 @@ Series == "SE.PRM.TSUP.5" ~ "Attended in-service training recently",
 Series == "SE.PRM.TSUP.8" ~ "% time spent in classrooms during trainings",
 Series == "SE.PRM.TSUP.9" ~ "Have opportunities to share ways to improve teaching with other teachers")
 )
-
-##########
-# Pull Ed Stats Data using World Bank API
-##########
-# make request to World Bank API and get a list of all EdStats indicators (including learning poverty)
-EdStatsRequest <- GET(url = "http://api.worldbank.org/v2/indicator?per_page=20000&format=json&source=12")
-EdStatsResponse <- content(EdStatsRequest, as = "text", encoding = "UTF-8")
-
-# Parse the JSON content and convert it to a data frame.
-EdStatsJSON <- fromJSON(EdStatsResponse, flatten = TRUE) %>%
-  data.frame()
-
-# Create a list of indicators to pull from edstats. More can be added as needed
-learning_pov_indicators<- 'SE.LPV.PRIM' # Pupils below minimum reading proficiency at end of primary (%). Low GAML threshold
-
-#get WDI metadata infor
-cache_list<-wbstats::wbcache()
-country_list <- wbstats::wbcountries()
-
-#get region and income group of the country
-region_label <- country_list[which(country_list$iso3c==country_file_name),]$admin
-income_label <- country_list[which(country_list$iso3c==country_file_name),]$income
-country_label <- country
-#set reference year to 2019 (Year of survey)
-reference_year<-as.numeric(year)
-
-# Now use wbstats package in R to pull from World Bank API
-
-learning_poverty_df <-wbstats::wb(country="all", #by specifying all, we can get a list of all aggregates (such as region or income level)
-                     indicator=learning_pov_indicators,
-                     startdate=reference_year-10,
-                     enddate=reference_year,
-                     return_wide = T,
-                     removeNA=TRUE,
-                     cache = cache_list
-                     ) %>%
-    filter(((reference_year-as.numeric(date))<=10) & (reference_year>=as.numeric(date))) %>% #filter out years outside reference window of 10 years     
-    group_by(iso3c, country) %>%
-    filter(as.numeric(date)==max(as.numeric(date))) %>% #group by country to create one observation per country which is the latest value
-      mutate(tab = 0 , 
-           SE.LPV.PRIM = as.numeric(SE.LPV.PRIM),
-           ID = case_when(country %in% c(country_label,region_label,income_label) ~ iso3c,
-                          TRUE ~ as.character(NA)),
-           grx = SE.LPV.PRIM/100)
 ```
 
 ### **INTRODUCTION** ###  
@@ -242,7 +235,12 @@ The **Survey of public officials** collects information about the capacity and o
 
 ### **KEY TAKEAWAYS, `r country_uc`, `r year`** ###  
 
-`r paste(takeaway)`
+- 52% learning poverty is observed at grade 4 level
+- Overall Grade 4 student proficiency (>80% student knowledge) is only `r round(input$value[input$Series=="SE.PRM.LERN"],digits=0)`%, attributed to low numeracy proficiency `r round(input$value[input$Series=="SE.PRM.LERN.3"], digits=0)`%).
+- Low teacher content knowledge attributed to poor teacher support and lack of strong instructional leadership (especially principal feedback on classroom observation)
+- Low capacity for learning in Grade 1 (particularly socio-emotional knowledge) is attributed to low enrolment in early childhood programs (13%)
+- A ~0.8 point difference exists in the policy de-jure and de-facto indicators on a 5 point scale for teaching and school management. Major gaps are seen in teacher support, teacher motivation and evaluation of school management
+- Bureaucracy scores high on mandates and accountability but low on impartial decision making
 
 ```{r color_codes, echo=FALSE, message = FALSE, warning = FALSE}
 
@@ -349,6 +347,7 @@ Learning                  & Proficiency on GEPD Assessment  & {`r input$value_co
                                       & Management Practices     & `r input$value_color[input$Series=="SE.PRM.PMAN.1.M"]` & `r input$value_color[input$Series=="SE.PRM.PMAN.1.F"]`\\\hline
 \end{tabular}}
 \end{table}
+\raggedbottom
 
 #### Table 3. GEPD Indicators by region, `r country`, `r year` ####
 \begin{table}[H]
@@ -368,38 +367,24 @@ Learning                  & Proficiency on GEPD Assessment & {`r input$value_col
                                       & Management Practices     & `r input$value_color[input$Series=="SE.PRM.PMAN.1.R"]` & `r input$value_color[input$Series=="SE.PRM.PMAN.1.U"]`\\\hline
 \end{tabular}}
 \end{table}
-```{r learning, fig.width=5, fig.height=2, echo=FALSE, warning=FALSE}
+\raggedbottom
 
-lp_figure <-   learning_poverty_df %>%
-    ggplot(aes(x=grx, y= tab)) +
-    geom_point(pch = 21, aes(fill= grx), size = 2) +
-    scale_fill_gradient(low = "grey21", high = "grey100") +
-    geom_point(data = learning_poverty_df[learning_poverty_df$ID ==country,], aes(x = grx, y=tab), 
-               pch=21, color = "black", fill = "#ffffb3", size = 3.5) +
-    geom_point(data = learning_poverty_df[learning_poverty_df$ID ==region_label,], aes(x = grx, y=tab), 
-               pch=21, color = "black", fill = "#0066ff", size = 3.5) +
-    geom_point(data = learning_poverty_df[learning_poverty_df$ID ==income_label,], aes(x = grx, y=tab), 
-               pch=21, color = "black", fill = "#ff9933", size = 3.5) +
-    #scale_x_continuous(breaks = c(0,0.25,0.5,0.75,1), labels = percent) +
-    geom_text_repel(data = subset(learning_poverty_df, !is.na(ID)), aes(x = grx, y = tab, label = ID, color = ID), 
-                    fontface = 'bold', size = 3.5, box.padding = 2, segment.color = 'black', ylim = c(0,NA), force = 1) +
-    scale_colour_manual(values = c("#282828", "#0066ff", "#ff9933")) +
-    ylim(-0.2,0.2)+
-    annotate("text", x = c(0,0.25,0.5,0.75,1), y = -0.06, label = c("0%", "25%", "50%", "75%", "100%")) +
-    theme_void() +
-    theme(legend.position = "none")
+```{r, code = readLines("learning_poverty.R"), include=FALSE}
+```
+### **OVERALL LEARNING OUTCOMES: `r learning_poverty_str` LEARNING POVERTY IN GRADE 4** ###  
+Learning poverty is defined as the share of children at end of primary age below minimum reading proficiency, adjusted for out of school children. Learning poverty in `r country` is `r diff_lp_regiontext` than the average for `r learning_poverty_df$country[learning_poverty_df$country == region_label]` region and `r diff_lp_cattext` than the average for `r learning_poverty_df$country[learning_poverty_df$country == income_label]` countries.
 
-lp_num_country <- round(input$value[input$Series=="SE.LPV.PRIM"], digits = 0)
-lp_region <- round(learning_poverty_df$`SE.LPV.PRIM`[learning_poverty_df$country == region_label], digits = 0)
-lp_category <- round(learning_poverty_df$SE.LPV.PRIM[learning_poverty_df$country == income_label], digits = 0)
-diff_lp_regionval <- if_else(lp_num_country>lp_region, lp_num_country-lp_region, lp_region-lp_num_country)
-diff_lp_regionval_vf <- diff_lp_regionval[1]
-diff_lp_regiontext <- if_else(lp_num_country>lp_region, glue("{diff_lp_regionval_vf}% points worse"), glue("{diff_lp_regionval_vf}% points better"))
-diff_lp_catval <- if_else(lp_num_country>lp_category, lp_num_country-lp_category, lp_region-lp_category)
-diff_lp_catval_vf <- diff_lp_catval[1]
-diff_lp_cattext <- if_else(lp_num_country>lp_category, glue("{diff_lp_catval_vf}% points worse"), glue("{diff_lp_catval_vf}% points better"))
+#### Figure 2. Leaning poverty comparison, `r country` ####
+```{r lp_fig, out.width= "100%", fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
+figure2 <- paste(here(),"/LP figures/lp_figure_",country_file_name, ".png", sep="")
+knitr::include_graphics(figure2)
+```
 
-learning_poverty_str <- str_c(lp_num_country, "%", sep = "")
+\greynote{Grey circles represent other countries. Large yellow circle represents `r country`. Other circles represent average learning poverty in `r country`'s region and income group.}
+
+```{r lern, include=FALSE}
+
+grade4_overall <- round(input$value[input$Series=="SE.PRM.LERN"], digits = 0)
 
 grade4_rural <- round(input$value[input$Series=="SE.PRM.LERN.1.R"], digits = 1)
 grade4_urban <- round(input$value[input$Series=="SE.PRM.LERN.1.U"], digits = 1)
@@ -416,36 +401,30 @@ grade4_num <- round(input$value[input$Series=="SE.PRM.LERN.3"], digits = 0)
 diff_lern_subject <- if_else(grade4_lit>grade4_num, grade4_lit-grade4_num, grade4_num-grade4_lit)
 lern_subject_text <- if_else(grade4_lit>grade4_num, glue("{diff_lern_subject} points higher"), glue("{diff_lern_subject} points lower"))
 ```
-### **OVERALL LEARNING OUTCOMES: `r learning_poverty_str` LEARNING POVERTY IN GRADE 4** ###  
-Learning poverty is `r diff_lp_regiontext` than the average for `r learning_poverty_df$country[learning_poverty_df$country == region_label]` region and `r diff_lp_cattext` than the average for `r learning_poverty_df$country[learning_poverty_df$country == income_label]` countries.
 
-
-#### Figure 2. Leaning poverty, `r country` ####
-```{r lp_fig, fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
-lp_figure
-```
-
-Average proficiency in Grade 4 is `r lern_subject_text` in literacy compared to numeracy,`r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.
+GEPD grade 4 assessment proficiency is defined as \% students scoring greater than 80/100 on student knowledge. GEPD student proficiency in `r country` is `r grade4_overall`% . 
+\vfill\null
+Student proficiency in literacy is `r lern_subject_text` in literacy compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.
 
 #### Figure 3. Grade 4 proficiency, `r country` ####
 ```{r lern_teach, fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
-input %>%
-  filter(Series == "SE.PRM.LERN.1.U"| Series =="SE.PRM.LERN.1.R"|Series =="SE.PRM.LERN.1.M"|Series == "SE.PRM.LERN.1.F"
-         |Series == "SE.PRM.LERN.2"|Series =="SE.PRM.LERN.3") %>%
-  mutate(gr = c("rural","rural", "gender", "gender", "subject", "subject")) %>%
-  ggplot(aes(y=value, x = Series, fill = gr)) +
-  geom_bar(stat = "identity", ) +
-  geom_text(aes(label= str_c((round(value, digits =1)),"%", sep = "")),hjust=-0.25, size=4) +
-  coord_flip()+
-  labs(y = "Average Grade 4 proficiency %",
-       caption = "Note: Proficiency means % students with knowledge score above 80%") +
-  scale_x_discrete(labels = c("Urban", "Rural", "Male", "Female", "Literacy", "Numeracy"), name = "") +
-  scale_fill_manual(values=c("#009FDA","#000000","#002244"))+
-  scale_y_continuous(limits = c(0,100)) +
-  theme_bw() +
-  theme(legend.position = "none",
-        axis.text.y =  element_text(size = 11),
-        axis.title.x = element_text(size = 11))
+  input_lern <- input %>%
+    filter(!is.na(lern_label)) %>%
+    mutate(lern_label = factor(lern_label, levels = c("Urban", "Rural", "Male", "Female", "Numeracy", "Literacy")))
+
+ input_lern %>%
+    ggplot(aes(y=value, x = lern_label, fill = gr)) +
+    geom_bar(stat = "identity", ) +
+    geom_text(aes(label= str_c((round(value, digits =1)),"%", sep = "")),hjust=-0.25, size=4) +
+    coord_flip()+
+    labs(y = "GEPD- Grade 4 proficiency %") +
+    scale_x_discrete(name = "") +
+    scale_fill_manual(values=c("#009FDA","#000000","#002244"))+
+    scale_y_continuous(limits = c(0,110)) +
+    theme_bw() +
+    theme(legend.position = "none",
+          axis.text.y =  element_text(size = 11),
+          axis.title.x = element_text(size = 11))
 
 #Content_knowledge
 teach_cont <- round(input$value[input$Series=="SE.PRM.CONT"], digits = 0)
@@ -455,19 +434,26 @@ cont_text <- if_else(teach_cont<60, glue("({teach_cont}%) needs improvement"), i
 cont_diff_subject <- if_else(teach_cont_lit>teach_cont_math, teach_cont_lit-teach_cont_math, teach_cont_math-teach_cont_lit)
 cont_subject_text <- if_else(teach_cont_lit>teach_cont_math, glue("{cont_diff_subject} points higher"), glue("{cont_diff_subject} points lower"))
 
-cont_policy_lowest_var <- as.name(c("SE.PRM.TATT","SE.PRM.TSDP","SE.PRM.TSUP","SE.PRM.TEVL") [which.min(c(input$value[input$Series=="SE.PRM.TATT"], input$value[input$Series=="SE.PRM.TSDP"],input$value[input$Series=="SE.PRM.TSUP"],  input$value[input$Series=="SE.PRM.TEVL"]))])
-cont_policy_lowest_varval <- round(input$value[input$Series==cont_policy_lowest_var], digits = 1)
-
 teach_pedg <- round(input$value[input$Series=="SE.PRM.PEDG"], digits = 0)
 pedg_text <- if_else(teach_pedg<60, glue("({teach_pedg}%) needs improvement"), if_else(teach_pedg>=60 & teach_pedg<80, glue("({teach_pedg}%) requires caution"), glue("({teach_pedg}%) is on target")))
+
+teach_efft <- round(input$value[input$Series=="SE.PRM.EFFT.2"], digits = 0)
+efft_text <- if_else(teach_efft<60, glue("({teach_efft}%) needs improvement"), if_else(teach_efft>=60 & teach_efft<80, glue("({teach_efft}%) requires caution"), glue("({teach_efft}%) is on target")))
+
+cont_policy_lowest_var <- as.name(c("SE.PRM.TATT","SE.PRM.TSDP","SE.PRM.TSUP","SE.PRM.TMNA","SE.PRM.TEVL") [which.min(c(input$value[input$Series=="SE.PRM.TATT"], input$value[input$Series=="SE.PRM.TSDP"],input$value[input$Series=="SE.PRM.TSUP"],  input$value[input$Series=="SE.PRM.TMNA"], input$value[input$Series=="SE.PRM.TEVL"]))])
+cont_policy_lowest_varval <- round(input$value[input$Series==cont_policy_lowest_var], digits = 1)
+cont_policy_lowest_name <- input$label[input$Series == cont_policy_lowest_var]
 ```
 
-**Teacher effectiveness**  
-Teacher content knowledge `r cont_text`. Teacher proficiency in language (`r teach_cont_lit`%) is `r cont_subject_text` than mathematics proficiency (`r teach_cont_math`%). Teacher pedagogical skills score `r pedg_text`.
+### **COMPARING DE-FACTO PRACTICES AND POLICY LEVERS** ###  
+Practice indicators measure quality of service delivery in schools such as teacher and student attendance, teacher knowledge, principal management skills, etc. Policy lever indicators measure how well school, personnel and student policies governing these practices are implemented. For instance, teacher content knowledge(practice) is impacted by implementation of teacher hiring policies, teaching support and training policies, and teacher monitoring and accountability systems. Comparing de-facto practice and policy lever indicators allows identification of low-scoring policy levers that affect low/high observed practice indicators.  
+
+#### **Teacher effectiveness** ####  
+Teacher content knowledge `r cont_text`. Teacher proficiency in language (`r teach_cont_lit`%) is `r cont_subject_text` than mathematics proficiency (`r teach_cont_math`%). Teacher pedagogical skills score `r pedg_text`, and teacher attendance `r efft_text`. `r cont_policy_lowest_name` policy lever scores the lowest(`r cont_policy_lowest_varval`/5).
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
-\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators}}\\\hline
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators(Teaching)}}\\\hline
 Content knowledge                   & {`r input$value_color[input$Series=="SE.PRM.CONT"]`\%}   & Attraction                                & `r input$value_color[input$Series=="SE.PRM.TATT"]` \\\cdashline{1-4} 
 \tabindent\emph{Maths proficiency}               & {`r input$value_color[input$Series=="SE.PRM.CONT.3"]`\%} &                                           & `r input$only_color[input$Series=="SE.PRM.TSDP"]`\\\cdashline{1-2}   
 \tabindent\emph{Language proficiency}            & {`r input$value_color[input$Series=="SE.PRM.CONT.2"]`\%} & \multirow{-2}{*}{Selection \& deployment} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.TSDP"]`} \\\cdashline{1-4}        
@@ -487,20 +473,25 @@ Pedagogical skills                               & {`r input$value_color[input$S
 #Capacity for learning
 lcap <- round(input$value[input$Series=="SE.PRM.LCAP"], digits = 0)
 lcap_text <- if_else(lcap<60, glue("({lcap}%) needs improvement"), if_else(lcap>=60 & lcap<80, glue("({lcap}%) requires caution"), glue("({lcap}%) is on target")))
+
 lcap_lowest_var <- as.name(c("SE.PRM.LCAP.2","SE.PRM.LCAP.3","SE.PRM.LCAP.4","SE.PRM.LCAP.5") [which.min(c(input$value[input$Series=="SE.PRM.LCAP.2"], input$value[input$Series=="SE.PRM.LCAP.3"],input$value[input$Series=="SE.PRM.LCAP.4"],  input$value[input$Series=="SE.PRM.LCAP.5"]))])
+lcap_lowest_varval <- round(input$value[input$Series==lcap_lowest_var], digits = 0)
 lcap_lowest_var_name <- input$label[input$Series==lcap_lowest_var]
-lcap_lowest_varval <- round(input$value[input$Series==lcap_lowest_var], digits = 1)
-lcap_subject_text <- glue("({lcap_lowest_varval}%)")
 
 attd <- round(input$value[input$Series=="SE.PRM.ATTD"], digits = 0)
 attd_text <- if_else(attd<60, glue("({attd}%) needs improvement"), if_else(attd>=60 & attd<80, glue("({attd}%) requires caution"), glue("({attd}%) is on target")))
+
+lcap_policy_lowest_var <- as.name(c("SE.PRM.LNTN","SE.PRM.LHTH","SE.PRM.LCBC","SE.PRM.LSKC","SE.PRM.LFCP") [which.min(c(input$value[input$Series=="SE.PRM.LNTN"], input$value[input$Series=="SE.PRM.LHTH"],input$value[input$Series=="SE.PRM.LCBC"],  input$value[input$Series=="SE.PRM.LSKC"], input$value[input$Series=="SE.PRM.LFCP"]))])
+lcap_policy_lowest_varval <- round(input$value[input$Series==lcap_policy_lowest_var], digits = 1)
+lcap_policy_lowest_name <- input$label[input$Series == lcap_policy_lowest_var]
 ```
-**Capacity for learning**  
-Student proficiency in Grade 1 `r lcap_text`. `r lcap_lowest_var_name` is the lowest knoweldge sub-score `r lcap_subject_text`. Student attendance`r attd_text`.
+
+#### **Capacity for learning in Grade 1** ####  
+Student proficiency in Grade 1 `r lcap_text`. `r lcap_lowest_var_name`(`r lcap_lowest_varval`)% is the lowest knowledge sub-score. Student attendance`r attd_text`. `r lcap_policy_lowest_name` policy lever scores the lowest(`r lcap_policy_lowest_varval`/5).
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
-\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators}}\\\hline
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators(Learners)}}\\\hline
 Capacity for learning                  & {`r input$value_color[input$Series=="SE.PRM.LCAP"]`\%} & & `r input$only_color[input$Series=="SE.PRM.LNTN"]`\\\cdashline{1-2}
 \tabindent\emph{Numeracy score}        & `r input$value_color[input$Series=="SE.PRM.LCAP.2"]`   & \multirow{-2}{*}{Nutrition Programs} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.LNTN"]`}  \\\cdashline{1-4}  
 \tabindent\emph{Literacy score}        & `r input$value_color[input$Series=="SE.PRM.LCAP.3"]`   & Health Programs                     & `r input$value_color[input$Series=="SE.PRM.LHTH"]` \\\cdashline{1-4}  
@@ -516,24 +507,29 @@ Student Attendance                     & {`r input$value_color[input$Series=="SE
 #Inputs and infrastructure
 inpt <- round(input$value[input$Series=="SE.PRM.INPT"], digits = 0)
 inpt_text <- if_else(inpt<3, glue("({inpt}/5) need improvement"), if_else(lcap>=3 & lcap<4, glue("({inpt}/5) require caution"), glue("({inpt}/5) are on target")))
+
 inpt_lowest_var <- as.name(c("SE.PRM.INPT.2","SE.PRM.INPT.3","SE.PRM.INPT.4","SE.PRM.INPT.5") [which.min(c(input$value[input$Series=="SE.PRM.INPT.2"], input$value[input$Series=="SE.PRM.INPT.3"],input$value[input$Series=="SE.PRM.INPT.4"],  input$value[input$Series=="SE.PRM.INPT.5"]))])
-inpt_lowest_var_name <- input$label[input$Series==inpt_lowest_var]
-inpt_lowest_varval <- round(input$value[input$Series==inpt_lowest_var], digits = 1)
-inpt_component_text <- glue("({inpt_lowest_varval}%)")
+inpt_lowest_var_name <- input$label[input$Series == inpt_lowest_var]
+inpt_lowest_varval <- round(input$value[input$Series==inpt_lowest_var], digits = 0)
 
 infr <- round(input$value[input$Series=="SE.PRM.INFR"], digits = 0)
 infr_text <- if_else(infr<3, glue("({infr}/5) needs improvement"), if_else(infr>=3 & infr<4, glue("({infr}/5) requires caution"), glue("({infr}/5) is on target")))
+
 infr_lowest_var <- as.name(c("SE.PRM.INFR.2","SE.PRM.INFR.3","SE.PRM.INFR.4","SE.PRM.INFR.5","SE.PRM.INFR.6") [which.min(c(input$value[input$Series=="SE.PRM.INFR.2"], input$value[input$Series=="SE.PRM.INFR.3"],input$value[input$Series=="SE.PRM.INFR.4"],  input$value[input$Series=="SE.PRM.INFR.5"], input$value[input$Series=="SE.PRM.INFR.6"]))])
 infr_lowest_var_name <- input$label[input$Series==infr_lowest_var]
-infr_lowest_varval <- round(input$value[input$Series==infr_lowest_var], digits = 1)
-infr_component_text <- glue("({infr_lowest_varval}%)")
+infr_lowest_varval <- round(input$value[input$Series==infr_lowest_var], digits = 0)
+
+inpt_policy_lowest_var <- as.name(c("SE.PRM.IMON","SE.PRM.ISTD")[which.min(c(input$value[input$Series=="SE.PRM.IMON"], input$value[input$Series=="SE.PRM.ISTD"]))])
+inpt_policy_lowest_name <- input$label[input$Series == inpt_policy_lowest_var]
+inpt_policy_lowest_varval <- round(input$value[input$Series==inpt_policy_lowest_var], digits = 1)
 ```
-**Inputs and infrastructure**  
-Basic inputs `r inpt_text`. `r inpt_lowest_var_name` is the lowest score `r inpt_component_text`. Basic infrastructure `r infr_text`. `r infr_lowest_var_name` is the lowest score `r infr_component_text`.
+
+#### **Inputs & Infrastructure** ####  
+Basic inputs `r inpt_text`. `r inpt_lowest_var_name`(`r inpt_lowest_varval`)% is the lowest score. Basic infrastructure `r infr_text`. `r infr_lowest_var_name`(`r infr_lowest_varval`)%  is the lowest score. `r inpt_policy_lowest_name` policy lever scores the lowest(`r inpt_policy_lowest_varval`/5).
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
-\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators}}\\\hline
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators(Inputs)}}\\\hline
 Basic inputs & `r input$value_color[input$Series=="SE.PRM.INPT"]` & & `r input$only_color[input$Series=="SE.PRM.ISTD"]` \\\cdashline{1-2}
 \tabindent\emph{\% Blackboard}    & {`r input$value_color[input$Series=="SE.PRM.INPT.2"]`\%} & & `r input$only_color[input$Series=="SE.PRM.ISTD"]`\\\cdashline{1-2}
 \tabindent\emph{\% Stationery}    & {`r input$value_color[input$Series=="SE.PRM.INPT.3"]`\%} & & `r input$only_color[input$Series=="SE.PRM.ISTD"]`\\\cdashline{1-2}
@@ -562,16 +558,19 @@ manage_highest_var_name <- input$Indicator.Name[input$Series==manage_highest_var
 manage_highest_varval <- round(input$value[input$Series==manage_highest_var], digits = 1)
 manage_hcomponent_text <- glue("({manage_highest_varval}/5)")
 
-manage_sub_ind <- c("SE.PRM.OPMN", "SE.PRM.OPMN.2", "SE.PRM.OPMN.3", "SE.PRM.ILDR", "SE.PRM.ILDR.2", "SE.PRM.ILDR.3", "SE.PRM.ILDR.4", "SE.PRM.ILDR.5", "SE.PRM.ILDR.6", "SE.PRM.ILDR.7", "SE.PRM.ILDR.8","SE.PRM.PKNW","SE.PRM.PKNW.2","SE.PRM.PKNW.3",
-"SE.PRM.PMAN", "SE.PRM.PMAN.2","SE.PRM.PMAN.3")
-lowest_sub_ind <- grep(manage_lowest_var, manage_sub_ind, value=TRUE)
+
+manage_policy_lowest_var <- as.name(c("SE.PRM.SATT","SE.PRM.SSLD","SE.PRM.SCFN","SE.PRM.SEVL","SE.PRM.SSUP") [which.min(c(input$value[input$Series=="SE.PRM.SATT"], input$value[input$Series=="SE.PRM.SSLD"],input$value[input$Series=="SE.PRM.SCFN"],  input$value[input$Series=="SE.PRM.SEVL"], input$value[input$Series=="SE.PRM.SSUP"]))])
+manage_policy_lowest_varval <- round(input$value[input$Series==manage_policy_lowest_var], digits = 1)
+manage_policy_lowest_name <- input$label[input$Series == manage_policy_lowest_var]
+
 ```
-**School Management by principals**  
-In school management, the lowest score is for principal's `r manage_lowest_var_name``r manage_lcomponent_text`, whereas the highest score is obtained for `r manage_highest_var_name``r manage_hcomponent_text`
+
+#### **School Management by principals** ####  
+In school management, the lowest score is for principal's `r manage_lowest_var_name``r manage_lcomponent_text`, whereas the highest score is obtained for `r manage_highest_var_name``r manage_hcomponent_text`. School `r manage_policy_lowest_name` policy lever scores the lowest(`r manage_policy_lowest_varval`/5).
 
 \begin{table}[H]
-\resizebox{\columnwidth}{!}{\begin{tabular}{m{4.8cm}cm{4cm}c}
-\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators}}\\\hline
+\resizebox{\columnwidth}{!}{\begin{tabular}{m{4cm}cm{4cm}c}
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy lever indicators(Management)}}\\\hline
 Operational management                     & `r input$value_color[input$Series=="SE.PRM.OPMN"]`       & & `r input$only_color[input$Series=="SE.PRM.SCFN"]`\\\cdashline{1-2}
 \tabindent\emph{Infrastructure}            & `r input$value_color[input$Series=="SE.PRM.OPMN.2"]`     & & `r input$only_color[input$Series=="SE.PRM.SCFN"]`\\\cdashline{1-2}
 \tabindent\emph{Ensuring inputs}           & `r input$value_color[input$Series=="SE.PRM.OPMN.3"]`     & & `r input$only_color[input$Series=="SE.PRM.SCFN"]`\\\cdashline{1-2}
@@ -581,17 +580,18 @@ Instructional Leadership                   & `r input$value_color[input$Series==
 \tabindent\emph{\% Feedback given}         & {`r input$value_color[input$Series=="SE.PRM.ILDR.6"]`\%} & & `r input$only_color[input$Series=="SE.PRM.SCFN"]`\\\cdashline{1-2}
 \tabindent\emph{\% Lesson-plan feedback}   & {`r input$value_color[input$Series=="SE.PRM.ILDR.8"]`\%} & \multirow{-8}{*}{Clarity of functions} & \multirow{-8}{*}{`r input$value_color[input$Series=="SE.PRM.SCFN"]`} \\\hline
 Principal school knowledge                         & `r input$value_color[input$Series=="SE.PRM.PKNW"]`       & & `r input$only_color[input$Series=="SE.PRM.SATT"]`\\\cdashline{1-2}
-\tabindent\emph{\% Familiarity-teacher knowledge}  & {`r input$value_color[input$Series=="SE.PRM.PKNW.2"]`\%} & \multirow{-2}{4cm}{Attraction} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.SATT"]`}\\\cdashline{1-4}
-\tabindent\emph{\% Familiarity-teacher experience} & {`r input$value_color[input$Series=="SE.PRM.PKNW.3"]`\%} & & `r input$only_color[input$Series=="SE.PRM.SSLD"]`\\\cdashline{1-2}
-\tabindent\emph{\% Familiarity-school inputs}      & {`r input$value_color[input$Series=="SE.PRM.PKNW.4"]`\%} & \multirow{-2}{4cm}{Selection \& Deployment} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.SSLD"]`} \\\cdashline{1-4} 
-Management skills & `r input$value_color[input$Series=="SE.PRM.PMAN"]` & & `r input$value_color[input$Series=="SE.PRM.SSUP"]`\\\cdashline{1-2}
-\tabindent\emph{Problem solving} & `r input$value_color[input$Series=="SE.PRM.PMAN.2"]` & \multirow{-2}{4cm}{Support} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.SSUP"]`}\\\cdashline{1-4}
-\tabindent\emph{Goal-setting} & `r input$value_color[input$Series=="SE.PRM.PMAN.3"]` & Evaluation & `r input$value_color[input$Series=="SE.PRM.SEVL"]`\\\hline
+\tabindent\emph{\% % Teachers' knowledge}  & {`r input$value_color[input$Series=="SE.PRM.PKNW.2"]`\%} & \multirow{-2}{4cm}{Attraction} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.SATT"]`}\\\cdashline{1-4}
+\tabindent\emph{\% % Teachers' experience} & {`r input$value_color[input$Series=="SE.PRM.PKNW.3"]`\%} & & `r input$only_color[input$Series=="SE.PRM.SSLD"]`\\\cdashline{1-2}
+\tabindent\emph{\% % Input availability}      & {`r input$value_color[input$Series=="SE.PRM.PKNW.4"]`\%} & \multirow{-2}{4cm}{Selection \& Deployment} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.SSLD"]`} \\\cdashline{1-4} 
+Principal Management skills & `r input$value_color[input$Series=="SE.PRM.PMAN"]` & & `r input$only_color[input$Series=="SE.PRM.SSUP"]`\\\cdashline{1-2}
+\tabindent\emph{Problem solving score} & `r input$value_color[input$Series=="SE.PRM.PMAN.2"]` & \multirow{-2}{4cm}{Support} & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.SSUP"]`}\\\cdashline{1-4}
+\tabindent\emph{Goal-setting score} & `r input$value_color[input$Series=="SE.PRM.PMAN.3"]` & Evaluation & `r input$value_color[input$Series=="SE.PRM.SEVL"]`\\\hline
 \end{tabular}}
 \\
-\greynote{\% refers to \% schools with the given sub-component}
+\greynote{(1) Under instructional leadership, \% refers to \% teachers reporting in affirmative for the given sub-component. (2) Under principal school knowledge, \% refers to \% principals familiar with the given sub-component in the school.}
 \end{table}
 \raggedbottom
+
 ```{r defacto_data, echo=FALSE, message=FALSE, warning=FALSE}
 #Putting table in
 defac_jure_ind_list <- c("SE.PRM.SATT",
@@ -632,8 +632,9 @@ high_diff_var_text <- glue("{defacto_diff[1,1]} ({defacto_diff[1,4]} points)")
 sechigh_diff_var_text <- glue("{defacto_diff[2,1]} ({defacto_diff[2,4]} points)")
 thirdhigh_diff_var_text <- glue("{defacto_diff[3,1]} ({defacto_diff[3,4]} points)")
 ```
-### **GAPS BETWEEN DE-FACTO INDICATORS AND DE-JURE POICIES IN TEACHING AND SCHOOL MANAGEMENT** ###    
-A ~`r average_diff` point average gap exists between the de-facto indicators and de-jure policies in `r country` across teaching and school management.
+### **GAPS BETWEEN DE-FACTO POLICY LEVERS AND DE-JURE POICIES IN TEACHING AND SCHOOL MANAGEMENT** ###    
+De-facto policy levers measure how well school, teacher and student policies are being implemented in the school system. GEPD also measures de-jure policy indicators which measure the strength of the policies. Analysis of the gap shows differences in implementation of policies in schools.  
+A ~**`r average_diff**` **point average gap** exists between the de-facto indicators and de-jure policies on a 1-5 scale in `r country` across teaching and school management.
 
 #### Figure 4. De-facto and de-jure indicators for policy levers, `r country` ####
 ```{r defacto_graphs, fig.width=5, fig.height=5, echo=FALSE, message=FALSE, warning=FALSE}
@@ -837,7 +838,6 @@ plot3_note <- eval(parse(text=paste(thirdhighest_diff_var,"_note",sep="")))
 
 ### **Breakdown of sub-indicators of the top 3 de-facto indicators which differ the most from de-jure indicators** ###  
 The highest gaps in practices and policies are observed for `r high_diff_var_text`, `r sechigh_diff_var_text`, `r thirdhigh_diff_var_text`.
-\vfill\null
 
 #### Figure 5: Sub-indicators of `r defacto_diff[1,1]` ####
 ```{r defacto_sub_graphs_1, fig.width=5, fig.height=3, echo=FALSE, message=FALSE, warning=FALSE}
@@ -852,16 +852,16 @@ plot1
 plot2
 ```
 
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} `r plot2_note`}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} `r plot2_note`
+\par}
 
 #### Figure 7: Sub-indicators of `r defacto_diff[3,1]` ####
 ```{r defacto_sub_graphs_3, fig.width=5, fig.height=3, echo=FALSE, message=FALSE, warning=FALSE}
 plot3
 ```
 
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} `r plot3_note`}
-
-\vfill\null
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} `r plot3_note`
+\par}
 
 ```{r politics_data, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -907,7 +907,8 @@ politics_lowest_text <- glue("({politics_lowest_varval}/5)")
 
 ### **POLITICS & BUREAUCRATIC CAPACITY INDICATORS** ###  
 
-\singlespacing{The highest score in politics and bureaucratic capacity is noted for `r politics_highest_var_name` `r politics_highest_text`, and the lowest score is noted for `r politics_lowest_var_name` `r politics_lowest_text`.}
+\setstretch{1}
+The highest score in politics and bureaucratic capacity is noted for `r politics_highest_var_name` `r politics_highest_text`, and the lowest score is noted for `r politics_lowest_var_name` `r politics_lowest_text`.
 
 #### Figure 8. Politics and bureaucratic capacity indicators, `r country` ####
 ```{r politics_graph,  fig.width=5, fig.height=3, echo= FALSE, message=FALSE, warning=FALSE}
