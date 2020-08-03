@@ -78,10 +78,14 @@ library(here)
 #########################
 # Launch Code
 ########################
-#move working directory to github main folder
 #anchor directory to correct place
 here()
 setwd(here())
+
+country_file_name <- "JOR"
+country <- "Jordan"
+country_uc <- "JOR"
+year <- "2019"
 
 #load API file
 input <- read_csv(paste("./Data/GEPD_Indicators_API_",country_file_name,".csv",sep=""))
@@ -840,7 +844,8 @@ The highest gaps in practices and policies are observed for `r high_diff_var_tex
 plot1
 ```
 
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} `r plot1_note`}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} `r plot1_note`
+\par}
 
 #### Figure 6: Sub-indicators of `r defacto_diff[2,1]` ####
 ```{r defacto_sub_graphs_2, fig.width=5, fig.height=3, echo=FALSE, message=FALSE, warning=FALSE}
