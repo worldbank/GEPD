@@ -1,6 +1,6 @@
 #File written by Brian Stacy on July 30, 2020
 # File will produce automated country briefs of 2 pages and 4 pages
-
+  
 # Load libraries
 library(rmarkdown)
 library(tidyverse)
@@ -28,7 +28,6 @@ setwd(here())
 #Set the country name here
 country_file_name <- "PER"
 country <- "Peru"
-country_uc <- "PERU"
 year <- "2019"
 
 
@@ -58,12 +57,11 @@ rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',
 #Set the country name here
 country_file_name <- "JOR"
 country <- "Jordan"
-country_uc <- "JORDAN"
 year <- "2019"
 
 takeaway <- "
 - 52% learning poverty is observed at grade 4 level
-- Overall Grade 4 student proficiency (>80% student knowledge) is only 4%, attributed to low numeracy proficiency 2%).
+- Overall Grade 4 student proficiency (>80% student knowledge) is only 4%, attributed to low numeracy proficiency 2%.
 - Low teacher content knowledge attributed to poor teacher support and lack of strong instructional leadership (especially principal feedback on classroom observation)
 - Low capacity for learning in Grade 1 (particularly socio-emotional knowledge) is attributed to low enrolment in early childhood programs (13%)
 - A ~0.8 point difference exists in the policy de-jure and de-facto indicators on a 5 point scale for teaching and school management. Major gaps are seen in teacher support, teacher motivation and evaluation of school management
