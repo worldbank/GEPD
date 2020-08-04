@@ -72,13 +72,13 @@ lp_figure <-   learning_poverty_df %>%
              pch=21, color = "black", fill = "#ff9933", size = 3.5) +
   #scale_x_continuous(breaks = c(0,0.25,0.5,0.75,1), labels = percent) +
   geom_text_repel(data = subset(learning_poverty_df, !is.na(ID)), aes(x = grx, y = tab, label = iso3c, color = iso3c), 
-                  fontface = 'bold', size = 3.5, box.padding = 2, segment.color = 'black', ylim = c(0,NA), force = 1) +
+                  fontface = 'bold', size = 3.5, box.padding = 2, segment.color = 'black', ylim = c(0,0.1), force = 1) +
   scale_colour_manual(values = c("#282828", "#0066ff", "#ff9933")) +
-  ylim(-0.2,0.2)+
+  ylim(-0.1,0.1)+
   annotate("text", x = c(0,0.25,0.5,0.75,1), y = -0.06, label = c("0%", "25%", "50%", "75%", "100%")) +
   theme_void() +
   theme(legend.position = "none")
-ggsave(here("LP figures", paste("lp_figure_", country_file_name, ".png", sep = '')), height = 2, width = 5)
+ggsave(here("LP figures", paste("lp_figure_", country_file_name, ".png", sep = '')), height = 1.5, width = 5)
 
 
 lp_num_country <- round(learning_poverty_df$`SE.LPV.PRIM`[learning_poverty_df$country == country_label], digits = 0)
