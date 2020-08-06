@@ -218,8 +218,8 @@ Proficiency by Grade 2/3 & {`r input$value_color[input$Series=="SE.PRM.PROE"]`\%
 Net Adjusted Enrollment Rate & {`r input$value_color[input$Series=="SE.PRM.TENR"]`\%} \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, `r country`, `r year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} All indicators are on a scale of 0-5 unless measured in \%. Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'}
+\setstretch{0.8}{\greysource{UIS, GLAD, GEPD, World Bank, `r country`, `r year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}}\\
+\setstretch{0.8}{\greynote{(1) Proficiency in GEPD assessments means % students scoring \textgreater{80\%}. (2) Proficiency by end of primary uses cutoff of Minimum Proficiency Levels (MPLs) defined by the Global Alliance to Monitor Learning(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'}}
 \end{table}
 \raggedbottom
 ```{r, code = readLines("learning_poverty.R"), include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
