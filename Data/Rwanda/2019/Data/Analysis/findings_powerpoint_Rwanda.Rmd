@@ -1566,7 +1566,10 @@ discuss_indicators_labels <- c(
 discuss_labels_df <- data.frame(variable=as.character(discuss_indicators),
                       varlabels=as.character(discuss_indicators_labels))
 
+
+
 teacher_discuss_df <- teacher_questionnaire_anon %>%
+  zap_labels()
   mutate(no_discuss=100*if_else(m3sdq19_ildr==0,1,0),
          discuss_10=100*case_when(
            m3sdq19_ildr==0 ~ 0,
