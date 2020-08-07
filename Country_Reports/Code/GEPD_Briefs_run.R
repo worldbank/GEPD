@@ -21,6 +21,31 @@ library(haven)
 here()
 setwd(here())
 
+
+
+#############
+# Rwanda
+#############
+
+#Set the country name here
+country_file_name <- "RWA"
+country <- "Rwanda"
+year <- "2020"
+
+takeaway <- "
+
+"
+
+# 2 Pager
+rmarkdown::render('./Code/GEPD_Brief_2page.Rmd',  
+                  output_file =  paste(country,"_", year,"_", "2Pager.pdf", sep=''), 
+                  output_dir = './Output/')
+
+#4 Pager
+rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',  
+                  output_file =  paste(country,"_", year,"_", "4Pager.pdf", sep=''), 
+                  output_dir = './Output/')
+
 #############
 # Peru
 #############
@@ -34,9 +59,9 @@ year <- "2019"
 takeaway <- "
 - Learning poverty is substantial, and rural children lag far beyond urban children in learning.
 - Disparities are driven by differences in practices (less than ½ of variation explained by within-school differences).
-- Of all practice indicators, teacher skills & children’s capacity for learning at primary entry explain low learning the best.
+- Of all practice indicators, teacher skills & children's capacity for learning at primary entry explain low learning the best.
 - Infrastructure is advanced, but internet access and accessibility to kids with disabilities are still poor (just 8% & 54% in rural schools).
-- Policy frameworks are comprehensive, but the de facto implementation varies across types of policies – E.g. teaching support.
+- Policy frameworks are comprehensive, but the de facto implementation varies across types of policies.  E.g. teaching support.
 - Bureaucratic capacity scores are affected by the lack of recognition of good performance for individuals, units, and departments. 
 "
 # 2 Pager
@@ -77,3 +102,6 @@ rmarkdown::render('./Code/GEPD_Brief_2page.Rmd',
 rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',  
                   output_file =  paste(country,"_", year,"_", "4Pager.pdf", sep=''), 
                   output_dir = './Output/')
+
+
+
