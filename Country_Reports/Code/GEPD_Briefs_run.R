@@ -85,11 +85,11 @@ country <- "Jordan"
 year <- "2019"
 
 takeaway <- "
-- 52% learning poverty is observed at grade 4 level
-- Overall Grade 4 student proficiency (>80% student knowledge) is only 4%, attributed to low numeracy proficiency 2%.
+- 52% learning poverty is observed in Grade 4. GEPD Grade 4 student proficiency (>80% student knowledge) is only 4%, attributed to low numeracy proficiency 2%.
 - Low teacher content knowledge attributed to poor teacher support and lack of strong instructional leadership (especially principal feedback on classroom observation)
 - Low capacity for learning in Grade 1 (particularly socio-emotional knowledge) is attributed to low enrolment in early childhood programs (13%)
-- A ~0.8 point difference exists in the policy de-jure and de-facto indicators on a 5 point scale for teaching and school management. Major gaps are seen in teacher support, teacher motivation and evaluation of school management
+- A ~0.8 point difference exists in the policy de-jure and de-facto indicators on a 5 point scale for teaching and school management. Major gaps are seen in teacher support, teacher motivation and evaluation of school management.
+- Quality of teaching support emerges as a major area requiring intervention, particularly through in-classroom support/feedback and pre-service training.
 - Bureaucracy scores high on mandates and accountability but low on impartial decision making
 "
 
