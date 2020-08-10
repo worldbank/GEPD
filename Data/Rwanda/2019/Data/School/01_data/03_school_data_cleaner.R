@@ -151,6 +151,10 @@ school_dta_raw <- school_dta
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 
+#corrected teacher variable by cross checking names rostered in M2
+teacher_questionnaire <- teacher_questionnaire %>%
+  mutate(m3sb_tnumber=if_else((interview__id=="da053b507fa3480ea40d63ed133c8bce" & m3saq6 == 38) ,12,m3sb_tnumber))
+
 
 
 #Add school preamble info

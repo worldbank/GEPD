@@ -37,6 +37,8 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
   mutate(teacher_name=m2saq2,
          teacher_number=TEACHERS__id)
 
+
+
 ###########################
 #read in school level file
 ###########################
@@ -118,6 +120,10 @@ for (i in indicator_names ) {
 #create one copy of each dataframe that never gets touched and is carried forward to public folder
 #####################
 school_dta_raw <- school_dta
+
+#merge school data to teacher roster
+teacher_roster <- teacher_roster %>%
+  left_join(school_data_preamble)
 
 #########################################
 #read in teacher questionnaire level file
@@ -2383,6 +2389,7 @@ school_dta_short_imp <- mice::complete(impdata, 1)
 ################################
 #Store Key Created Datasets
 ################################
+
 
 #saves the following in R and stata format
 

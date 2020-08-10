@@ -219,7 +219,7 @@ api_template <- api_template %>%
       #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
       SE.PRM.PEDG.1.R = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Rural"),
       SE.PRM.PEDG.1.U = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Urban"),
-      SE.PRM.PEDG.2   = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "All"),  
+      SE.PRM.PEDG.2   = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "All"),
       #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
       #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
       SE.PRM.PEDG.2.R = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Rural"),

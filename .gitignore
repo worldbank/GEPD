@@ -29,6 +29,7 @@
 # These files include GitHub settings
 !.gitignore
 !.gitattributes
+!.here
 
 # Keep markdown files used for documentation on GitHub
 !README.md
@@ -58,6 +59,7 @@
 # R-scrips and Rmarkdown-scripts
 !/**/**/*.R
 !/**/**/*.Rmd
+!/**/**/*.Rproj
 
 # HTML files
 !/**/*item_analysis.html
