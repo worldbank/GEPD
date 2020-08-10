@@ -622,27 +622,181 @@ graded_data <- "no"
   
   
   
+  
+  
   #############################################
-  ### Teacher Pedagogy ###
+  ##### Teacher Pedagogical Skill ###########
   #############################################
-  if (graded_data=='yes') {
-    teacher_pedagogy <- school_dta %>%
-    select(preamble_info, starts_with('s1'), starts_with('s2'),starts_with('m4s') )
   
-  # Generate useful variables
+  #define variables for TEACH
+  # label variables
   
-  # One observation per segment
+  var.labels = c(random_school_id="Video Name/New school ID", 
+                 language='Video Language',
+                 video_length='Video Length',
+                 school_clip="Segment to code",
+                 person = "Person Scoring",
+                 s_0_1_1 = "0.1 Teacher provides learning activity to most students",
+                 s_0_1_2 = "0.1 Students are on task",
+                 s_0_2_1 = "0.1 Teacher provides learning activity to most students",
+                 s_0_2_2 = "0.1 Students are on task",
+                 s_0_3_1 = "0.1 Teacher provides learning activity to most students",
+                 s_0_3_2 = "0.1 Students are on task",
+                 s_a1 = "SUPPORTIVE LEARNING ENVIRONMENT: Segment 1",
+                 s_a1_1 = "1.1 The teacher treats all students respectfully",
+                 s_a1_2 = "1.2 The teacher uses positive language with students",
+                 s_a1_3 = "1.3 The teacher responds to students' need",
+                 s_a1_4 = "1.4 The teacher does not exhibit gender bias and challenges gender stereotypes in the classroom",
+                 s_a2 = "POSITIVE BEHAVIORAL EXPECTATIONS: Segment 1",
+                 s_a2_1 = "2.1 The teacher sets clear behavioral expectations for classroom activities",
+                 s_a2_2 = "2.2 The teacher acknowledges positive student behavior",
+                 s_a2_3 = "2.3 The teacher redirects misbehavior and focuses on the expected behavior",
+                 s_b3 = "LESSON FACILITATION: Segment 1",
+                 s_b3_1 = "3.1 The teacher explicitly articulates the objectives of the lesson",
+                 s_b3_2 = "3.2 The teacher's explanation of content is clear",
+                 s_b3_3 = "3.3 The teacher makes connections in the lesson that relate to other content",
+                 s_b3_4 = "3.4 The teacher models by enacting, or thinking aloud",
+                 s_b4 = "CHECKS FOR UNDERSTANDING: Segment 1",
+                 s_b4_1 = "4.1 The teacher uses questions, prompts or other strategies to determine students's level of understanding",
+                 s_b4_2 = "4.2 The teacher monitors most students during independent/group work",
+                 s_b4_3 = "4.3 The teacher adjusts teaching to the level of the students",
+                 s_b5 = "FEEDBACK: Segment 1",
+                 s_b5_1 = "5.1 The teacher provides specific comments or prompts that help clarify students' misunderstandings",
+                 s_b5_2 = "5.2 The teacher provides specific comments or prompts that help identify students' successes",
+                 s_b6 = "CRITICAL THINKING: Segment 1",
+                 s_b6_1 = "6.1 The teacher asks open-ended questions",
+                 s_b6_2 = "6.2 The teacher provides thinking tasks",
+                 s_b6_3 = "6.3 The students ask open-ended questions or perform thinking tasks",
+                 s_c7 = "AUTONOMY: Segment 1",
+                 s_c7_1 = "7.1 The teacher provides students with choices",
+                 s_c7_2 = "7.2 The teacher provides students with opportunities to take on roles in the classroom",
+                 s_c7_3 = "7.3 The students volunteer to participate in the classroom",
+                 s_c8 = "PERSEVERANCE: Segment 1",
+                 s_c8_1 = "8.1 The teacher acknowledges students' effort",
+                 s_c8_2 = "8.2 The teacher has a positive attitude towards studens' challenges",
+                 s_c8_3 = "8.3 The teacher encourages goal-setting",
+                 s_c9 = "SOCIAL AND COLLABORATIVE SKILLS: Segment 1",
+                 s_c9_1 = "9.1 The teacher promotes students,Äô collaboration through peer interaction",
+                 s_c9_2 = "9.2 The teacher promotes students' interpersonal skills",
+                 s_c9_3 = "9.3 Students collaborate with one another through peer interaction",
+                 enum_comments = "Additional comments by enumerator:"
+  )
   
-  segment2 <- teacher_pedagogy %>%
-    select(-starts_with('s1'))
+  #read in school ids
+  teach_dta_ids <- readxl::read_excel(path=file.path(download_folder, "teach_school_id_merged.xls")) %>%
+    as_tibble(.name_repair='universal') %>%
+    rename(Language_of_Assessment=Language.of.Assessment) %>%
+    select(-Language.Constraint)
+
+#read in teach data  
+  teach_dta <- readxl::read_excel(path=file.path(download_folder, "TEACH_Final_Scores.xlsx"), sheet = "ALL_Scores", skip=1) 
+  names(teach_dta) = names(var.labels)
+  # label(teach_dta) = as.list(var.labels[match(names(var.labels), names(var.labels))])
   
-  segment1 <- teacher_pedagogy %>%
-    select(-starts_with('s2'))
+  #merge on school ids 
   
-  names(segment1) <- str_replace(names(segment1), "s1", "s")
-  names(segment2) <- str_replace(names(segment2), "s2", "s")
+teach_dta <- teach_dta %>%
+  left_join(teach_dta_ids) %>%
+  select(school_code, everything())
   
-  teacher_pedagogy_segments <- bind_rows(segment1, segment2)
+  
+  
+  #pull out school code from video clip name
+  teacher_pedagogy_segments <- teach_dta %>%
+    filter(!is.na(school_code)) %>%
+    mutate(
+           clip_temp=str_replace(school_clip," ", ""),
+           clip_temp=grepl('Segment1', clip_temp),
+           clip=if_else(clip_temp==TRUE, 1,2)
+             ) %>%
+    select(-clip_temp, -video_length, -school_clip, -person, -enum_comments) %>%
+    select(school_code, clip, everything())
+  
+  #recode scores to be numeric
+  
+  
+  low_medium_high <- c(
+    "s_0_1_2",
+    "s_0_2_2",
+    "s_0_3_2",
+    "s_a2_1",
+    "s_a2_2",
+    "s_a2_3",
+    "s_b3_1",
+    "s_b3_2",
+    "s_b3_3",
+    "s_b3_4",
+    "s_b5_1",
+    "s_b5_2",
+    "s_b6_1",
+    "s_b6_2",
+    "s_b6_3",
+    "s_c7_1",
+    "s_c7_2",
+    "s_c7_3",
+    "s_c8_1",
+    "s_c8_2",
+    "s_c8_3",
+    "s_c9_1",
+    "s_c9_2",
+    "s_c9_3")
+  
+  low_medium_high_na <- c("s_a1_1",
+                          "s_a1_2",
+                          "s_a1_3",
+                          "s_a1_4",
+                          "s_b4_1",
+                          "s_b4_2",
+                          "s_b4_3"
+                          
+  )
+  
+  
+  yes_no <- c("s_0_1_1",
+              "s_0_2_1",
+              "s_0_3_1"
+  )
+  
+  overall <- c('s_a1',
+               's_a2',
+               's_b3',
+               's_b4',
+               's_b5',
+               's_b6',
+               's_c7',
+               's_c8',
+               's_c9'
+  )
+  
+  
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%  
+    mutate_at(vars(overall),~(if_else(. %in% c('1','2','3','4','5'),as.numeric(.),as.numeric(NA) ))) %>%
+    mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),.,as.character(NA) ))) %>%
+    mutate_at(vars(low_medium_high), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
+    mutate_at(vars(low_medium_high_na), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
+    mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(str_replace_all(.,"[[:punct:]]",""))) %>%
+    mutate_at(vars(low_medium_high), ~case_when(
+      .=="L" ~ 2,
+      .=="M" ~ 3,
+      .=="H" ~ 4,
+      TRUE ~ as.numeric(NA)
+    )) %>%
+    mutate_at(vars(low_medium_high_na), ~case_when(
+      .=="NA" ~ 1,
+      .=="L" ~ 2,
+      .=="M" ~ 3,
+      .=="H" ~ 4,
+      TRUE ~ as.numeric(NA)
+    )) %>%
+    mutate_at(vars(yes_no), ~case_when(
+      .=="N" ~ 0,
+      .=="Y" ~ 1,
+      TRUE ~ as.numeric(NA)
+    )) %>%
+    mutate_at(vars(low_medium_high), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
+    mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
+    mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"))))
+  
   
   #create sub-indicators from TEACH
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
@@ -658,7 +812,11 @@ graded_data <- "no"
   
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
     mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
-    mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
+    mutate_at(vars(s_0_1_1, s_0_2_1, s_0_3_1), ~case_when(.=="Yes" ~ 1,
+                                                          .=="No" ~ 0,
+                                                          TRUE ~ NA_real_)) %>%
+    mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_))
+  
   
   #een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
   #replace tt_yes=tt_yes*100
@@ -668,9 +826,9 @@ graded_data <- "no"
   # Time on task - Second measure
   # Proportion of classes where a low number of students are on task, a medium number of students are on task
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-    mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
-           tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
-           tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
+    mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "Low"),
+           tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "Medium"),
+           tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "High"))
   
   # We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
   
@@ -685,16 +843,29 @@ graded_data <- "no"
   
   
   
-  final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
+  
+  
+  
+  # Now merge on school information
+  final_indicator_data_PEDG<- school_dta %>%
+    select(preamble_info, m4saq1, m4saq1_number )  %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    select( -starts_with('interview'), -starts_with('enumerator')) %>%
+    left_join(teacher_pedagogy_segments) %>%
+    mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+           classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+           instruction_prof=100*as.numeric(instruction>=3),
+           socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+    filter(!is.na(teach_score)) %>%
+    write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
     group_by(school_code) %>%
     mutate(number_segments=  sum(!is.na(teach_score))) %>%
-    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-    select( -starts_with('interview'), -starts_with('enumerator'),
-            -starts_with('m4saq1'))
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
-  write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_score_counts.csv", sep="/"))
   
-}
+  #Breakdowns by Male/Female
+  
   #############################################
   ##### 4th Grade Assessment ###########
   #############################################
