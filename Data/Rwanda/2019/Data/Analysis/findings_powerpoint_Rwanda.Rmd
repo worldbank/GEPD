@@ -164,7 +164,7 @@ wrapper <- function(x, ...)
                        'student_attendance', 
                        'sch_absence_rate',
                        'content_proficiency', 
-                       #'teach_prof',
+                       'teach_prof',
                        'ecd_student_proficiency', 
                        'inputs', 
                        'infrastructure',
@@ -195,7 +195,7 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Student Attendance',
                          'School Absence Rate', 
                          "Teacher Content Knowledge", 
-                         #"Teacher Pedagogical Skills",
+                         "Teacher Pedagogical Skills",
                          'Capacity for Learning', 
                          'Basic Inputs', 
                          'Basic Infrastructure', 
@@ -1075,7 +1075,7 @@ inpt_urban_rural
 - One of the best predictors of 4th grade student achievement, along with the 1st grade scores, is the teacher's pedagogical score  
 - The following plots the school level average of the 4th grade assessment scores on the teacher's pedagogical skill based on the Teach scale.  
 
-```{r teach_plot, eval=FALSE, include=FALSE}
+```{r teach_plot, echo=FALSE}
  #############################
     # Create database with just learning outcomes for regressions
     ##############################
@@ -1569,7 +1569,7 @@ discuss_labels_df <- data.frame(variable=as.character(discuss_indicators),
 
 
 teacher_discuss_df <- teacher_questionnaire_anon %>%
-  zap_labels()
+  zap_labels() %>%
   mutate(no_discuss=100*if_else(m3sdq19_ildr==0,1,0),
          discuss_10=100*case_when(
            m3sdq19_ildr==0 ~ 0,
