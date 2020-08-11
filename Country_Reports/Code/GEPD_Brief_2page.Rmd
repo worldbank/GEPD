@@ -90,7 +90,7 @@ Series == "SE.PRM.LERN.1.U" ~ "Urban",
 Series == "SE.PRM.LERN.1.R" ~ "Rural",
 Series == "SE.PRM.LERN.1.F" ~ "Female",
 Series == "SE.PRM.LERN.1.M" ~ "Male",
-Series == "SE.PRM.LERN.2" ~ "Literacy",
+Series == "SE.PRM.LERN.2" ~ "Language",
 Series == "SE.PRM.LERN.3" ~ "Numeracy"),
 gr = case_when(
 Series == "SE.PRM.LERN.1.U" ~ "rural",
@@ -146,8 +146,8 @@ Series == 'SE.PRM.BFIN' ~ 'Financing',
 Series == "SE.PRM.BIMP" ~ "Impartial Decision-Making",
 Series == "SE.PRM.BMAC" ~ "Mandates & Accountability",
 Series == "SE.PRM.BNLG" ~ "National Learning Goals",
-Series == "SE.PRM.BQBR" ~ "Quality of Bureaucracy")
-)
+Series == "SE.PRM.BQBR" ~ "Quality of Bureaucracy"
+))
 
 ```
 
@@ -167,16 +167,23 @@ The **Survey of public officials** collects information about the capacity and o
 
 ### **KEY TAKEAWAYS, \uppercase{`r country`}, `r year`** ###  
 `r takeaway`
+```{r, code = readLines("Learning poverty_lays.R"), include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
+```
 
 ```{r color_codes, echo=FALSE, message = FALSE, warning = FALSE}
 
 grep_color <- c('PROE|TENR|PRIM|ATTD|CONT|EFFT|LCAP|PEDG|LERN')
 
  input <- input %>%
-    as_tibble(.name_repair = 'universal') %>%
+    add_row(Series = "HD.HCI.LAYS", value = as.numeric(lays_num_country))
+ 
+ input <- input %>%
+   as_tibble(.name_repair = 'universal') %>%
    #Adding new cell with value and colour in new column
     mutate(value_color=case_when(
       #percentages
+      (value >= lays_world & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!15}",value, sep=""),
+      (value <= lays_world & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!15}",value, sep=""),
       (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value,sep=""),
       (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value, sep=""),
       (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep=""),
@@ -198,9 +205,12 @@ grep_color <- c('PROE|TENR|PRIM|ATTD|CONT|EFFT|LCAP|PEDG|LERN')
       (value <3 &              !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}")
     )
     )
- 
- grade4_overall <- round(input$value[input$Series=="SE.PRM.LERN"], digits = 0)
+lays_lp_choice <- if_else(country_file_name == "RWA", lays, lp)
+lays_lp_units <- if_else(country_file_name == "RWA", lays_units, lp_units)
+lays_lp_cell <- if_else(country_file_name == "RWA", input$value_color[input$Series=="HD.HCI.LAYS"],
+                                                    input$value_color[input$Series=="SE.LPV.PRIM"])
 ```
+
 \setlength\dashlinedash{0.2pt}
 \setlength\dashlinegap{1.5pt}
 \setlength\arrayrulewidth{0.3pt}
@@ -209,7 +219,7 @@ grep_color <- c('PROE|TENR|PRIM|ATTD|CONT|EFFT|LCAP|PEDG|LERN')
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{p{0.4\textwidth}c}
 \textbf{Indicator} & \textbf{Value}\\ \hline
-Learning poverty & {`r input$value_color[input$Series=="SE.LPV.PRIM"]`\%} \\\cdashline{1-2}
+`r lays_lp_choice` & {`r lays_lp_cell`} \\\cdashline{1-2}
 Proficiency by End of Primary & {`r input$value_color[input$Series=="SE.LPV.PRIM.BMP"]`\%} \\\cdashline{1-2}
 Proficiency on GEPD Assessment & {`r input$value_color[input$Series=="SE.PRM.LERN"]`\%} \\\cdashline{1-2}
 \tabindent\emph{Literacy proficiency} & {`r input$value_color[input$Series=="SE.PRM.LERN.2"]`\%} \\\cdashline{1-2}
@@ -218,22 +228,43 @@ Proficiency by Grade 2/3 & {`r input$value_color[input$Series=="SE.PRM.PROE"]`\%
 Net Adjusted Enrollment Rate & {`r input$value_color[input$Series=="SE.PRM.TENR"]`\%} \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}{\greysource{UIS, GLAD, GEPD, World Bank, `r country`, `r year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}}\\
-\setstretch{0.8}{\greynote{(1) Proficiency in GEPD assessments means % students scoring \textgreater{80\%}. (2) Proficiency by end of primary uses cutoff of Minimum Proficiency Levels (MPLs) defined by the Global Alliance to Monitor Learning(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'}}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, `r country`, `r year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{80\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
 \end{table}
 \raggedbottom
-```{r, code = readLines("learning_poverty.R"), include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
-```
-### **LEARNING OUTCOMES: `r learning_poverty_str` LEARNING POVERTY, `r grade4_overall`% GEPD PROFICIENCY IN GRADE 4** ###  
-Learning poverty in `r country` is `r diff_lp_regiontext` than the average for `r learning_poverty_df$country[learning_poverty_df$country == region_label]` region and `r diff_lp_cattext` than the average for `r learning_poverty_df$country[learning_poverty_df$country == income_label]` countries.
+```{r figure_details, include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
 
-#### Figure 2. Leaning poverty comparison, `r country` ####
-```{r lp_fig, out.width= "100%", fig.width=5, fig.height=1.5, message=FALSE, echo=FALSE, warning=FALSE}
-figure2 <- paste(here(),"/LP figures/lp_figure_",country_file_name, ".png", sep="")
+grade4_overall <- round(input$value[input$Series=="SE.PRM.LERN"], digits = 1)
+
+figure_headline <- if_else(country_file_name == "RWA",
+                           glue("LEARNING OUTCOMES: {lays_num_country} LEARNING ADJUSTED YEARS IN SCHOOL, {grade4_overall}% GEPD PROFICIENCY IN GRADE 4"),
+                           glue("LEARNING OUTCOMES: {learning_poverty_str} LEARNING POVERTY, {grade4_overall}% GEPD PROFICIENCY IN GRADE 4"))
+                           
+LP_para <- paste("Learning poverty is defined as the share of children at end of primary age below minimum reading proficiency, adjusted for out of school children. Learning poverty in ", country, " is ", diff_lp_regiontext, " than the average for ", region_label, " region and ", diff_lp_cattext, " than the average for ", income_label, " countries. ", sep = "")
+LAYS_para <- paste("Learning adjusted years of school (LAYS) is calculated by adjusting expected years of schooling for schooling quality. Learning adjusted years of schooling in ",country," is ", diff_lays_regiontext, " than the average for ", region_label, " region and ", diff_lays_inctext, " than the average for " , income_label, " countries.", sep = "")
+                     
+lern_para <- if_else(country_file_name == "RWA", LAYS_para, LP_para)
+
+figure_head <- if_else(country_file_name == "RWA", glue("Figure 2. Learning adjusted years in school comparison"),
+                                                   glue("Figure 2. Leaning poverty comparison"))
+
+figure_note <- if_else(country_file_name == "RWA",
+                       glue("Grey circles represent other countries. Yellow circle represents {country}. Orange and blue circles represent average LAYS in {country}'s region and income group."),
+                       glue("Grey circles represent other countries. Yellow circle represents {country}. Other circles represent average learning poverty in {country}'s region and income group."))
+                       
+```
+### **`r figure_headline`** ###  
+
+`r lern_para`
+
+#### `r figure_head` ####
+```{r lp_lays_fig, out.width= "100%", fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
+figure <- if_else(country_file_name == "RWA", "lays_figure_", "lp_figure_")
+figure2 <- paste(here(), "/LP figures/", figure , country_file_name, ".png", sep="")
 knitr::include_graphics(figure2)
 ```
 
-\greynote{Grey circles represent other countries. Large yellow circle represents `r country`. Other circles represent average learning poverty in `r country`'s region and income group.}
+\greynote{`r figure_note`}
 
 ```{r learning, fig.width=5, fig.height=1.5, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -253,13 +284,15 @@ diff_lern_subject <- if_else(grade4_lit>grade4_num, grade4_lit-grade4_num, grade
 lern_subject_text <- if_else(grade4_lit>grade4_num, glue("{diff_lern_subject} points higher"), glue("{diff_lern_subject} points lower"))
 ```
 
-**GEPD grade 4 assessment proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 80/100 on student knowledge. Proficiency is `r lern_subject_text` in literacy compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.  
+GEPD grade 4 assessment proficiency is defined as \% students scoring greater than 80/100 on student knowledge. **GEPD grade 4 assessment proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 80/100 on student knowledge. Student proficiency is `r lern_subject_text` in language compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.  
+
+\vfill\null
 
 #### Figure 3. GEPD Grade 4 proficiency, `r country` ####
 ```{r learning_figure, fig.width=5, fig.height=1.5, message=FALSE, echo=FALSE, warning=FALSE}
 input_lern <- input %>%
     filter(!is.na(lern_label)) %>%
-    mutate(lern_label = factor(lern_label, levels = c("Urban", "Rural", "Male", "Female", "Numeracy", "Literacy")))
+    mutate(lern_label = factor(lern_label, levels = c("Urban", "Rural", "Male", "Female", "Numeracy", "Language")))
 
  input_lern %>%
     ggplot(aes(y=value, x = lern_label, fill = gr)) +
@@ -277,7 +310,7 @@ input_lern <- input %>%
 ```
 
 ### **COMPARING DE-FACTO PRACTICES AND POLICY LEVERS** ###  
-Practice indicators measure quality of service delivery in schools such as teacher and student attendance, teacher knowledge, principal management skills, etc. Policy lever indicators measure how well school, personnel and student policies governing these practices are implemented. For instance, teacher content knowledge(practice) is impacted by implementation of teacher support policies, and monitoring and accountability systems. Comparing de-facto practice and policy lever indicators allows identification of low-scoring policy levers that affect observed practice indicators.  
+Practice indicators measure quality of service delivery in schools such as student performance, teacher knowledge, principal management skills, etc. Policy lever indicators measure how well school, personnel and student policies governing these practices are implemented. Comparing de-facto practice and policy lever indicators allows identification of low-scoring policy levers that affect observed practice indicators.  
 
 ```{r compare_data, fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
 #Content_knowledge
@@ -309,7 +342,7 @@ lcap_lowest_var_name <- input$label[input$Series==lcap_lowest_var]
 attd <- round(input$value[input$Series=="SE.PRM.ATTD"], digits = 0)
 attd_text <- if_else(attd<60, glue("({attd}%) needs improvement"), if_else(attd>=60 & attd<80, glue("({attd}%) requires caution"), glue("({attd}%) is on target")))
 
-lcap_policy_lowest_var <- as.name(c("SE.PRM.LNTN","SE.PRM.LHTH","SE.PRM.LCBC","SE.PRM.LSKC","SE.PRM.LFCP") [which.min(c(input$value[input$Series=="SE.PRM.LNTN"], input$value[input$Series=="SE.PRM.LHTH"],input$value[input$Series=="SE.PRM.LCBC"],  input$value[input$Series=="SE.PRM.LSKC"], input$value[input$Series=="SE.PRM.LFCP"]))])
+lcap_policy_lowest_var <- as.name(c("SE.PRM.LNTN","SE.PRM.LHTH","SE.PRM.LCBC","SE.PRM.LSKC","SE.PRM.LFCP")[which.min(c(input$value[input$Series=="SE.PRM.LNTN"], input$value[input$Series=="SE.PRM.LHTH"],input$value[input$Series=="SE.PRM.LCBC"],  input$value[input$Series=="SE.PRM.LSKC"], input$value[input$Series=="SE.PRM.LFCP"]))])
 lcap_policy_lowest_varval <- round(input$value[input$Series==lcap_policy_lowest_var], digits = 1)
 lcap_policy_lowest_name <- input$label[input$Series == lcap_policy_lowest_var]
 
