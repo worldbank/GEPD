@@ -22,7 +22,6 @@ here()
 setwd(here())
 
 
-
 #############
 # Rwanda
 #############
@@ -33,7 +32,12 @@ country <- "Rwanda"
 year <- "2020"
 
 takeaway <- "
-
+- 3.8 years of learning adjusted years of schooling observed in Rwanda. GEPD Grade 4 proficiency is low at only 0.16%, with numeracy proficiency lower than language proficiency of students.
+- Teacher content knowledge is poor at only 27%, attributed to poor teaching support and weak monitoring and accountability systems. Only 44% teachers reported receiving feedback from principals after classroom observation in schools.
+- Grade 1 proficiency of students is ~9%, with students scoring lower on executive functions and socio-emotional learning.
+- Basic inputs and infrastructure are weak in areas of avaiability of functional blackboards, functional toilets and electricity in schools.
+- Major gaps are seen in implementation of teaching support policies, teaching monitoring and accountability systems and selection and deployment policies for school principals.
+- Primary education funding amount and efficiency of spending is low and education policy implementation is politicized, lowering bureacucratic capacity.  
 "
 
 # 2 Pager
@@ -75,6 +79,7 @@ rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',
                   output_dir = './Output/')
 
 
+
 #############
 # Jordan
 #############
@@ -102,6 +107,3 @@ rmarkdown::render('./Code/GEPD_Brief_2page.Rmd',
 rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',  
                   output_file =  paste(country,"_", year,"_", "4Pager.pdf", sep=''), 
                   output_dir = './Output/')
-
-
-
