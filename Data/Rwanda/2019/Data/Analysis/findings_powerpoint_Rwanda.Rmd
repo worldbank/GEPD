@@ -3,14 +3,14 @@ title: "Global Education Policy Dashboard - Rwanda 2020"
 author: "Education Global Practice, World Bank"
 output:
   html_document:
-    fig_height: 6
-    fig_width: 8
+    fig_height: 8
+    fig_width: 10
     toc: yes
     theme: readable
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, fig.height=8, fig.width = 10)
 #include packages
 library(tidyverse)
 library(haven)
@@ -892,19 +892,24 @@ learning_data_plot <- final_indicator_data_LERN_anon %>%
   mutate(Type=if_else(rural==TRUE, "Rural", "Urban"))
 
 
-learning_dataMedian <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(weighted.median(student_knowledge, ipw, na.rm=T),1))
+learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(wtd.mean(student_knowledge, ipw, na.rm=T),1))
 
   ggplot(learning_data_plot, aes(x=Type, y=student_knowledge, fill=Gender)) + #now plot the output in a bar graph
-    geom_boxplot(aes(weight=ipw), position="dodge") +
-    geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
-              position = position_dodge(width = 0.8), size = 3, vjust = 1) +
-  ggtitle("4th Grade Student Assessment Scores by Gender and Urban/Rural") +
+    geom_violin(aes(weight=ipw), position="dodge") +
+    geom_text(data = learning_dataMean, aes(x=Type, y=MD, label=MD), 
+              position = position_dodge(width = 0.9), size = 5, vjust = -1) +
+    geom_point(data = learning_dataMean, aes(x=Type, y=MD),
+               position = position_dodge(width = 0.9)) +
+  ggtitle("Distribution of 4th Grade Student Assessment Scores by Gender and Urban/Rural") +
   xlab(str_wrap("Urban/Rural Status", width=75))+
-  ylab(str_wrap("Fraction Correcton on 4th Grade Assessment",35)) +
+  ylab(str_wrap("Percentage Correcton on 4th Grade Assessment",35)) +
   scale_fill_discrete(name="Gender", 
                       labels=c('All Students','Girls','Boys' )) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "bottom",
+          axis.text = ggplot2::element_text(
+                                      size=12
+                                      )) 
 
 ```
 
@@ -925,23 +930,70 @@ learning_data_plot2 <- final_indicator_data_LERN_anon %>%
     TRUE ~ as.character(NA)
     )) %>%
   select(-Female, -Male) %>%
-  mutate(Type=if_else(m8_language==1, "Kinyarwandan Tested School", "English Tested School"))
+  mutate(Type=if_else(m8_language==1, "Kinyarwanda Tested School", "English Tested School"))
 
 
-learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), MD = round(weighted.median(literacy_student_knowledge, ipw, na.rm=T),1))
+learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), MD = round(wtd.mean(literacy_student_knowledge, ipw, na.rm=T),1))
 
   ggplot(learning_data_plot2, aes(x=Type, y=literacy_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
-    geom_boxplot(aes(weight=ipw), position="dodge") +
+    geom_violin(aes(weight=ipw), position="dodge") +
     geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
-              position = position_dodge(width = 0.8), size = 3, vjust = 1) +
-  ggtitle(str_wrap("4th Grade Literacy Student Assessment Scores by Gender and Whether Tested in Kinyarwandan",50)) +
+              position = position_dodge(width = 0.9), size = 5, vjust = -1) +
+    geom_point(data = learning_dataMedian, aes(x=Type, y=MD),
+               position = position_dodge(width = 0.9)) +
+  ggtitle(str_wrap("4th Grade Literacy Student Assessment Scores by Gender and Whether Tested in Kinyarwanda",100)) +
   xlab(str_wrap("Language Tested", width=75))+
   ylab(str_wrap("Fraction Correcton on 4th Grade Literacy Assessment",35)) +
   scale_fill_discrete(name="Gender", 
                       labels=c('All Students','Girls','Boys' )) +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "bottom",
+          axis.text = ggplot2::element_text(
+                                      size=12
+                                      )) 
 
+ggplot(learning_dataMedian, aes(x=Type, y=MD, fill=Gender)) + #now plot the output in a bar graph
+    geom_bar(stat='identity', position="dodge") +
+    geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
+              position = position_dodge(width = 0.9), size = 5, vjust = -1) +
+    geom_point(data = learning_dataMedian, aes(x=Type, y=MD),
+               position = position_dodge(width = 0.9)) +
+  ggtitle(str_wrap("4th Grade Literacy Assessment Scores by Gender and Whether Tested in Kinyarwanda",100)) +
+  xlab(str_wrap("Language Tested", width=75))+
+  ylab(str_wrap("Fraction Correcton on 4th Grade Literacy Assessment",35)) +
+  scale_fill_discrete(name="Gender", 
+                      labels=c('All Students','Girls','Boys' )) +
+  coord_flip() +
+  expand_limits(y=c(0,50)) + 
+  theme_bw() +
+    theme(legend.position = "bottom",
+          axis.text = ggplot2::element_text(
+                                      size=12
+                                      )) 
+
+
+
+learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), MD = round(wtd.mean(math_student_knowledge, ipw, na.rm=T),1))
+
+ggplot(learning_dataMedian, aes(x=Type, y=MD, fill=Gender)) + #now plot the output in a bar graph
+    geom_bar(stat='identity', position="dodge") +
+    geom_text(data = learning_dataMedian, aes(x=Type, y=MD, label=MD), 
+              position = position_dodge(width = 0.9), size = 5, vjust = -1) +
+    geom_point(data = learning_dataMedian, aes(x=Type, y=MD),
+               position = position_dodge(width = 0.9)) +
+  ggtitle(str_wrap("4th Grade Math Assessment Scores by Gender and Whether Tested in Kinyarwanda",100)) +
+  xlab(str_wrap("Language Tested", width=75))+
+  ylab(str_wrap("Fraction Correcton on 4th Grade Math Assessment",35)) +
+  scale_fill_discrete(name="Gender", 
+                      labels=c('All Students','Girls','Boys' )) +
+  coord_flip() +
+  expand_limits(y=c(0,50)) + 
+  theme_bw() +
+    theme(legend.position = "bottom",
+          axis.text = ggplot2::element_text(
+                                      size=12
+                                      ) )
+  
 ```
 
 ## Breakdowns for Infrastructure/Inputs
@@ -1412,7 +1464,7 @@ data_defacto <- school_dta_short_anon %>%
   left_join(labels_df_var)
 
   ggplot(data=data_defacto, aes(x=indicator_labels, y=indicator_values, fill='#ff0000')) + #now plot the output in a bar graph
-    geom_boxplot(position="dodge") +
+    geom_violin(position="dodge") +
     # scale_x_discrete(labels = str_wrap(indicator_labels, width = 25)) + 
   xlab(str_wrap("Policy Lever Indicators", width=75))+
   ylab("Scale (1-5)") +
@@ -1635,6 +1687,8 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
 
 - Moving to the Bureaucracy Indicators, below we show the averages by Office type for each of our indicators
 - Public officials in the district offices tend to score lower than at the central level
+- Fraction of public officials reporting as motivated or more motivated: `r mean(public_officials_dta_clean_anon$motivation_relative_start>=100, na.rm=T)`
+
 
 ```{r overall, echo=FALSE}
 
@@ -1647,6 +1701,11 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
+  mutate(govt_tier=case_when(
+    govt_tier=='District office ' ~ 'Sector Office',
+    govt_tier=='Regional office ' ~ 'District Office',
+    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+  )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
   pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
@@ -1669,14 +1728,23 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
   ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
   scale_fill_discrete(name="Government Level") +
   theme_bw() +
-    theme(legend.position = "bottom") 
+    theme(legend.position = "bottom",
+          axis.text = ggplot2::element_text(
+                                      size=12
+                                      ),
+          legend.text = ggplot2::element_text(
+                                      size=12
+                                      )) 
+
+  
+#more motivated question
 
 ```
 
 
 # Appendix
 
-## Table of Sub-Indicators by Urban/Rural, Public/Private, Evening/Non-Evening, Regions, Owned/Rented School Property
+## Table of Sub-Indicators by Urban/Rural, Public/Private
 
 - Note: In many cases, the sub-indicators are displayed as the fraction (0-1) of respondents answering
 

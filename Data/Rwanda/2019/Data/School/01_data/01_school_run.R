@@ -12,6 +12,7 @@
 ######################################
 # Load Required Packages#
 ######################################
+library(tidyverse)
 library(here)
 library(knitr)
 library(markdown)
