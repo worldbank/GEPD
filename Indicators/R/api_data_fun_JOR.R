@@ -219,7 +219,7 @@ api_template <- api_template %>%
       #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
       SE.PRM.PEDG.1.R = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Rural"),
       SE.PRM.PEDG.1.U = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Urban"),
-      SE.PRM.PEDG.2   = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "All"),  
+      SE.PRM.PEDG.2   = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "All"),
       #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
       #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
       SE.PRM.PEDG.2.R = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Rural"),
@@ -557,9 +557,9 @@ api_template <- api_template %>%
   #Policy Lever (Teaching) - Support                                                                                        
   SE.PRM.TSUP.1  =expert_df$practicum ,
   #(De Jure) Practicum required as part of pre-service training                                                             
-  SE.PRM.TSUP.2 = 100*indicator_means(m3sdq3_tsup		, "school", "TSUP",  "All"), 
+  SE.PRM.TSUP.2 = 100-100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP",  "All"),
   #(De Facto) Percent reporting they completed a practicum as part of pre-service training                                  
-  SE.PRM.TSUP.3  = 100-100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.3  = 100*indicator_means(m3sdq3_tsup		, "school", "TSUP",  "All"),
   #(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program                
   SE.PRM.TSUP.4  =expert_df$prof_development,
   #(De Jure) Participation in professional development has professional implications for teachers                           
@@ -712,7 +712,7 @@ api_template <- api_template %>%
   SE.PRM.LHTH.8 =100*as.numeric(defacto_dta_learners_final$`MICS/DHS - Percentage of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility`) #(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was deliv~
     ) %>%
     mutate(
-      SE.PRM.LHTH.DF =4*(SE.PRM.LHTH.2+SE.PRM.LHTH.4+SE.PRM.LHTH.6 + SE.PRM.LHTH.8)/400+1,#(De Facto) Policy Lever (Learners) - Health
+      SE.PRM.LHTH.DF =4*(SE.PRM.LHTH.2+SE.PRM.LHTH.3+ SE.PRM.LHTH.8)/300+1,#(De Facto) Policy Lever (Learners) - Health
     SE.PRM.LHTH.DJ =expert_df$health_programs#(De Jure) Policy Lever (Learners) - Health
     ) %>%
   mutate(
@@ -725,7 +725,7 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   SE.PRM.LCBC.1  =expert_df$pre_primary_free_some,#(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary educat~
-  SE.PRM.LCBC.2  =100*(as.numeric(defacto_dta_learners_final$`Percentage of children age 36-59 months who are attending ECE`)+as.numeric(defacto_dta_learners_final$`Percentage of ECE Classrooms with Effective Practices`))/2,#(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme
+  SE.PRM.LCBC.2  =100*(as.numeric(defacto_dta_learners_final$`Percentage of children age 36-59 months who are attending ECE`)),#(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme
   SE.PRM.LCBC.3  =expert_df$developmental_standards,#(De Jure) Are there developmental standards established for early childhood care and education?
   SE.PRM.LCBC.4  =expert_df$ece_qualifications,#(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary tea~
   SE.PRM.LCBC.5  =expert_df$ece_in_service#(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-servic~
@@ -917,15 +917,18 @@ api_template <- api_template %>%
   #######################################
   # Politics & Bureaucratic Capacity - Financing 	(BFIN)
   #######################################
-  # indicator_values_transpose <- indicator_values_transpose %>%
-  #   mutate(
-  # SE.PRM.BFIN   = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #Politics & Bureaucratic Capacity - Financing
-  # SE.PRM.BFIN.1 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1,#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
-  # SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`), #(Financing) - Adequacy expressed by the per child spending
-  # SE.PRM.BFIN.3 =-999,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
-  # SE.PRM.BFIN.4 =-999,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
-  # SE.PRM.BFIN.5 =-999,#(Financing) - Equity
-  #   )
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+  SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`), #(Financing) - Adequacy expressed by the per child spending
+  SE.PRM.BFIN.3 =as.numeric(finance_df_final$`Efficiency by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest`),#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
+  SE.PRM.BFIN.4 =as.numeric(finance_df_final$`Efficiency by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest`),#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
+  SE.PRM.BFIN.5 =-999,#(Financing) - Equity
+    ) %>%
+    mutate(
+      SE.PRM.BFIN   = 4*as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2)+1, #Politics & Bureaucratic Capacity - Financing
+      SE.PRM.BFIN.1 = 4*as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2)+1,#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
+      
+    )
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
     rownames_to_column(var='Series') %>%

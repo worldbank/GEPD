@@ -201,6 +201,15 @@ data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT//JOR/JOR_2019_GE
 ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.OOS",  "SE.LPV.PRIM.OOS.FE", "SE.LPV.PRIM.OOS.MA",
                "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA")
 #read in data from wbopendata
+#get WDI metadata infor
+cache_list<-wbstats::wbcache()
+wbopendat<-wbstats::wb(country="JOR", 
+            indicator=ind_list,
+            startdate=2015,
+            enddate=2015,
+            return_wide = T,
+            removeNA=FALSE)
+
 wbopendat<-WDI(country="JO", indicator=ind_list, start=2015, end=2015, extra=T) %>%
   filter(!is.na(SE.LPV.PRIM) & !is.na(country)) %>%
   group_by(iso3c) %>%
@@ -230,15 +239,15 @@ defacto_dta_learners_final <- defacto_dta_learners_shaped %>%
 # 
 # 
 # #financing
-# finance_df <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Finance_scoring.xlsx', sep="/"),  .name_repair = 'universal') 
-# finance_df_shaped<-data.frame(t(finance_df[-1]), stringsAsFactors = FALSE)
-# colnames(finance_df_shaped) <- finance_df$Question
-# 
-# #create indicatorsTS
-# finance_df_final <- finance_df_shaped %>%
-#   rownames_to_column() %>%
-#   filter(rowname=='Scores') %>%
-#   select(-rowname)
+finance_df <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Finance_scoring.xlsx', sep="/"),  .name_repair = 'universal')
+finance_df_shaped<-data.frame(t(finance_df[-1]), stringsAsFactors = FALSE)
+colnames(finance_df_shaped) <- finance_df$Question
+
+#create indicatorsTS
+finance_df_final <- finance_df_shaped %>%
+  rownames_to_column() %>%
+  filter(rowname=='Scores') %>%
+  select(-rowname)
 
 
 source('R/api_data_fun_JOR.R')

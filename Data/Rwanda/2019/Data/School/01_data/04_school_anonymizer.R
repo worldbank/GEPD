@@ -49,7 +49,9 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights' )
+             'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights',
+             'school_dta_raw', 'ecd_dta_raw', 'assess_4th_grade_dta_raw', 'teacher_assessment_dta_raw', 'teacher_questionnaire_raw'
+             )
 
 #define function to create weights for summary statistics
 
@@ -161,6 +163,7 @@ for (i in data_list ) {
       select(-one_of('m1saq1_first','m1saq1_last', 'm1saq2', 'm1saq2b')) %>% #drop principal names and phone numbers
       select(-contains('troster')) %>%
       select(-contains('name')) %>%
+      select(-contains('p4_class_')) %>%
       select(-contains('_response')) %>%
       select(-contains('m2saq2')) %>%
       select(-contains('m6s1q1')) %>%

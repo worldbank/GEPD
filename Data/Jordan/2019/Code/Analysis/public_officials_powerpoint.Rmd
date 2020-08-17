@@ -1,0 +1,585 @@
+---
+title: "Global Education Policy Dashboard"
+author: "Education Global Practice, World Bank"
+date: "02/20/2020"
+output: html_document
+
+---
+<style type="text/css">
+.main-container {
+  max-width: 1500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+#include packages
+library(tidyverse)
+library(skimr)
+library(haven)
+library(kableExtra)
+library(flextable)
+library(ggridges)
+library(scales)
+library(spatstat)
+#library(ggradar)
+library(Hmisc)
+library(DT)
+
+# define stle for ggplot based on BBC plotting styles
+bbc_style <- function() {
+  font <- "Helvetica"
+  
+  ggplot2::theme(
+    
+    #Text format:
+    #This sets the font, size, type and colour of text for the chart's title
+    plot.title = ggplot2::element_text(family=font,
+                                       size=28,
+                                       face="bold",
+                                       color="#222222"),
+    #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+    plot.subtitle = ggplot2::element_text(family=font,
+                                          size=22,
+                                          margin=ggplot2::margin(9,0,9,0)),
+    plot.caption = ggplot2::element_blank(),
+    #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+    
+    #Legend format
+    #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+    legend.position = "top",
+    legend.text.align = 0,
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    legend.key = ggplot2::element_blank(),
+    legend.text = ggplot2::element_text(family=font,
+                                        size=18,
+                                        color="#222222"),
+    
+    #Axis format
+    #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_text(family=font,
+                                      size=18,
+                                      color="#222222"),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    
+    #Grid lines
+    #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank(),
+    
+    #Blank background
+    #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+    panel.background = ggplot2::element_blank(),
+    
+    #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+    strip.background = ggplot2::element_rect(fill="white"),
+    strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+
+```
+
+##
+
+
+
+## Introduction
+
+
+- The Global Education Policy Dashboard  applies framework of WDR 2018 
+
+- Create and collect a concise set of indicators that allow tracking of key determinants of learning.  
+
+- The Dashboard tracks three levels, the three Ps:
+  * Practice
+  * Policies
+  * Politics.
+
+## Survey of Public Officials
+
+- The Policy Dashboard survey includes the politics, or the political and bureaucratic environment in which those policies are created and implemented:  
+  * Are there political incentives and bureaucratic capacity to deliver learning for all children?  
+
+
+## Survey Details
+
+- Sample a total of 200 public officials.  
+
+- Roughly 60 officials will be surveyed at the federal level
+  *  Interview the HR director, finance director, planning director, and three randomly selected service focused departments.  
+  *  Sample of 9 professional employees chosen at random from service departments.
+
+- 140 officials surveyed at regional/district level.  
+  * Selected from Districts/Regions where we survey schools
+  * 7 officials will sampled each office:
+    * Head of organization, HR director, two division directors from finance and planning, and 3 randomly selected professional employees 
+    
+## Notes on Scoring
+
+- Most indicators are scored on a 1-5 scale with 1 being the lowest score and 5 being the best score.
+
+```{r data, include=FALSE}
+
+#set directory to bring in data
+
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+
+#load public official data
+load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
+
+#load school data for comparisons
+#load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
+
+#Load original sample of schools
+# currentDate<-c("2020-02-12")
+# sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Jordan/2019/Data/Sampling/school_sample_",currentDate,".RData", sep="")
+# 
+# load(sample_frame_name)
+
+#compare data collected to original sample
+# school_dta_short <- school_dta_short %>%
+#   mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+#   left_join(data_set_updated) %>%
+#   mutate(longitude=as.character(longitude)) %>%
+#   mutate(latitude=as.character(latitude)) %>%
+#   mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+#          lon=if_else(is.na(lon), as.numeric(longitude), lon),
+#          school_ipw=weights) %>%
+#   mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*total_4th) %>%
+#   mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+
+
+#Create a function which will generate new binary variable using case_when, but 
+#if value is misisng it will generate binary variable to be missing
+#This is done a lot so will create function for it.
+#e.g. school_absent=case_when(
+#         m2sbq6_efft==6  ~ 1,
+#         m2sbq6_efft!=6   ~ 0,
+#         is.na(m2sbq6_efft) ~ as.numeric(NA))
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+#create function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+```
+
+
+
+## Overall performance
+
+```{r overall, echo=FALSE}
+
+
+data_plot <- public_officials_dta_clean %>%
+  mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
+  mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
+    mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
+  group_by(govt_tier) %>%
+  select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
+  pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
+                      "impartial_decision_making","quality_bureaucracy" ),
+               names_to = "indicators",
+               values_to = "indicator_values") 
+
+dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(median(indicator_values, na.rm=T),1))
+
+  ggplot(data_plot, aes(x=indicators, y=indicator_values, fill=govt_tier)) + #now plot the output in a bar graph
+    geom_boxplot(position="dodge") +
+    geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
+    scale_x_discrete(labels = str_wrap(c("Impartial Decision Making",
+                                         "Mandates & Accountability",
+                                         "National Learning Goals",
+                                         "Quality of the Bureaucracy"), width = 25)) + 
+  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
+  scale_fill_discrete(name="Government Level") +
+  theme_bw() +
+    theme(legend.position = "bottom") 
+
+```
+
+## Breakdowns by Central, Regional, District Level
+
+```{r po_breakdown_level, include=FALSE}
+
+ind_list<-c(
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation'
+    )
+
+
+    indicator_labels<-c(  "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'Imagine that when you started your motivation was 100. What number would you say your motivation was now relative to that?',
+                        "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation'
+                        )
+  
+    labels_df<-data.frame(name=as.character(ind_list),
+                          varlabel=as.character(indicator_labels))
+
+
+
+
+df<-final_indicator_data_BIMP
+
+
+        sum_items<-colnames(public_officials_dta_clean[,grep(x=colnames(public_officials_dta_clean), pattern="IDM|NLG|ACM|QB")])
+        metadata<-public_officials_metadata %>%
+          mutate(varlabel=as.character(varlabel)) %>%
+          bind_rows(labels_df)
+        
+        #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                     sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                     p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                     p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                     p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                     complete = ~ sum(!is.na(.))))
+
+  public_officials_dta_clean <- public_officials_dta_clean %>%
+    mutate(motivation_relative_start=as.numeric(motivation_relative_start))
+      
+  sumstats_public_officials <- public_officials_dta_clean %>%
+              select(one_of(ind_list) ) 
+
+
+  
+  
+  
+  sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+  
+  
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+            mutate(name=variable,
+                   indicators=variable) %>%
+            left_join(metadata) %>%
+              mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+                    ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+            mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+            select(variable, varlabel, mean, ci)
+    
+  
+   #Now do breakdown by govt_tier
+    #mineduc
+    sumstats_public_officials_mineduc <- public_officials_dta_clean %>%
+      filter(govt_tier=="Ministry of Education (or equivalent)") 
+
+    
+
+    sumstats_public_officials_mineduc <- sumstats_public_officials_mineduc %>%
+                select(one_of(ind_list) ) 
+
+    
+    
+    
+    sumstats_public_officials_mineduc_df<-my_skim(sumstats_public_officials_mineduc) %>%
+    yank( "numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_public_officials_mineduc_df <- sumstats_public_officials_mineduc_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_mineduc=mean,
+             ci_mineduc=ci) %>%
+      select(variable, varlabel, mean_mineduc, ci_mineduc)
+    
+   #region
+    sumstats_public_officials_region <- public_officials_dta_clean %>%
+      filter(govt_tier=="Regional office (or equivalent)") 
+
+    
+
+    sumstats_public_officials_region <- sumstats_public_officials_region %>%
+              select(one_of(ind_list) ) 
+    
+    
+    
+    sumstats_public_officials_region_df<-my_skim(sumstats_public_officials_region) %>%
+    yank( "numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_public_officials_region_df <- sumstats_public_officials_region_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_region=mean,
+             ci_region=ci) %>%
+      select(variable, varlabel, mean_region, ci_region)
+    
+       #district
+    sumstats_public_officials_district <- public_officials_dta_clean %>%
+      filter(govt_tier=="District office (or equivalent)") 
+
+    
+
+    sumstats_public_officials_district <- sumstats_public_officials_district %>%
+              select(one_of(ind_list) ) 
+    
+    
+    
+    sumstats_public_officials_district_df<-my_skim(sumstats_public_officials_district) %>%
+          yank( "numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_public_officials_district_df <- sumstats_public_officials_district_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_district=mean,
+             ci_district=ci) %>%
+      select(variable, varlabel, mean_district, ci_district)
+    
+    
+    #now bind urban/rural with the main results
+    sumstats_public_officials_df <- sumstats_public_officials_df %>%
+      left_join(sumstats_public_officials_mineduc_df) %>%
+      left_join(sumstats_public_officials_region_df) %>%
+      left_join(sumstats_public_officials_district_df)
+  
+  
+  
+
+  sumstats_df <- sumstats_public_officials_df %>%
+    arrange(factor(varlabel, levels=indicator_labels))
+  
+
+   
+   sumstats_df <- sumstats_df %>%
+     select(variable, varlabel,  mean, ci, mean_mineduc, ci_mineduc, mean_region, ci_region, mean_district, ci_district)
+
+   
+    
+   
+```
+
+
+
+```{r datatable, echo=FALSE}
+ #add in custom column sub-headers
+  sketch = htmltools::withTags(table(
+    class = 'display',
+    thead(
+      tr(
+        th( rowspan = 2, 'Indicator'),
+        th( rowspan = 2, 'Label'),
+        th(colspan = 2, 'Overall'),
+        th(colspan = 2, 'Central'),
+        th(colspan = 2, 'Regional'),
+        th(colspan = 2, 'District'),
+      ),
+      tr(
+        lapply(rep(c('Mean', '95% Confident Interval'), 4), th)
+      )
+    )
+  ))
+  
+  # create 19 breaks and 20 rgb color values ranging from white to red
+  
+
+  DT::datatable(sumstats_df, 
+                caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
+                container = sketch,
+                rownames=FALSE,
+                class='cell-border stripe',
+                escape = FALSE,
+                extensions = c ('Buttons', 'FixedHeader'), 
+                options=list(
+                  dom = 'Bfrtip',
+                  buttons = c('csv'),
+                  pageLength = 80,
+                  scrollX = TRUE, 
+                  paging=FALSE,
+                  ordering=F)) %>%
+    formatRound(columns = c('mean', 'ci', 'mean_mineduc', 'ci_mineduc', 'mean_region', 'ci_region','mean_district', 'ci_district'  ),
+                digits=2)  
+
+  
+
+
+
+```
+
+
+
+
+## Breakdowns by Managers vs Technical Staff
+
+
+
+```{r po_breakdown_level2, include=FALSE}
+
+
+        #add function to produce weighted summary stats
+
+    
+  
+   #Now do breakdown by govt_tier
+    #mineduc
+    sumstats_public_officials_manager <- public_officials_dta_clean %>%
+      filter(DEM1q12n==1) 
+
+    
+
+    sumstats_public_officials_manager <- sumstats_public_officials_manager %>%
+                select(one_of(ind_list) ) 
+
+    
+    
+    
+    sumstats_public_officials_manager_df<-my_skim(sumstats_public_officials_manager) %>%
+          yank( "numeric") %>%
+          mutate(variable=skim_variable) %>%
+          select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)  
+    
+    
+    #add variable label
+    sumstats_public_officials_manager_df <- sumstats_public_officials_manager_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_manager=mean,
+             ci_manager=ci) %>%
+      select(variable, varlabel, mean_manager, ci_manager)
+    
+   #technical
+    sumstats_public_officials_technical <- public_officials_dta_clean %>%
+      filter(DEM1q12n==2) 
+
+    
+
+    sumstats_public_officials_technical <- sumstats_public_officials_technical %>%
+              select(one_of(ind_list) ) 
+    
+    
+    
+    sumstats_public_officials_technical_df<-my_skim(sumstats_public_officials_technical) %>%
+          yank( "numeric") %>%
+          mutate(variable=skim_variable) %>%
+          select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+    
+    
+    #add variable label
+    sumstats_public_officials_technical_df <- sumstats_public_officials_technical_df %>%
+      mutate(name=variable,
+             indicators=variable) %>%
+      left_join(metadata) %>%
+      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+      mutate(mean_technical=mean,
+             ci_technical=ci) %>%
+      select(variable, varlabel, mean_technical, ci_technical)
+    
+       
+    
+    #now bind urban/rural with the main results
+    sumstats_public_officials_df2 <- sumstats_public_officials_df %>%
+      left_join(sumstats_public_officials_manager_df) %>%
+      left_join(sumstats_public_officials_technical_df) 
+
+  
+  
+
+  sumstats_df2 <- sumstats_public_officials_df2 %>%
+    arrange(factor(varlabel, levels=indicator_labels))
+  
+
+   
+   sumstats_df2 <- sumstats_df2 %>%
+     select(variable, varlabel,  mean, ci, mean_manager, ci_manager, mean_technical, ci_technical)
+
+   
+    
+   
+```
+
+
+
+```{r datatable2, echo=FALSE}
+ #add in custom column sub-headers
+  sketch = htmltools::withTags(table(
+    class = 'display',
+    thead(
+      tr(
+        th( rowspan = 2, 'Indicator'),
+        th( rowspan = 2, 'Label'),
+        th(colspan = 2, 'Overall'),
+        th(colspan = 2, 'Managers'),
+        th(colspan = 2, 'Technical Staff'),
+      ),
+      tr(
+        lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
+      )
+    )
+  ))
+  
+  # create 19 breaks and 20 rgb color values ranging from white to red
+  
+
+  DT::datatable(sumstats_df2, caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
+                container = sketch,
+                rownames=FALSE,
+                class='cell-border stripe',
+                escape = FALSE,
+                extensions = c ('Buttons', 'FixedHeader'), 
+                options=list(
+                  dom = 'Bfrtip',
+                  buttons = c('csv'),
+                  pageLength = 80,
+                  scrollX = TRUE, 
+                  paging=FALSE,
+                  ordering=F)) %>%
+    formatRound(columns = c('mean', 'ci', 'mean_manager', 'ci_manager', 'mean_technical', 'ci_technical'),
+                digits=2)  
+
+  
+
+
+
+```
+

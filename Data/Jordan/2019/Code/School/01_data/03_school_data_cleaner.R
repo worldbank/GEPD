@@ -37,6 +37,8 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
   mutate(teacher_name=m2saq2,
          teacher_number=TEACHERS__id)
 
+
+
 ###########################
 #read in school level file
 ###########################
@@ -114,7 +116,14 @@ for (i in indicator_names ) {
 }
 
 
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+school_dta_raw <- school_dta
 
+#merge school data to teacher roster
+teacher_roster <- teacher_roster %>%
+  left_join(school_data_preamble)
 
 #########################################
 #read in teacher questionnaire level file
@@ -218,7 +227,10 @@ for (i in indicator_names ) {
   }
 }
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+teacher_questionnaire_raw <- teacher_questionnaire
 
 #############################################
 ##### Teacher Absence ###########
@@ -339,7 +351,10 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
 
 teacher_absence_final<- teacher_absence_dta %>%
-  select(preamble_info_absence, contains('absent'))
+  select(preamble_info, preamble_info_absence, contains('absent')) %>%
+  group_by(school_code, teacher_number) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
 
 
 
@@ -449,7 +464,10 @@ teacher_assessment_dta <- teacher_assessment_dta %>%
   mutate(n_mssing_CONT=n_miss_row(.))
 
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+teacher_assessment_dta_raw <- teacher_assessment_dta
 
 
 #Drop columns that end in "mistake".  THis is not necessary for computing indicator
@@ -712,6 +730,12 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          student_male=bin_var(m8s1q3,1),
   )
 
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+assess_4th_grade_dta_raw <- assess_4th_grade_dta
+
+
 # create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
 # This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
 # In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
@@ -916,7 +940,10 @@ list_topics<-c("vocabn", "comprehension","letters","words","sentence","nm_writin
                "backward_digit","head_shoulders",
                "perspective","conflict_resol")
 
-
+#####################
+#create one copy of each dataframe that never gets touched and is carried forward to public folder
+#####################
+ecd_dta_raw <- ecd_dta
 
 #recode ECD variables to be 1 if student got it correct and zero otherwise
 ecd_dta<- ecd_dta %>%
@@ -1403,11 +1430,11 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
          blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
   mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
   mutate(principal_knowledge_score=case_when(
-    principal_knowledge_avg >0.9 ~ 5,
-    (principal_knowledge_avg >0.8 & principal_knowledge_avg<=0.9) ~ 4,
-    (principal_knowledge_avg >0.7 & principal_knowledge_avg<=0.8) ~ 3,
-    (principal_knowledge_avg >0.6 & principal_knowledge_avg<=0.7) ~ 2,
-    (principal_knowledge_avg <=0.6 ) ~ 1  )
+    principal_knowledge_avg ==1 ~ 5,
+    (principal_knowledge_avg >=5/6 & principal_knowledge_avg<1) ~ 4,
+    (principal_knowledge_avg >=4/6 & principal_knowledge_avg<5/6) ~ 3,
+    (principal_knowledge_avg >=3/6 & principal_knowledge_avg<4/6) ~ 2,
+    (principal_knowledge_avg <3/6 ) ~ 1  )
   ) %>%
   select(school_code, starts_with('m7sfq5_pknw'),m5s2q1c_number, starts_with('m7sfq6_pknw'), m5s2q1e_number, starts_with('m7sfq7_pknw'), m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
@@ -1882,14 +1909,15 @@ final_indicator_data_ISTD <- school_data_ISTD %>%
 ##### School  Inputs and Infrastructure Monitoring ###########
 #############################################
 
-# School Survey. This lever measures the extent to which there is a monitoring system in place to ensure that the inputs that must be available at the schools are in fact available at the schools. This set of questions will include three aspects: 
-# - 1 Point. Are all input items (functioning blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade classrooms, basic classroom furniture, and at least one computer in the schools) being monitored? (partial credit available) 
-# - 1 Point. Are all infrastructure items (functioning toilets, electricity, drinking water, and accessibility for people with disabilities) being monitored? (partial credit available) 
-# - 1 Point. Is the community involved in the monitoring?
+# School Survey. A score of 1-5 based on 3 factors. Each factor has received an equal weight in terms of points. The factors are the following: 
+#-	Someone is monitoring 
+#-	System for monitoring available (E.g. inventory)
+#-	Community involved in monitoring 
+
 
 school_data_IMON <- school_data_IMON %>%
   mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
-         m1scq5_imon=case_when(
+         system_in_place=case_when(
            m1scq5_imon==0 ~ 0,
            m1scq5_imon==1 ~ 1,
            m1scq5_imon==2 ~ 0.5,
@@ -1905,7 +1933,7 @@ school_data_IMON <- school_data_IMON %>%
                                            0),
   ) %>%
   mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
-  mutate(sch_monitoring=1+1.5*monitoring_inputs+1.5*monitoring_infrastructure+parents_involved)
+  mutate(sch_monitoring=1+(monitoring_inputs+monitoring_infrastructure)/2+system_in_place+parents_involved)
 
 
 
@@ -1914,7 +1942,6 @@ final_indicator_data_IMON <- school_data_IMON %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_IMON=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-
 
 #############################################
 ##### School School Management Clarity of Functions  ###########
@@ -2184,7 +2211,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
             'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
             'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
             'standards_monitoring',
-            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','system_in_place','parents_involved',
             'sch_management_attraction', 'principal_satisfaction',
             'sch_selection_deployment', 
             'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
@@ -2242,8 +2269,6 @@ weights_list<-c('g4_stud_weight_component', 'abs_weight_component', 'teacher_wei
 
 final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
-  group_by(school_code) %>%
-  summarise_all(~first(na.omit(.))) %>%
   select(all_of(keep_info), one_of(ind_list), everything()) %>%
   left_join(school_weights)
 
@@ -2358,9 +2383,13 @@ school_dta_short_imp <- mice::complete(impdata, 1)
   school_dta_short_imp <- school_dta_short
   school_gdp <-school_dta_short
 }
+
+
+
 ################################
 #Store Key Created Datasets
 ################################
+
 
 #saves the following in R and stata format
 

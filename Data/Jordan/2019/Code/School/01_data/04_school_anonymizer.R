@@ -50,7 +50,8 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' , 'school_weights')
+             'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' , 'school_weights',
+             'school_dta_raw', 'ecd_dta_raw', 'assess_4th_grade_dta_raw', 'teacher_assessment_dta_raw', 'teacher_questionnaire_raw')
 
 
 #define function to create weights for summary statistics
@@ -61,6 +62,31 @@ sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
+
+
+
+# Create a variable for Syrian Schools
+# These are typically evening schools, but the survey firm has provided a list 
+data_set_updated <- data_set_updated %>%
+  mutate(Syrian_school=(foundation_period=="Evening")) %>%
+  mutate(Syrian_school=case_when(
+    organization_code==110138 ~ FALSE,
+    organization_code==110547 ~ FALSE,
+    organization_code==110611 ~ FALSE,
+    organization_code==110803 ~ FALSE,
+    organization_code==112490 ~ FALSE,
+    organization_code==112634 ~ FALSE,
+    organization_code==113185 ~ FALSE,
+    organization_code==113621 ~ FALSE,
+    organization_code==113651 ~ FALSE,
+    organization_code==113804 ~ FALSE,
+    organization_code==113887 ~ FALSE,
+    organization_code==114110 ~ FALSE,
+    organization_code==160268 ~ FALSE,
+    organization_code==160271 ~ FALSE,
+    TRUE ~ Syrian_school
+  ))
+
 
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
@@ -74,7 +100,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
     mutate(province=governorate) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" | names(data_set_updated) == "province" |
-                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | 
+                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | names(data_set_updated) == "Syrian_school" |
                                                       names(data_set_updated) == "property_type" | names(data_set_updated) == "supervisory_authority")])))
 }
 

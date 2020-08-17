@@ -31,6 +31,8 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 country <-'JOR'
 country_name <- "Jordan"
 year <- '2019'
+
+api <- 'no'
 #########################
 # File paths #
 #########################

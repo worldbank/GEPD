@@ -1858,7 +1858,7 @@ output$indicators_table <- DT::renderDataTable({
       #Now do breakdown by non-evening/Rural
       #non-evening
       sumstats_school_nonevening <- school_dta_short_anon %>%
-        filter(foundation_period!="Evening") 
+        filter(Syrian_school==FALSE) 
       
       
       sch_ipw<-sumstats_school_nonevening$ipw 
@@ -1889,7 +1889,7 @@ output$indicators_table <- DT::renderDataTable({
       
       #evening
       sumstats_school_evening <- school_dta_short_anon  %>%
-        filter(foundation_period=="Evening") 
+        filter(Syrian_school==TRUE) 
       
       
       sch_ipw<-sumstats_school_evening$ipw 
@@ -1979,9 +1979,9 @@ output$indicators_table <- DT::renderDataTable({
             th( rowspan = 2, 'Indicator'),
             th( rowspan = 2, 'Value Range'),
             th(colspan = 2, 'Overall'),
-            th(colspan = 2, 'Non-Evening Schools'),
-            th(colspan = 2, 'Evening Schools'),
-            th(rowspan = 2, str_wrap('Ratio of Non-Evening to Evening',10))
+            th(colspan = 2, 'Non-Syrian Schools'),
+            th(colspan = 2, 'Syrian Schools'),
+            th(rowspan = 2, str_wrap('Ratio of Non-Syrian to Syrian',10))
           ),
           tr(
             lapply(rep(c('Mean', '95% Confident Interval'), 3), th)

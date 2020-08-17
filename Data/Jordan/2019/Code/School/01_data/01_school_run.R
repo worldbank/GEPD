@@ -22,7 +22,7 @@ library(rmarkdown)
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
-
+setwd(here())
 
 
 #Country name
@@ -38,13 +38,13 @@ year <- '2019'
 
 
 
-if (Sys.getenv("USERNAME") == "wb469649"){
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-  backup_onedrive="yes"
+  backup_onedrive="no"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
   
 } else {
