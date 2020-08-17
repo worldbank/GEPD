@@ -86,7 +86,11 @@ here()
 setwd(here())
 
 #load API file
-input <- read_csv(paste("./Data/GEPD_Indicators_API_",country_file_name,".csv",sep=""))
+input <- read_csv(paste("./Data/GEPD_Indicators_API_",country_file_name,".csv",sep="")) %>%
+  mutate(value=case_when(
+    value<0 ~ as.numeric(NA),
+    TRUE ~ value
+  ))
 #Modify file to add indicator labels for de-facto de-jure comparison indicators required
 input <- input %>%
   mutate(value = if_else(value<=5.5, round(value, digits = 1), round(value, digits = 0))) %>%
@@ -251,27 +255,27 @@ grep_color <- c('PROE|TENR|PRIM|ATTD|CONT|EFFT|LCAP|PEDG|LERN')
    #Adding new cell with value and colour in new column
     mutate(value_color=case_when(
       #percentages
-      (value >= lays_world & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!15}",value, sep=""),
-      (value <= lays_world & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!15}",value, sep=""),
-      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value,sep=""),
-      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value, sep=""),
-      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep=""),
+      (value >= lays_world & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!10}",value, sep=""),
+      (value <= lays_world & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!10}",value, sep=""),
+      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!10}",value,sep=""),
+      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!10}",value, sep=""),
+      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!10}",value, sep=""),
       #non-percentages
-      (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value, sep=""),
-      (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value, sep=""),
-      (value <3 &              !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep="")
+      (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green}",value, sep=""),
+      (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!10}",value, sep=""),
+      (value <3 &              !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!10}",value, sep="")
     )
     ) %>%
    #Adding new cell with only colour in new column
     mutate(only_color=case_when(
       #percentages
-      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
-      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
-      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}"),
+      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!10}"),
+      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!10}"),
+      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!10}"),
       #non-percentages
-      (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
-      (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
-      (value <3 &              !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}")
+      (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!10}"),
+      (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!10}"),
+      (value <3 &              !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!10}")
     )
     )
 lays_lp_choice <- if_else(country_file_name == "RWA", lays, lp)
@@ -651,7 +655,7 @@ defacto_diff <- defacto_master_tbl %>%
     spread(type,value) %>%
     mutate(diff=`De-jure`-`De-facto`) %>%
     arrange(desc(diff))
-average_diff <- round(mean(defacto_diff$diff), digits=1)
+average_diff <- round(mean(abs(defacto_diff$diff)), digits=1)
 average_diff_text <- if_else(average_diff>=1, "significant", if_else(average_diff>0 & average_diff<1, "some", "no"))
 #Finding top 3 indicators with highest difference and writing down their differences
 high_diff_var_text <- glue("{defacto_diff[1,1]} ({defacto_diff[1,4]} points)")
