@@ -20,9 +20,9 @@ library(haven)
 #anchor directory to correct place
 here()
 setwd(here())
-#Set year
+#Set year to pull data for LAYS and LP from WB APIs
 year <- "2019"
-#Load required file for creating figures for Learning poverty and LAYS
+#Run code to pull and create dataframe with LP and LAYS data
 source('./Code/HCI_LP_fileload.R')
 #############
 # Rwanda
