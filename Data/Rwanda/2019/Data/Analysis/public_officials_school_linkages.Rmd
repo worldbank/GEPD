@@ -400,7 +400,7 @@ patch_plot <- (idm | acm ) / (nlg | qb )
 
 patch_plot + plot_annotation(
   title = 'Plots of Bureaucracy Indicators Across Regions',
-  caption = 'Regional shading shows average of all public officials in that district including officials at Directorate level'
+  caption = 'Regional shading shows average of all public officials in that district including officials at Sector level'
 )
 ```
 
@@ -828,14 +828,14 @@ patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
   title = 'Plot of 4th Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Sector level',150)
 )
 
 patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
 
 patch_scatter_alt + plot_annotation(
   title = 'Plot of 4th Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Sector level',150)
 )
 
 ```
@@ -908,17 +908,18 @@ patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
   title = 'Plot of 1st Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Sector level',150)
 )
 
 patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
 
 patch_scatter_alt + plot_annotation(
   title = 'Plot of 1st Grade Student Fraction Correct on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that district including officials at Sector level',150)
 )
 
 ```
+
 
 
 
@@ -985,23 +986,149 @@ idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=pres
                      label.x.npc = "right", label.y.npc = -0.1,
                      formula = 'y~x', parse = TRUE, size = 5)   
 
+idm_scatter2 <- ggplot(merge_df_collapse, aes(x=politicized_personnel_management, y=presence_rate)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Presence Rate") +
+        xlab("Politicized Personnel Management") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)   
+
+
 
 patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
 
 patch_scatter + plot_annotation(
   title = 'Plot of Teacher Presence on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
+  caption = str_wrap('Regional average of all public officials in that District including officials at Sector level',150)
 )
 
 
-patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
+# patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
+# 
+# patch_scatter_alt + plot_annotation(
+#   title = 'Plot of Teacher Presence on Bureaucracy Indicators, by Region',
+#   caption = str_wrap('Regional average of all public officials in that District including officials at Sector level',150)
+# )
 
-patch_scatter_alt + plot_annotation(
-  title = 'Plot of Teacher Presence on Bureaucracy Indicators, by Region',
-  caption = str_wrap('Regional average of all public officials in that district including officials at Directorate level',150)
+patch_scatter3 <- idm_scatter + idm_scatter2 
+
+patch_scatter3 + plot_annotation(
+  title = 'Plot of Teacher Presence on Impartial Decision Making Bureaucracy Indicators, by Region',
+  caption = str_wrap('Regional average of all public officials in that District including officials at Sector level',150)
+)
+
+```
+
+
+
+
+```{r scatters_content, echo=FALSE, fig.height=6, fig.width=9, warning=FALSE}
+
+
+
+
+
+acm_scatter<-  ggplot(merge_df_collapse, aes(x=mandates_accountability, y=content_knowledge)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Teacher Content Knowledge") +
+  xlab("Mandates and Accountability") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+qb_scatter<-  ggplot(merge_df_collapse, aes(x=quality_bureaucracy, y=content_knowledge)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Teacher Content Knowledge") +
+  xlab("Quality of Bureaucracy") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)
+
+nlg_scatter<-  ggplot(merge_df_collapse, aes(x=national_learning_goals, y=content_knowledge)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Teacher Content Knowledge") +
+  xlab("National Learning Goals") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)
+
+
+idm_scatter <- ggplot(merge_df_collapse, aes(x=impartial_decision_making, y=content_knowledge)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Teacher Content Knowledge") +
+  xlab("Impartial Decision Making") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)   
+
+idm_scatter2 <- ggplot(merge_df_collapse, aes(x=politicized_personnel_management, y=content_knowledge)) +
+        geom_point() +
+        geom_smooth(method='lm', mapping = aes()) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 16),
+          
+        ) +
+        ylab("Teacher Content Knowledge") +
+        xlab("Politicized Policy Implementation") +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = -0.1,
+                     formula = 'y~x', parse = TRUE, size = 5)   
+
+
+
+patch_scatter <- (idm_scatter | acm_scatter ) / (nlg_scatter | qb_scatter )
+
+patch_scatter + plot_annotation(
+  title = 'Plot of Teacher Content Knowledge on Bureaucracy Indicators, by Region',
+  caption = str_wrap('Regional average of all public officials in that District including officials at Sector level',150)
 )
 
 
+# patch_scatter_alt <- (idm | idm_scatter  ) / (qb | qb_scatter )
+# 
+# patch_scatter_alt + plot_annotation(
+#   title = 'Plot of Teacher Presence on Bureaucracy Indicators, by Region',
+#   caption = str_wrap('Regional average of all public officials in that District including officials at Sector level',150)
+# )
+
+patch_scatter3 <- idm_scatter
+
+patch_scatter3 + plot_annotation(
+  title = 'Plot of Teacher Content Knowledge on Impartial Decision Making Bureaucracy Indicators, by Region',
+  caption = str_wrap('Regional average of all public officials in that District including officials at Sector level',150)
+)
 
 ```
 

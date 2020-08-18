@@ -61,7 +61,7 @@ school_dta_short_merge <- school_dta_short_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
-               #'teach_score',
+               'teach_score',
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
@@ -174,7 +174,7 @@ reg_df<- assess_4th_grade_anon_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
-               #'teach_score',
+               'teach_score',
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
