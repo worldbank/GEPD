@@ -20,8 +20,10 @@ library(haven)
 #anchor directory to correct place
 here()
 setwd(here())
-
-
+#Set year
+year <- "2019"
+#Load required file for creating figures for Learning poverty and LAYS
+source('./Code/HCI_LP_fileload.R')
 #############
 # Rwanda
 #############
@@ -29,15 +31,15 @@ setwd(here())
 #Set the country name here
 country_file_name <- "RWA"
 country <- "Rwanda"
-year <- "2020"
+country_year <- "2020"
 
 takeaway <- "
-- 3.8 years of learning adjusted years of schooling observed in Rwanda. GEPD Grade 4 proficiency is low at only 0.16%, with numeracy proficiency lower than language proficiency of students.
-- Teacher content knowledge is poor at only 27%, attributed to poor teaching support and weak monitoring and accountability systems. Only 44% teachers reported receiving feedback from principals after classroom observation in schools.
-- Grade 1 proficiency of students is ~9%, with students scoring lower on executive functions and socio-emotional learning.
-- Basic inputs and infrastructure are weak in areas of avaiability of functional blackboards, functional toilets and electricity in schools.
+- Substantially low learning outcomes observed for students in Grade 1 and 4.
+- Weak teacher pedagogical skills and low teacher content knowledge attributed to poor teaching support and weak monitoring and accountability systems.
+- Grade 1 proficiency of students is ~9%, with students scoring lower on executive functions and socio-emotional learning. Only 13% students are enrolled in early childhood programs which face gaps in caregiver skills and financial constraints.
+- Basic inputs and infrastructure are weak in areas of functional toilets and electricity in schools.
 - Major gaps are seen in implementation of teaching support policies, teaching monitoring and accountability systems and selection and deployment policies for school principals.
-- Primary education funding amount and efficiency of spending is low and education policy implementation is politicized, lowering bureacucratic capacity.  
+- Primary education funding amount and efficiency of spending is low and education policy implementation is politicized, lowering bureaucratic capacity.
 "
 
 # 2 Pager
@@ -57,8 +59,7 @@ rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',
 #Set the country name here
 country_file_name <- "PER"
 country <- "Peru"
-year <- "2019"
-
+country_year <- "2020"
 
 takeaway <- "
 - Learning poverty is substantial, and rural children lag far beyond urban children in learning.
@@ -87,7 +88,7 @@ rmarkdown::render('./Code/GEPD_Brief_4page.Rmd',
 #Set the country name here
 country_file_name <- "JOR"
 country <- "Jordan"
-year <- "2019"
+country_year <- "2020"
 
 takeaway <- "
 - 52% learning poverty is observed in Grade 4. GEPD Grade 4 student proficiency (>80% student knowledge) is only 4%, attributed to low numeracy proficiency 2%.
