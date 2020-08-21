@@ -1554,8 +1554,8 @@ attitude_fun_rev  <- function(x) {
 
 
 teacher_questionnaire_TATT <- teacher_questionnaire_TATT %>%
-  mutate(teacher_satisfied_job=attitude_fun_rev(m3seq1_tatt)/5,
-         teacher_satisfied_status=attitude_fun_rev(m3seq2_tatt)/5,
+  mutate(teacher_satisfied_job=if_else(m3seq1_tatt<=2,1,0),
+         teacher_satisfied_status=if_else(m3seq2_tatt<=2,1,0),
          better_teachers_promoted=bin_var(m3seq3_tatt,1),
          teacher_bonus=bin_var(m3seq4_tatt,1),
          teacher_bonus_attend=if_else(m3seq4_tatt==1,

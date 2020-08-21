@@ -1,0 +1,369 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[twocolumn]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage[left=0.5cm,right=0.5cm,top=1.5cm,bottom=1.2cm]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{fancyhdr} \usepackage{booktabs,xcolor} \pagestyle{fancy} \renewcommand{\headrulewidth}{0pt} \rhead{2020} \cfoot{\includegraphics[width=20cm]{footer.png}} \fancypagestyle{plain}{\pagestyle{fancy}} \setlength{\headheight}{77.3pt} \setlength{\footskip}{36.5pt} \setlength{\textheight}{0.90\textheight} \pagenumbering{gobble} \usepackage[fontsize=9pt]{scrextend} \usepackage{float} \restylefloat{table} \usepackage{xcolor} \usepackage{multicol} \usepackage{array} \usepackage{colortbl} \usepackage{multirow} \usepackage{collcell} \usepackage{setspace} \usepackage{arydshln} \usepackage{caption} \captionsetup{skip=0pt} \setlength{\columnsep}{1.5cm}
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+\newcommand{\greynote}[1]{
+    {\scriptsize
+    \textcolor{darkgray}{\textit{Notes:} #1}
+  }
+}
+
+\newcommand{\greysource}[1]{
+    {\scriptsize
+    \textcolor{darkgray}{\textit{Source:} #1}
+  }
+}
+
+\newcommand{\greydisclaimer}[1]{
+    {\scriptsize
+    \textcolor{darkgray}{\textit{Disclaimer:} #1}
+  }
+}
+
+\newcommand*{\tabindent}{\hspace{1mm}}
+
+\hypertarget{introduction}{%
+\subsubsection{\texorpdfstring{\textbf{INTRODUCTION}}{INTRODUCTION}}\label{introduction}}
+
+\textbf{The Global Education Policy Dashboard (GEPD): An innovative tool
+to measure drivers of learning outcomes in basic education}\\
+GEPD uses 3 data collection instruments to report on nearly 40
+indicators that operationalize the World Development Report 2018
+framework to track 3 areas for progress in education- Practices,
+Policies, and Politics. Using these indicators, the dashboard highlights
+areas where countries need to act to improve learning outcomes and
+allows a way for governments to track progress as they act to close gaps
+in these areas. For more information on GEPD, please visit
+\textbf{\href{https://www.worldbank.org/en/topic/education/brief/global-education-policy-dashboard}{www.worldbank.org/global-education-policy-dashboard}}
+
+\hypertarget{figure-1.-gepd-framework-practices-policies-and-politics-expanding-on-wdr-2018-framework}{%
+\paragraph{Figure 1. GEPD framework (practices, policies and politics),
+expanding on WDR 2018
+framework}\label{figure-1.-gepd-framework-practices-policies-and-politics-expanding-on-wdr-2018-framework}}
+
+\begin{center}\includegraphics[width=0.8\linewidth]{/Users/kanikaverma/Documents/GitHub/gepd/Country_Reports/Data/full_circle} \end{center}
+
+\hypertarget{instruments-of-data}{%
+\subsubsection{\texorpdfstring{\textbf{INSTRUMENTS OF
+DATA}}{INSTRUMENTS OF DATA}}\label{instruments-of-data}}
+
+The \textbf{School Survey} consists of 8 modules to collect data across
+200-300 schools on practices (the quality of service delivery in
+schools) and de facto policy indicators. It consists of streamlined
+versions of existing instruments together with new questions to fill
+gaps in those instruments.\\
+The \textbf{Policy Survey} collects information via interviews with
+\textasciitilde{}200 officials per country at federal and regional level
+to feed into the policy de jure indicators and identify key elements of
+the policy framework.\\
+The \textbf{Survey of public officials} collects information about the
+capacity and orientation of the bureaucracy and political factors
+affecting education outcomes. This survey is an education-focused
+version of the civil-servant surveys from the Bureaucracy Lab, WBG.
+
+\hypertarget{key-takeaways-2020}{%
+\subsubsection{\texorpdfstring{\textbf{KEY TAKEAWAYS, \uppercase{Peru},
+2020}}{KEY TAKEAWAYS, , 2020}}\label{key-takeaways-2020}}
+
+\begin{itemize}
+\tightlist
+\item
+  Learning poverty is substantial, and rural children lag far beyond
+  urban children in learning.
+\item
+  Disparities are driven by differences in practices (less than ½ of
+  variation explained by within-school differences).
+\item
+  Of all practice indicators, teacher skills \& children's capacity for
+  learning at primary entry explain low learning the best.
+\item
+  Infrastructure is advanced, but internet access and accessibility to
+  kids with disabilities are still poor (just 8\% \& 54\% in rural
+  schools).
+\item
+  Policy frameworks are comprehensive, but the de facto implementation
+  varies across types of policies. E.g. teaching support.
+\item
+  Bureaucratic capacity scores are affected by the lack of recognition
+  of good performance for individuals, units, and departments.
+\end{itemize}
+
+\vfill
+
+\setlength\dashlinedash{0.2pt}
+\setlength\dashlinegap{1.5pt}
+\setlength\arrayrulewidth{0.3pt}
+
+\hypertarget{table-1.-key-gepd-outcome-indicators}{%
+\paragraph{Table 1. Key GEPD Outcome
+Indicators}\label{table-1.-key-gepd-outcome-indicators}}
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{\begin{tabular}{m{8cm}c}
+\textbf{Indicator} & \textbf{Value}  \\\hline
+Learning poverty & {\cellcolor{red!15}56\%} \\\cdashline{1-2}
+Proficiency by End of Primary & {\cellcolor{red!15}54\%} \\\cdashline{1-2}
+Proficiency on GEPD Assessment & {\cellcolor{red!15}33\%} \\\cdashline{1-2}
+\hspace{1mm}\emph{Literacy proficiency} & {\cellcolor{yellow!15}61\%} \\\cdashline{1-2}
+\hspace{1mm}\emph{Numeracy proficiency} & {\cellcolor{red!15}23\%} \\\cdashline{1-2}
+Proficiency by Grade 2/3 & {NA} \\\cdashline{1-2}
+Net Adjusted Enrollment Rate & {NA} \\\hline
+\end{tabular}}
+\\
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, Peru, 2020. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{80\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
+\end{table}
+\raggedbottom
+
+\hypertarget{learning-outcomes-56-learning-poverty-33-gepd-proficiency-in-grade-4}{%
+\subsubsection{\texorpdfstring{\textbf{LEARNING OUTCOMES: 56\% LEARNING
+POVERTY, 33\% GEPD PROFICIENCY IN GRADE
+4}}{LEARNING OUTCOMES: 56\% LEARNING POVERTY, 33\% GEPD PROFICIENCY IN GRADE 4}}\label{learning-outcomes-56-learning-poverty-33-gepd-proficiency-in-grade-4}}
+
+Learning poverty is defined as the share of children at end of primary
+age below minimum reading proficiency, adjusted for out of school
+children. Learning poverty in Peru is 5\% points worse than the average
+for Latin America \& Caribbean (excluding high income) region and 27\%
+points worse than the average for Upper middle income countries.
+
+\hypertarget{figure-2.-leaning-poverty-comparison}{%
+\paragraph{Figure 2. Leaning poverty
+comparison}\label{figure-2.-leaning-poverty-comparison}}
+
+\includegraphics[width=1\linewidth]{/Users/kanikaverma/Documents/GitHub/gepd/Country_Reports/LP_LAYS_figures/lp_figure_PER}
+
+{\scriptsize
+    \textcolor{darkgray}{\textit{Notes:} Grey circles represent other countries. Yellow circle represents Peru. Other circles represent average learning poverty in Peru's region and income group.}
+  }
+
+\textbf{GEPD grade 4 proficiency of 33\%} means 33\% students score
+greater than 80\% in GEPD assessment. Student proficiency is 38 points
+higher in language compared to numeracy, 2 points higher for boys
+compared to girls, and 23 points higher in urban areas compared to rural
+areas.
+
+\hypertarget{figure-3.-gepd-grade-4-proficiency-peru}{%
+\paragraph{Figure 3. GEPD Grade 4 proficiency,
+Peru}\label{figure-3.-gepd-grade-4-proficiency-peru}}
+
+\includegraphics{/Users/kanikaverma/Documents/GitHub/gepd/Country_Reports/Output/Peru_2019_2Pager_files/figure-latex/learning_figure-1.pdf}
+
+\hypertarget{comparing-de-facto-practices-and-policy-levers}{%
+\subsubsection{\texorpdfstring{\textbf{COMPARING DE-FACTO PRACTICES AND
+POLICY
+LEVERS}}{COMPARING DE-FACTO PRACTICES AND POLICY LEVERS}}\label{comparing-de-facto-practices-and-policy-levers}}
+
+Practice indicators measure quality of service delivery in schools such
+as student performance, teacher knowledge, principal management skills,
+etc. Policy lever indicators measure how well school, personnel and
+student policies governing these practices are implemented. Comparing
+de-facto practice and policy lever indicators allows identification of
+low-scoring policy levers that affect observed practice indicators.
+
+\hypertarget{teacher-effectiveness}{%
+\paragraph{\texorpdfstring{\textbf{Teacher
+effectiveness}}{Teacher effectiveness}}\label{teacher-effectiveness}}
+
+Teacher content knowledge (39\%) needs improvement. Teacher proficiency
+in language (41\%) is 5 points higher than mathematics proficiency
+(36\%). Teacher pedagogical skills score (34\%) needs improvement, and
+teacher attendance (92\%) is on target. Teaching - Monitoring \&
+Accountability is the weakest policy lever(2.8/5).
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy levers (Teaching)}}\\\hline
+Content knowledge                   & {\cellcolor{red!15}39\%}   & Attraction                                & \cellcolor{yellow!15}3.6 \\\cdashline{1-4} 
+\hspace{1mm}\emph{Maths proficiency}               & {\cellcolor{red!15}36\%} &                                           & \cellcolor{yellow!15}\\\cdashline{1-2}   
+\hspace{1mm}\emph{Language proficiency}            & {\cellcolor{red!15}41\%} & \multirow{-2}{*}{Selection \& deployment} & \multirow{-2}{*}{\cellcolor{yellow!15}3.6} \\\cdashline{1-4}        
+Pedagogical skills                               & {\cellcolor{red!15}34\%}   &                                           & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Classroom culture}            & {\cellcolor{green!15}91\%} & \multirow{-2}{*}{Support}                 & \multirow{-2}{*}{\cellcolor{yellow!15}3.1} \\\cdashline{1-4}
+\hspace{1mm}\emph{\% Instruction practices}        & {\cellcolor{red!15}39\%} &                                           & \cellcolor{green!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Socio-emotional skills}       & {\cellcolor{red!15}24\%} & \multirow{-2}{*}{Evaluation}              & \multirow{-2}{*}{\cellcolor{green!15}4} \\\cdashline{1-4}
+& \cellcolor{green!15} & Monitoring \& Accountability  & \cellcolor{red!15}2.8 \\\cdashline{3-4}
+\multirow{-2}{*}{Teacher Attendance}             & \multirow{-2}{*}{\cellcolor{green!15}92\%} & Intrinsic motivation    & \cellcolor{green!15}4.1 \\\hline
+\end{tabular}}
+\\
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{80\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
+\end{table}
+
+\hypertarget{capacity-for-learning-in-grade-1}{%
+\paragraph{\texorpdfstring{\textbf{Capacity for learning in Grade
+1}}{Capacity for learning in Grade 1}}\label{capacity-for-learning-in-grade-1}}
+
+Student proficiency in Grade 1 (53\%) needs improvement. Executive
+funcion score(65)\% is the lowest knowledge sub-score. Student
+attendance(93\%) is on target. Center-Based Care is the weakest policy
+lever(2.6/5).
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy levers (Learners)}}\\\hline
+Capacity for learning                  & {\cellcolor{red!15}53\%} & & \cellcolor{green!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{Numeracy score}        & \cellcolor{green!15}90   & \multirow{-2}{*}{Nutrition Programs} & \multirow{-2}{*}{\cellcolor{green!15}4.3}  \\\cdashline{1-4}  
+\hspace{1mm}\emph{Literacy score}        & \cellcolor{yellow!15}77   & Health Programs                     & \cellcolor{green!15}4.2 \\\cdashline{1-4}  
+\hspace{1mm}\emph{Executive score}       & \cellcolor{yellow!15}65   & Center based care                   & \cellcolor{red!15}2.6 \\\cdashline{1-4}  
+\hspace{1mm}\emph{Socio-emotional score} & \cellcolor{yellow!15}75   & Caregiver Skills Capacity           & \cellcolor{red!15}2.9 \\\cdashline{1-4}  
+Student Attendance                     & {\cellcolor{green!15}93\%}     & Caregiver Financial Capacity        & \cellcolor{green!15}4.5 \\\hline
+\end{tabular}}
+\\
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{80\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
+\end{table}
+\vfill\null
+
+\hypertarget{inputs-infrastructure}{%
+\paragraph{\texorpdfstring{\textbf{Inputs \&
+Infrastructure}}{Inputs \& Infrastructure}}\label{inputs-infrastructure}}
+
+Basic inputs (4.1/5) are on target. Percent of schools with access to
+EdTech(78)\% is the lowest score. Basic infrastructure (3.7/5) requires
+caution. Percent of schools with access to internet(54)\% is the lowest
+score. Inputs \& Infrastructure - Monitoring is the weakest policy
+lever(3.7/5).
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy levers(Inputs)}}\\\hline
+Basic inputs & \cellcolor{green!15}4.1 & & \cellcolor{yellow!15} \\\cdashline{1-2}
+\hspace{1mm}\emph{\% Blackboard}    & {\cellcolor{green!15}82\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Stationery}    & {\cellcolor{green!15}96\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Furniture}     & {\cellcolor{green!15}84\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% EdTech access} & {\cellcolor{yellow!15}78\%} & \multirow{-5}{4.2cm}{Inputs and infrastructure standards} & \multirow{-5}{*}{\cellcolor{yellow!15}3.7}\\\hline
+Basic infrastructure & \cellcolor{yellow!15}3.7 & & \cellcolor{yellow!15} \\\cdashline{1-2}
+\hspace{1mm}\emph{\% Drinking water}    & {\cellcolor{green!15}91\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Functional toilet} & {\cellcolor{yellow!15}68\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Internet}          & {\cellcolor{green!15}96\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Electricity}       & {\cellcolor{red!15}54\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Disability access} & {\cellcolor{yellow!15}65\%} & \multirow{-6}{4.2cm}{Inputs and infrastructure monitoring} & \multirow{-6}{*}{\cellcolor{yellow!15}3.7}\\\hline
+\end{tabular}}
+\\
+{\scriptsize
+    \textcolor{darkgray}{\textit{Notes:} \% refers to \% schools with the given sub-component}
+  }
+
+\end{table}
+
+\hypertarget{school-management-by-principals}{%
+\paragraph{\texorpdfstring{\textbf{School Management by
+principals}}{School Management by principals}}\label{school-management-by-principals}}
+
+In school management, the lowest score is for principal's Instructional
+Leadership(3.3/5), whereas the highest score is obtained for Operational
+Management(4.3/5). School Management- Support is the weakest policy
+lever(3.5/5).
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{\begin{tabular}{m{4cm}cm{4cm}c}
+\multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy levers(Management)}}\\\hline
+Operational management                       & \cellcolor{green!15}4.3                   &                                       & \cellcolor{green!15}\\\cdashline{1-2}
+Instructional Leadership                     & \cellcolor{yellow!15}3.3                   & \multirow{-2}{*}{Clarity of functions} & \multirow{-2}{*}{\cellcolor{green!15}5} \\\hline
+                                             & \cellcolor{yellow!15}                    & Attraction                            & \cellcolor{green!15}4.4\\\cdashline{3-4}
+\multirow{-2}{*}{Principal School knowledge}  & \multirow{-2}{*}{\cellcolor{yellow!15}3.6} & Selection \& Deployment               & \cellcolor{green!15}4.4\\\cdashline{3-4}
+                                              & \cellcolor{green!15}                    & Support                               & \cellcolor{yellow!15}3.5\\\cdashline{3-4}
+\multirow{-2}{*}{Principal Management skills}  & \multirow{-2}{*}{\cellcolor{green!15}4.3} & Evaluation                            & \cellcolor{green!15}4.4\\\hline
+\end{tabular}}
+\\
+{\scriptsize
+    \textcolor{darkgray}{\textit{Notes:} All scores are on a (0-5) scale.}
+  }
+
+\end{table}
+
+\hypertarget{politics-bureaucratic-capacity-indicators}{%
+\subsubsection{\texorpdfstring{\textbf{POLITICS \& BUREAUCRATIC CAPACITY
+INDICATORS}}{POLITICS \& BUREAUCRATIC CAPACITY INDICATORS}}\label{politics-bureaucratic-capacity-indicators}}
+
+Politics and bureaucratic capacity indicators measure the capacity and
+orientation of the bureaucracy, as well as political factors affecting
+education outcomes. The highest score in politics and bureaucratic
+capacity is noted for Financing (5/5), and the lowest score is noted for
+National Learning Goals (3/5).
+
+\begin{table}[H]
+\resizebox{\columnwidth}{!}{\begin{tabular}{p{0.4\textwidth}c}
+\textbf{Indicator} & \textbf{Value}\\ \hline
+Quality of Bureaucracy & \cellcolor{green!15}4\\\cdashline{1-2}
+Impartial Decision-Making & \cellcolor{yellow!15}3.3\\\cdashline{1-2}
+Mandates \& Accountability & \cellcolor{green!15}4.2\\\cdashline{1-2}
+National Learning Goals & \cellcolor{yellow!15}3\\\cdashline{1-2}
+Financing & \cellcolor{green!15}5\\\hline
+\end{tabular}}
+\\
+{\scriptsize
+    \textcolor{darkgray}{\textit{Notes:} All scores are on a (0-5) scale.}
+  }
+
+\end{table}
+\raggedbottom
+
+{\scriptsize
+    \textcolor{darkgray}{\textit{Disclaimer:} GEPD numbers presented in this brief are based on multiple sources including GEPD instruments, UIS, GLAD and Learning Poverty indicators. For that reason, the numbers discussed here may be different from official statistics reported by governments and national offices of statistics. Such differences are due to the different purposes of the statistics, which can be for global comparison or to meet national definitions.}
+  }
+
+\end{document}

@@ -38,7 +38,7 @@ year <- '2019'
 
 
 
-if (Sys.getenv("USERNAME") == "wb469649"){
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
