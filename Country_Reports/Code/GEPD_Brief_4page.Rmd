@@ -638,7 +638,7 @@ defacto_diff <- defacto_master_tbl %>%
     mutate(diff=`De-jure`-`De-facto`,
            diff_chr = as.character(round(diff, digits = 1))) %>%
     arrange(desc(diff))
-average_diff <- round(mean(defacto_diff$diff), digits=1)
+average_diff <- round(mean(abs(defacto_diff$diff)), digits=1)
 average_diff_text <- if_else(average_diff>=1, "significant", if_else(average_diff>0 & average_diff<1, "some", "no"))
 #Finding top 3 indicators with highest difference , and bottom 3 indicators with smallest differences, and writing down their differences
 high_diff_var_text <-     paste(defacto_diff[1,1] ,"(", defacto_diff[1,5] , " points", ")", sep = "")

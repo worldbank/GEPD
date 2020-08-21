@@ -16,6 +16,7 @@ library(here)
 library(knitr)
 library(markdown)
 library(rmarkdown)
+library(tidyverse)
 ######################################
 # User Inputs for Run File #
 ######################################
