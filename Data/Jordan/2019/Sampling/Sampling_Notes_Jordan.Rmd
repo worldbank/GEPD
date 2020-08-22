@@ -84,7 +84,15 @@ colnames(df)<-tolower(colnames(df))
 #remove spaces in column names
 colnames(df)<-gsub(" ","_",colnames(df))
 
-
+samp_cut <- df %>%
+  mutate(rural=(classification_area=="Village")) %>%
+  filter(total_students_grade_4>=1 & total_students_grade_1>=1 & total_teachers>=1 ) %>%
+  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private") %>%
+  mutate(cut=(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3 )) %>%
+  group_by(cut) %>%
+  summarise(schools=n(),
+            g4_stud=sum(total_students_grade_4),
+            g1_stud=sum(total_students_grade_1)) 
 # #create variable ID for strata and keep schools with more than 3 1st and 4th grade students.  
 # Also keep only private schools and schools supervised by Ministry of Education
 df<-df %>%

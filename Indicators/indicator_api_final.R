@@ -167,6 +167,7 @@ indicator_match  <- df_overall %>%
   arrange(Series) %>%
   select(Series, Indicator.Name, indicator_tag)
 
+
 #add extra metadata
 api_template <- api_template %>%
   mutate(Source="Global Education Policy Dashboard",
@@ -177,7 +178,6 @@ api_template <- api_template %>%
   rename('Source Note'=Source.Note,
          'Indicator Name'=Indicator.Name) %>%
   select(-c(indicator_tag, Value))
-
 
 
 ##########################
