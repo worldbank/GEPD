@@ -190,12 +190,12 @@ blank <- "NA"
       #NA, or negative cells value to be relaced by NA
       (is.na(value) | as.numeric(value)<0) ~ paste(blank,sep=""),
       #percentages
-      (value >= lays_80 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!15}",value, sep=""),
-      (value >= lays_60 & value<lays_80 & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{yellow!15}",value, sep=""),
-      (value <  lays_60 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!15}",value, sep=""),
-      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value,sep=""),
-      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value,sep=""),
-      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep=""),
+      (value >= lays_90 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!15}",value, sep=""),
+      (value >= lays_85 & value<lays_90 & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{yellow!15}",value, lays_units, sep=""),
+      (value <  lays_85 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!15}",value, sep=""),
+      (value >=90 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value,sep=""),
+      (value >=85 & value<90 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value,sep=""),
+      (value <85 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep=""),
       #non-percentages
       (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value, sep=""),
       (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value, sep=""),
@@ -205,20 +205,20 @@ blank <- "NA"
    #Adding new cell with only colour in new column
     mutate(only_color=case_when(
       #percentages
-      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
-      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
-      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}"),
+      (value >=90 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
+      (value >=85 & value<90 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
+      (value <85 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}"),
       #non-percentages
       (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
       (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
       (value <3 &              !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}")
     )
     )
-lays_lp_choice <- if_else(marker ==0, lays, lp)
+lays_lp_choice <- if_else(marker == 0, lays, lp)
 lays_lp_units <- if_else(marker == 0, 
                          input$value_units[input$Series=="HD.HCI.LAYS"],
                          input$value_units[input$Series=="SE.LPV.PRIM"])
-lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS"],
+lays_lp_cell <- if_else(marker == 0, input$value_color[input$Series=="HD.HCI.LAYS"],
                                     input$value_color[input$Series=="SE.LPV.PRIM"])
 ```
 
@@ -240,7 +240,7 @@ Net Adjusted Enrollment Rate & {`r input$value_color[input$Series=="SE.PRM.TENR"
 \end{tabular}}
 \\
 \setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, `r country`, `r country_year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{80\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{90\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
 \end{table}
 \raggedbottom
 
@@ -250,8 +250,10 @@ Net Adjusted Enrollment Rate & {`r input$value_color[input$Series=="SE.PRM.TENR"
 
 #### `r figure_headline` ####
 ```{r lp_lays_fig, out.width= "100%", fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
-figure <- if_else(marker == 0, "lays_figure_", "lp_figure_")
-figure2 <- paste(here(), "/LP_LAYS_figures/", figure , country_file_name, ".png", sep="")
+lays_figure_name <- paste("lays_figure_", country_file_name, ".png", sep = '')
+lp_figure_name <- paste("lp_figure_", country_file_name, ".png", sep = '')
+figure <- if_else(marker == 0, lays_figure_name, lp_figure_name)
+figure2 <- paste(here(), "/LP_LAYS_figures/", figure, sep="")
 knitr::include_graphics(figure2)
 ```
 
@@ -275,7 +277,7 @@ diff_lern_subject <- if_else(grade4_lit>grade4_num, grade4_lit-grade4_num, grade
 lern_subject_text <- if_else(grade4_lit>grade4_num, glue("{diff_lern_subject} points higher"), glue("{diff_lern_subject} points lower"))
 ```
 
-**GEPD grade 4 proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 80\% in GEPD assessment. Student proficiency is `r lern_subject_text` in language compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.  
+**GEPD grade 4 proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 90\% in GEPD assessment. Student proficiency is `r lern_subject_text` in language compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.  
 
 #### Figure 3. GEPD Grade 4 proficiency, `r country` ####
 ```{r learning_figure, fig.width=5, fig.height=1.5, message=FALSE, echo=FALSE, warning=FALSE}
@@ -288,7 +290,7 @@ input_lern <- input %>%
     geom_bar(stat = "identity", ) +
     geom_text(aes(label= str_c((round(value, digits =1)),"%", sep = "")),hjust=-0.25, size=4) +
     coord_flip()+
-    labs(y = "% of Grade 4 students scoring >80% on GEPD assessment") +
+    labs(y = "% of Grade 4 students scoring >90% on GEPD assessment") +
     scale_x_discrete(name = "") +
     scale_fill_manual(values=c("#009FDA","#000000","#002244"))+
     scale_y_continuous(limits = c(0,110)) +
@@ -306,15 +308,15 @@ Practice indicators measure quality of service delivery in schools such as stude
 teach_cont <- round(input$value[input$Series=="SE.PRM.CONT"], digits = 0)
 teach_cont_lit <- round(input$value[input$Series=="SE.PRM.CONT.2"], digits = 0)
 teach_cont_math <- round(input$value[input$Series=="SE.PRM.CONT.3"], digits = 0)
-cont_text <- if_else(teach_cont<60, glue("({teach_cont}%) needs improvement"), if_else(teach_cont>=60 & teach_cont<80, glue("({teach_cont}%) requires caution"), glue("({teach_cont}%) is on target")))
+cont_text <- if_else(teach_cont<85, glue("({teach_cont}%) needs improvement"), if_else(teach_cont>=85 & teach_cont<90, glue("({teach_cont}%) requires caution"), glue("({teach_cont}%) is on target")))
 cont_diff_subject <- if_else(teach_cont_lit>teach_cont_math, teach_cont_lit-teach_cont_math, teach_cont_math-teach_cont_lit)
 cont_subject_text <- if_else(teach_cont_lit>teach_cont_math, glue("{cont_diff_subject} points higher"), glue("{cont_diff_subject} points lower"))
 
 teach_pedg <- round(input$value[input$Series=="SE.PRM.PEDG"], digits = 0)
-pedg_text <- if_else(teach_pedg<60, glue("({teach_pedg}%) needs improvement"), if_else(teach_pedg>=60 & teach_pedg<80, glue("({teach_pedg}%) requires caution"), glue("({teach_pedg}%) is on target")))
+pedg_text <- if_else(teach_pedg<85, glue("({teach_pedg}%) needs improvement"), if_else(teach_pedg>=85 & teach_pedg<90, glue("({teach_pedg}%) requires caution"), glue("({teach_pedg}%) is on target")))
 
 teach_efft <- round(input$value[input$Series=="SE.PRM.EFFT.2"], digits = 0)
-efft_text <- if_else(teach_efft<60, glue("({teach_efft}%) needs improvement"), if_else(teach_efft>=60 & teach_efft<80, glue("({teach_efft}%) requires caution"), glue("({teach_efft}%) is on target")))
+efft_text <- if_else(teach_efft<85, glue("({teach_efft}%) needs improvement"), if_else(teach_efft>=85 & teach_efft<90, glue("({teach_efft}%) requires caution"), glue("({teach_efft}%) is on target")))
 
 cont_policy_lowest_var <- as.name(c("SE.PRM.TATT","SE.PRM.TSDP","SE.PRM.TSUP","SE.PRM.TMNA","SE.PRM.TEVL") [which.min(c(input$value[input$Series=="SE.PRM.TATT"], input$value[input$Series=="SE.PRM.TSDP"],input$value[input$Series=="SE.PRM.TSUP"],  input$value[input$Series=="SE.PRM.TMNA"], input$value[input$Series=="SE.PRM.TEVL"]))])
 cont_policy_lowest_varval <- round(input$value[input$Series==cont_policy_lowest_var], digits = 1)
@@ -322,14 +324,14 @@ cont_policy_lowest_name <- input$label[input$Series == cont_policy_lowest_var]
 
 #Capacity for learning
 lcap <- round(input$value[input$Series=="SE.PRM.LCAP"], digits = 0)
-lcap_text <- if_else(lcap<60, glue("({lcap}%) needs improvement"), if_else(lcap>=60 & lcap<80, glue("({lcap}%) requires caution"), glue("({lcap}%) is on target")))
+lcap_text <- if_else(lcap<85, glue("({lcap}%) needs improvement"), if_else(lcap>=85 & lcap<90, glue("({lcap}%) requires caution"), glue("({lcap}%) is on target")))
 
 lcap_lowest_var <- as.name(c("SE.PRM.LCAP.2","SE.PRM.LCAP.3","SE.PRM.LCAP.4","SE.PRM.LCAP.5") [which.min(c(input$value[input$Series=="SE.PRM.LCAP.2"], input$value[input$Series=="SE.PRM.LCAP.3"],input$value[input$Series=="SE.PRM.LCAP.4"],  input$value[input$Series=="SE.PRM.LCAP.5"]))])
 lcap_lowest_varval <- round(input$value[input$Series==lcap_lowest_var], digits = 0)
 lcap_lowest_var_name <- input$label[input$Series==lcap_lowest_var]
 
 attd <- round(input$value[input$Series=="SE.PRM.ATTD"], digits = 0)
-attd_text <- if_else(attd<60, glue("({attd}%) needs improvement"), if_else(attd>=60 & attd<80, glue("({attd}%) requires caution"), glue("({attd}%) is on target")))
+attd_text <- if_else(attd<85, glue("({attd}%) needs improvement"), if_else(attd>=85 & attd<90, glue("({attd}%) requires caution"), glue("({attd}%) is on target")))
 
 lcap_policy_lowest_var <- as.name(c("SE.PRM.LNTN","SE.PRM.LHTH","SE.PRM.LCBC","SE.PRM.LSKC","SE.PRM.LFCP")[which.min(c(input$value[input$Series=="SE.PRM.LNTN"], input$value[input$Series=="SE.PRM.LHTH"],input$value[input$Series=="SE.PRM.LCBC"],  input$value[input$Series=="SE.PRM.LSKC"], input$value[input$Series=="SE.PRM.LFCP"]))])
 lcap_policy_lowest_varval <- round(input$value[input$Series==lcap_policy_lowest_var], digits = 1)
@@ -385,7 +387,7 @@ Pedagogical skills                               & {`r input$value_color[input$S
 \multirow{-2}{*}{Teacher Attendance}             & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.EFFT.2"]``r input$value_units[input$Series=="SE.PRM.EFFT.2"]`} & Intrinsic motivation    & `r input$value_color[input$Series=="SE.PRM.TINM"]` \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{80\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{90\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
 \end{table}
 
 #### **Capacity for learning in Grade 1** ####  
@@ -401,7 +403,7 @@ Capacity for learning                  & {`r input$value_color[input$Series=="SE
 Student Attendance                     & {`r input$value_color[input$Series=="SE.PRM.ATTD"]``r input$value_units[input$Series=="SE.PRM.ATTD"]`}     & Caregiver Financial Capacity        & `r input$value_color[input$Series=="SE.PRM.LFCP"]` \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{80\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{90\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
 \end{table}
 \vfill\null
 
