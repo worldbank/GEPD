@@ -1,39 +1,46 @@
-\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 %
-\documentclass[twocolumn]{article}
+\documentclass[
+  twocolumn]{article}
 \usepackage{lmodern}
 \usepackage{amssymb,amsmath}
 \usepackage{ifxetex,ifluatex}
-\usepackage{fixltx2e} % provides \textsubscript
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
-  \usepackage{textcomp} % provides euro and other symbols
-\else % if luatex or xelatex
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
   \usepackage{unicode-math}
-  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
-% use upquote if available, for straight quotes in verbatim environments
+% Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-% use microtype if available
-\IfFileExists{microtype.sty}{%
-\usepackage[]{microtype}
-\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
-\IfFileExists{parskip.sty}{%
-\usepackage{parskip}
-}{% else
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
-}
-\usepackage{hyperref}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-            pdfborder={0 0 0},
-            breaklinks=true}
-\urlstyle{same}  % don't use monospace font for urls
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
 \usepackage[left=0.5cm,right=0.5cm,top=1.5cm,bottom=1.2cm]{geometry}
-\usepackage{graphicx,grffile}
+\usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
 \def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
@@ -42,26 +49,18 @@
 % margins by default, and it is still possible to overwrite the defaults
 % using explicit options in \includegraphics[width, height, ...]{}
 \setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\setcounter{secnumdepth}{0}
-% Redefines (sub)paragraphs to behave more like sections
-\ifx\paragraph\undefined\else
-\let\oldparagraph\paragraph
-\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
-\fi
-\ifx\subparagraph\undefined\else
-\let\oldsubparagraph\subparagraph
-\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
-\fi
-
-% set default figure placement to htbp
+% Set default figure placement to htbp
 \makeatletter
 \def\fps@figure{htbp}
 \makeatother
-
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{fancyhdr} \usepackage{booktabs,xcolor} \pagestyle{fancy} \renewcommand{\headrulewidth}{0pt} \rhead{2020} \cfoot{\includegraphics[width=20cm]{footer.png}} \fancypagestyle{plain}{\pagestyle{fancy}} \setlength{\headheight}{77.3pt} \setlength{\footskip}{35.1pt} \setlength{\textheight}{0.90\textheight} \pagenumbering{gobble} \usepackage[fontsize=9pt]{scrextend} \usepackage{float} \restylefloat{table} \usepackage{xcolor} \usepackage{multicol} \usepackage{array} \usepackage{colortbl} \usepackage{multirow} \usepackage{collcell} \usepackage{setspace} \usepackage{arydshln} \usepackage{caption} \captionsetup{skip=0pt} \setlength{\columnsep}{1.5cm} \setstretch{1}
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
 
 \author{}
 \date{\vspace{-2.5em}}
@@ -125,7 +124,7 @@ schools) and de facto policy indicators. It consists of streamlined
 versions of existing instruments together with new questions to fill
 gaps in those instruments.\\
 The \textbf{Policy Survey} collects information via interviews with
-\textasciitilde{}200 officials per country at federal and regional level
+\textasciitilde200 officials per country at federal and regional level
 to feed into the policy de jure indicators and identify key elements of
 the policy framework.\\
 The \textbf{Survey of public officials} collects information about the
@@ -148,7 +147,7 @@ version of the civil-servant surveys from the Bureaucracy Lab, WBG.
   attributed to poor teaching support and weak monitoring and
   accountability systems.
 \item
-  Grade 1 proficiency of students is \textasciitilde{}9\%, with students
+  Grade 1 proficiency of students is \textasciitilde9\%, with students
   scoring lower on executive functions and socio-emotional learning.
   Only 13\% students are enrolled in early childhood programs which face
   gaps in caregiver skills and financial constraints.
@@ -184,14 +183,14 @@ version of the civil-servant surveys from the Bureaucracy Lab, WBG.
 \cellcolor{outcome} &                             & Proficiency by End of Primary  & {NA} \\\cdashline{3-4}
 \cellcolor{outcome} &                             & Proficiency on GEPD Assessment & {\cellcolor{red!15}0.2\%} \\\cdashline{2-4}
 \cellcolor{outcome} &  Participation              & Net Adjusted Enrollment Rate   & {\cellcolor{green!15}95\%} \\\cdashline{2-4}
-\cellcolor{outcome}\multirow{-5}{*}{\rotatebox{90}{\textcolor{white}{Outcomes}}} &  Participation and learning  & Learning adjusted years in schooling (in years) & {\cellcolor{red!15}3.8}\\\cdashline{1-4}
-\cellcolor{practice} & \multirow{3}{2cm}{Teaching}                 & Teacher Effort           & {\cellcolor{green!15}80\%} \\\cdashline{3-4}
+\cellcolor{outcome}\multirow{-5}{*}{\rotatebox{90}{\textcolor{white}{Outcomes}}} &  Participation and learning  & Learning adjusted years in schooling (in years) & {\cellcolor{red!15}3.9}\\\cdashline{1-4}
+\cellcolor{practice} & \multirow{3}{2cm}{Teaching}                 & Teacher Effort           & {\cellcolor{red!15}80\%} \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Content Knowledge        & {\cellcolor{red!15}27\%} \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Pedagogical Skills       & {\cellcolor{red!15}22\%} \\\cdashline{2-4}
 \cellcolor{practice} & \multirow{2}{2cm}{Inputs \& Infrastructure} & Basic Inputs             & \cellcolor{yellow!15}3.3 \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Basic Infrastructure     & \cellcolor{yellow!15}3.1 \\\cdashline{2-4}
 \cellcolor{practice} & \multirow{2}{2cm}{Learners}                 & Capacity for Learning    & {\cellcolor{red!15}9\%} \\\cdashline{3-4}
-\cellcolor{practice} &                                             & Student Attendance       & {\cellcolor{green!15}87\%} \\\cdashline{2-4}
+\cellcolor{practice} &                                             & Student Attendance       & {\cellcolor{yellow!15}87\%} \\\cdashline{2-4}
 \cellcolor{practice} & \multirow{4}{2cm}{School Management}        & Operational Management   & \cellcolor{green!15}4 \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Instructional Leadership & \cellcolor{yellow!15}3.4 \\\cdashline{3-4}
 \cellcolor{practice} &                                             & School Knowledge         & \cellcolor{green!15}4 \\\cdashline{3-4}
@@ -222,7 +221,7 @@ version of the civil-servant surveys from the Bureaucracy Lab, WBG.
 \end{tabular}}
 \\
 \setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, Rwanda, 2020. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{80\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{90\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
 \end{table}
 
 \hypertarget{table-2.-gepd-indicators-by-gender-rwanda-2020}{%
@@ -233,11 +232,11 @@ version of the civil-servant surveys from the Bureaucracy Lab, WBG.
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{2cm}m{5cm}cc}
 \textbf{Subtitle} & \textbf{Indicator} & \textbf{Male} & \textbf{Female} \\\hline
 Learning                  & Proficiency on GEPD Assessment  & {\cellcolor{red!15}0.1\%} & {\cellcolor{red!15}0.2\%} \\\cdashline{1-4}
-\multirow{3}{*}{Teaching} & Teacher Effort      & {\cellcolor{yellow!15}79\%} & {\cellcolor{green!15}80\%} \\\cdashline{2-4}
+\multirow{3}{*}{Teaching} & Teacher Effort      & {\cellcolor{red!15}79\%} & {\cellcolor{red!15}80\%} \\\cdashline{2-4}
                           &  Content knowledge  & {\cellcolor{red!15}28\%} & {\cellcolor{red!15}26\%} \\\cdashline{2-4}
                           &  Pedagogical Skills & {NA} & {NA} \\\cdashline{1-4}
 \multirow{2}{*}{Learners}   & Capacity for Learning    & {\cellcolor{red!15}52\%} & {\cellcolor{red!15}55\%} \\\cdashline{2-4}
-                            & Student Attendance       & {\cellcolor{green!15}82\%} & {\cellcolor{green!15}84\%} \\\cdashline{1-4}
+                            & Student Attendance       & {\cellcolor{red!15}82\%} & {\cellcolor{red!15}84\%} \\\cdashline{1-4}
 \multirow{4}{2cm}{School Management}  & Operational Management   & \cellcolor{green!15}4 & \cellcolor{green!15}4 \\\cdashline{2-4}
                                       & Instructional Leadership & \cellcolor{yellow!15}3.4 & \cellcolor{yellow!15}3.4 \\\cdashline{2-4}
                                       & School Knowledge         & \cellcolor{green!15}4 & \cellcolor{green!15}4 \\\cdashline{2-4}
@@ -254,13 +253,13 @@ Learning                  & Proficiency on GEPD Assessment  & {\cellcolor{red!15
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{2cm}m{5cm}cc}
 \textbf{Subtitle} & \textbf{Indicator} & \textbf{Rural} & \textbf{Urban} \\\hline
 Learning                  & Proficiency on GEPD Assessment & {\cellcolor{red!15}0.1\%} & {\cellcolor{red!15}0.8\%} \\\cdashline{1-4}
-\multirow{3}{*}{Teaching} & Teacher Effort                 & {\cellcolor{yellow!15}79\%} & {\cellcolor{green!15}85\%} \\\cdashline{2-4}
+\multirow{3}{*}{Teaching} & Teacher Effort                 & {\cellcolor{red!15}79\%} & {\cellcolor{yellow!15}85\%} \\\cdashline{2-4}
                           &  Content knowledge             & {\cellcolor{red!15}24\%} & {\cellcolor{red!15}45\%} \\\cdashline{2-4}
                           &  Pedagogical Skills            & {\cellcolor{red!15}23\%} & {\cellcolor{red!15}13\%} \\\cdashline{1-4}
 \multirow{2}{2cm}{Inputs \& infrastructure}   & Basic Inputs             & \cellcolor{yellow!15}3.2 & \cellcolor{yellow!15}3.8 \\\cdashline{2-4}
                                               & Basic Infrastructure     & \cellcolor{yellow!15}3.1 & \cellcolor{yellow!15}3.5 \\\cdashline{1-4}
-\multirow{2}{*}{Learners}   & Capacity for Learning    & {\cellcolor{red!15}52\%} & {\cellcolor{yellow!15}63\%} \\\cdashline{2-4}
-                            & Student Attendance       & {\cellcolor{green!15}86\%} & {\cellcolor{green!15}93\%} \\\cdashline{1-4}
+\multirow{2}{*}{Learners}   & Capacity for Learning    & {\cellcolor{red!15}52\%} & {\cellcolor{red!15}63\%} \\\cdashline{2-4}
+                            & Student Attendance       & {\cellcolor{yellow!15}86\%} & {\cellcolor{green!15}93\%} \\\cdashline{1-4}
 \multirow{4}{2cm}{School Management}  & Operational Management   & \cellcolor{green!15}4 & \cellcolor{green!15}4.1 \\\cdashline{2-4}
                                       & Instructional Leadership & \cellcolor{yellow!15}3.4 & \cellcolor{yellow!15}3.4 \\\cdashline{2-4}
                                       & School Knowledge         & \cellcolor{yellow!15}3.9 & \cellcolor{green!15}4.5 \\\cdashline{2-4}
@@ -269,15 +268,15 @@ Learning                  & Proficiency on GEPD Assessment & {\cellcolor{red!15}
 \end{table}
 \raggedbottom
 
-\hypertarget{learning-outcomes-3.8-learning-adjusted-years-in-school-0.2-gepd-proficiency-in-grade-4}{%
-\subsubsection{\texorpdfstring{\textbf{LEARNING OUTCOMES: 3.8 LEARNING
+\hypertarget{learning-outcomes-3.9-learning-adjusted-years-in-school-0.2-gepd-proficiency-in-grade-4}{%
+\subsubsection{\texorpdfstring{\textbf{LEARNING OUTCOMES: 3.9 LEARNING
 ADJUSTED YEARS IN SCHOOL, 0.2\% GEPD PROFICIENCY IN GRADE
-4}}{LEARNING OUTCOMES: 3.8 LEARNING ADJUSTED YEARS IN SCHOOL, 0.2\% GEPD PROFICIENCY IN GRADE 4}}\label{learning-outcomes-3.8-learning-adjusted-years-in-school-0.2-gepd-proficiency-in-grade-4}}
+4}}{LEARNING OUTCOMES: 3.9 LEARNING ADJUSTED YEARS IN SCHOOL, 0.2\% GEPD PROFICIENCY IN GRADE 4}}\label{learning-outcomes-3.9-learning-adjusted-years-in-school-0.2-gepd-proficiency-in-grade-4}}
 
 Learning adjusted years of school (LAYS) is calculated by adjusting
 expected years of schooling for schooling quality. Learning adjusted
 years of schooling in Rwanda is 0.9 years lower than the average for
-Sub-Saharan Africa (excluding high income) region and 0.6 years lower
+Sub-Saharan Africa (excluding high income) region and 0.5 years lower
 than the average for Low income countries.
 
 \hypertarget{figure-2.-learning-adjusted-years-in-school-comparison}{%
@@ -291,7 +290,7 @@ comparison}\label{figure-2.-learning-adjusted-years-in-school-comparison}}
   }
 
 \textbf{GEPD grade 4 proficiency of 0.2\%} means 0.2\% students score
-greater than 80\% in GEPD assessment. Student proficiency is 1 points
+greater than 90\% in GEPD assessment. Student proficiency is 1 points
 higher in language compared to numeracy, 0.1 points lower for boys
 compared to girls, and 0.7 points higher in urban areas compared to
 rural areas. \vfill\null
@@ -328,8 +327,8 @@ teaching attraction (incentives/job satisfaction), teacher motivation
 and monitoring systems. Teacher content knowledge (27\%) needs
 improvement. Teacher proficiency in language (20\%) is 21 points lower
 than mathematics proficiency (41\%). Teacher pedagogical skills score
-(22\%) needs improvement, and teacher attendance (87\%) is on target.
-Teaching - Support is the weakest policy lever(2.8/5).
+(22\%) needs improvement, and teacher attendance (87\%) requires
+caution. Teaching - Support is the weakest policy lever(2.8/5).
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
@@ -341,11 +340,11 @@ Pedagogical skills                               & {\cellcolor{red!15}22\%}   & 
 \hspace{1mm}\emph{\% Classroom culture}            & {\cellcolor{green!15}90\%} & \multirow{-2}{*}{Support}                 & \multirow{-2}{*}{\cellcolor{red!15}2.8} \\\cdashline{1-4}
 \hspace{1mm}\emph{\% Instruction practices}        & {\cellcolor{red!15}20\%} &                                           & \cellcolor{green!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Socio-emotional skills}       & {\cellcolor{red!15}15\%} & \multirow{-2}{*}{Evaluation}              & \multirow{-2}{*}{\cellcolor{green!15}4.5} \\\cdashline{1-4}
-& \cellcolor{green!15} & Monitoring \& Accountability  & \cellcolor{red!15}2.9 \\\cdashline{3-4}
-\multirow{-2}{*}{Teacher Attendance}             & \multirow{-2}{*}{\cellcolor{green!15}87\%} & Intrinsic motivation    & \cellcolor{yellow!15}3.9 \\\hline
+& \cellcolor{yellow!15} & Monitoring \& Accountability  & \cellcolor{red!15}2.9 \\\cdashline{3-4}
+\multirow{-2}{*}{Teacher Attendance}             & \multirow{-2}{*}{\cellcolor{yellow!15}87\%} & Intrinsic motivation    & \cellcolor{yellow!15}3.9 \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{80\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{90\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
 \end{table}
 \raggedbottom
 
@@ -358,20 +357,20 @@ nutrition programs, enrolment in early childhood education, quality of
 skills of educators and financial support provided to programs enabling
 early learning. Proficiency in Grade 1 (9\%) needs improvement. Literacy
 score(38)\% is the lowest knowledge sub-score. Student attendance(87\%)
-is on target. Center-Based Care is the weakest policy lever(1.5/5).
+requires caution. Center-Based Care is the weakest policy lever(1.5/5).
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
 \multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy levers(Learners)}}\\\hline
 Capacity for learning                  & {\cellcolor{red!15}9\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{Numeracy score}        & \cellcolor{yellow!15}62   & \multirow{-2}{*}{Nutrition Programs} & \multirow{-2}{*}{\cellcolor{yellow!15}3.2}  \\\cdashline{1-4}  
+\hspace{1mm}\emph{Numeracy score}        & \cellcolor{red!15}62   & \multirow{-2}{*}{Nutrition Programs} & \multirow{-2}{*}{\cellcolor{yellow!15}3.2}  \\\cdashline{1-4}  
 \hspace{1mm}\emph{Literacy score}        & \cellcolor{red!15}38   & Health Programs                     & \cellcolor{yellow!15}3.5 \\\cdashline{1-4}  
 \hspace{1mm}\emph{Executive score}       & \cellcolor{red!15}47   & Center based care                   & \cellcolor{red!15}1.5 \\\cdashline{1-4}  
-\hspace{1mm}\emph{Socio-emotional score} & \cellcolor{yellow!15}67   & Caregiver Skills Capacity           & \cellcolor{red!15}2.8 \\\cdashline{1-4}  
-Student Attendance                     & {\cellcolor{green!15}87\%}     & Caregiver Financial Capacity        & \cellcolor{red!15}2.3 \\\hline
+\hspace{1mm}\emph{Socio-emotional score} & \cellcolor{red!15}67   & Caregiver Skills Capacity           & \cellcolor{red!15}2.8 \\\cdashline{1-4}  
+Student Attendance                     & {\cellcolor{yellow!15}87\%}     & Caregiver Financial Capacity        & \cellcolor{red!15}2.3 \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{80\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{90\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
 \end{table}
 \raggedbottom
 
@@ -391,16 +390,16 @@ Infrastructure - Monitoring is the weakest policy lever(3.1/5).
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
 \multicolumn{2}{c}{\textbf{Practice Indicators}} & \multicolumn{2}{c}{\textbf{Policy levers(Inputs)}}\\\hline
 Basic inputs & \cellcolor{yellow!15}3.3 & & \cellcolor{green!15} \\\cdashline{1-2}
-\hspace{1mm}\emph{\% Blackboard}    & {\cellcolor{yellow!15}60\%} & & \cellcolor{green!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Blackboard}    & {\cellcolor{red!15}60\%} & & \cellcolor{green!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Stationery}    & {\cellcolor{green!15}92\%} & & \cellcolor{green!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Furniture}     & {\cellcolor{green!15}99\%} & & \cellcolor{green!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% EdTech access} & {\cellcolor{yellow!15}76\%} & \multirow{-5}{4.2cm}{Inputs and infrastructure standards} & \multirow{-5}{*}{\cellcolor{green!15}4.5}\\\hline
+\hspace{1mm}\emph{\% EdTech access} & {\cellcolor{red!15}76\%} & \multirow{-5}{4.2cm}{Inputs and infrastructure standards} & \multirow{-5}{*}{\cellcolor{green!15}4.5}\\\hline
 Basic infrastructure & \cellcolor{yellow!15}3.1 & & \cellcolor{yellow!15} \\\cdashline{1-2}
-\hspace{1mm}\emph{\% Drinking water}    & {\cellcolor{yellow!15}74\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Drinking water}    & {\cellcolor{red!15}74\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Functional toilet} & {\cellcolor{red!15}57\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% Internet}          & {\cellcolor{yellow!15}78\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Internet}          & {\cellcolor{red!15}78\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Electricity}       & {\cellcolor{red!15}27\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% Disability access} & {\cellcolor{yellow!15}75\%} & \multirow{-6}{4.2cm}{Inputs and infrastructure monitoring} & \multirow{-6}{*}{\cellcolor{yellow!15}3.1}\\\hline
+\hspace{1mm}\emph{\% Disability access} & {\cellcolor{red!15}75\%} & \multirow{-6}{4.2cm}{Inputs and infrastructure monitoring} & \multirow{-6}{*}{\cellcolor{yellow!15}3.1}\\\hline
 \end{tabular}}
 \\
 \setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} \% refers to \% schools with the given sub-component}
@@ -426,14 +425,14 @@ Operational management                     & \cellcolor{green!15}4       & & \ce
 \hspace{1mm}\emph{Infrastructure}            & \cellcolor{green!15}4.5     & & \cellcolor{green!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{Ensuring inputs}           & \cellcolor{yellow!15}3.5     & & \cellcolor{green!15}\\\cdashline{1-2}
 Instructional Leadership                   & \cellcolor{yellow!15}3.4       & & \cellcolor{green!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% Classroom observed}     & {\cellcolor{green!15}88\%} & & \cellcolor{green!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Classroom observed}     & {\cellcolor{yellow!15}88\%} & & \cellcolor{green!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Discussed observations} & {\cellcolor{red!15}51\%} & & \cellcolor{green!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% Feedback given}         & {\cellcolor{yellow!15}70\%} & & \cellcolor{green!15}\\\cdashline{1-2}
+\hspace{1mm}\emph{\% Feedback given}         & {\cellcolor{red!15}70\%} & & \cellcolor{green!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{\% Lesson-plan feedback}   & {\cellcolor{red!15}44\%} & \multirow{-8}{*}{Clarity of functions} & \multirow{-8}{*}{\cellcolor{green!15}4.9} \\\hline
 Principal school knowledge                         & \cellcolor{green!15}4       & & \cellcolor{green!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% Teachers' knowledge}  & {\cellcolor{green!15}80\%} & \multirow{-2}{4cm}{Attraction} & \multirow{-2}{*}{\cellcolor{green!15}4.3}\\\cdashline{1-4}
+\hspace{1mm}\emph{\% Teachers' knowledge}  & {\cellcolor{red!15}80\%} & \multirow{-2}{4cm}{Attraction} & \multirow{-2}{*}{\cellcolor{green!15}4.3}\\\cdashline{1-4}
 \hspace{1mm}\emph{\% Teachers' experience} & {\cellcolor{green!15}99\%} & & \cellcolor{yellow!15}\\\cdashline{1-2}
-\hspace{1mm}\emph{\% Input availability}      & {\cellcolor{yellow!15}77\%} & \multirow{-2}{4cm}{Selection \& Deployment} & \multirow{-2}{*}{\cellcolor{yellow!15}3.9} \\\cdashline{1-4} 
+\hspace{1mm}\emph{\% Input availability}      & {\cellcolor{red!15}77\%} & \multirow{-2}{4cm}{Selection \& Deployment} & \multirow{-2}{*}{\cellcolor{yellow!15}3.9} \\\cdashline{1-4} 
 Principal Management skills & \cellcolor{green!15}4.2 & & \cellcolor{yellow!15}\\\cdashline{1-2}
 \hspace{1mm}\emph{Problem solving score} & \cellcolor{green!15}4.2 & \multirow{-2}{4cm}{Support} & \multirow{-2}{*}{\cellcolor{yellow!15}3.7}\\\cdashline{1-4}
 \hspace{1mm}\emph{Goal-setting score} & \cellcolor{green!15}4.2 & Evaluation & \cellcolor{green!15}4.5\\\hline
