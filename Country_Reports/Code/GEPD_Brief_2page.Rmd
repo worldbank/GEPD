@@ -240,7 +240,7 @@ Net Adjusted Enrollment Rate & {`r input$value_color[input$Series=="SE.PRM.TENR"
 \end{tabular}}
 \\
 \setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, `r country`, `r country_year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{90\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} (1) Proficiency on GEPD assessment means \% students with knowledge\textgreater{80\%}. (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS). (3) All indicators are on a scale of 0-5 unless measured in \%. (4) Green indicates indicator 'on-target', yellow indicates 'requires caution', red indicates 'needs improvement'.}
 \end{table}
 \raggedbottom
 
@@ -277,7 +277,7 @@ diff_lern_subject <- if_else(grade4_lit>grade4_num, grade4_lit-grade4_num, grade
 lern_subject_text <- if_else(grade4_lit>grade4_num, glue("{diff_lern_subject} points higher"), glue("{diff_lern_subject} points lower"))
 ```
 
-**GEPD grade 4 proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 90\% in GEPD assessment. Student proficiency is `r lern_subject_text` in language compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.  
+**GEPD grade 4 proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 80\% in GEPD assessment. Student proficiency is `r lern_subject_text` in language compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas.  
 
 #### Figure 3. GEPD Grade 4 proficiency, `r country` ####
 ```{r learning_figure, fig.width=5, fig.height=1.5, message=FALSE, echo=FALSE, warning=FALSE}
@@ -290,7 +290,7 @@ input_lern <- input %>%
     geom_bar(stat = "identity", ) +
     geom_text(aes(label= str_c((round(value, digits =1)),"%", sep = "")),hjust=-0.25, size=4) +
     coord_flip()+
-    labs(y = "% of Grade 4 students scoring >90% on GEPD assessment") +
+    labs(y = "% of Grade 4 students scoring >80% on GEPD assessment") +
     scale_x_discrete(name = "") +
     scale_fill_manual(values=c("#009FDA","#000000","#002244"))+
     scale_y_continuous(limits = c(0,110)) +
@@ -387,7 +387,7 @@ Pedagogical skills                               & {`r input$value_color[input$S
 \multirow{-2}{*}{Teacher Attendance}             & \multirow{-2}{*}{`r input$value_color[input$Series=="SE.PRM.EFFT.2"]``r input$value_units[input$Series=="SE.PRM.EFFT.2"]`} & Intrinsic motivation    & `r input$value_color[input$Series=="SE.PRM.TINM"]` \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{90\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Content knowledge(\& sub-indicators) indicate \% teachers with knowledge\textgreater{80\%}.Pedagogical skills(\& sub-indicators) indicate \% teachers with proficiency 3/5 or above.}
 \end{table}
 
 #### **Capacity for learning in Grade 1** ####  
@@ -403,7 +403,7 @@ Capacity for learning                  & {`r input$value_color[input$Series=="SE
 Student Attendance                     & {`r input$value_color[input$Series=="SE.PRM.ATTD"]``r input$value_units[input$Series=="SE.PRM.ATTD"]`}     & Caregiver Financial Capacity        & `r input$value_color[input$Series=="SE.PRM.LFCP"]` \\\hline
 \end{tabular}}
 \\
-\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{90\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
+\setstretch{0.8}\color{darkgray}\scriptsize{\textit{Notes:} Capacity for learning indicates \% students with knowledge\textgreater{80\%}. Sub-indicator scores refer to average subject knowledge on a 0-100 scale.}
 \end{table}
 \vfill\null
 
