@@ -107,8 +107,8 @@ diff_lays_regionval <- round(if_else(lays_num_country>lays_region, lays_num_coun
 diff_lays_regiontext <- if_else(lays_num_country>lays_region, glue("{diff_lays_regionval} years higher"), glue("{diff_lays_regionval} years lower"))
 diff_lays_income <- round(if_else(lays_num_country>lays_income, lays_num_country-lays_income, lays_income-lays_num_country), digits =1)
 diff_lays_inctext <- if_else(lays_num_country>lays_income, glue("{diff_lays_income} years higher"), glue("{diff_lays_income} years lower"))
-lays_80 <- round(quantile(hci_lp_final$HD.HCI.LAYS, probs = 0.8, na.rm = TRUE), digits =1)
-lays_60 <- round(quantile(hci_lp_final$HD.HCI.LAYS, probs = 0.6, na.rm = TRUE), digits =1)
+lays_90 <- round(quantile(hci_lp_final$HD.HCI.LAYS, probs = 0.9, na.rm = TRUE), digits =1)
+lays_85 <- round(quantile(hci_lp_final$HD.HCI.LAYS, probs = 0.85, na.rm = TRUE), digits =1)
 
 #Set marker for which indicator and figure will be displayed
 #Learning poverty is displayed if present, if absent, LAYS will be shown instead
