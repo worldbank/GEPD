@@ -37,7 +37,7 @@ library(kableExtra)
 
 #Load the data
 #read in school level file
-
+save_folder <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Rwanda/2019/Data/clean/School'
 
 load(file=paste(save_folder, "paradata_light.RData", sep="/"))
 ```
@@ -517,6 +517,61 @@ bscols(widths=c(3,NA),
 ```
 
 
+```{r plain_map}
+
+#create icons
+icons2 <- awesomeIcons(
+  icon = 'graduation-cap',
+  iconColor = 'white',
+  library = 'fa',
+  markerColor = 'blue'
+)
+
+
+map2 <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
+  addTiles()  %>%
+  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons2,
+                    popup = paste("Name: ", school_map$school_name_preload, " <br>",
+                                  "Province: ", school_map$school_province_preload, " <br>",
+                                  "District: ", school_map$school_district_preload, " <br>",
+                                  "EMIS Code: ", school_map$school_emis_preload, " <br>",
+                                  "<font color='red' > Outcomes ", " <br> <font color='black' >",
+                                  "Avg 4th Grade Learning Score:", round(school_map$student_knowledge, digits=2), "% <br>",
+                                  "Avg 4th Grade Student Attendance:", round(school_map$student_attendance, digits=2), "% <br>",
+                                  "<font color='red' > Practice Indicators ", " <br> <font color='black' >",
+                                  "Teacher Absence Rate: ", round(school_map$absence_rate, digits=2), "% <br>",
+                                  "Teacher Content Knowledge Score: ", round(school_map$content_knowledge, digits=2),"% <br>",
+                                  "Teacher Pedagogy (TEACH)", round(school_map$teach_score, digits=2), " <br>",
+                                  "Basic Inputs: ", round(school_map$inputs, digits=2), " <br>",
+                                  "Basic Infrastructure: ", round(school_map$infrastructure, digits=2), " <br>",
+                                  "Capacity for Learning: ", round(school_map$ecd_student_knowledge, digits=2), "% <br>",
+                                  "Operational Management: ", round(school_map$operational_management, digits=2), " <br>",
+                                  "Instructional Leadership: ", round(school_map$instructional_leadership, digits=2), " <br>",
+                                  "Principal Management Skills: ", round(school_map$principal_management, digits=2), " <br>",
+                                  "<font color='blue' > Policy Indicators ", " <br> <font color='black' >",
+                                  "Teacher Attraction (De Facto): ", round(school_map$teacher_attraction, digits=2), " <br>",
+                                  "Teacher Selection & Deployment (De Facto): ", round(school_map$teacher_selection_deployment, digits=2), " <br>",
+                                  "Teacher Support (De Facto): ", round(school_map$teacher_support, digits=2), " <br>",
+                                  "Teacher Evaluation (De Facto): ", round(school_map$teaching_evaluation, digits=2), " <br>",
+                                  "Teacher Monitoring & Accoutability (De Facto): ", round(school_map$teaching_evaluation, digits=2), " <br>",
+
+                                  "Teacher Intrinsic Motivation: ", round(school_map$intrinsic_motivation, digits=2), "<br>",
+                                  "Inputs & Infrastructure Monitoring (De Facto): ", round(school_map$school_monitoring, digits=2), "<br>",
+                                  "School Management Attraction (De Facto): ", round(school_map$school_management_attraction, digits=2), "<br>",
+                                  "School Management Selection & Deployment: ", round(school_map$school_selection_deployment, digits=2), "<br>",
+                                  "School Management Support: ", round(school_map$school_support, digits=2), "<br>",
+                                  "School Management Evaluation: ", round(school_map$principal_evaluation, digits=2), "<br>"
+
+
+                                  ) )  %>%
+    addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
+
+}
+
+
+map2(school_map)
+
+```
 
 
 

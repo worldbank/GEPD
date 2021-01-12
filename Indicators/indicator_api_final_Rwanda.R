@@ -226,7 +226,8 @@ expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', se
 
 #score expert data (this requires a lot of hard coding and transcribing)
 #read in data
-defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal')
+defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal') %>%
+  filter(!is.na(indicator))
 defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
 colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
 

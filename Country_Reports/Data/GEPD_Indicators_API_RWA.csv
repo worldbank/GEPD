@@ -407,8 +407,8 @@ SE.PRM.TATT.5,(De Facto) Percent of teachers reporting that there are incentives
 SE.PRM.TATT.6,(De Facto) Percent of teachers that performance matters for promotions,Global Education Policy Dashboard,World Bank,NA,83.34109
 SE.PRM.TATT.7,(De Jure) Is there a well-established career path for teachers?,Global Education Policy Dashboard,World Bank,NA,-999
 SE.PRM.TATT.8,(De Facto) Percent of teachers that report salary delays in the past 12 months,Global Education Policy Dashboard,World Bank,NA,42.07487
-SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.855486
+SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.855486
+SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,5
 SE.PRM.TENR,Net Adjusted Enrollment Rate,Global Education Policy Dashboard,World Bank,NA,95.28152
 SE.PRM.TENR.1,(De Facto) Percent of primary school age children who are enrolled at primary education,Global Education Policy Dashboard,World Bank,NA,95.28152
 SE.PRM.TEVL,Policy Lever (Teaching) - Evaluation,Global Education Policy Dashboard,World Bank,"School survey.  This policy lever measures whether there is a teacher evaluation system in place, and if so, the types of decisions that are made based on the evaluation results.  Score is the sum of the following:   , 1 Point. Was teacher formally evaluated in past school year?   - 1 Point total.  0.2 points for each of the following: Evaluation included evaluation of attendance, knowledge of subject matter, pedagogical skills in the classroom, students' academic achievement, students' socio-emotional development       - 1 Point.  Consequences exist if teacher receives 2 or more negative evaluations   - 1 Point. Rewards exist if teacher receives 2 or more positive evaluations",4.548604
