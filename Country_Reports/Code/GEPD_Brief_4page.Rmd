@@ -653,7 +653,7 @@ thirdlow_diff_var_text <- paste(defacto_diff[9,1] ,"(", defacto_diff[9,5] , " po
 ### **GAPS BETWEEN DE-FACTO POLICY LEVERS AND DE-JURE POLICIES IN TEACHING AND SCHOOL MANAGEMENT** ###    
 De-facto policy levers measure how well school, teacher and student policies are being implemented in the school system. GEPD also measures de-jure policy indicators which measure the strength and quality of the underlying student, teacher and school management policies. Analysis of the difference in these indicators shows gaps in implementation of education policies in schools.  
 
-A ~**`r average_diff` point average gap** exists between the de-facto policy levers and de-jure policies in `r country` across teaching and school management, suggesting there are `r average_diff_text` gaps in policy implementation in teaching and school management. Smallest gaps suggesting good level of implementation are observed for `r lowest_diff_var_text`, `r seclow_diff_var_text` and `r thirdlow_diff_var_text`.
+A ~**`r average_diff` point average gap** exists between the de-facto policy levers and de-jure policies in `r country` across teaching and school management, suggesting there are `r average_diff_text` gaps in policy implementation in teaching and school management. Smallest gaps suggesting good level of implementation are observed for `r high_diff_var_text`, `r sechigh_diff_var_text` and `r thirdhigh_diff_var_text`.
 
 #### Figure 4. De-facto and de-jure indicators for policy levers, `r country` ####
 ```{r defacto_graphs, fig.width=5, fig.height=5, echo=FALSE, message=FALSE, warning=FALSE}
