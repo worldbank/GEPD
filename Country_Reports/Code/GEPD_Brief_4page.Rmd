@@ -307,7 +307,7 @@ lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS
 \cellcolor{outcome} &                             & Proficiency on GEPD Assessment & {`r input$value_color[input$Series=="SE.PRM.LERN"]``r input$value_units[input$Series=="SE.PRM.LERN"]`} \\\cdashline{2-4}
 \cellcolor{outcome} &  Participation              & Net Adjusted Enrollment Rate   & {`r input$value_color[input$Series=="SE.PRM.TENR"]``r input$value_units[input$Series=="SE.PRM.TENR"]`} \\\cdashline{2-4}
 \cellcolor{outcome}\multirow{-5}{*}{\rotatebox{90}{\textcolor{white}{Outcomes}}} &  Participation and learning  & `r lays_lp_choice` & {`r lays_lp_cell``r lays_lp_units`}\\\cdashline{1-4}
-\cellcolor{practice} & \multirow{3}{2cm}{Teaching}                 & Teacher Presence           & {`r input$value_color[input$Series=="SE.PRM.EFFT"]``r input$value_units[input$Series=="SE.PRM.EFFT"]`} \\\cdashline{3-4}
+\cellcolor{practice} & \multirow{3}{2cm}{Teaching}                 & Teacher Presence           & {`r input$value_color[input$Series=="SE.PRM.EFFT.2"]``r input$value_units[input$Series=="SE.PRM.EFFT"]`} \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Content Knowledge        & {`r input$value_color[input$Series=="SE.PRM.CONT"]``r input$value_units[input$Series=="SE.PRM.CONT"]`} \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Pedagogical Skills       & {`r input$value_color[input$Series=="SE.PRM.PEDG"]``r input$value_units[input$Series=="SE.PRM.PEDG"]`} \\\cdashline{2-4}
 \cellcolor{practice} & \multirow{2}{2cm}{Inputs \& Infrastructure} & Basic Inputs             & `r input$value_color[input$Series=="SE.PRM.INPT"]` \\\cdashline{3-4}
@@ -326,10 +326,10 @@ lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS
 \cellcolor{policy}   &                                              & Intrinsic Motivation          & `r input$value_color[input$Series=="SE.PRM.TINM"]` \\\cdashline{2-4}
 \cellcolor{policy}   & \multirow{2}{2cm}{Inputs \& infrastructure}  & Standards                     & `r input$value_color[input$Series=="SE.PRM.ISTD"]` \\\cdashline{3-4} 
 \cellcolor{policy}   &                                              & Monitoring                    & `r input$value_color[input$Series=="SE.PRM.IMON"]` \\\cdashline{2-4}
-\cellcolor{policy}   & \multirow{5}{2cm}{Learners}                  & Nutrition Programs            & `r input$value_color[input$Series=="SE.PRM.TATT"]` \\\cdashline{3-4}
-\cellcolor{policy}   &                                              & Health Programs               & `r input$value_color[input$Series=="SE.PRM.TATT"]` \\\cdashline{3-4}
+\cellcolor{policy}   & \multirow{5}{2cm}{Learners}                  & Nutrition Programs            & `r input$value_color[input$Series=="SE.PRM.LNTN"]` \\\cdashline{3-4}
+\cellcolor{policy}   &                                              & Health Programs               & `r input$value_color[input$Series=="SE.PRM.LHTH"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Center based care             & `r input$value_color[input$Series=="SE.PRM.LCBC"]` \\\cdashline{3-4}
-\cellcolor{policy}   &                                              & Caregiver Financial Capacity  & `r input$value_color[input$Series=="SE.PRM.LCBC"]` \\\cdashline{3-4}
+\cellcolor{policy}   &                                              & Caregiver Financial Capacity  & `r input$value_color[input$Series=="SE.PRM.LFCP"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Caregiver Skills Capacity     & `r input$value_color[input$Series=="SE.PRM.LSKC"]` \\\cdashline{2-4}
 \cellcolor{policy}   & \multirow{5}{2cm}{School Management}         & Clarity of Functions          & `r input$value_color[input$Series=="SE.PRM.SCFN"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Attraction                    & `r input$value_color[input$Series=="SE.PRM.SATT"]` \\\cdashline{3-4}
@@ -352,10 +352,10 @@ lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{2cm}m{5cm}cc}
 \textbf{Subtitle} & \textbf{Indicator} & \textbf{Male} & \textbf{Female} \\\hline
 Learning                  & Proficiency on GEPD Assessment  & {`r input$value_color[input$Series=="SE.PRM.LERN.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LERN.1.F"]`\%} \\\cdashline{1-4}
-\multirow{3}{*}{Teaching} & Teacher Presence      & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.F"]`\%} \\\cdashline{2-4}
+\multirow{3}{*}{Teaching} & Teacher Presence      & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.F"]`\%} \\\cdashline{2-4}
                           &  Content knowledge  & {`r input$value_color[input$Series=="SE.PRM.CONT.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.CONT.1.F"]`\%} \\\cdashline{2-4}
                           &  Pedagogical Skills & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.M"]``r input$value_units[input$Series=="SE.PRM.PEDG.1.M"]`} & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.F"]``r input$value_units[input$Series=="SE.PRM.PEDG.1.F"]`} \\\cdashline{1-4}
-\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.F"]`\%} \\\cdashline{2-4}
+\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.F"]`\%} \\\cdashline{2-4}
                             & Student Attendance       & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.F"]`\%} \\\cdashline{1-4}
 \multirow{4}{2cm}{School Management}  & Operational Management   & `r input$value_color[input$Series=="SE.PRM.OPMN.1.M"]` & `r input$value_color[input$Series=="SE.PRM.OPMN.1.F"]` \\\cdashline{2-4}
                                       & Instructional Leadership & `r input$value_color[input$Series=="SE.PRM.ILDR.1.M"]` & `r input$value_color[input$Series=="SE.PRM.ILDR.1.F"]` \\\cdashline{2-4}
@@ -370,12 +370,12 @@ Learning                  & Proficiency on GEPD Assessment  & {`r input$value_co
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{2cm}m{5cm}cc}
 \textbf{Subtitle} & \textbf{Indicator} & \textbf{Rural} & \textbf{Urban} \\\hline
 Learning                  & Proficiency on GEPD Assessment & {`r input$value_color[input$Series=="SE.PRM.LERN.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LERN.1.U"]`\%} \\\cdashline{1-4}
-\multirow{3}{*}{Teaching} & Teacher Presence                 & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.U"]`\%} \\\cdashline{2-4}
+\multirow{3}{*}{Teaching} & Teacher Presence                 & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.U"]`\%} \\\cdashline{2-4}
                           &  Content knowledge             & {`r input$value_color[input$Series=="SE.PRM.CONT.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.CONT.1.U"]`\%} \\\cdashline{2-4}
                           &  Pedagogical Skills            & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.U"]`\%} \\\cdashline{1-4}
 \multirow{2}{2cm}{Inputs \& infrastructure}   & Basic Inputs             & `r input$value_color[input$Series=="SE.PRM.INPT.1.R"]` & `r input$value_color[input$Series=="SE.PRM.INPT.1.U"]` \\\cdashline{2-4}
                                               & Basic Infrastructure     & `r input$value_color[input$Series=="SE.PRM.INFR.1.R"]` & `r input$value_color[input$Series=="SE.PRM.INFR.1.U"]` \\\cdashline{1-4}
-\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.U"]`\%} \\\cdashline{2-4}
+\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.U"]`\%} \\\cdashline{2-4}
                             & Student Attendance       & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.U"]`\%} \\\cdashline{1-4}
 \multirow{4}{2cm}{School Management}  & Operational Management   & `r input$value_color[input$Series=="SE.PRM.OPMN.1.R"]` & `r input$value_color[input$Series=="SE.PRM.OPMN.1.U"]` \\\cdashline{2-4}
                                       & Instructional Leadership & `r input$value_color[input$Series=="SE.PRM.ILDR.1.R"]` & `r input$value_color[input$Series=="SE.PRM.ILDR.1.U"]` \\\cdashline{2-4}

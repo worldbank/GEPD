@@ -34,12 +34,12 @@ country <- "Rwanda"
 country_year <- "2020"
 
 takeaway <- "
-- Substantially low learning outcomes observed for students in Grade 1 and 4.
-- Weak teacher pedagogical skills and low teacher content knowledge attributed to poor teaching support and weak monitoring and accountability systems.
-- Grade 1 proficiency of students is ~9%, with students scoring lower on executive functions and socio-emotional learning. Only 13% students are enrolled in early childhood programs which face gaps in caregiver skills and financial constraints.
-- Basic inputs and infrastructure are weak in areas of functional toilets and electricity in schools.
-- Major gaps are seen in implementation of teaching support policies, teaching monitoring and accountability systems and selection and deployment policies for school principals.
-- Primary education funding amount and efficiency of spending is low and education policy implementation is politicized, lowering bureaucratic capacity.
+- Learning outcomes are low, and rural children lag far behind urban children in learning.
+- Practices related to teacher skill and children’s preparation for learning have most room for improvement.
+- Of all practice indicators, children’s preparation for learning at primary entry explains low learning the best.
+- Policy frameworks are comprehensive, but the de facto implementation varies across types of policies – E.g. teaching support.
+- Teacher presence is high, near levels seen in middle income countries such as Jordan and Peru.
+- Improving learning outcomes in Rwanda will require a whole-of- government approach since capacity for learning depends on multiple sectors.
 "
 
 # 2 Pager
