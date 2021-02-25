@@ -1,0 +1,10 @@
+desc,practice,policy
+Content Knowledge,SE.PRM.CONT,SE.PRM.TATT
+  Math proficiency,SE.PRM.CONT.3,SE.PRM.TSDP
+  Language proficiency,SE.PRM.CONT.2,SE.PRM.TSDP
+Pedagogical skills,SE.PRM.PEDG,SE.PRM.TEVL
+  % Classroom culture,SE.PRM.PEDG.2,SE.PRM.TEVL
+  % Instructional practices,SE.PRM.PEDG.3,SE.PRM.TSUP
+  % Scoio-emotional skills,SE.PRM.PEDG.4,SE.PRM.TSUP
+Teacher Attendance,SE.PRM.EFFT.2,SE.PRM.TMNA
+Teacher Attendance,SE.PRM.EFFT.2,SE.PRM.TINM

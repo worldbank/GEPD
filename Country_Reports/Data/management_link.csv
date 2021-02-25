@@ -1,0 +1,16 @@
+desc,practice,policy
+Operational management,SE.PRM.OPMN,SE.PRM.SCFN
+  Infrastructure,SE.PRM.OPMN.2,SE.PRM.SCFN
+  Ensuring inputs,SE.PRM.OPMN.3,SE.PRM.SCFN
+Instructional Leadership,SE.PRM.ILDR,SE.PRM.SCFN
+  % Classroom observed,SE.PRM.ILDR.2,SE.PRM.SCFN
+% Discussed observations,SE.PRM.ILDR.4,SE.PRM.SCFN
+% Feedback given,SE.PRM.ILDR.6,SE.PRM.SCFN
+  % Lesson-plan feedback,SE.PRM.ILDR.8,SE.PRM.SCFN
+Principal school knowledge,SE.PRM.PKNW,SE.PRM.SATT
+  % Teachers' knowledge,SE.PRM.PKNW.2,SE.PRM.SATT
+% Teachers' experience,SE.PRM.PKNW.3,SE.PRM.SSLD
+% Input availability,SE.PRM.PKNW.4,SE.PRM.SSLD
+Principal Management skills,SE.PRM.PMAN,SE.PRM.SSUP
+  Problem solving score,SE.PRM.PMAN.2,SE.PRM.SSUP
+  Goal-setting score,SE.PRM.PMAN.3,SE.PRM.SEVL

@@ -1,0 +1,12 @@
+desc,practice,policy
+Basic inputs,SE.PRM.INPT,SE.PRM.ISTD
+  % Blackboard,SE.PRM.INPT.2,SE.PRM.ISTD
+  % Stationary,SE.PRM.INPT.3,SE.PRM.ISTD
+  % Furniture,SE.PRM.INPT.4,SE.PRM.ISTD
+  % EdTech acces,SE.PRM.INPT.5,SE.PRM.ISTD
+Basic Infrastructure,SE.PRM.INFR,SE.PRM.IMON
+  % Drinking water,SE.PRM.INFR.2,SE.PRM.IMON
+  % Functional toilet,SE.PRM.INFR.3,SE.PRM.IMON
+  % Internet,SE.PRM.INFR.4,SE.PRM.IMON
+  % Electricity,SE.PRM.INFR.5,SE.PRM.IMON
+  % Disability access,SE.PRM.INFR.6,SE.PRM.IMON

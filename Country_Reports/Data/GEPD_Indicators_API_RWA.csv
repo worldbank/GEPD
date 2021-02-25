@@ -142,12 +142,12 @@ SE.PRM.INPT,Basic Inputs,Global Education Policy Dashboard,World Bank,"School su
 SE.PRM.INPT.1,(De Facto) Average number of classroom inputs in classrooms,Global Education Policy Dashboard,World Bank,NA,3.326416
 SE.PRM.INPT.1.R,(De Facto) Average number of classroom inputs in classrooms - Rural,Global Education Policy Dashboard,World Bank,NA,3.247847
 SE.PRM.INPT.1.U,(De Facto) Average number of classroom inputs in classrooms - Urban,Global Education Policy Dashboard,World Bank,NA,3.780961
-SE.PRM.INPT.2,(De Facto) Percent of classrooms with a functional blackboard and chalk,Global Education Policy Dashboard,World Bank,NA,59.81681
-SE.PRM.INPT.2.R,(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural,Global Education Policy Dashboard,World Bank,NA,57.91294
-SE.PRM.INPT.2.U,(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban,Global Education Policy Dashboard,World Bank,NA,64.72966
-SE.PRM.INPT.3,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",Global Education Policy Dashboard,World Bank,NA,92.19166
-SE.PRM.INPT.3.R,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",Global Education Policy Dashboard,World Bank,NA,90.78626
-SE.PRM.INPT.3.U,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",Global Education Policy Dashboard,World Bank,NA,100
+SE.PRM.INPT.2,(De Facto) Percent of classrooms with a functional blackboard and chalk,Global Education Policy Dashboard,World Bank,NA,92.19166
+SE.PRM.INPT.2.R,(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural,Global Education Policy Dashboard,World Bank,NA,90.78626
+SE.PRM.INPT.2.U,(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban,Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.INPT.3,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",Global Education Policy Dashboard,World Bank,NA,59.81681
+SE.PRM.INPT.3.R,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",Global Education Policy Dashboard,World Bank,NA,57.91294
+SE.PRM.INPT.3.U,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",Global Education Policy Dashboard,World Bank,NA,64.72966
 SE.PRM.INPT.4,(De Facto) Percent of classrooms with basic classroom furniture,Global Education Policy Dashboard,World Bank,NA,99.46333
 SE.PRM.INPT.4.R,(De Facto) Percent of classrooms with basic classroom furniture - Rural,Global Education Policy Dashboard,World Bank,NA,99.36673
 SE.PRM.INPT.4.U,(De Facto) Percent of classrooms with basic classroom furniture - Urban,Global Education Policy Dashboard,World Bank,NA,100
@@ -273,27 +273,27 @@ SE.PRM.OPMN.3.F,(De Facto) Average score for ensuring  availability of school in
 SE.PRM.OPMN.3.M,(De Facto) Average score for ensuring  availability of school inputs - Male,Global Education Policy Dashboard,World Bank,NA,3.5306
 SE.PRM.OPMN.3.R,(De Facto) Average score for ensuring  availability of school inputs - Rural,Global Education Policy Dashboard,World Bank,NA,3.475118
 SE.PRM.OPMN.3.U,(De Facto) Average score for ensuring  availability of school inputs - Urban,Global Education Policy Dashboard,World Bank,NA,3.658041
-SE.PRM.PEDG,Teacher Pedagogical Skills,Global Education Policy Dashboard,World Bank,School survey.  Based on TEACH ratings from classroom observations,NA
-SE.PRM.PEDG.1,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score),Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.PEDG,Teacher Pedagogical Skills,Global Education Policy Dashboard,World Bank,School survey.  Based on TEACH ratings from classroom observations,21.73201
+SE.PRM.PEDG.1,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score),Global Education Policy Dashboard,World Bank,NA,21.73201
 SE.PRM.PEDG.1.F,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
 SE.PRM.PEDG.1.M,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.1.R,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Rural,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.1.U,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Urban,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.2,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score),Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.PEDG.1.R,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Rural,Global Education Policy Dashboard,World Bank,NA,23.26696
+SE.PRM.PEDG.1.U,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Urban,Global Education Policy Dashboard,World Bank,NA,13.25301
+SE.PRM.PEDG.2,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score),Global Education Policy Dashboard,World Bank,NA,90.48105
 SE.PRM.PEDG.2.F,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
 SE.PRM.PEDG.2.M,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.2.R,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Rural,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.2.U,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Urban,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.3,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score),Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.PEDG.2.R,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Rural,Global Education Policy Dashboard,World Bank,NA,90.63357
+SE.PRM.PEDG.2.U,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Urban,Global Education Policy Dashboard,World Bank,NA,89.63855
+SE.PRM.PEDG.3,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score),Global Education Policy Dashboard,World Bank,NA,20.36787
 SE.PRM.PEDG.3.F,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
 SE.PRM.PEDG.3.M,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.3.R,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Rural,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.3.U,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Urban,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.4,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score),Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.PEDG.3.R,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Rural,Global Education Policy Dashboard,World Bank,NA,22.73005
+SE.PRM.PEDG.3.U,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Urban,Global Education Policy Dashboard,World Bank,NA,7.319277
+SE.PRM.PEDG.4,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score),Global Education Policy Dashboard,World Bank,NA,15.26813
 SE.PRM.PEDG.4.F,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
 SE.PRM.PEDG.4.M,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.4.R,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Rural,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.4.U,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Urban,Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.PEDG.4.R,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Rural,Global Education Policy Dashboard,World Bank,NA,15.37665
+SE.PRM.PEDG.4.U,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Urban,Global Education Policy Dashboard,World Bank,NA,14.66867
 SE.PRM.PKNW,Principal School Knowledge,Global Education Policy Dashboard,World Bank,NA,3.961019
 SE.PRM.PKNW.1,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school,Global Education Policy Dashboard,World Bank,NA,3.961019
 SE.PRM.PKNW.1.F,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Female,Global Education Policy Dashboard,World Bank,NA,3.984538
@@ -398,16 +398,16 @@ SE.PRM.SSUP.8,(De Facto) Percent of principals that report having received in-se
 SE.PRM.SSUP.9,(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals,Global Education Policy Dashboard,World Bank,NA,44.72463
 SE.PRM.SSUP.DF,(De Facto) Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,NA,3.669618
 SE.PRM.SSUP.DJ,(De Jure) Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,NA,4.333333
-SE.PRM.TATT,Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,"In the school survey, a number of De Facto questions on teacher attraction are asked.  0.8 points is awarded for each of the following:   , 0.8 Points. Teacher satisfied with job   - 0.8 Points. Teacher satisfied with status in community   - 0.8 Points. Would better teachers be promoted faster?   - 0.8 Points. Do teachers receive bonuses?   - 0.8 Points. One minus the fraction of months in past year with a salary delay.",3.855486
+SE.PRM.TATT,Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,"In the school survey, a number of De Facto questions on teacher attraction are asked.  0.8 points is awarded for each of the following:   , 0.8 Points. Teacher satisfied with job   - 0.8 Points. Teacher satisfied with status in community   - 0.8 Points. Would better teachers be promoted faster?   - 0.8 Points. Do teachers receive bonuses?   - 0.8 Points. One minus the fraction of months in past year with a salary delay.",3.774067
 SE.PRM.TATT.1,(De Jure) Average starting public-school teacher salary as percent of GDP per capita,Global Education Policy Dashboard,World Bank,NA,117.241
-SE.PRM.TATT.2,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community,Global Education Policy Dashboard,World Bank,NA,66.06138
-SE.PRM.TATT.3,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher,Global Education Policy Dashboard,World Bank,NA,69.90106
+SE.PRM.TATT.2,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community,Global Education Policy Dashboard,World Bank,NA,60.40083
+SE.PRM.TATT.3,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher,Global Education Policy Dashboard,World Bank,NA,66.36022
 SE.PRM.TATT.4,(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries,Global Education Policy Dashboard,World Bank,NA,40.16251
 SE.PRM.TATT.5,(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas,Global Education Policy Dashboard,World Bank,NA,0.4988549
 SE.PRM.TATT.6,(De Facto) Percent of teachers that performance matters for promotions,Global Education Policy Dashboard,World Bank,NA,83.34109
 SE.PRM.TATT.7,(De Jure) Is there a well-established career path for teachers?,Global Education Policy Dashboard,World Bank,NA,-999
 SE.PRM.TATT.8,(De Facto) Percent of teachers that report salary delays in the past 12 months,Global Education Policy Dashboard,World Bank,NA,42.07487
-SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.855486
+SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.774067
 SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,5
 SE.PRM.TENR,Net Adjusted Enrollment Rate,Global Education Policy Dashboard,World Bank,NA,95.28152
 SE.PRM.TENR.1,(De Facto) Percent of primary school age children who are enrolled at primary education,Global Education Policy Dashboard,World Bank,NA,95.28152
@@ -424,19 +424,19 @@ SE.PRM.TEVL.9,(De Jure) There are clear consequences for teachers who receive tw
 SE.PRM.TEVL.DF,(De Facto) Policy Lever (Teaching) - Evaluation,Global Education Policy Dashboard,World Bank,NA,4.548604
 SE.PRM.TEVL.DJ,(De Jure) Policy Lever (Teaching) - Evaluation,Global Education Policy Dashboard,World Bank,NA,5
 SE.PRM.TINM,Policy Lever (Teaching) - Intrinsic Motivation,Global Education Policy Dashboard,World Bank,"School Survey. This lever measures whether teachers are intrinsically motivated to teach. The question(s) aim to address this phenomenon by measuring the level of intrinsic motivation among teachers as well as teacher values that may be relevant for ensuring that the teacher is motivated to focus on all children and not just some.  Score is sum of the following      , Max 0.8 Points.. Average response to battery of questions on whether teachers considers it acceptable to be absent in certain situations.  Average response scores scaled to be continuous score between 0-1.     - Max 10.8 Points.. Average response to battery of questions on whether teachers consider some students to be more deserving of attention.  Average response scores scaled to be continuous score between 0-1.    - Max 0.8 point. Average response to battery of questions on teachers growth mindset regarding students.  Average response scores scaled to be continuous score between 0-1.    - 0.8 Points. Binary response to whether teacher said they became teacher, because teaching offered steady career.  Teacher scored 0 points if they reported wanting to teach for a steady career.    -0.8 Points.  Binary response of whether there is a probationary period for teachers.",3.926858
-SE.PRM.TINM.1,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the assigned curriculum has been completed""",Global Education Policy Dashboard,World Bank,NA,220.0578
-SE.PRM.TINM.10,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can change even their basic intelligence level considerably""",Global Education Policy Dashboard,World Bank,NA,9516.912
+SE.PRM.TINM.1,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the assigned curriculum has been completed""",Global Education Policy Dashboard,World Bank,NA,2.200578
+SE.PRM.TINM.10,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can change even their basic intelligence level considerably""",Global Education Policy Dashboard,World Bank,NA,95.16912
 SE.PRM.TINM.11,(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers,Global Education Policy Dashboard,World Bank,NA,76.51419
 SE.PRM.TINM.12,(De Facto) New teachers are required to undergo a probationary period,Global Education Policy Dashboard,World Bank,NA,57.4644
 SE.PRM.TINM.13,(De Jure) New teachers are required to undergo a probationary period,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TINM.2,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if students are left with work to do""",Global Education Policy Dashboard,World Bank,NA,166.5918
-SE.PRM.TINM.3,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the teacher is doing something useful for the community""",Global Education Policy Dashboard,World Bank,NA,2956.087
-SE.PRM.TINM.4,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they attend school regularly""",Global Education Policy Dashboard,World Bank,NA,2101.739
-SE.PRM.TINM.5,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they come to school with materials""",Global Education Policy Dashboard,World Bank,NA,1382.564
-SE.PRM.TINM.6,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they are motivated to learn""",Global Education Policy Dashboard,World Bank,NA,2188.636
-SE.PRM.TINM.7,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students have a certain amount of intelligence and they really can’t do much to change it""",Global Education Policy Dashboard,World Bank,NA,1339.761
-SE.PRM.TINM.8,"(De Facto) Percent of teachers that agree or strongly agrees with ""To be honest, students can’t really change how intelligent they are""",Global Education Policy Dashboard,World Bank,NA,1546.655
-SE.PRM.TINM.9,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can always substantially change how intelligent they are""",Global Education Policy Dashboard,World Bank,NA,9511.166
+SE.PRM.TINM.2,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if students are left with work to do""",Global Education Policy Dashboard,World Bank,NA,1.665918
+SE.PRM.TINM.3,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the teacher is doing something useful for the community""",Global Education Policy Dashboard,World Bank,NA,29.56087
+SE.PRM.TINM.4,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they attend school regularly""",Global Education Policy Dashboard,World Bank,NA,21.01739
+SE.PRM.TINM.5,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they come to school with materials""",Global Education Policy Dashboard,World Bank,NA,13.82564
+SE.PRM.TINM.6,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they are motivated to learn""",Global Education Policy Dashboard,World Bank,NA,21.88636
+SE.PRM.TINM.7,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students have a certain amount of intelligence and they really can’t do much to change it""",Global Education Policy Dashboard,World Bank,NA,13.39761
+SE.PRM.TINM.8,"(De Facto) Percent of teachers that agree or strongly agrees with ""To be honest, students can’t really change how intelligent they are""",Global Education Policy Dashboard,World Bank,NA,15.46655
+SE.PRM.TINM.9,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can always substantially change how intelligent they are""",Global Education Policy Dashboard,World Bank,NA,95.11166
 SE.PRM.TINM.DF,(De Facto) Policy Lever (Teaching) - Intrinsic Motivation,Global Education Policy Dashboard,World Bank,NA,3.926858
 SE.PRM.TINM.DJ,(De Jure) Policy Lever (Teaching) - Intrinsic Motivation,Global Education Policy Dashboard,World Bank,NA,5
 SE.PRM.TMNA,Policy Lever (Teaching) - Monitoring & Accountability,Global Education Policy Dashboard,World Bank,"School Survey.  This policy lever measures the extent to which teacher presence is being monitored, whether attendance is rewarded, and whether there are consequences for chronic absence. Score is the sum of the following:   , 1 Point. Teachers evaluated by some authority on basis of absence.   - 1 Point.  Good attendance is rewarded.    - 1 Point.  There are consequences for chronic absence (more than 30% absence).   - 1 Point. One minus the fraction of teachers that had to miss class because of any of the following: collect paycheck, school administrative procedure, errands or request of the school district office, other administrative tasks.",2.911148
