@@ -1096,7 +1096,7 @@ defacto_master_tbl %>%
   }
   
   SE.PRM.SATT_plot <- cowplot::plot_grid(edit_plot(SE.PRM.SATT_plot_1),edit_plot(SE.PRM.SATT_plot_2), align ='v', ncol=1)
-  SE.PRM.TSDP_plot <- cowplot::plot_grid(edit_plot(SE.PRM.TSDP_plot_1),edit_plot(SE.PRM.TSDP_plot_2), align ='v', ncol=1)
+  SE.PRM.TSDP_plot <- edit_plot(SE.PRM.TSDP_plot_1)
   
   SE.PRM.TSUP_note <- "Percent of teachers reporting in affirmative unless stated otherwise"
   SE.PRM.SCFN_note <- "Percent of principals who know if policies governing schools assign responsibility for implementation of given aspect."

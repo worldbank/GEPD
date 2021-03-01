@@ -67,7 +67,8 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 currentDate<-c("2020-02-14")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
-weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv"))
+weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
+  select(-sample) #variable name causes conflict
 load(sample_frame_name)
 
 #create weights for each school
@@ -76,7 +77,7 @@ data_set_updated <- data_set_updated %>%
   #now calculate probability of selecting woreda
   group_by(Region, Zone, Woreda) %>%
   mutate(N_school_woreda=n(),
-         N_students_woreda=sum(grd4_total,na.rm=T))
+         N_students_woreda=sum(grd4_total,na.rm=T)) %>%
   group_by(Region) %>%
   mutate(strat_total=sum(grd4_total, na.rm=T),
          N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
@@ -94,7 +95,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(
            N_schools=N_sch,
            N_schools_strata=N_sch_strata,
-           N_selected_strata=N_sel_strata) %>%
+           N_selected_strata=N_sel_strata,
+           school_weights=ipw,
+           ipw=ipw*!! snumber ) %>%
     mutate(province=Region) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
                                                         names(data_set_updated) == "owner" )])))

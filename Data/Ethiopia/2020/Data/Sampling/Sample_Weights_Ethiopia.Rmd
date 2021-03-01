@@ -249,7 +249,7 @@ sampling_proc <-  function(number) {
 }
 
 #now sample 10000 times
-weights_df <- data.frame(num = c(1:10000)) %>%
+weights_df <- data.frame(num = c(1:2000)) %>%
   mutate(numbers=num) %>%
   nest(numbers)  %>%
   mutate(
@@ -260,15 +260,15 @@ weights_df <- data.frame(num = c(1:10000)) %>%
   ) %>%
   unnest(trial_data) %>%
   select(-data) %>%
-  dtplyr::lazy_dt()
+  write_excel_csv(file="C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2020/Data/Sampling/Ethiopia_weights_full_sim.csv") 
 
-weights_df <- weights_df %>%
+weights_df_collapsed <- weights_df %>%
   group_by(Region, Zone, Woreda, School_Name, Sector, owner, Location, Program, Admin_Code, Code_School ) %>%
   summarise( sample=sum(sample, na.rm=T),
              count=n()) %>%
   mutate(ipw=sample/count) %>%
   as_tibble()
 
-write_excel_csv(weights_df, file="C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2020/Data/Sampling/Ethiopia_weights.csv")
+write_excel_csv(weights_df_collapsed, file="C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2020/Data/Sampling/Ethiopia_weights.csv")
 ```
 
