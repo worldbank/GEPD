@@ -204,7 +204,7 @@ Series == 'SE.PRM.BFIN' ~ 'Financing',
 Series == "SE.PRM.BIMP" ~ "Impartial Decision-Making",
 Series == "SE.PRM.BMAC" ~ "Mandates & Accountability",
 Series == "SE.PRM.BNLG" ~ "National Learning Goals",
-Series == "SE.PRM.BQBR" ~ "Quality of Bureaucracy"
+Series == "SE.PRM.BQBR" ~ "Characteristics of Bureaucracy"
 ))
 ```
 
