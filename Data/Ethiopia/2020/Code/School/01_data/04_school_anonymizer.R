@@ -13,7 +13,16 @@ library(digest)
 
 load(file = file.path(confidential_folder, "school_survey_data.RData"))
 
+#add some disability questions
+school_dis <- school_dta %>%
+  group_by(school_code) %>%
+  summarise(across(starts_with('m4scq'),mean, na.rm=TRUE))
 
+
+final_school_data <- final_school_data %>%
+  select(-starts_with('m4scq')) %>%
+  left_join(school_dis, by='school_code',suffix=c("",".y")) %>%
+  select(-ends_with(".y"))
 #generate list of datasets to anonnymize
 #Read in list of indicators
 indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
@@ -204,7 +213,7 @@ for (i in data_list ) {
     
     print(i)
     
-      final_school_data<-temp
+      #final_school_data<-temp
       print(i)
       
       temp %>%

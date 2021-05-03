@@ -10,8 +10,6 @@ library(haven)
 library(stringr)
 library(Hmisc)
 library(skimr)
-library(naniar)
-library(vtable)
 library(readxl)
 library(readr)
 library(WDI)
@@ -51,35 +49,11 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #Read in indicators.md file
 ###########################
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+indicators <- read_csv(here::here('Indicators','indicators.csv'))
+
+indicator_choices <- read_csv(here::here('Indicators','indicators_choices.csv'))
 
 
-indicators <- indicators %>%
-  select(-c('X1', 'X8'))
-
-indicator_names <-  indicators$indicator_tag
-indicator_names <- sapply(indicator_names, tolower)
-
-names(indicators)<-make.names(names(indicators), unique=TRUE)
-
-
-#get metadata on indicators
-#Read in list of indicators
-indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
-indicator_choices <- indicator_choices %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-
-indicator_choices <- indicator_choices %>%
-  select(-c('X1', 'X6')) %>%
-  rename("Source Note"="How is the indicator scored?" ) 
-
-
-names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
 
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
@@ -191,7 +165,7 @@ api_template <- api_template %>%
 # Example:
 
 #specify path to data
-data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT//JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/JOR-19/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
 
 
 
@@ -252,13 +226,54 @@ finance_df_final <- finance_df_shaped %>%
 
 source('R/api_data_fun_JOR.R')
 
-JOR_data_2019 <- api_final
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD"
+
+#function to create score data for a specified country and year
+api_metadata_fn <- function(cntry, yr) {
+  api_metadata_fn_p <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_c <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_p %>%
+    bind_rows(api_metadata_fn_c) %>%
+    arrange(Series) %>%
+    mutate(year=yr,
+           cty_or_agg="cty",
+           countrycode=cntry)
+}
+
+JOR_data_2019 <- api_metadata_fn('JOR', 2019)
 
 
 #export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_JOR.csv')
+write_excel_csv(JOR_data_2019, paste( 'GEPD_Indicators_API_JOR.csv',sep=""))
 
-write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_JOR.csv',sep=""))
+write_excel_csv(JOR_data_2019, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_JOR.csv',sep=""))
 
 
 

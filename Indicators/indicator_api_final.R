@@ -10,8 +10,6 @@ library(haven)
 library(stringr)
 library(Hmisc)
 library(skimr)
-library(naniar)
-library(vtable)
 library(readxl)
 library(readr)
 library(WDI)
@@ -50,40 +48,13 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ############################
 #Read in indicators.md file
 ###########################
-#Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-
-indicators <- indicators %>%
-  select(-c('X1', 'X8'))
-
-indicator_names <-  indicators$indicator_tag
-indicator_names <- sapply(indicator_names, tolower)
-
-names(indicators)<-make.names(names(indicators), unique=TRUE)
-
-
 #get metadata on indicators
 #Read in list of indicators
-indicator_choices <- read_delim(here::here('Indicators','indicators_choices.csv'), delim=",", trim_ws=TRUE)
-indicator_choices <- indicator_choices %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+indicators <- read_csv(here::here('Indicators','indicators.csv'))
 
-
-indicator_choices <- indicator_choices %>%
-  select(-c('X1', 'X6')) %>%
-  rename("Source Note"="How is the indicator scored?" ) 
-
-
-names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
-
+indicator_choices <- read_csv(here::here('Indicators','indicators_choices.csv'))
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- indicators$indicator_tag
 
 
 
@@ -98,7 +69,7 @@ df<-indicators %>%
 
 df_overall <- df %>%
   select(Series, Indicator.Name, indicator_tag ) 
-  
+
 
 df_defacto_dejure <- df %>%
   filter(grepl("Policy Lever", Indicator.Name )) %>%
@@ -111,7 +82,7 @@ df_defacto_dejure <- df %>%
   mutate(Series=paste(Series, type_val, sep="."),
          Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
   select(Series, Indicator.Name)
-  
+
 # Prepare a data frame, on which we can add values
 
 ##########################
@@ -167,16 +138,7 @@ indicator_match  <- df_overall %>%
   arrange(Series) %>%
   select(Series, Indicator.Name, indicator_tag)
 
-#add extra metadata
-api_template <- api_template %>%
-  mutate(Source="Global Education Policy Dashboard",
-         'Source Organization'="World Bank") %>%
-  left_join(indicator_choices) %>%
-  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
-  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
-  rename('Source Note'=Source.Note,
-         'Indicator Name'=Indicator.Name) %>%
-  select(-c(indicator_tag, Value))
+
 
 
 
@@ -191,8 +153,7 @@ api_template <- api_template %>%
 # Example:
 
 #specify path to data
-data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/"
-
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/"
 
 
 
@@ -218,6 +179,7 @@ expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', se
 #score expert data (this requires a lot of hard coding and transcribing)
 #read in data
 defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal') 
+
 defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
 colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
 
@@ -241,14 +203,64 @@ finance_df_final <- finance_df_shaped %>%
   select(-rowname)
 
 
+#add extra metadata
+api_template <- api_template %>%
+  mutate(Source="Global Education Policy Dashboard",
+         'Source Organization'="World Bank") %>%
+  left_join(indicator_choices) %>%
+  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
+  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
+  rename('Source Note'=Source.Note,
+         'Indicator Name'=Indicator.Name) %>%
+  select(-c(indicator_tag, Value))
+
 source('R/api_data_fun.R')
 
-PER_data_2019 <- api_final
 
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD"
+
+#function to create score data for a specified country and year
+api_metadata_fn <- function(cntry, yr) {
+  api_metadata_fn_p <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_c <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_p %>%
+    bind_rows(api_metadata_fn_c) %>%
+    arrange(Series) %>%
+    mutate(year=yr,
+           cty_or_agg="cty",
+           countrycode=cntry)
+}
+
+
+PER_data_2019 <- api_metadata_fn('PER', 2019)
 
 #export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_PER.csv')
-
-write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_PER.csv',sep=""))
-
-
+write_excel_csv(PER_data_2019, paste('GEPD_Indicators_API_PER.csv',sep=""))
+write_excel_csv(PER_data_2019, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_PER.csv',sep=""))

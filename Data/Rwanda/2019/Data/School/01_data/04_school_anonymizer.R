@@ -13,6 +13,15 @@ library(digest)
 
 load(file = file.path(confidential_folder, "school_survey_data.RData"))
 
+#add some disability questions
+school_dis <- school_dta %>%
+  group_by(school_code) %>%
+  summarise(across(starts_with('m4scq'),mean, na.rm=TRUE))
+
+
+final_school_data <- final_school_data %>%
+  left_join(school_dis, by='school_code',suffix=c("",".y")) %>%
+  select(-ends_with(".y"))
 
 #generate list of datasets to anonnymize
 #Read in list of indicators
@@ -56,7 +65,7 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-currentDate<-c("2020-02-14")
+currentDate<-c("2019-08-30")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
@@ -215,7 +224,7 @@ for (i in data_list ) {
     
     print(i)
     
-      final_school_data<-temp
+      #final_school_data<-temp
       print(i)
       write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
 

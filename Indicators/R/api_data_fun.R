@@ -620,14 +620,14 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
-  SE.PRM.TINM.1 = 100*indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.10 = 100*indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
-  SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
-  SE.PRM.TINM.12 = 100*indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
+  SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.10 = indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+  SE.PRM.TINM.11 = indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
+  SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
   SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
-  SE.PRM.TINM.2 = 100*indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
-  SE.PRM.TINM.3 = 100*indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.4 = 100*indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+  SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+  SE.PRM.TINM.3 = indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+  SE.PRM.TINM.4 = indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
   SE.PRM.TINM.5 = indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
   SE.PRM.TINM.6 = indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
   SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
@@ -709,7 +709,7 @@ api_template <- api_template %>%
   SE.PRM.LHTH.1 =expert_df$immunization, #(De Jure) Are young children required to receive a complete course of childhood immunizations?                           
   SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final[,5]), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
   SE.PRM.LHTH.3 =expert_df$healthcare_young_children, #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
-  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of  children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance                                                      
+  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance                                                      
   SE.PRM.LHTH.5 =expert_df$deworming, #(De Jure) Are deworming pills funded and distributed by the government?                                                  
   SE.PRM.LHTH.6 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children age 6-59 months who received deworming medication.`), #(De Facto) Percent of children age 6-59 months who received deworming medication                                         
   SE.PRM.LHTH.7 =expert_df$antenatal_skilled_delivery, #(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?                   
@@ -923,17 +923,19 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-  SE.PRM.BFIN   = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #Politics & Bureaucratic Capacity - Financing                                                                               
-  SE.PRM.BFIN.1 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1,#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
-  SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`), #(Financing) - Adequacy expressed by the per child spending                                                                 
-  SE.PRM.BFIN.3 =-999,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
-  SE.PRM.BFIN.4 =-999,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
-  SE.PRM.BFIN.5 =-999,#(Financing) - Equity 
+      SE.PRM.BFIN.2 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #(Financing) - Adequacy expressed by the per child spending
+      SE.PRM.BFIN.3 =4*as.numeric(finance_df_final$`Efficiency by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest`)+1,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
+      SE.PRM.BFIN.4 =4*as.numeric(finance_df_final$`Efficiency by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest`)+1,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
+      SE.PRM.BFIN.5 =-999,#(Financing) - Equity
+    ) %>%
+    mutate(
+      SE.PRM.BFIN   = as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2), #Politics & Bureaucratic Capacity - Financing
+      SE.PRM.BFIN.1 = as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2),#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
+      
     )
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
-    rownames_to_column(var='Series') %>%
-    rename(value = V1  )
+    rownames_to_column(var='Series') 
   
 api_final<-api_template %>%
     dplyr::select(-value) %>%

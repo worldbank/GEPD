@@ -29,18 +29,11 @@ names(indicators)<-make.names(names(indicators), unique=TRUE)
 
 #get metadata on indicators
 #Read in list of indicators
-indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
-indicator_choices <- indicator_choices %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+#Read in list of indicators
+indicators <- read_csv(here::here('Indicators','indicators.csv'))
 
+indicator_choices <- read_csv(here::here('Indicators','indicators_choices.csv'))
 
-indicator_choices <- indicator_choices %>%
-  select(-c('X1', 'X6')) %>%
-  rename("Source Note"="How is the indicator scored?" ) 
-
-
-names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
 
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
