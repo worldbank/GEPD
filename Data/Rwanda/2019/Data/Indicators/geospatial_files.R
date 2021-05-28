@@ -54,7 +54,7 @@ keyfile <- read_csv(file.path(confidential_folder, "public_official_linkfile_has
 geo_public_officials_df <- public_officials_dta_clean %>%
   left_join(keyfile) %>%
   mutate(hashed_office_id = hashed_office) %>%
-  select(id_code, hashed_office_id,hashed_position, lat, lon) %>%
+  select(id_code, hashed_office_id,hashed_position, interview__id, lat, lon) %>%
   group_by(hashed_office_id) %>%
   fill(lat,.direction = 'updown') %>%
   fill(lon,.direction = 'updown') %>%

@@ -218,7 +218,7 @@ source('R/api_data_fun.R')
 
 
 #Tags
-practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD"
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG"
 
 #function to create score data for a specified country and year
 api_metadata_fn <- function(cntry, yr) {
@@ -255,7 +255,9 @@ api_metadata_fn <- function(cntry, yr) {
     arrange(Series) %>%
     mutate(year=yr,
            cty_or_agg="cty",
-           countrycode=cntry)
+           countrycode=cntry,
+           value=round(value,1),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
 }
 
 

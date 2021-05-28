@@ -1,0 +1,95 @@
+---
+title: "Finance Indicator"
+author: "Brian Stacy"
+date: "5/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(readxl)
+library(here)
+library(flextable)
+library(gtsummary)
+library(gt)
+
+dir <- here()
+
+
+```
+
+# Read in GEPD indicators
+
+```{r gepd}
+
+gepd_df <- read_excel(path=paste0(dir,"/Indicators/GEPD_Indicators_for_EdStats_PER_JOR_v3.xlsx"))
+
+gepd_df %>%
+  filter(grepl("SE.PRM.BFIN", Series)) %>%
+  gt() %>%
+  tab_header(
+    title="GEPD Finance Indicators for Jordan and Peru"
+  )
+  
+
+```
+
+# Finance Summary Stats
+
+```{r financedf}
+
+finance_df <- read_excel(path=paste0(dir, "/Technical_Note/Expenditure per student_Mar17 2021__2.xls"))
+
+#summary table ty region
+finance_df %>%
+  select(region, `Spending per primary school-age child as % of GDP per capita`) %>%
+  tbl_summary(
+    by='region',
+    type = all_continuous() ~ "continuous2",
+    digits= all_continuous() ~ 1,
+    statistic = all_continuous() ~ c(
+                                     "{mean}",     
+                                     "{median} ({p25}, {p75})", 
+                                     "{min}, {max}",
+                                     "{N_nonmiss}"),
+      
+  ) %>%
+  as_gt() %>%
+  tab_header(
+    title="Spending per primary school-age child as % of GDP per capita by Region"
+  )
+
+
+```
+
+```{r finance_plot}
+finance_df %>%
+  mutate(highlight=if_else(country %in% c("Jordan", "Peru", "Rwanda"),TRUE,FALSE),) %>%
+ggplot(aes(x=`Spending per primary school-age child as % of GDP per capita`, y=region, color=highlight, size=highlight)) +
+  geom_point() +
+  theme_bw() +
+  guides(color=guide_legend(title="Peru, Jordan, Rwanda")) +
+  ggtitle("Spending per primary school-age child as % of GDP per capita by Region")
+
+```
+
+
+```{r countrynum}
+
+#summary table ty region
+finance_df %>%
+  select(country, region, `Spending per primary school-age child as % of GDP per capita`) %>%
+  filter(country %in% c("Jordan", "Peru", "Rwanda")) %>%
+  mutate(`Spending per primary school-age child as % of GDP per capita`=round(`Spending per primary school-age child as % of GDP per capita`,1)) %>%
+  gt() %>%
+  tab_header(
+    title="Spending per primary school-age child as % of GDP per capita for Jordan, Rwanda, and Peru"
+  )
+
+```
+

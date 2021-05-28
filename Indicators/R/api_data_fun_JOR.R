@@ -168,7 +168,7 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.EFFT     = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
+      SE.PRM.EFFT     = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "All"),
       SE.PRM.EFFT.1   = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
       SE.PRM.EFFT.1.F = 100-indicator_means(absence_rate, "school", "EFFT",  "Female"),
       SE.PRM.EFFT.1.M = 100-indicator_means(absence_rate, "school", "EFFT",  "Male"),
