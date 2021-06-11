@@ -253,6 +253,8 @@ write_excel_csv(sample_woredas, paste(dir_frame, '/sample_woredas_', Sys.Date(),
 
 ```
 
+## Resample
+
 Replace 12 schools, because they are in Tigray and the Benishangul Gumuz Regions, which are having security problems.
 
 ```{r woreda sampling_up, echo=FALSE}
@@ -319,6 +321,74 @@ write_excel_csv(sample_random_replacements_up, paste(dir_frame, '/sample_schools
 
 
 ```
+
+## Second Security Resample
+
+```{r woreda sampling_up, echo=FALSE}
+
+zone_list_up2 <- c('Semen Gonder', 'Makelawi  Gonder')
+woreda_list_up2 <- c('Wegera','Mirab Dembia', 'Misrak Dembia', 'Dabat', 'Debark Ketema', 'Debark zuria' ) #these woredas were already selected
+
+
+#do some editing here, because we selected two woredas that had logistical problems
+#original code:
+sample_woredas_up2 <- df %>%
+  ungroup() %>%
+  mutate(n_stud_tot=sum(grd4_total)) %>%
+  group_by(Region, Zone, Woreda) %>%
+  summarise(n_stud_woreda=sum(grd4_total),
+            n_stud_tot=mean(n_stud_tot)) %>%
+  filter(Zone %in% zone_list_up2) %>%
+  filter((Woreda %in% woreda_list_up2)) %>%
+  mutate(n_stud_region=sum(n_stud_woreda)) %>%
+  group_by(Zone) %>%
+  sample_n(1) %>%
+  mutate(sampled_woreda="Sampled Woreda")
+
+
+#school selectino
+
+
+school_sample_df_up2<- df %>%
+  left_join(sample_woredas_up2) %>%
+  filter(!is.na(sampled_woreda)) %>%
+  group_by(Region, Woreda) %>%
+  mutate(num_urban=sum(Location=="Urban"),
+         num_schools=n() )%>%
+  ungroup()
+
+school_sample_urban_replacements_up2 <- school_sample_df_up2 %>%
+  filter(Location=="Urban") %>%
+  group_by(Region, Zone, Woreda) %>%
+  mutate(size_samp=case_when(
+    num_schools-num_urban==0 ~ 3,
+    num_schools-num_urban==1 ~ 2,
+    num_schools-num_urban>=2 ~ 1,
+    num_urban==0 | is.na(num_urban) ~ 0
+  )) %>% #select 1 urban if there are 2 rural, but more if there are less than two rural
+  sample_n(size=size_samp, weight=grd4_total)
+
+school_sample_rural_replacements_up2 <- school_sample_df_up2 %>%
+  filter(Location=="Rural") %>%
+  group_by(Region, Zone, Woreda) %>%
+  mutate(size_samp=case_when(
+    (num_urban==0 | is.na(num_urban))   ~ 3,
+    num_schools-num_urban==1 ~ 1,
+    num_schools-num_urban==0 ~ 0,
+    TRUE ~ 2
+  )) %>% #select 2 rural if there is 1 urban, but more if there are less than one urban
+  sample_n(size=size_samp)
+
+sample_random_replacements_up2 <- bind_rows(school_sample_rural_replacements_up2, school_sample_urban_replacements_up2) %>%
+  arrange(Region, Zone, Woreda) %>%
+  mutate(sample="Sampled School") %>%
+  select(-sampled_woreda, -num_urban, -num_schools, -size_samp)
+
+write_excel_csv(sample_random_replacements_up2, paste(dir_frame, '/sample_schools_updated_', Sys.Date(),  '.csv', sep=""))
+
+
+```
+
 
 The list above shows the 100 Woredas selected for our sample.  Next, we will choose the 3 schools per Woreda using random selection.  Where possible, we will randomly select 2 rural and 1 urban school.  In cases where there are insufficient numbers of urban or rural schools, we will drop this condition and select randomly.
 
