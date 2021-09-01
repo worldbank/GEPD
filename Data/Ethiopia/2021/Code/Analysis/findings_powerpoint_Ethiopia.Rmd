@@ -1,5 +1,5 @@
 ---
-title: "Global Education Policy Dashboard - Rwanda 2020"
+title: "Global Education Policy Dashboard - Ethiopia 2021"
 author: "Education Global Practice, World Bank"
 output:
   html_document:
@@ -112,7 +112,7 @@ Policy Survey:  The policy survey is conducted by an expert on the laws and regu
 Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
 Roadmap:  
-- Below is a set of tables and charts containing findings for the Rwanda 2020 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
+- Below is a set of tables and charts containing findings for the Ethiopia 2021 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
 - Then we will discuss findings of our Practice Indicators  
 - Finally we will conclude with findings for our Bureaucracy Indicators.  
 
@@ -123,10 +123,10 @@ Roadmap:
 
 #set directory to bring in data
 
-work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_RAW/Data/anonymized/"
+work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
 
 #load public official data
-#load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
+load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
 
 #load school data for comparisons
 load(paste(work_dir, "School/school_indicators_data_anon.RData", sep=""))
@@ -164,6 +164,7 @@ wrapper <- function(x, ...)
                        'student_attendance', 
                        'sch_absence_rate',
                        'content_proficiency', 
+                       'teach_prof',
                        'ecd_student_proficiency', 
                        'inputs', 
                        'infrastructure',
@@ -183,13 +184,18 @@ wrapper <- function(x, ...)
                        'management_attraction', 
                        'sch_selection_deployment', 
                        'sch_support', 
-                       'principal_evaluation'
+                       'principal_evaluation', 
+                       'national_learning_goals',
+                       'mandates_accountability',
+                       'quality_bureaucracy',
+                       'impartial_decision_making'
     )
  
 main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
                          'Student Attendance',
                          'School Absence Rate', 
                          "Teacher Content Knowledge", 
+                         "Teacher Pedagogical Skills",
                          'Capacity for Learning', 
                          'Basic Inputs', 
                          'Basic Infrastructure', 
@@ -209,7 +215,11 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Policy Lever (School Management) - Attraction' ,                   
                          'Policy Lever (School Management) - Selection & Deployment'  ,      
                          'Policy Lever (School Management) - Support' ,                      
-                         'Policy Lever (School Management) - Evaluation'    
+                         'Policy Lever (School Management) - Evaluation'    , 
+                         'Politics & Bureaucratic Capacity - National Learning Goals' ,
+                         'Politics & Bureaucratic Capacity - Mandates & Accountability'   ,  
+                         'Politics & Bureaucratic Capacity - Quality of Bureaucracy'    ,    
+                         'Politics & Bureaucratic Capacity - Impartial Decision-Making'    
                          
                          
 ) 
@@ -274,7 +284,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     #Now do breakdown by Urban/Rural
     #Urban
     sumstats_school_Urban <- school_dta_short_anon %>%
-      filter(Location=="Urban") 
+      filter(urban_rural=="Urban") 
 
     
     sch_ipw<-sumstats_school_Urban$ipw 
@@ -305,7 +315,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     
     #Rural
       sumstats_school_Rural <- school_dta_short_anon  %>%
-        filter(Location=="Rural") 
+        filter(urban_rural=="Rural") 
 
         
         sch_ipw<-sumstats_school_Rural$ipw 
@@ -339,11 +349,53 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       left_join(sumstats_school_Rural_df)
     
       
- 
+    
+  #Survey of Public Officials
+    metadata<-public_officials_metadata
+    
+    #add function to produce weighted summary stats
+    my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                           complete = ~ sum(!is.na(.))))    
+  
+  
+  sumstats_public_officials <- public_officials_dta_clean_anon %>%
+    select(one_of(indicators_list) ) 
+  
+  
+  
+  sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+  
+  
+  #add variable label
+  sumstats_public_officials_df <- sumstats_public_officials_df %>%
+    mutate(name=variable,
+           indicators=variable) %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+    mutate(mean_Urban=as.numeric(NA),
+           ci_Urban=as.character(NA),
+           mean_Rural=as.numeric(NA),
+           ci_Rural=as.character(NA)) %>%
+    select(varlabel, mean, ci, mean_Urban, ci_Urban, mean_Rural, ci_Rural)
+  
+  
+  sumstats_df <- sumstats_school_df_final %>%
+    bind_rows(sumstats_public_officials_df) %>%
+    arrange(factor(varlabel, levels=main_indicator_labels2))
   
 
    
-   sumstats_df <- sumstats_school_df_final %>%
+   sumstats_df <- sumstats_df %>%
      select(varlabel,  mean, ci, mean_Urban, ci_Urban, mean_Rural, ci_Rural)
    
 
@@ -359,7 +411,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Ethiopia 2020 - Urban/Rural",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Ethiopia 2021 - Urban/Rural",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Rural to Urban"),
           digits = 1, 
@@ -380,7 +432,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
    mutate(mean=if_else(group=="Urban", mean_Urban, mean_Rural))
 
    
-Location1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+urban_rural1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
   geom_point(data=filter(dumbbell_df, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
   geom_dumbbell(aes(x=mean_Urban, xend=mean_Rural),
     size=3, color="#e3e2e1",
@@ -398,7 +450,7 @@ Location1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowl
   labs(x='Mean', y=NULL)+
   theme_bw()
 
-Location2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
   geom_point(data=filter(dumbbell_df, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
   geom_dumbbell(aes(x=mean_Urban, xend=mean_Rural),
     size=3, color="#e3e2e1",
@@ -518,10 +570,52 @@ Location2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Know
         left_join(sumstats_school_nonprivate_df) %>%
         left_join(sumstats_school_private_df)
       
-
+      #Survey of Public Officials
+      metadata<-public_officials_metadata
+      
+      #add function to produce weighted summary stats
+      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                             complete = ~ sum(!is.na(.))))    
+      
+      
+      sumstats_public_officials <- public_officials_dta_clean_anon %>%
+        select(one_of(indicators_list) ) 
+      
+      
+      
+      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+        yank("numeric") %>%
+        mutate(variable=skim_variable) %>%
+        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+      
+      
+      #add variable label
+      sumstats_public_officials_df <- sumstats_public_officials_df %>%
+        mutate(name=variable,
+               indicators=variable) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+        mutate(mean_Urban=as.numeric(NA),
+               ci_Urban=as.character(NA),
+               mean_Rural=as.numeric(NA),
+               ci_Rural=as.character(NA)) %>%
+        select(varlabel, mean, ci, mean_Urban, ci_Urban, mean_Rural, ci_Rural)
+      
+     
+      sumstats_df <- sumstats_school_df_final %>%
+        bind_rows(sumstats_public_officials_df) %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
 
       
-      sumstats_df <- sumstats_school_df_final %>%
+      sumstats_df <- sumstats_df %>%
         select(varlabel,  mean, ci, mean_Urban, ci_Urban, mean_Rural, ci_Rural)
       
 
@@ -534,7 +628,7 @@ Location2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Know
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Ethiopia 2020 - Public/Private Schools",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Ethiopia 2021 - Public/Private Schools",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Public to Private"),
           digits = 1, 
@@ -543,7 +637,7 @@ Location2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Know
     add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
   
 
-# Location1/Location2 +
+# urban_rural1/urban_rural2 +
 #     plot_annotation(title = str_wrap('Differences in Dashboard Indicators Between Urban/Rural Schools',80))
 
   
@@ -590,7 +684,7 @@ learning_data_plot <- final_indicator_data_LERN_anon %>%
     TRUE ~ as.character(NA)
     )) %>%
   select(-Female, -Male) %>%
-  mutate(Type=Location)
+  mutate(Type=urban_rural)
 
 
 learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(wtd.mean(student_knowledge, ipw, na.rm=T),1))
@@ -618,16 +712,16 @@ learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD =
 
 - We compare inputs and infrastructure for Urban/Rural schools 
 
-```{r Location, echo=FALSE}
+```{r urban_rural, echo=FALSE}
 
 
-Location <- school_dta_short_anon %>%
-  mutate(Type=factor(Location, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
-  filter(!is.na(Location))
+urban_rural <- school_dta_short_anon %>%
+  mutate(Type=factor(urban_rural, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
+  filter(!is.na(urban_rural))
 
 
 
-infr_Location <- Location %>%
+infr_urban_rural <- urban_rural %>%
   group_by(Type) %>%
   mutate(weight=ipw/sum(ipw, na.rm=T)) %>%
   ungroup() %>%
@@ -639,21 +733,21 @@ infr_Location <- Location %>%
        y='Density')+
   ggtitle("Infrastructure in Urban/Rural Areas")
   
-infr_Location
+infr_urban_rural
 
 ```
 
 
-```{r Location_input, echo=FALSE}
+```{r urban_rural_input, echo=FALSE}
 
 
-Location_input <- school_dta_short_anon %>%
-  mutate(Type=factor(Location, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
-  filter(!is.na(Location))
+urban_rural_input <- school_dta_short_anon %>%
+  mutate(Type=factor(urban_rural, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
+  filter(!is.na(urban_rural))
 
 
 
-inpt_Location <- Location %>%
+inpt_urban_rural <- urban_rural %>%
   group_by(Type) %>%
   mutate(weight=ipw/sum(ipw, na.rm=T)) %>%
   ungroup() %>%
@@ -663,7 +757,7 @@ inpt_Location <- Location %>%
   labs(x='Input Index')+
   ggtitle("Input Across Urban/Rural")
   
-inpt_Location
+inpt_urban_rural
 
 ```
 
@@ -906,7 +1000,7 @@ textbooks <- final_indicator_data_PKNW_anon %>%
   mutate(share_textbook=(m4scq5_inpt)/(m4scq4_inpt)) %>%
   mutate(share_textbook_guess=(m7sfq10_pknw)/(m4scq4_inpt)) %>%
   mutate(gap_textbooks=(m7sfq10_pknw-m4scq5_inpt)) %>%
-  mutate(Type=factor(Location.x, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
+  mutate(Type=factor(urban_rural.x, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
   filter(!is.na(Type)) %>%
   filter(abs(gap_textbooks)<80) #drop some outlier observations that are probably miscodings
 
@@ -1073,8 +1167,8 @@ main_indicator_labels<-c(
     
     #get de facto data
 data_defacto <- school_dta_short_anon %>%
-    mutate(Type=factor(Location, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
-    filter(!is.na(Location)) %>%
+    mutate(Type=factor(urban_rural, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
+    filter(!is.na(urban_rural)) %>%
       select(hashed_school_code,Type, indicators_list, ipw) %>%
       pivot_longer(cols=indicators_list,
                names_to = "indicators",
@@ -1299,6 +1393,66 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
 
 
 
+# Politics 
+
+## Overall performance for Bureuacracy Indicators
+
+- Moving to the Bureaucracy Indicators, below we show the averages by Office type for each of our indicators
+- Public officials in the district offices tend to score lower than at the central level
+- Fraction of public officials reporting as motivated or more motivated: `r mean(public_officials_dta_clean_anon$motivation_relative_start>=100, na.rm=T)`
+
+
+```{r overall, echo=FALSE}
+
+public_officials_dta_clean_anon <- public_officials_dta_clean_anon %>%
+    filter(!is.na(govt_tier)) 
+
+
+
+data_plot <- public_officials_dta_clean_anon %>%
+  mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
+  mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
+    mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
+  mutate(govt_tier=case_when(
+    govt_tier=='District office ' ~ 'Sector Office',
+    govt_tier=='Regional office ' ~ 'District Office',
+    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+  )) %>%
+  group_by(govt_tier) %>%
+  select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
+  pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
+                      "impartial_decision_making","quality_bureaucracy" ),
+               names_to = "indicators",
+               values_to = "indicator_values") 
+
+dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(median(indicator_values, na.rm=T),1))
+
+  ggplot(data_plot, aes(x=indicators, y=indicator_values, fill=govt_tier)) + #now plot the output in a bar graph
+    geom_boxplot(position="dodge") +
+    geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
+    scale_x_discrete(labels = str_wrap(c("Impartial Decision Making",
+                                         "Mandates & Accountability",
+                                         "National Learning Goals",
+                                         "Quality of the Bureaucracy"), width = 25)) + 
+  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
+  scale_fill_discrete(name="Government Level") +
+  theme_bw() +
+    theme(legend.position = "bottom",
+          axis.text = ggplot2::element_text(
+                                      size=12
+                                      ),
+          legend.text = ggplot2::element_text(
+                                      size=12
+                                      )) 
+
+  
+#more motivated question
+
+```
+
 
 # Appendix
 
@@ -1306,13 +1460,15 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
 
 - Note: In many cases, the sub-indicators are displayed as the fraction (0-1) of respondents answering
 
-```{r dt2, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r dt2, echo=FALSE, message=FALSE, warning=FALSE}
   
 #create subset with just main indicators
     indicators_list<- c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient','student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
                 'student_attendance',
                 'presence_rate',  'absence_rate', 'sch_absence_rate', 
                 'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
@@ -1333,14 +1489,19 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
                 'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
                 'sch_selection_deployment', 
                 'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
     )
  
 main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", "4th Grade Student Proficiency - No Lonely Giraffe","4th Grade Student Proficiency Literacy - No Lonely Giraffe", "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
                         "Student Attendance Rate",
                         "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
                         "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
-
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
@@ -1361,7 +1522,11 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
                         "School Management Attraction", 'principal_satisfaction', 'principal_salary',
                         "School Management Selection & Deployment",
                         "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                        "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
+                        "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
                         )
 
 
@@ -1424,7 +1589,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     #Now do breakdown by Urban/Rural
     #Urban
     sumstats_school_Urban <- school_dta_short_anon %>%
-      filter(Location=="Urban") 
+      filter(urban_rural=="Urban") 
 
     
     sch_ipw<-sumstats_school_Urban$ipw 
@@ -1455,7 +1620,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     
     #Rural
       sumstats_school_Rural <- school_dta_short_anon  %>%
-        filter(Location=="Rural") 
+        filter(urban_rural=="Rural") 
 
         
         sch_ipw<-sumstats_school_Rural$ipw 
@@ -1490,8 +1655,52 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     
       
     
+  #Survey of Public Officials
+    metadata<-public_officials_metadata
+    
+    #add function to produce weighted summary stats
+    my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
+                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+                                           complete = ~ sum(!is.na(.))))    
+  
+  
+  sumstats_public_officials <- public_officials_dta_clean_anon %>%
+    select(one_of(indicators_list) ) 
+  
+  
+  
+  sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+    yank("numeric") %>%
+    mutate(variable=skim_variable) %>%
+    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+  
+  
+  #add variable label
+  sumstats_public_officials_df <- sumstats_public_officials_df %>%
+    mutate(name=variable,
+           indicators=variable) %>%
+    left_join(labels_df_2) %>%
+    mutate(varlabel=indicator_labels) %>%
+    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+    mutate(mean_Urban=as.numeric(NA),
+           ci_Urban=as.character(NA),
+           mean_Rural=as.numeric(NA),
+           ci_Rural=as.character(NA)) %>%
+    select(varlabel, mean, ci, mean_Urban, ci_Urban, mean_Rural, ci_Rural)
+  
+  
+  sumstats_df <- sumstats_school_df_final %>%
+    bind_rows(sumstats_public_officials_df) %>%
+    arrange(factor(varlabel, levels=main_indicator_labels2))
+  
+
    
-   sumstats_df <- sumstats_school_df_final %>%
+   sumstats_df <- sumstats_df %>%
      select(varlabel,  mean, ci, mean_Urban, ci_Urban, mean_Rural, ci_Rural)
    
 
@@ -1507,7 +1716,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Ethiopia 2020 - Urban/Rural",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Ethiopia 2021 - Urban/Rural",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Rural to Urban"),
           digits = 1, 
@@ -1528,7 +1737,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
    mutate(mean=if_else(group=="Urban", mean_Urban, mean_Rural))
 
    
-Location1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+urban_rural1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
   geom_point(data=filter(dumbbell_df, grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
   geom_dumbbell(aes(x=mean_Urban, xend=mean_Rural),
     size=3, color="#e3e2e1",
@@ -1546,7 +1755,7 @@ Location1<- ggplot(data=filter(sumstats_dumbell, grepl("Pedagogical|Effort|Knowl
   labs(x='Mean', y=NULL)+
   theme_bw()
 
-Location2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
+urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes( y=varlabel)) +
   geom_point(data=filter(dumbbell_df, !grepl("Pedagogical|Effort|Knowledge|Attendance|Proficiency|Capacity", varlabel)), aes(x=mean, color=group)) +
   geom_dumbbell(aes(x=mean_Urban, xend=mean_Rural),
     size=3, color="#e3e2e1",
