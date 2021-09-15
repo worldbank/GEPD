@@ -22,6 +22,7 @@
 ## Switches
 
   Reset <- 1
+  backup_onedrive <- "no"
 
 ## Cleaning
   
@@ -34,7 +35,7 @@
   
   pacman::p_load(
     
-    httr, haven, dplyr, Hmisc, tidyr, here, vtable, stringr, naniar, purr
+    httr, haven, dplyr, Hmisc, tidyr, here, vtable, stringr, naniar, purr, readr
     
   )
   
@@ -68,8 +69,10 @@ infrastructure_dta <- read_dta(file.path(download_folder, "/astata/06-M1SECC.dta
 vtable(infrastructure_dta)
 
 ## Infrastructure school : blackboard, light, cholk ----
-infrastructure_board_dta <- read_dta(file.path(download_folder, "/astata/17-M4BC..dta"))
-vtable(infrastructure_board_dta)
+#input_dta <- read_dta(file.path(download_folder, "/astata/17-M4BC..dta"))
+input_dta<-read_dta(file.path(download_folder, "/astata/01-SECABD24DE.dta"))
+
+vtable(input_dta)
 
 ## Management school  ----
 management_dta <- read_dta(file.path(download_folder, "/astata/12-M3A.dta"))
@@ -711,7 +714,7 @@ first_grade<- first_grade %>%
   
   
   #------------------------------------------------------------------------------#
-  ## 11. Cleaning and creating indicators: infrastructure school Level ----  
+  ## 11. Cleaning and creating indicators: Infrastructure school Level ----  
   
   # School survey. Total score starts at 1 and points added are the sum of whether a school has: 
   #   - Access to adequate drinking water 
@@ -745,7 +748,7 @@ first_grade<- first_grade %>%
     )) 
   
   #visibility ## ATTENTION TO MODIFY
-  infrastructure_board_dta <- infrastructure_board_dta %>%
+  input_dta <- input_dta %>%
     left_join(infrastructure_dta %>% select(s_ecole_code, s_date_heure_fin, d_m1c_11c) %>% rename(s_date_heure_fin_f09=s_date_heure_fin)) %>% 
     select(s_ecole_code, s_date_heure_fin_f09, s_m4ab_15, s_m4ab_21, d_m1c_11c) %>%
     mutate(visibility=case_when(
@@ -759,6 +762,7 @@ first_grade<- first_grade %>%
   
   #accessibility for people with disabilities
   final_indicator_data_INFR <- infrastructure_dta %>%
+    filter(s_type_ecole == 3) %>% # schools from sample
     group_by(s_ecole_code) %>%
     summarise_all(~first(na.omit(.))) %>%
     mutate(
@@ -923,7 +927,7 @@ first_grade<- first_grade %>%
   
   
   #############################################
-  ##### PROBLEM SOLVING - VIGNETTES ###########
+  ##### Problem solving - vignettes ###########
   #############################################  
   final_indicator_data_OPMN <- management_dta %>%
     group_by(s_ecole_code) %>%
@@ -1320,4 +1324,158 @@ first_grade<- first_grade %>%
     select( -starts_with('interview'), -starts_with('enumerator'))  
   
   
+  #------------------------------------------------------------------------------#
+  ## 13. School  Inputs and Infrastructure Standards ###########
+  
+  # - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
+  
+  ## Filtering
+  school_data_IMON <- input_dta %>% 
+    
+    # Only var of interest
+    select(-starts_with("s_m")) %>% 
+    
+    # Only schools from sample
+    filter(s_type_ecole ==3)
+    
+    
+  
+  ## Metadata
+  meta_IMON <- makeVlist(school_data_IMON)
+  
+  ## Computation of indicators
+  school_data_ISTD <- school_data_IMON %>%
+    
+    # Rename for matching
+    setNames(tolower(gsub("d_m1_e09","m1scq9_imon__",names(.)))) %>% 
+    setNames(tolower(gsub("d_m1e_04","m1scq4_imon__",names(.)))) %>% 
+    setNames(tolower(gsub("d_m1e_13","m1scq13_imon__",names(.)))) %>%
+    setNames(tolower(gsub("d_m1e_14","m1scq14_imon__",names(.)))) %>%
+  
+    
+    # Computation as previously established
+    mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                      pattern="m1scq13_imon__")], na.rm=TRUE),
+           standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                               pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
+    mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2) %>% 
+    
+    rename(school_code = s_ecole_code)
+  
+  
+  final_indicator_data_ISTD <- school_data_ISTD %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_ISTD=n_miss_row(.))  %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
+  
+  
+  #############################################
+  ##### School  Inputs and Infrastructure Monitoring ###########
+  #############################################
+  
+  # School Survey. A score of 1-5 based on 3 factors. Each factor has received an equal weight in terms of points. The factors are the following: 
+  #-	Someone is monitoring 
+  #-	System for monitoring available (E.g. inventory)
+  #-	Community involved in monitoring 
+  
+  
+  school_data_IMON <- school_data_IMON %>%
+    
+    rename(
+      m1scq3_imon = d_m1e_10, 
+      m1scq5_imon = d_m1e_05, # inventory for school intrants
+      m1scq1_imon = d_m1e_01,
+      m1scq7_imon = d_m1e_07
+      ) %>% 
+    
+    setNames(tolower(gsub("d_m1_e09","m1scq9_imon__",names(.)))) %>% 
+    setNames(tolower(gsub("d_m1e_04","m1scq4_imon__",names(.)))) %>% 
+    setNames(tolower(gsub("d_m1e_13","m1scq13_imon__",names(.)))) %>%
+    setNames(tolower(gsub("d_m1e_14","m1scq14_imon__",names(.)))) %>%
+    
+    mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
+           system_in_place=case_when(
+             m1scq5_imon==0 ~ 0,
+             m1scq5_imon==1 ~ 1,
+             m1scq5_imon==2 ~ 0.5,
+             TRUE ~ 0
+           )) %>%
+    mutate(monitoring_inputs=if_else(m1scq1_imon==1,
+                                     rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                     pattern="m1scq4_imon__")], na.rm=TRUE),
+                                     0),
+           monitoring_infrastructure=if_else(m1scq7_imon==1,
+                                             rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                             pattern="m1scq9_imon__")], na.rm=TRUE),
+                                             0),
+    ) %>%
+    mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
+    mutate(sch_monitoring=1+(monitoring_inputs+monitoring_infrastructure)/2+system_in_place+parents_involved) %>% 
+    rename(school_code = s_ecole_code)
+  
+  
+  
+  
+  final_indicator_data_IMON <- school_data_IMON %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_IMON=n_miss_row(.))  %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
+  
 
+  
+  #------------------------------------------------------------------------------#
+  ## FINAL - SAVING VARIOUS DATASETS IN CLEAN FOLDER FOR THE COUNTRY ###########
+  
+  # One last renaming for matching below
+  final_indicator_data_INFR <- final_indicator_data_INFR %>% rename(school_code = s_ecole_code)
+  final_indicator_data_LCAP <- final_indicator_data_LCAP %>% rename(school_code = s_ecole_code)
+  final_indicator_data_OPMN <- final_indicator_data_OPMN %>% rename(school_code = s_ecole_code)
+  final_indicator_data_PMAN <- final_indicator_data_PMAN %>% rename(school_code = s_ecole_code)
+  
+  
+  #Read in list of indicators
+  indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+  indicators <- indicators %>%
+    filter(Series!="---") %>%
+    separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
+    select(-contains("X1"))
+  
+  #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+  indicator_names <- indicators$indicator_tag
+  ind_dta_list<-c()
+  
+  
+  for (i in indicator_names ) {
+    if (exists(paste("final_indicator_data_",i, sep=""))) {
+      #form temp data frame with each schools data
+      temp<-get(paste("final_indicator_data_",i, sep="")) 
+      
+      #add element to list
+      ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",i, sep=""))
+      
+      
+      print(i)
+      #Merge this to overall final_school_data frame
+      if (!exists('final_school_data')) {
+        final_school_data<-temp
+        print(i)
+        write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        # if (backup_onedrive=="yes") {
+        # write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        # }
+
+      } else {
+        final_school_data<-final_school_data %>%
+          left_join(temp, by='school_code') %>%
+          select(-ends_with(".x"), -ends_with(".y"))
+        
+        write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        # if (backup_onedrive=="yes") {
+        #   write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        # }
+      }
+    }
+  }
+  
