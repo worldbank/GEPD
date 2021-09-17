@@ -78,6 +78,11 @@ vtable(input_dta)
 management_dta <- read_dta(file.path(download_folder, "/astata/12-M3A.dta"))
 vtable(management_dta)
 
+## Teacher roster ----
+roster_dta <- read_dta(file.path(download_folder, "/astata/08-M2AB1AB.dta"))
+vtable(roster_dta)
+
+
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= s_enqueteur_name  ,
