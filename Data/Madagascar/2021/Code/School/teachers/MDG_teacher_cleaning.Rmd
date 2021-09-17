@@ -1,0 +1,329 @@
+---
+title: "Madagascar Teacher Cleaning"
+author: "Brian Stacy"
+date: "9/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+library(vtable)
+library(here)
+library(readxl)
+library(stringr)
+library(Hmisc)
+library(naniar)
+
+#Country name
+country <-'MDG'
+country_name <- "Madagascar"
+year <- '2021'
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+
+```
+
+```{r functions}
+
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+
+
+bin_var_2 <- function(var, val) {
+  if_else(var==val, 
+          as.numeric(1),
+          as.numeric(var))
+}
+```
+
+
+# Load Data
+
+Read in data for Madagascar.  All teacher questionnaire files were numbered as Module 3 in the Madagascar school survey.  These files will be read in one at a time.
+
+Start with non-teacher files, including the school file.
+
+```{r schoolload}
+## 2. Calling in datasets ----  
+# load sampling frame
+
+sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'))
+
+## 1st grade assessment ----
+first_grade <- read_dta(file.path(download_folder, "/21-M5.dta")) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+## 4th grade assessment ----
+fourth_grade <- read_dta(file.path(download_folder, "/20-M5_liste.dta")) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+## School level data ----
+school_dta<-read_dta(file.path(download_folder, "/01-SECABD24DE.dta")) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+vtable(school_dta)
+
+## Infrastructure school ----
+infrastructure_dta <- read_dta(file.path(download_folder, "/06-M1SECC.dta")) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+vtable(infrastructure_dta)
+
+## Infrastructure school : blackboard, light, cholk ----
+#input_dta <- read_dta(file.path(download_folder, "/astata/17-M4BC..dta"))
+input_dta<-read_dta(file.path(download_folder, "/01-SECABD24DE.dta")) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+vtable(input_dta)
+
+## Management school  ----
+management_dta <- read_dta(file.path(download_folder, "/11-M3A.dta")) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+vtable(management_dta)
+
+
+
+#rename a few key variables up front
+school_dta<- school_dta %>%
+  mutate(
+         enumerator_number=s_enqueteur_code ,
+         survey_time=s_date_heure_fin	,
+         school_code=s_ecole_code
+         # lat=s_latitude,
+         # lon=s_longitude,
+  ) %>%
+  mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
+  mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
+
+
+
+#------------------------------------------------------------------------------#
+## 3. Lists of variables ----  
+
+#list additional info that will be useful to keep in each indicator dataframe
+preamble_info <- c( "s_ecole_code", 
+                   "s_region_code", "s_cisco_code", "s_commune_name",   
+                   "s_commune_code", "s_ecole_name", "s_zap_name", "s_zap_code",
+                   "s_urbain", "s_date_visite", "s_enqueteur_code", "s_type_ecole", "s_public", "s_etab_code",
+                   "lat","lon"
+                   )
+
+school_dta_preamble <- input_dta %>%
+  left_join(school_dta) %>%
+  mutate(
+    lat=s_latitude,
+    lon=s_longitude
+  ) %>%
+  select(preamble_info)
+
+```
+
+Now load the teacher files.
+
+```{r teacherload}
+list.files(path=download_folder)
+
+#Teacher absence file
+teacher_roster_dta <- read_dta(paste0(download_folder, '/08-M2AB1AB.dta')) %>%
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+#Teacher questionnaire file
+teacher_questionnaire_dta <- read_dta(paste0(download_folder, '/10-M2BA1_E.dta')) %>%
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+#Teacher assessment file
+teacher_assessment_dta <- read_dta(paste0(download_folder, '/22-M6.dta')) %>%
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+teacher_pedagogy_dta <- read_dta(paste0(download_folder, '/17-M4BC.dta')) %>%
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+```
+
+## Teacher Absence
+
+```{r absence}
+
+
+
+#############################################
+##### Teacher Absence ###########
+#############################################
+
+# School survey. Percent of teachers absent. Teacher is coded absent if they are: 
+#   - not in school 
+# - in school but absent from the class 
+# - in the class but not teaching.
+
+#create absence file containing just teacher selected for absence check
+teacher_absence_dta <- teacher_roster_dta %>%
+  filter(s_m2aa_09a==1)
+  
+
+
+#number missing
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(n_mssing_EFFT=n_miss_row(.))
+
+#rename a few key variables up front
+teacher_absence_dta<- teacher_absence_dta %>%
+  mutate(
+         teacher_number=s_m2aa_02c ,
+         teacher_position=s_m2aa_04,
+         teacher_permanent=bin_var(s_m2aa_05,1),
+         teacher_contract=bin_var(s_m2aa_05,2),
+         #teacher_temporary=bin_var(m2saq5,3),
+         teacher_volunteer=bin_var(s_m2aa_05,5),
+         #teacher_ngo=bin_var(m2saq5,5)==5,
+         # teacher_other=case_when(
+         #   m2saq5==97 ~ m2saq5_other,
+         #   m2saq5!=97 ~ "NA"
+         # ),
+         teacher_fulltime=bin_var(s_m2aa_06,1),
+         teacher_male=bin_var(s_m2aa_03,1),
+         teacher_grd1=bin_var(s_m2aa_08aa,1),
+         teacher_grd2=bin_var(s_m2aa_08ab,1),
+         teacher_grd3=bin_var(s_m2aa_08ac,1),
+         teacher_grd4=bin_var(s_m2aa_08ad,1),
+         teacher_grd5=bin_var(s_m2aa_08ae,1),
+         #teacher_language=bin_var(m2saq8__1,1),
+         #teacher_math=bin_var(m2saq8__2,1),
+         #teacher_both_subj=bin_var(m2saq8__3,1),
+         #teacher_other_subj=bin_var(m2saq8__97,1),
+  )
+
+teacher_absence_dta<- teacher_absence_dta %>%
+  mutate(temp=rowSums(select(.,teacher_grd1, teacher_grd2, teacher_grd3, teacher_grd4, teacher_grd5))) %>% # here we count the number of grades present in the classroom
+  mutate(multigrade=case_when(temp > 1 ~ 1,
+                              TRUE ~ 0)) %>% #this variable is equal to 1 if there are several grades and zero otherwise
+  select(-temp)
+
+#  We create a unique grade variable
+
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(grade=case_when(teacher_grd1==1 & multigrade!=1 ~ 1,
+                         teacher_grd2==1 & multigrade!=1 ~ 2,
+                         teacher_grd3==1 & multigrade!=1 ~ 3,
+                         teacher_grd4==1 & multigrade!=1 ~ 4,
+                         teacher_grd5==1 & multigrade!=1 ~ 5,
+                         multigrade==1 ~ 6,
+                         TRUE ~ NA_real_)) %>%
+  mutate(grade=factor(grade, levels=c(1,2,3,4,5,6), labels=c("Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Multigrade")))
+
+label(teacher_absence_dta$grade) <- "Grade"
+
+#list additional info that will be useful to keep in each indicator dataframe
+preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'teacher_number',
+                           'teacher_position', 'teacher_permanent', 'teacher_contract', 'teacher_volunteer', 
+                           'teacher_fulltime', 'teacher_male', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5', 
+                            'm2sbq6_efft')
+
+#create indicator for whether each teacher was absent from school
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(
+    sch_absence_rate_1st=100*case_when(
+      s_m2ab1a_01==5 ~ 1,
+      s_m2ab1a_01!=5   ~ 0,
+      is.na(s_m2ab1a_01) ~ as.numeric(NA)
+    ),
+    
+    sch_absence_rate_2nd=100*case_when(
+      s_m2ab1b_01==5 ~ 1,
+      s_m2ab1b_01!=5   ~ 0,
+      is.na(s_m2ab1b_01) ~ as.numeric(NA)
+    ))
+
+#create indicator for whether each teacher was absent from classroom or school
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(absence_rate=100*case_when(
+    m2sbq6_efft==6 | m2sbq6_efft==5  ~ 1,
+    m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
+    is.na(m2sbq6_efft) ~ as.numeric(NA)) 
+    
+    absence_rate_1st=100*case_when(
+      s_m2ab1a_01==5 | s_m2ab1a_01==2 | s_m2ab1a_01==3 ~ 1,
+      s_m2ab1a_01!=5   ~ 0,
+      is.na(s_m2ab1a_01) ~ as.numeric(NA)
+    ),
+    
+    absence_rate_2nd=100*case_when(
+      s_m2ab1b_01==5 ~ 1,
+      s_m2ab1b_01!=5   ~ 0,
+      is.na(s_m2ab1b_01) ~ as.numeric(NA)
+    ))
+    
+    )
+
+#create indicator for whether each principal was absent from school
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(principal_absence=100*case_when(
+    m2sbq3_efft==8  ~ 1,
+    m2sbq3_efft!=8   ~ 0,
+    is.na(m2sbq3_efft) ~ as.numeric(NA))) %>%
+  mutate(absence_rate=if_else(is.na(absence_rate), principal_absence, absence_rate ),
+         sch_absence_rate=if_else(is.na(sch_absence_rate), principal_absence, sch_absence_rate ),
+         presence_rate=100-absence_rate)
+
+
+teacher_absence_final<- teacher_absence_dta %>%
+  select(preamble_info, preamble_info_absence, contains('absent')) %>%
+  group_by(school_code, teacher_number) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+
+
+
+#Build teacher absence practice indicator
+final_indicator_data_EFFT <- teacher_absence_dta %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'), -c('teacher_name', 'm2saq2'))
+
+#Breakdowns by Male/Female
+final_indicator_data_EFFT_M <- teacher_absence_dta %>%
+  filter(teacher_male==1) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'), -c('teacher_name', 'm2saq2'))
+
+final_indicator_data_EFFT_F <- teacher_absence_dta %>%
+  filter(teacher_male==0) %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select( -starts_with('interview'), -starts_with('enumerator'), -c('teacher_name', 'm2saq2'))
+
+
+```
+

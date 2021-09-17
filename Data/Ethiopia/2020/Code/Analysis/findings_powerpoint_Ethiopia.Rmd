@@ -1,5 +1,5 @@
 ---
-title: "Global Education Policy Dashboard - Rwanda 2020"
+title: "Global Education Policy Dashboard - Ethiopia 2020"
 author: "Education Global Practice, World Bank"
 output:
   html_document:
@@ -112,7 +112,7 @@ Policy Survey:  The policy survey is conducted by an expert on the laws and regu
 Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
 Roadmap:  
-- Below is a set of tables and charts containing findings for the Rwanda 2020 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
+- Below is a set of tables and charts containing findings for the Ethiopia 2020 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
 - Then we will discuss findings of our Practice Indicators  
 - Finally we will conclude with findings for our Bureaucracy Indicators.  
 
@@ -990,7 +990,7 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/Expert_Survey"
+    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
 
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 

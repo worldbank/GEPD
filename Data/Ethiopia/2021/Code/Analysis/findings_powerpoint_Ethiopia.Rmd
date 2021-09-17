@@ -1084,7 +1084,7 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/Expert_Survey"
+    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
 
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
@@ -1414,9 +1414,9 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'Sector Office',
-    govt_tier=='Regional office ' ~ 'District Office',
-    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+    govt_tier=='District office ' ~ 'District Office',
+    govt_tier=='Regional office ' ~ 'Regional Office',
+    govt_tier=='Ministry of Education '  ~ 'MINEDUC'
   )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
