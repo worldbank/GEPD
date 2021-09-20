@@ -1360,9 +1360,9 @@ first_grade<- first_grade %>%
   
     
     # Computation as previously established
-    mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
+    mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(.), 
                                                       pattern="m1scq13_imon__")], na.rm=TRUE),
-           standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
+           standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(.), 
                                                                pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
     mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2) %>% 
     
