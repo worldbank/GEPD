@@ -23,6 +23,7 @@
 
   Reset <- 1
   backup_onedrive <- "no"
+  dta <- "yes"
 
 ## Cleaning
   
@@ -35,7 +36,7 @@
   
   pacman::p_load(
     
-    httr, haven, dplyr, Hmisc, tidyr, here, vtable, stringr, naniar, purr, readr
+    httr, haven, dplyr, Hmisc, tidyr, here, vtable, stringr, naniar, purr, readr, foreign
     
   )
   
@@ -1466,7 +1467,13 @@ first_grade<- first_grade %>%
       if (!exists('final_school_data')) {
         final_school_data<-temp
         print(i)
-        write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        
+        if (dta == "yes"){
+          write_dta(temp, path = file.path(paste(confidential_folder,"/Indicators/dta", sep=""), paste(i,"_final_indicator_data.dta", sep="")))
+        } 
+        else {
+          write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        }
         # if (backup_onedrive=="yes") {
         # write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
         # }
@@ -1476,7 +1483,12 @@ first_grade<- first_grade %>%
           left_join(temp, by='school_code') %>%
           select(-ends_with(".x"), -ends_with(".y"))
         
+        if (dta == "yes"){
+          write_dta(temp, path = file.path(paste(confidential_folder,"/Indicators/dta", sep=""), paste(i,"_final_indicator_data.dta", sep="")))
+        } 
+      else {
         write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      }
         # if (backup_onedrive=="yes") {
         #   write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
         # }
