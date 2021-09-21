@@ -24,7 +24,9 @@ read_var <- function(var) {
 #start with teachers
 ##########################
   expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
-  fill(Question..)
+  fill(Question..) %>% 
+  filter(!is.na(Question))
+
 
 expert_dta_teachers_shaped<-data.frame(t(expert_dta_teachers[-1])) 
 colnames(expert_dta_teachers_shaped) <- expert_dta_teachers$Question..
@@ -92,7 +94,8 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 # Inputs
 ##############################
 expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
-  fill(Question..)
+  fill(Question..) %>% 
+  filter(!is.na(Question))
 
 
 expert_dta_inputs_shaped<-data.frame(t(expert_dta_inputs[-1]))
@@ -125,7 +128,8 @@ expert_dta_inputs_final<-expert_dta_inputs_final %>%
 # School Management
 ###############################
 expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
-  fill(Question..)
+  fill(Question..) %>% 
+  filter(!is.na(Question))
 
 
 expert_dta_school_management_shaped<-data.frame(t(expert_dta_school_management[-1]))
@@ -211,7 +215,9 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 # Learners 
 ################################
 expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
-fill(Question..)
+fill(Question..) %>% 
+filter(!is.na(Question))
+
 
 expert_dta_learners_shaped<-data.frame(t(expert_dta_learners[-1]))
 
