@@ -42,7 +42,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(A4),
-         teacher_salary=(12*414/3012))
+         teacher_salary=(12*54/3012)) # NOTE -here i inserted 54 instead of 414 as the expert indicated that the average salary was 54$
 
 #teacher selection and deployment
 #
@@ -92,7 +92,7 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 # Inputs
 ##############################
 expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
-  filter(!is.na(Question..))
+  fill(Question..)
 
 
 expert_dta_inputs_shaped<-data.frame(t(expert_dta_inputs[-1]))
@@ -125,7 +125,7 @@ expert_dta_inputs_final<-expert_dta_inputs_final %>%
 # School Management
 ###############################
 expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
-  filter(!is.na(Question..))
+  fill(Question..)
 
 
 expert_dta_school_management_shaped<-data.frame(t(expert_dta_school_management[-1]))
@@ -142,13 +142,13 @@ attr(expert_dta_school_management_final, "variable.labels") <- expert_dta_school
 #school management clarity
 
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  mutate(infrastructure_scfn=read_var(A1.1),
-         materials_scfn=read_var(A1.2),
-         hiring_scfn=read_var(A1.3),
-         supervision_scfn=read_var(A1.4),
-         student_scfn=read_var(A1.5),
-         principal_hiring_scfn=read_var(A1.6),
-         principal_supervision_scfn=read_var(A1.7)
+  mutate(infrastructure_scfn=read_var(C1.1),
+         materials_scfn=read_var(C1.2),
+         hiring_scfn=read_var(C1.3),
+         supervision_scfn=read_var(C1.4),
+         student_scfn=read_var(C1.5),
+         principal_hiring_scfn=read_var(C1.6),
+         principal_supervision_scfn=read_var(C1.7)
   ) %>%
   mutate(sch_management_clarity=1+
            (infrastructure_scfn+materials_scfn)/2+
@@ -160,40 +160,58 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 
 #school management attraction
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  mutate(professionalized=read_var(A3)) %>%
+  mutate(professionalized=read_var(C3)) %>%
   mutate(sch_management_attraction=1+4*professionalized)
 
 ##### School School Management Selection and Deployment
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  mutate(principal_rubric=read_var(A4),
-         principal_factors=read_var(A5)) %>%
+  mutate(principal_rubric=read_var(C4),
+         principal_factors=read_var(C5)) %>%
   mutate(sch_selection_deployment=1+principal_rubric+principal_factors)
   
 # school management support
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  mutate(principal_training_required=read_var(A8),
-         principal_training_type=read_var(A9),
-         principal_training_type1=read_var(A9.1),
-         principal_training_type2=read_var(A9.2),
-         principal_training_type3=read_var(A9.3),
-         principal_training_frequency_1=read_var(A10.1),
-         principal_training_frequency_2=read_var(A10.2),
-         principal_training_frequency_3=read_var(A10.3)
+  mutate(principal_training_required=read_var(C8),
+         principal_training_type=read_var(C9),
+         principal_training_type1= case_when(
+           C9 == 1 ~ 1,
+           C9 != 1 ~ 0
+         ),
+         principal_training_type2=case_when(
+           C9 == 2 ~ 1,
+           C9 != 2 ~ 0
+         ),
+         principal_training_type3=case_when(
+           C9 == 3 ~ 1,
+           C9 != 3 ~ 0
+         ),
+         principal_training_frequency_1=case_when(
+           C10 == 1 ~ 1,
+           C10 != 1 ~ 0
+         ),
+         principal_training_frequency_2=case_when(
+           C10 == 2 ~ 1,
+           C10 != 2 ~ 0
+         ),
+         principal_training_frequency_3=case_when(
+           C10 == 3 ~ 1,
+           C10 != 3 ~ 0
+         )
          ) %>%
   mutate(sch_support=1+principal_training_required+2*principal_training_type/3+
            (principal_training_frequency_1+principal_training_frequency_2+principal_training_frequency_3)/6)
 
 # school management evaluation
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  mutate(principal_monitor_law=read_var(A6),
-         principal_monitor_criteria=read_var(A7)) %>%
+  mutate(principal_monitor_law=read_var(C6),
+         principal_monitor_criteria=read_var(C7)) %>%
   mutate(principal_evaluation=1+principal_monitor_law+principal_monitor_criteria)
 
 ################################
 # Learners 
 ################################
 expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
-  filter(!is.na(Question..))
+fill(Question..)
 
 expert_dta_learners_shaped<-data.frame(t(expert_dta_learners[-1]))
 
@@ -248,33 +266,40 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
 #trim to just important variables
 ##############################
 #school management
-school_management_drop<-expert_dta_school_management$Question..
+#school_management_drop<-expert_dta_school_management$Question..
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  select(-school_management_drop)
+  select(-starts_with("C"))
+
+  #select(-all_of(school_management_drop))
 
 #inputs
-inputs_drop<-expert_dta_inputs$Question..
+#inputs_drop<-expert_dta_inputs$Question..
 expert_dta_inputs_final <- expert_dta_inputs_final %>%
-  select(-inputs_drop)
+  select(-starts_with("B"))
+#select(-all_of(inputs_drop))
 
 #teachers
 
-teachers_drop<-expert_dta_teachers$Question..
+#teachers_drop<-expert_dta_teachers$Question..
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
-  select(-teachers_drop)
+  select(-starts_with("A"))
+
+  #select(-all_of(teachers_drop))
 
 #learners
 
-learners_drop<-expert_dta_learners$Question..
+#learners_drop<-expert_dta_learners$Question..
 expert_dta_learners_final <- expert_dta_learners_final %>%
-  select(-learners_drop)
+  select(-starts_with("D"))
+
+  #select(-all_of(learners_drop))
 
 
 expert_dta_final<-expert_dta_teachers_final %>%
   bind_cols(expert_dta_inputs_final) %>%
   bind_cols(expert_dta_school_management_final) %>%
   bind_cols(expert_dta_learners_final) %>%
-  select(-A11.1) %>%
+  #select(-A11.1) %>%
   mutate(group="De Jure") 
 
 write_dta(expert_dta_final,path=paste(expert_dir, 'expert_dta_final.dta', sep="/"))

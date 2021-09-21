@@ -287,9 +287,9 @@ first_grade<- first_grade %>%
     m6s2q14a_head_shoulders = d_m5e3_17a,
     m6s2q14b_head_shoulders = d_m5e3_17b,
     m6s2q14c_head_shoulders = d_m5e3_17c,
-    m6s2q14d_head_shoulders = d_m5e3_17d,
-    m6s2q14e_head_shoulders = d_m5e3_17e,
-    m6s2q14f_head_shoulders = d_m5e3_18d,
+    m6s2q14d_head_shoulders = d_m5e3_17g, # NOTE, here we invert the variables' names to account for the way the survey was administered
+    m6s2q14e_head_shoulders = d_m5e3_17h,
+    m6s2q14f_head_shoulders = d_m5e3_18d, # NOTE, the first three are here practices that were implemented as such, so we skip them
     m6s2q14g_head_shoulders = d_m5e3_18e,
     m6s2q14h_head_shoulders = d_m5e3_18f,
     m6s2q14i_head_shoulders = d_m5e3_18g,
@@ -330,7 +330,7 @@ first_grade<- first_grade %>%
                    ends_with("backward_digit"),
                    ends_with("perspective"),
                    ends_with("conflict_resol")), ~bin_var(.,1)  ) %>%
-    mutate_at(vars(ends_with("head_shoulders")), ~if_else(.x==2,1,0,missing=NULL)) %>%
+   mutate_at(vars(ends_with("head_shoulders")), ~if_else(.x==2 | .x==1,1,0,missing=NULL)) %>%
     mutate_at(vars(ends_with("vocabn")), ~case_when(.x==97 ~ as.numeric(NA),
                                                     .x==99 ~ 0,
                                                     .x==77 ~ 0,
@@ -363,9 +363,21 @@ first_grade<- first_grade %>%
        # Question 8
        m6s2q8_counting = if_else(str_detect(s_ecole_code, "623|646|647|650|719|721|728|738|749|766|799") & Q7_Q8_delete ==0, NA_integer_, as.integer(m6s2q8_counting))
        
-       )
+       ) 
+   
+   ## VERIFICATION OF THE DATA RELATED TO THE EXERCICE 17 AND 18. THERE WAS A PROBLEM IN THE IMPLEMENTATION OF THE EXERCICE 17 SINCE
+   # THE FIRST THREE PRACTICES WERE ADMINISTERED AS EVALUATIONS, WHICH EXPLAINS THE NAS FOR THE FIRST THREE EVALUATIONS.
+     
   
- 
+     sample<- first_grade %>%
+     mutate(second_stop=rowSums(.[grep(x=colnames(first_grade), pattern="a_head_shoulders|b_head_shoulders|c_head_shoulders|d_head_shoulders|e_head_shoulders")], na.rm=TRUE)) %>% 
+    # mutate(second_stop=rowSums(.[grep(x=colnames(first_grade), pattern="d_m5e3_17a|d_m5e3_17b|d_m5e3_17c|d_m5e3_17g|d_m5e3_17h")], na.rm=TRUE)) %>% 
+      mutate(first_stop=rowSums(.[grep(x=colnames(first_grade), pattern="a_head_shoulders|b_head_shoulders|c_head_shoulders")], na.rm=TRUE)) %>% 
+     #mutate(first_stop=rowSums(.[grep(x=colnames(first_grade), pattern="d_m5e3_17a|d_m5e3_17b|d_m5e3_17c")], na.rm=TRUE)) %>% 
+     mutate(first_rule_potential = if_else(first_stop == 0, 1, 0),
+            second_rule_potential = if_else(second_stop == 0, 1, 0)) #%>% 
+     select(ends_with("potential"), ends_with("stop")) %>%
+     map(table)
 #------------------------------------------------------------------------------#
 ## 6. Constructing indicator : 1st grade level----  
 
