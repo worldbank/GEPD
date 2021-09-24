@@ -157,7 +157,7 @@ teacher_roster_dta <- read_dta(paste0(download_folder, '/08-M2AB1AB.dta')) %>%
   filter(s_type_ecole==3) #just keep dashboard schools
 
 #Teacher questionnaire file
-teacher_questionnaire_dta <- read_dta(paste0(download_folder, '/10-M2BA1_E.dta')) %>%
+teacher_questionnaire_dta_raw <- read_dta(paste0(download_folder, '/10-M2BA1_E.dta')) %>%
   left_join(school_dta_preamble) %>%
   filter(s_type_ecole==3) #just keep dashboard schools
 
@@ -480,69 +480,61 @@ final_indicator_data_EFFT_F <- teacher_absence_dta %>%
   
   attitude_fun  <- function(x) {
     case_when(
-      x==99 ~ as.numeric(NA),
-      x==4 ~ 5,
-      x==3 ~ 3.67,
-      x==2 ~ 2.33,
-      x==1 ~ 1
+      x==98 ~ as.numeric(NA),
+      TRUE ~ x
     )
   }
   
   attitude_fun_rev  <- function(x) {
     case_when(
-      x==99 ~ as.numeric(NA),
+      x==98 ~ as.numeric(NA),
       x==1 ~ 5,
-      x==2 ~ 3.67,
-      x==3 ~ 2.33,
-      x==4 ~ 1
+      x==2 ~ 4,
+      x==3 ~ 3,
+      x==4 ~ 2,
+      x==5 ~ 1
     )
   }
   
   
-  teacher_questionnaire_TATT <- teacher_questionnaire_dta %>%
-    mutate(teacher_satisfied_job=attitude_fun_rev(m3seq1_tatt)/5,
-           teacher_satisfied_status=attitude_fun_rev(m3seq2_tatt)/5,
-           better_teachers_promoted=bin_var(m3seq3_tatt,1),
-           teacher_bonus=bin_var(m3seq4_tatt,1),
-           teacher_bonus_attend=if_else(m3seq4_tatt==1,
-                                        bin_var(m3seq5_tatt__1,1),
+  teacher_questionnaire_dta <- teacher_questionnaire_dta_raw %>%
+    mutate(teacher_satisfied_job=attitude_fun_rev(d_m2be_01)/5,
+           teacher_satisfied_status=attitude_fun_rev(d_m2be_02)/5,
+           better_teachers_promoted=bin_var(d_m2be_03,1),
+           teacher_bonus=bin_var(d_m2be_04,1),
+           teacher_bonus_attend=if_else(d_m2be_04==1,
+                                        bin_var(d_m2be_05a,1),
                                         0),
-           teacher_bonus_student_perform=if_else(m3seq4_tatt==1,
-                                                 bin_var(m3seq5_tatt__2,1),
+           teacher_bonus_student_perform=if_else(d_m2be_04==1,
+                                                 bin_var(d_m2be_05b,1),
                                                  0),
-           teacher_bonus_extra_duty=if_else(m3seq4_tatt==1,
-                                            bin_var(m3seq5_tatt__3,1),
+           teacher_bonus_extra_duty=if_else(d_m2be_04==1,
+                                            bin_var(d_m2be_05c,1),
                                             0),
-           teacher_bonus_hard_staff=if_else(m3seq4_tatt==1,
-                                            bin_var(m3seq5_tatt__4,1),
+           teacher_bonus_hard_staff=if_else(d_m2be_04==1,
+                                            bin_var(d_m2be_05d,1),
                                             0),
-           teacher_bonus_subj_shortages=if_else(m3seq4_tatt==1,
-                                                bin_var(m3seq5_tatt__5,1),
+           # teacher_bonus_subj_shortages=if_else(d_m2be_04==1,
+           #                                      bin_var(d_m2be_05e,1),
+           #                                      0),
+           teacher_bonus_add_qualif=if_else(d_m2be_04==1,
+                                            bin_var(d_m2be_05e,1),
+                                            0),
+           teacher_bonus_school_perform=if_else(d_m2be_04==1,
+                                                bin_var(d_m2be_05f,1),
                                                 0),
-           teacher_bonus_add_qualif=if_else(m3seq4_tatt==1,
-                                            bin_var(m3seq5_tatt__6,1),
-                                            0),
-           teacher_bonus_school_perform=if_else(m3seq4_tatt==1,
-                                                bin_var(m3seq5_tatt__7,1),
-                                                0),
-           teacher_bonus_other=if_else(m3seq4_tatt==1,
-                                       if_else(m3seq5_tatt__97==1,m3seq5_other_tatt,"NA"),
+           teacher_bonus_other=if_else(d_m2be_04==1,
+                                       if_else(d_m2be_05g==1,d_m2be_05au,"NA"),
                                        "NA"),
-           salary_delays=if_else(m3seq6_tatt==1, m3seq7_tatt,0)) %>%
+           salary_delays=s_m2bb1_01) %>%
     mutate(salary_delays=if_else(salary_delays>12,12,salary_delays)) %>%
     mutate(teacher_attraction=1+0.8*teacher_satisfied_job+.8*teacher_satisfied_status+.8*better_teachers_promoted+.8*teacher_bonus+.8*(1-salary_delays/12))
   
   
-  final_indicator_data_TATT <- teacher_questionnaire_TATT %>%
-    left_join(school_data_preamble) %>%
+  final_indicator_data_TATT <- teacher_questionnaire_dta %>%
     mutate(n_mssing_TATT=n_miss_row(.)) %>%
-    group_by(interview__key) %>%
-    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-    group_by(school_code) %>%
-    summarise_all(~first(na.omit(.))) %>%
-    select(-drop_teacher_info)  %>%
-    select( -starts_with('interview'), -starts_with('enumerator'))  
-  
+    group_by(s_ecole_code) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
   
 ```
@@ -568,32 +560,27 @@ final_indicator_data_EFFT_F <- teacher_absence_dta %>%
   # - 2 points. Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview.
   
   
-  teacher_questionnaire_TSDP <- teacher_questionnaire_dta %>%
+  teacher_questionnaire_dta <- teacher_questionnaire_dta %>%
     mutate(
       teacher_selection=case_when(
-        (m3sdq1_tsdp__5==1 | m3sdq1_tsdp__6==1 | m3sdq1_tsdp__8==1 | m3sdq1_tsdp__9==1 )  ~ 2,
-        (m3sdq1_tsdp__1==1 | m3sdq1_tsdp__2==1 | m3sdq1_tsdp__3==1 | m3sdq1_tsdp__4==1 | m3sdq1_tsdp__7==1) ~ 1,
-        (m3sdq1_tsdp__1==0 & m3sdq1_tsdp__2==0 & m3sdq1_tsdp__3==0 & m3sdq1_tsdp__4==0 & m3sdq1_tsdp__5==0 & m3sdq1_tsdp__6==0 & m3sdq1_tsdp__7==0 & m3sdq1_tsdp__8==0 & m3sdq1_tsdp__9==0) ~ 0
+        (d_m2bd_01c==1 | d_m2bd_01d==1 | d_m2bd_01f==1 | d_m2bd_01g==1 )  ~ 2,
+        (d_m2bd_01a==1 | d_m2bd_01b==1 | d_m2bd_01e==1) ~ 1,
+        (d_m2bd_01a==0 & d_m2bd_01b==0 & d_m2bd_01c==0 & d_m2bd_01d==0 & d_m2bd_01e==0 & d_m2bd_01f==0 & d_m2bd_01g==0 ) ~ 0
       ),
       teacher_deployment=case_when(
-        (m3seq8_tsdp__3==1 | m3seq8_tsdp__4==1 | m3seq8_tsdp__5==1  )  ~ 2,
-        (m3seq8_tsdp__1==1 | m3seq8_tsdp__2==1 | m3seq8_tsdp__97==1) ~ 1,
-        ((m3seq8_tsdp__1==0 & m3seq8_tsdp__2==0 & m3seq8_tsdp__3==0 & m3seq8_tsdp__4==0 & m3seq8_tsdp__5==0) | ( m3seq8_tsdp__99==1)) ~ 0
+        (d_m2be_06bb==1 | d_m2be_06bc==1 | d_m2be_06bd==1  )  ~ 2,
+        (d_m2be_06ba==1 | d_m2be_06bf==1) ~ 1,
+        ((d_m2be_06ba==0 & d_m2be_06bb==0 & d_m2be_06bc==0 & d_m2be_06bd==0 | d_m2be_06bf==0) ) ~ 0
         
       )
     ) %>%
     mutate(teacher_selection_deployment=1+teacher_selection+teacher_deployment)
   
   
-  final_indicator_data_TSDP <- teacher_questionnaire_TSDP %>%  
-    left_join(school_data_preamble) %>%
+  final_indicator_data_TSDP <- teacher_questionnaire_dta %>%  
     mutate(n_mssing_TSDP=n_miss_row(.)) %>%
-    group_by(interview__key) %>%
-    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-    group_by(school_code) %>%
-    summarise_all(~first(na.omit(.))) %>%
-    select(-drop_teacher_info)  %>%
-    select( -starts_with('interview'), -starts_with('enumerator'))  
+    group_by(s_ecole_code) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
   
 ```
