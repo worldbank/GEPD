@@ -10,6 +10,7 @@ library(shiny)
 library(skimr)
 library(flextable)
 library(haven)
+library(tidyverse)
 
 #set max upload size to 30MB
 options(shiny.maxRequestSize = 30*1024^2)
@@ -64,8 +65,14 @@ ui <- fluidPage(
             radioButtons("disp", "Display",
                          choices = c(Head = "head",
                                      `Summary Stats` = "sumstats",
+                                     Histogram = "hist",
                                      All = "all"),
-                         selected = "sumstats")
+                         selected = "sumstats"),
+            
+            #allow user to choose a column for histogram
+            selectizeInput("col",
+                           "Choose Indicator for histogram:",
+                           choices=NULL)
             
         ),
         
