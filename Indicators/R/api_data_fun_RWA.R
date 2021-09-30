@@ -247,14 +247,15 @@ api_template <- api_template %>%
       SE.PRM.INPT.1   =indicator_means(inputs, "school", "INPT",  "All"),
       SE.PRM.INPT.1.R =indicator_means(inputs, "school", "INPT",  "Rural"),
       SE.PRM.INPT.1.U =indicator_means(inputs, "school", "INPT",  "Urban"),
-      #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
-      SE.PRM.INPT.2   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
-      SE.PRM.INPT.2.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.2.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
       #(De Facto) Percent of classrooms with a functional blackboard and chalk	
-      SE.PRM.INPT.3   =100*indicator_means(blackboard_functional, "school", "INPT",  "All"),
-      SE.PRM.INPT.3.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.2   =100*indicator_means(blackboard_functional, "school", "INPT",  "All"),
+      SE.PRM.INPT.2.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural"),
       SE.PRM.INPT.3.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban"),
+      #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
+      SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
+      SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
+
       #(De Facto) Percent of classrooms with basic classroom furniture	
       SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All"),
       SE.PRM.INPT.4.R =100*indicator_means(share_desk, "school", "INPT",  "Rural"),
@@ -705,7 +706,7 @@ api_template <- api_template %>%
   SE.PRM.LHTH.1 =expert_df$immunization, #(De Jure) Are young children required to receive a complete course of childhood immunizations?
   SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final[,5]), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
   SE.PRM.LHTH.3 =expert_df$healthcare_young_children, #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
-  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of? children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance
+  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of  children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance
   SE.PRM.LHTH.5 =expert_df$deworming, #(De Jure) Are deworming pills funded and distributed by the government?
   SE.PRM.LHTH.6 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children age 6-59 months who received deworming medication.`), #(De Facto) Percent of children age 6-59 months who received deworming medication
   SE.PRM.LHTH.7 =expert_df$antenatal_skilled_delivery, #(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?

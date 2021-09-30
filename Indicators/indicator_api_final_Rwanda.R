@@ -251,7 +251,7 @@ finance_df_final <- finance_df_shaped %>%
   select(-rowname)
 
 
-source('R/api_data_fun_RWA.R')
+source('R/api_data_fun_RWA.R', echo=TRUE)
 
 RWA_data_2019 <- api_final
 

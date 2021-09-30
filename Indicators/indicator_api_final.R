@@ -139,6 +139,16 @@ indicator_match  <- df_overall %>%
   select(Series, Indicator.Name, indicator_tag)
 
 
+#add extra metadata
+api_template <- api_template %>%
+  mutate(Source="Global Education Policy Dashboard",
+         'Source Organization'="World Bank") %>%
+  left_join(indicator_choices) %>%
+  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
+  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
+  rename('Source Note'=Source.Note,
+         'Indicator Name'=Indicator.Name) %>%
+  select(-c(indicator_tag, Value))
 
 
 

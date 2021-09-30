@@ -421,8 +421,8 @@ Basic inputs & `r input$value_color[input$Series=="SE.PRM.INPT"]` & & `r input$o
 Basic infrastructure & `r input$value_color[input$Series=="SE.PRM.INFR"]` & & `r input$only_color[input$Series=="SE.PRM.IMON"]` \\\cdashline{1-2}
 \tabindent\emph{\% Drinking water}    & {`r input$value_color[input$Series=="SE.PRM.INFR.2"]``r input$value_units[input$Series=="SE.PRM.INFR.2"]`} & & `r input$only_color[input$Series=="SE.PRM.IMON"]`\\\cdashline{1-2}
 \tabindent\emph{\% Functional toilet} & {`r input$value_color[input$Series=="SE.PRM.INFR.3"]``r input$value_units[input$Series=="SE.PRM.INFR.3"]`} & & `r input$only_color[input$Series=="SE.PRM.IMON"]`\\\cdashline{1-2}
-\tabindent\emph{\% Internet}          & {`r input$value_color[input$Series=="SE.PRM.INFR.4"]``r input$value_units[input$Series=="SE.PRM.INFR.4"]`} & & `r input$only_color[input$Series=="SE.PRM.IMON"]`\\\cdashline{1-2}
-\tabindent\emph{\% Electricity}       & {`r input$value_color[input$Series=="SE.PRM.INFR.5"]``r input$value_units[input$Series=="SE.PRM.INFR.5"]`} & & `r input$only_color[input$Series=="SE.PRM.IMON"]`\\\cdashline{1-2}
+\tabindent\emph{\% Internet}          & {`r input$value_color[input$Series=="SE.PRM.INFR.5"]``r input$value_units[input$Series=="SE.PRM.INFR.5"]`} & & `r input$only_color[input$Series=="SE.PRM.IMON"]`\\\cdashline{1-2}
+\tabindent\emph{\% Electricity}       & {`r input$value_color[input$Series=="SE.PRM.INFR.4"]``r input$value_units[input$Series=="SE.PRM.INFR.4"]`} & & `r input$only_color[input$Series=="SE.PRM.IMON"]`\\\cdashline{1-2}
 \tabindent\emph{\% Disability access} & {`r input$value_color[input$Series=="SE.PRM.INFR.6"]``r input$value_units[input$Series=="SE.PRM.INFR.6"]`} & \multirow{-6}{4.2cm}{Inputs and infrastructure monitoring} & \multirow{-6}{*}{`r input$value_color[input$Series=="SE.PRM.IMON"]`}\\\hline
 \end{tabular}}
 \\
