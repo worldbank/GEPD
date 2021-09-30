@@ -1,0 +1,260 @@
+---
+title: "Data Collection Notes - Mozambique"
+author: ""
+output:
+  html_document: default
+
+always_allow_html: yes
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+#load relevant libraries
+library(knitr)
+library(tidyverse)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(kableExtra)
+library(DT)
+library(mice)
+library(stargazer)
+library(gt)
+library(vtable)
+#Load the data
+
+#read in school level file with sampling information
+#currentDate<-c("2019-07-22")
+#sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+#Specify the file name containing the sample information
+currentDate<-c("2020-02-12")
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+load(file=sample_frame_name) 
+load(sample_frame_name)
+
+date_set_coord<-data_set_updated %>%
+  select(codigo, lat, lon)
+
+sample_updated <- sample_updated %>%
+  left_join(date_set_coord)
+
+
+```
+
+
+```{r data}
+
+#Country name and year of survey
+country <-'MOZ'
+country_name <- "Mozambique"
+year <- '2019'
+
+
+#Add your UPI here and set the directory paths of your choice.
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  
+}
+
+load(paste0(confidential_folder, "/school_indicators_data.Rdata"))
+
+
+```
+
+Between March 16 and March 23, 2020, a survey firm hired by the Global Education Policy Dashboard team was in the field in Mozambique to conduct a school survey. The plan was for 170 schools to be visited, but because of school closures due to COVID 19, complete data was only available for 40 schools.  1 school was unable to be visited because of access issues, and was replaced in the field prior to the school closures.  The purpose of this report is to document that schools that were and were not visited prior to school closures.
+
+```{r country_map, include=FALSE}
+sample_map <- data_set_updated %>%
+     filter(!is.na(sample)) %>%
+    mutate(longitude=as.character(lon)) %>%
+    mutate(latitude=as.character(lat)) %>%
+    mutate(longitude=as.numeric(longitude)) %>%
+    mutate(latitude=as.numeric(latitude)) 
+
+data_schools <- final_indicator_data_LCAP %>%
+  select(school_code, ecd_student_knowledge) %>%
+  mutate(codigo=school_code)
+
+  sample_map_chosen <- data_set_updated %>%
+     mutate(longitude=as.character(lon)) %>%
+     mutate(latitude=as.character(lat)) %>%
+     mutate(longitude=as.numeric(longitude)) %>%
+     mutate(latitude=as.numeric(latitude)) %>%
+     left_join(data_schools) %>%
+     filter(sample=='Sampled School' | !is.na(ecd_student_knowledge)) %>%
+     mutate(sample_text=if_else(
+       is.na(ecd_student_knowledge),
+       "Unable to Visit",
+       "Visited"
+     ))
+
+   
+
+   pal <- colorFactor(
+     palette = c("red", "green"),
+     domain = c("Unable to Visit", "Visited")
+   )
+   
+
+    
+
+```
+
+## Table of Mozambique Districts Visited Prior to School Closures
+
+Below is a set of tables showing the provinces and districts visited by the enumerators prior to school closures.
+
+```{r provtab}
+
+prov_tab <- sample_map_chosen %>%
+  mutate(Province=if_else(!is.na(province),province, as.character(orig_province))) %>%
+  group_by(Province, sample_text) %>%
+  summarise(n=n()) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from=sample_text,
+    values_from=n
+  ) %>%
+  mutate(Visited=if_else(is.na(Visited),0,as.numeric(Visited)),
+         `Unable to Visit`=if_else(is.na(`Unable to Visit`),0,as.numeric(`Unable to Visit`)))
+
+gt(prov_tab) %>%
+  tab_header(
+    title="Schools Visited/Not Visited by Province Prior to COVID-19."
+  ) %>%
+  summary_rows(
+    columns = c('Visited','Unable to Visit' ),
+    fns = list(
+      Total = "sum"),
+    formatter=fmt_number,
+    decimals=0
+  ) 
+
+```
+
+
+
+## Map of Mozambique Schools Visited Prior to School Closures
+
+The below map shows the schools that were visited prior to COVID related school closures that stopped data collection.
+
+
+
+```{r country_map2, echo=FALSE}
+leaflet(data=sample_map_chosen) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(sample_map_chosen$sample_text),
+                      radius=7,
+                popup =  paste("Name: ", sample_map_chosen$orig_name, " <br>",
+                                  "Province: ", sample_map_chosen$orig_province, " <br>",
+                                  "District: ", sample_map_chosen$orig_distrito, " <br>",
+                                  "EMIS Code: ", sample_map_chosen$codigo, " <br>",
+                                  "Total # of 1st Graders", sample_map_chosen$fim1_hm, " <br>",
+                                  "Total # of 4th Graders", sample_map_chosen$fim4_hm, " <br>",
+                                  "Total # of Students", sample_map_chosen$totalfim_hm )) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_map_chosen$sample_text, title="Schools Visited")
+```
+
+## Comparison of Means Between Visited/Not Visited Schools
+
+The schools chosen for this exercise were chosen based on schools visited during the 2018 SDI in Mozambique. To assess whether the schools visited were similar to those not visited, we can compare the outcomes in the 2018 SDI for schools visited versus not visited to check for large differences.
+
+The following outcomes are compared from the 2018 SDI data: 4th grade student test scores (0-100), teacher absence rates (0-100), teacher content knowledge exam scores (0-100), Teach pedagogy proficiency of the teachers (0-100), school inputs (1-5) (availability of textbooks, writing utensils, blackboards, desks), and school infrastructure (1-5) (electricity, working restrooms, drinking water).  For each outcome, the means are presented for schools visited and not visited, plus the p-value of a statistical test that the means are equal across groups.
+
+```{r ttest, eval=FALSE, include=FALSE}
+
+ttest_df <- sample_map_chosen %>%
+  select(sample_text, student_knowledge, absence_rate, content_knowledge, pedagogical_knowledge, inputs, infrastructure) %>%
+  pivot_longer(
+    cols=c(student_knowledge, absence_rate, content_knowledge, pedagogical_knowledge, inputs, infrastructure),
+    names_to='indicator',
+    values_to='values'
+  ) %>%
+  # pivot_wider(
+  #   names_from=sample_text,
+  #   values_from = values
+  # ) %>%
+  group_by(indicator) %>%
+  nest() %>%
+  mutate(visited=map(data, ~ .x %>%
+                       filter(sample_text=="Visited")
+      ),
+      not_visited=map(data, ~ .x %>%
+                       filter(sample_text!="Visited")
+      )
+  ) %>%
+  mutate(
+    visited_mean=map(
+      visited,
+      ~mean(.x$values, na.rm=T)
+    ),
+    not_visited_mean=map(
+      not_visited,
+      ~mean(.x$values, na.rm=T)
+    )
+  ) %>%
+  mutate(p.value=data %>%
+      map(
+      ~t.test(.x$values~.x$sample_text) 
+      # map(broom::tidy) %>%
+      # map_dbl(pluck, "p.value")
+  ))
+                       
+
+
+
+
+```
+
+```{r ttest2}
+
+
+t1 <-  t.test(sample_map_chosen$student_knowledge ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="4th Grade Test Score")
+                       
+t2 <-  t.test(sample_map_chosen$absence_rate ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="Teacher Absence Rate")
+
+t3 <-  t.test(sample_map_chosen$content_knowledge ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="Teacher Content Knowledge")
+
+t4 <-  t.test(sample_map_chosen$pedagogical_knowledge ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="Teach Pedagogy")
+
+t5 <-  t.test(sample_map_chosen$inputs ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="Input Index")
+
+t6 <-  t.test(sample_map_chosen$infrastructure ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="Infrastructure Index")
+
+t_df <- bind_rows(t1, t2, t3, t4, t5, t6) %>%
+  transmute(
+    Indicator=indicator,
+    Visited = round(estimate2,1),
+    `Not Visited`=round(estimate1,1),
+    Difference=round(estimate,1),
+    `P-value`=round(p.value,3), 
+    `95% CI`=paste0("[",round(conf.low,1),",",round(conf.high,1),"]")
+    
+    
+  ) 
+
+gt(t_df) %>%
+  tab_header(
+    title="Test of Differences for SDI 2018 Indicators between Schools Visited/Not Visited"
+  )
+
+```
