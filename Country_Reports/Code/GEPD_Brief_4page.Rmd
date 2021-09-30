@@ -259,12 +259,12 @@ blank <- "NA"
       #NA, or negative
       (is.na(value) | as.numeric(value)<0) ~ paste(blank,sep=""),
       #percentages
-      (value >= lays_80 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!15}",value, sep=""),
-      (value >= lays_60 & value<lays_80 & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{yellow!15}",value, lays_units, sep=""),
-      (value <  lays_60 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!15}",value, sep=""),
-      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value,sep=""),
-      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value,sep=""),
-      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep=""),
+      (value >= lays_90 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{green!15}",value, sep=""),
+      (value >= lays_85 & value<lays_90 & (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{yellow!15}",value, lays_units, sep=""),
+      (value <  lays_85 &      (Series == "HD.HCI.LAYS")) ~ paste("\\cellcolor{red!15}",value, sep=""),
+      (value >=90 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value,sep=""),
+      (value >=85 & value<90 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value,sep=""),
+      (value <85 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}",value, sep=""),
       #non-percentages
       (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}",value, sep=""),
       (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}",value, sep=""),
@@ -274,9 +274,9 @@ blank <- "NA"
    #Adding new cell with only colour in new column
     mutate(only_color=case_when(
       #percentages
-      (value >=80 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
-      (value >=60 & value<80 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
-      (value <60 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}"),
+      (value >=90 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
+      (value >=85 & value<90 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
+      (value <85 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{red!15}"),
       #non-percentages
       (value >=4 & value<=5 &  !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{green!15}"),
       (value >=3 & value<4 &   !(grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("\\cellcolor{yellow!15}"),
@@ -307,7 +307,7 @@ lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS
 \cellcolor{outcome} &                             & Proficiency on GEPD Assessment & {`r input$value_color[input$Series=="SE.PRM.LERN"]``r input$value_units[input$Series=="SE.PRM.LERN"]`} \\\cdashline{2-4}
 \cellcolor{outcome} &  Participation              & Net Adjusted Enrollment Rate   & {`r input$value_color[input$Series=="SE.PRM.TENR"]``r input$value_units[input$Series=="SE.PRM.TENR"]`} \\\cdashline{2-4}
 \cellcolor{outcome}\multirow{-5}{*}{\rotatebox{90}{\textcolor{white}{Outcomes}}} &  Participation and learning  & `r lays_lp_choice` & {`r lays_lp_cell``r lays_lp_units`}\\\cdashline{1-4}
-\cellcolor{practice} & \multirow{3}{2cm}{Teaching}                 & Teacher Effort           & {`r input$value_color[input$Series=="SE.PRM.EFFT"]``r input$value_units[input$Series=="SE.PRM.EFFT"]`} \\\cdashline{3-4}
+\cellcolor{practice} & \multirow{3}{2cm}{Teaching}                 & Teacher Presence           & {`r input$value_color[input$Series=="SE.PRM.EFFT.2"]``r input$value_units[input$Series=="SE.PRM.EFFT"]`} \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Content Knowledge        & {`r input$value_color[input$Series=="SE.PRM.CONT"]``r input$value_units[input$Series=="SE.PRM.CONT"]`} \\\cdashline{3-4}
 \cellcolor{practice} &                                             & Pedagogical Skills       & {`r input$value_color[input$Series=="SE.PRM.PEDG"]``r input$value_units[input$Series=="SE.PRM.PEDG"]`} \\\cdashline{2-4}
 \cellcolor{practice} & \multirow{2}{2cm}{Inputs \& Infrastructure} & Basic Inputs             & `r input$value_color[input$Series=="SE.PRM.INPT"]` \\\cdashline{3-4}
@@ -326,21 +326,21 @@ lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS
 \cellcolor{policy}   &                                              & Intrinsic Motivation          & `r input$value_color[input$Series=="SE.PRM.TINM"]` \\\cdashline{2-4}
 \cellcolor{policy}   & \multirow{2}{2cm}{Inputs \& infrastructure}  & Standards                     & `r input$value_color[input$Series=="SE.PRM.ISTD"]` \\\cdashline{3-4} 
 \cellcolor{policy}   &                                              & Monitoring                    & `r input$value_color[input$Series=="SE.PRM.IMON"]` \\\cdashline{2-4}
-\cellcolor{policy}   & \multirow{5}{2cm}{Learners}                  & Nutrition Programs            & `r input$value_color[input$Series=="SE.PRM.TATT"]` \\\cdashline{3-4}
-\cellcolor{policy}   &                                              & Health Programs               & `r input$value_color[input$Series=="SE.PRM.TATT"]` \\\cdashline{3-4}
+\cellcolor{policy}   & \multirow{5}{2cm}{Learners}                  & Nutrition Programs            & `r input$value_color[input$Series=="SE.PRM.LNTN"]` \\\cdashline{3-4}
+\cellcolor{policy}   &                                              & Health Programs               & `r input$value_color[input$Series=="SE.PRM.LHTH"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Center based care             & `r input$value_color[input$Series=="SE.PRM.LCBC"]` \\\cdashline{3-4}
-\cellcolor{policy}   &                                              & Caregiver Financial Capacity  & `r input$value_color[input$Series=="SE.PRM.LCBC"]` \\\cdashline{3-4}
+\cellcolor{policy}   &                                              & Caregiver Financial Capacity  & `r input$value_color[input$Series=="SE.PRM.LFCP"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Caregiver Skills Capacity     & `r input$value_color[input$Series=="SE.PRM.LSKC"]` \\\cdashline{2-4}
 \cellcolor{policy}   & \multirow{5}{2cm}{School Management}         & Clarity of Functions          & `r input$value_color[input$Series=="SE.PRM.SCFN"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Attraction                    & `r input$value_color[input$Series=="SE.PRM.SATT"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Selection \& Deployment       & `r input$value_color[input$Series=="SE.PRM.SSLD"]` \\\cdashline{3-4}
 \cellcolor{policy}   &                                              & Support                       & `r input$value_color[input$Series=="SE.PRM.SSUP"]` \\\cdashline{3-4}
 \cellcolor{policy}\multirow{-18}{*}{\rotatebox{90}{\textcolor{white}{Policy levers}}} & & Evaluation           & `r input$value_color[input$Series=="SE.PRM.SEVL"]` \\\cdashline{1-4}
-\cellcolor{politics} & \multirow{5}{2cm}{Politics \& Bureaucratic Capacity}           & Quality of Bureaucracy & `r input$value_color[input$Series=="SE.PRM.TATT"]` \\\cdashline{3-4}
-\cellcolor{politics} & & Impartial Decision-Making  & `r input$value_color[input$Series=="SE.PRM.TSDP"]` \\\cdashline{3-4}
-\cellcolor{politics} & & Mandates \& Accountability & `r input$value_color[input$Series=="SE.PRM.TSUP"]` \\\cdashline{3-4}
-\cellcolor{politics} & & National Learning Goals    & `r input$value_color[input$Series=="SE.PRM.TEVL"]` \\\cdashline{3-4}
-\cellcolor{politics}\multirow{-5}{*}{\rotatebox{90}{\textcolor{white}{Politics}}}     & & Financing            & `r input$value_color[input$Series=="SE.PRM.TMNA"]` \\\hline
+\cellcolor{politics} & \multirow{5}{2cm}{Politics \& Bureaucratic Capacity}           & Quality of Bureaucracy & `r input$value_color[input$Series=="SE.PRM.BQBR"]` \\\cdashline{3-4}
+\cellcolor{politics} & & Impartial Decision-Making  & `r input$value_color[input$Series=="SE.PRM.BIMP"]` \\\cdashline{3-4}
+\cellcolor{politics} & & Mandates \& Accountability & `r input$value_color[input$Series=="SE.PRM.BMAC"]` \\\cdashline{3-4}
+\cellcolor{politics} & & National Learning Goals    & `r input$value_color[input$Series=="SE.PRM.BNLG"]` \\\cdashline{3-4}
+\cellcolor{politics}\multirow{-5}{*}{\rotatebox{90}{\textcolor{white}{Politics}}}     & & Financing            & `r input$value_color[input$Series=="SE.PRM.BFIN"]` \\\hline
 \end{tabular}}
 \\
 \setstretch{0.8}\color{darkgray}\scriptsize{\textit{Source:} UIS, GLAD, GEPD, World Bank, `r country`, `r country_year`. For information on indicators, please consult the World Bank \href{https://github.com/worldbank/GEPD}{\underline{GEPD}}, \href{https://github.com/worldbank/GLAD}{\underline{GLAD}} and \href{https://github.com/worldbank/LearningPoverty}{\underline{Learning Poverty}} repositories.}\\
@@ -352,10 +352,10 @@ lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{2cm}m{5cm}cc}
 \textbf{Subtitle} & \textbf{Indicator} & \textbf{Male} & \textbf{Female} \\\hline
 Learning                  & Proficiency on GEPD Assessment  & {`r input$value_color[input$Series=="SE.PRM.LERN.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LERN.1.F"]`\%} \\\cdashline{1-4}
-\multirow{3}{*}{Teaching} & Teacher Effort      & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.F"]`\%} \\\cdashline{2-4}
+\multirow{3}{*}{Teaching} & Teacher Presence      & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.F"]`\%} \\\cdashline{2-4}
                           &  Content knowledge  & {`r input$value_color[input$Series=="SE.PRM.CONT.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.CONT.1.F"]`\%} \\\cdashline{2-4}
                           &  Pedagogical Skills & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.M"]``r input$value_units[input$Series=="SE.PRM.PEDG.1.M"]`} & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.F"]``r input$value_units[input$Series=="SE.PRM.PEDG.1.F"]`} \\\cdashline{1-4}
-\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.F"]`\%} \\\cdashline{2-4}
+\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.F"]`\%} \\\cdashline{2-4}
                             & Student Attendance       & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.M"]`\%} & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.F"]`\%} \\\cdashline{1-4}
 \multirow{4}{2cm}{School Management}  & Operational Management   & `r input$value_color[input$Series=="SE.PRM.OPMN.1.M"]` & `r input$value_color[input$Series=="SE.PRM.OPMN.1.F"]` \\\cdashline{2-4}
                                       & Instructional Leadership & `r input$value_color[input$Series=="SE.PRM.ILDR.1.M"]` & `r input$value_color[input$Series=="SE.PRM.ILDR.1.F"]` \\\cdashline{2-4}
@@ -370,12 +370,12 @@ Learning                  & Proficiency on GEPD Assessment  & {`r input$value_co
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{2cm}m{5cm}cc}
 \textbf{Subtitle} & \textbf{Indicator} & \textbf{Rural} & \textbf{Urban} \\\hline
 Learning                  & Proficiency on GEPD Assessment & {`r input$value_color[input$Series=="SE.PRM.LERN.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LERN.1.U"]`\%} \\\cdashline{1-4}
-\multirow{3}{*}{Teaching} & Teacher Effort                 & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.1.U"]`\%} \\\cdashline{2-4}
+\multirow{3}{*}{Teaching} & Teacher Presence                 & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.EFFT.2.U"]`\%} \\\cdashline{2-4}
                           &  Content knowledge             & {`r input$value_color[input$Series=="SE.PRM.CONT.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.CONT.1.U"]`\%} \\\cdashline{2-4}
                           &  Pedagogical Skills            & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.PEDG.1.U"]`\%} \\\cdashline{1-4}
 \multirow{2}{2cm}{Inputs \& infrastructure}   & Basic Inputs             & `r input$value_color[input$Series=="SE.PRM.INPT.1.R"]` & `r input$value_color[input$Series=="SE.PRM.INPT.1.U"]` \\\cdashline{2-4}
                                               & Basic Infrastructure     & `r input$value_color[input$Series=="SE.PRM.INFR.1.R"]` & `r input$value_color[input$Series=="SE.PRM.INFR.1.U"]` \\\cdashline{1-4}
-\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.1.U"]`\%} \\\cdashline{2-4}
+\multirow{2}{*}{Learners}   & Capacity for Learning    & {`r input$value_color[input$Series=="SE.PRM.LCAP.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.LCAP.U"]`\%} \\\cdashline{2-4}
                             & Student Attendance       & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.R"]`\%} & {`r input$value_color[input$Series=="SE.PRM.ATTD.1.U"]`\%} \\\cdashline{1-4}
 \multirow{4}{2cm}{School Management}  & Operational Management   & `r input$value_color[input$Series=="SE.PRM.OPMN.1.R"]` & `r input$value_color[input$Series=="SE.PRM.OPMN.1.U"]` \\\cdashline{2-4}
                                       & Instructional Leadership & `r input$value_color[input$Series=="SE.PRM.ILDR.1.R"]` & `r input$value_color[input$Series=="SE.PRM.ILDR.1.U"]` \\\cdashline{2-4}
@@ -391,8 +391,10 @@ Learning                  & Proficiency on GEPD Assessment & {`r input$value_col
 
 #### `r figure_headline` ####
 ```{r lp_lays_fig, out.width= "100%", fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
-figure <- if_else(marker==0, "lays_figure_", "lp_figure_")
-figure2 <- paste(here(), "/LP_LAYS_figures/", figure , country_file_name, ".png", sep="")
+lays_figure_name <- paste("lays_figure_", country_file_name, ".png", sep = '')
+lp_figure_name <- paste("lp_figure_", country_file_name, ".png", sep = '')
+figure <- if_else(marker == 0, lays_figure_name, lp_figure_name)
+figure2 <- paste(here(), "/LP_LAYS_figures/", figure, sep="")
 knitr::include_graphics(figure2)
 ```
 
@@ -443,15 +445,15 @@ lern_subject_text <- if_else(grade4_lit>grade4_num, glue("{diff_lern_subject} po
 teach_cont <- round(input$value[input$Series=="SE.PRM.CONT"], digits = 0)
 teach_cont_lit <- round(input$value[input$Series=="SE.PRM.CONT.2"], digits = 0)
 teach_cont_math <- round(input$value[input$Series=="SE.PRM.CONT.3"], digits = 0)
-cont_text <- if_else(teach_cont<60, glue("({teach_cont}%) needs improvement"), if_else(teach_cont>=60 & teach_cont<80, glue("({teach_cont}%) requires caution"), glue("({teach_cont}%) is on target")))
+cont_text <- if_else(teach_cont<85, glue("({teach_cont}%) needs improvement"), if_else(teach_cont>=85 & teach_cont<90, glue("({teach_cont}%) requires caution"), glue("({teach_cont}%) is on target")))
 cont_diff_subject <- if_else(teach_cont_lit>teach_cont_math, teach_cont_lit-teach_cont_math, teach_cont_math-teach_cont_lit)
 cont_subject_text <- if_else(teach_cont_lit>teach_cont_math, glue("{cont_diff_subject} points higher"), glue("{cont_diff_subject} points lower"))
 
 teach_pedg <- round(input$value[input$Series=="SE.PRM.PEDG"], digits = 0)
-pedg_text <- if_else(teach_pedg<60, glue("({teach_pedg}%) needs improvement"), if_else(teach_pedg>=60 & teach_pedg<80, glue("({teach_pedg}%) requires caution"), glue("({teach_pedg}%) is on target")))
+pedg_text <- if_else(teach_pedg<85, glue("({teach_pedg}%) needs improvement"), if_else(teach_pedg>=85 & teach_pedg<90, glue("({teach_pedg}%) requires caution"), glue("({teach_pedg}%) is on target")))
 
 teach_efft <- round(input$value[input$Series=="SE.PRM.EFFT.2"], digits = 0)
-efft_text <- if_else(teach_efft<60, glue("({teach_efft}%) needs improvement"), if_else(teach_efft>=60 & teach_efft<80, glue("({teach_efft}%) requires caution"), glue("({teach_efft}%) is on target")))
+efft_text <- if_else(teach_efft<85, glue("({teach_efft}%) needs improvement"), if_else(teach_efft>=85 & teach_efft<90, glue("({teach_efft}%) requires caution"), glue("({teach_efft}%) is on target")))
 
 cont_policy_lowest_var <- as.name(c("SE.PRM.TATT","SE.PRM.TSDP","SE.PRM.TSUP","SE.PRM.TMNA","SE.PRM.TEVL") [which.min(c(input$value[input$Series=="SE.PRM.TATT"], input$value[input$Series=="SE.PRM.TSDP"],input$value[input$Series=="SE.PRM.TSUP"],  input$value[input$Series=="SE.PRM.TMNA"], input$value[input$Series=="SE.PRM.TEVL"]))])
 cont_policy_lowest_varval <- round(input$value[input$Series==cont_policy_lowest_var], digits = 1)
@@ -462,7 +464,7 @@ cont_policy_lowest_name <- input$label[input$Series == cont_policy_lowest_var]
 Practice indicators measure quality of service delivery in schools such as teacher and student attendance, teacher knowledge, principal management skills, etc. Policy lever indicators measure how well school, personnel and student policies governing these practices are implemented. For instance, teacher content knowledge(practice) is influenced by implementation of teacher hiring policies, teacher training and monitoring and accountability systems. Comparing de-facto practice and policy lever indicators allows identification of low-scoring policy levers that affect observed practice indicators.  
 
 #### **Teacher effectiveness** ####  
-Teacher effectiveness is determined by a teacher's own knowledge level, pedagogical skills and effort. These practices are impacted by quality of teaching support, teacher recruitment and deployment, level of teaching attraction (incentives/job satisfaction), teacher motivation and monitoring systems. Teacher content knowledge `r cont_text`. Teacher proficiency in language (`r teach_cont_lit`%) is `r cont_subject_text` than mathematics proficiency (`r teach_cont_math`%). Teacher pedagogical skills score `r pedg_text`, and teacher attendance `r efft_text`. `r cont_policy_lowest_name` is the weakest policy lever(`r cont_policy_lowest_varval`/5).
+Teacher effectiveness is determined by a teacher's own knowledge level, pedagogical skills and presence. These practices are impacted by quality of teaching support, teacher recruitment and deployment, level of teaching attraction (incentives/job satisfaction), teacher motivation and monitoring systems. Teacher content knowledge `r cont_text`. Teacher proficiency in language (`r teach_cont_lit`%) is `r cont_subject_text` than mathematics proficiency (`r teach_cont_math`%). Teacher pedagogical skills score `r pedg_text`, and teacher attendance `r efft_text`. `r cont_policy_lowest_name` is the weakest policy lever(`r cont_policy_lowest_varval`/5).
 
 \begin{table}[H]
 \resizebox{\columnwidth}{!}{\begin{tabular}{m{3.8cm}cm{4.2cm}c}
@@ -485,14 +487,14 @@ Pedagogical skills                               & {`r input$value_color[input$S
 ```{r lcap_content, message=FALSE, echo=FALSE, warning=FALSE}
 #Capacity for learning
 lcap <- round(input$value[input$Series=="SE.PRM.LCAP"], digits = 0)
-lcap_text <- if_else(lcap<60, glue("({lcap}%) needs improvement"), if_else(lcap>=60 & lcap<80, glue("({lcap}%) requires caution"), glue("({lcap}%) is on target")))
+lcap_text <- if_else(lcap<85, glue("({lcap}%) needs improvement"), if_else(lcap>=85 & lcap<90, glue("({lcap}%) requires caution"), glue("({lcap}%) is on target")))
 
 lcap_lowest_var <- as.name(c("SE.PRM.LCAP.2","SE.PRM.LCAP.3","SE.PRM.LCAP.4","SE.PRM.LCAP.5") [which.min(c(input$value[input$Series=="SE.PRM.LCAP.2"], input$value[input$Series=="SE.PRM.LCAP.3"],input$value[input$Series=="SE.PRM.LCAP.4"],  input$value[input$Series=="SE.PRM.LCAP.5"]))])
 lcap_lowest_varval <- round(input$value[input$Series==lcap_lowest_var], digits = 0)
 lcap_lowest_var_name <- input$label[input$Series==lcap_lowest_var]
 
 attd <- round(input$value[input$Series=="SE.PRM.ATTD"], digits = 0)
-attd_text <- if_else(attd<60, glue("({attd}%) needs improvement"), if_else(attd>=60 & attd<80, glue("({attd}%) requires caution"), glue("({attd}%) is on target")))
+attd_text <- if_else(attd<85, glue("({attd}%) needs improvement"), if_else(attd>=85 & attd<90, glue("({attd}%) requires caution"), glue("({attd}%) is on target")))
 
 lcap_policy_lowest_var <- as.name(c("SE.PRM.LNTN","SE.PRM.LHTH","SE.PRM.LCBC","SE.PRM.LSKC","SE.PRM.LFCP") [which.min(c(input$value[input$Series=="SE.PRM.LNTN"], input$value[input$Series=="SE.PRM.LHTH"],input$value[input$Series=="SE.PRM.LCBC"],  input$value[input$Series=="SE.PRM.LSKC"], input$value[input$Series=="SE.PRM.LFCP"]))])
 lcap_policy_lowest_varval <- round(input$value[input$Series==lcap_policy_lowest_var], digits = 1)

@@ -70,10 +70,16 @@ learning_poverty_df <-wbstats::wb(country="all", #by specifying all, we can get 
 ##########
 
 #Pulll data for the Human Capital INdex - Learning Adjusted Years of Schooling:
-hci_df <- GET(url = "http://api.worldbank.org/v2/country/all/indicator/HD.HCI.LAYS?per_page=500&format=json") %>%
+hci_df <- GET(url = "http://api.worldbank.org/v2/country/all/indicator/HD.HCI.LAYS?per_page=10000&format=json") %>%
   content( as = "text", encoding = "UTF-8") %>%
-  fromJSON( flatten = TRUE) %>%
+  fromJSON(flatten = TRUE) %>%
   data.frame() %>%
+  arrange(countryiso3code, country.value, desc(date)) %>%
+  filter(!is.na(value)) %>%
+  filter(((reference_year-as.numeric(date))<=10) & (reference_year>=as.numeric(date))) %>%  #filter out years outside reference window of 10 years 
+  mutate_if(is.character, str_trim) %>% 
+  group_by(countryiso3code, country.value) %>%   #group by country to create one observation per country which is the latest value
+  filter(as.numeric(date)==max(as.numeric(date))) %>%
   rename(iso3c = countryiso3code,
          date_hci = date,
          country_name = country.value,
@@ -113,7 +119,7 @@ hci_income <- hci_df%>%
 hci_main <- hci_df %>%
   select(iso3c, date_hci, country_name, HD.HCI.LAYS)
 
-hci_final <- rbind(hci_main, hci_region, hci_admin, hci_income)
+hci_final<- dplyr::bind_rows(hci_region, hci_admin, hci_income, hci_main)
 hci_final <- hci_final %>%
   mutate_if(is.character, str_trim)
 

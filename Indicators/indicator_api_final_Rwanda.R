@@ -51,7 +51,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #Read in indicators.md file
 ###########################
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_csv(here::here('Indicators','indicators.csv'))
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -191,7 +191,7 @@ api_template <- api_template %>%
 # Example:
 
 #specify path to data
-data_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT//RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/"
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/"
 
 
 

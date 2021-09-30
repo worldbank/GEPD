@@ -4,8 +4,6 @@
 #load relevant libraries
 
 library(skimr)
-library(naniar)
-library(vtable)
 library(digest)
 library(tidyverse)
 library(haven)
@@ -16,17 +14,6 @@ library(Hmisc)
 #Clean data files downloaded from API
 #Written by Brian Stacy 6/14/2019
 
-#load relevant libraries
-
-library(skimr)
-library(naniar)
-library(vtable)
-library(digest)
-library(tidyverse)
-library(haven)
-library(stringr)
-library(Hmisc)
-#NOTE:  The R script to pull the data from the API should be run before this file
 
 
 
@@ -56,7 +43,6 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 #read in school level file
 ###########################
 school_dta<-read_dta(file.path(download_folder, school_file))
-vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
@@ -680,7 +666,7 @@ graded_data <- "no"
                  s_c8_2 = "8.2 The teacher has a positive attitude towards studens' challenges",
                  s_c8_3 = "8.3 The teacher encourages goal-setting",
                  s_c9 = "SOCIAL AND COLLABORATIVE SKILLS: Segment 1",
-                 s_c9_1 = "9.1 The teacher promotes students,Äô collaboration through peer interaction",
+                 s_c9_1 = "9.1 The teacher promotes students,?? collaboration through peer interaction",
                  s_c9_2 = "9.2 The teacher promotes students' interpersonal skills",
                  s_c9_3 = "9.3 Students collaborate with one another through peer interaction",
                  enum_comments = "Additional comments by enumerator:"

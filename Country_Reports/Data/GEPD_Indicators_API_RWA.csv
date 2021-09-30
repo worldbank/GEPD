@@ -142,12 +142,12 @@ SE.PRM.INPT,Basic Inputs,Global Education Policy Dashboard,World Bank,"School su
 SE.PRM.INPT.1,(De Facto) Average number of classroom inputs in classrooms,Global Education Policy Dashboard,World Bank,NA,3.326416
 SE.PRM.INPT.1.R,(De Facto) Average number of classroom inputs in classrooms - Rural,Global Education Policy Dashboard,World Bank,NA,3.247847
 SE.PRM.INPT.1.U,(De Facto) Average number of classroom inputs in classrooms - Urban,Global Education Policy Dashboard,World Bank,NA,3.780961
-SE.PRM.INPT.2,(De Facto) Percent of classrooms with a functional blackboard and chalk,Global Education Policy Dashboard,World Bank,NA,59.81681
-SE.PRM.INPT.2.R,(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural,Global Education Policy Dashboard,World Bank,NA,57.91294
-SE.PRM.INPT.2.U,(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban,Global Education Policy Dashboard,World Bank,NA,64.72966
-SE.PRM.INPT.3,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",Global Education Policy Dashboard,World Bank,NA,92.19166
-SE.PRM.INPT.3.R,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",Global Education Policy Dashboard,World Bank,NA,90.78626
-SE.PRM.INPT.3.U,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",Global Education Policy Dashboard,World Bank,NA,100
+SE.PRM.INPT.2,(De Facto) Percent of classrooms with a functional blackboard and chalk,Global Education Policy Dashboard,World Bank,NA,92.19166
+SE.PRM.INPT.2.R,(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural,Global Education Policy Dashboard,World Bank,NA,90.78626
+SE.PRM.INPT.2.U,(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban,Global Education Policy Dashboard,World Bank,NA,NA
+SE.PRM.INPT.3,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",Global Education Policy Dashboard,World Bank,NA,59.81681
+SE.PRM.INPT.3.R,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",Global Education Policy Dashboard,World Bank,NA,57.91294
+SE.PRM.INPT.3.U,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",Global Education Policy Dashboard,World Bank,NA,64.72966
 SE.PRM.INPT.4,(De Facto) Percent of classrooms with basic classroom furniture,Global Education Policy Dashboard,World Bank,NA,99.46333
 SE.PRM.INPT.4.R,(De Facto) Percent of classrooms with basic classroom furniture - Rural,Global Education Policy Dashboard,World Bank,NA,99.36673
 SE.PRM.INPT.4.U,(De Facto) Percent of classrooms with basic classroom furniture - Urban,Global Education Policy Dashboard,World Bank,NA,100
@@ -398,16 +398,16 @@ SE.PRM.SSUP.8,(De Facto) Percent of principals that report having received in-se
 SE.PRM.SSUP.9,(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals,Global Education Policy Dashboard,World Bank,NA,44.72463
 SE.PRM.SSUP.DF,(De Facto) Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,NA,3.669618
 SE.PRM.SSUP.DJ,(De Jure) Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,NA,4.333333
-SE.PRM.TATT,Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,"In the school survey, a number of De Facto questions on teacher attraction are asked.  0.8 points is awarded for each of the following:   , 0.8 Points. Teacher satisfied with job   - 0.8 Points. Teacher satisfied with status in community   - 0.8 Points. Would better teachers be promoted faster?   - 0.8 Points. Do teachers receive bonuses?   - 0.8 Points. One minus the fraction of months in past year with a salary delay.",3.855486
+SE.PRM.TATT,Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,"In the school survey, a number of De Facto questions on teacher attraction are asked.  0.8 points is awarded for each of the following:   , 0.8 Points. Teacher satisfied with job   - 0.8 Points. Teacher satisfied with status in community   - 0.8 Points. Would better teachers be promoted faster?   - 0.8 Points. Do teachers receive bonuses?   - 0.8 Points. One minus the fraction of months in past year with a salary delay.",3.774067
 SE.PRM.TATT.1,(De Jure) Average starting public-school teacher salary as percent of GDP per capita,Global Education Policy Dashboard,World Bank,NA,117.241
-SE.PRM.TATT.2,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community,Global Education Policy Dashboard,World Bank,NA,66.06138
-SE.PRM.TATT.3,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher,Global Education Policy Dashboard,World Bank,NA,69.90106
+SE.PRM.TATT.2,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community,Global Education Policy Dashboard,World Bank,NA,60.40083
+SE.PRM.TATT.3,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher,Global Education Policy Dashboard,World Bank,NA,66.36022
 SE.PRM.TATT.4,(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries,Global Education Policy Dashboard,World Bank,NA,40.16251
 SE.PRM.TATT.5,(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas,Global Education Policy Dashboard,World Bank,NA,0.4988549
 SE.PRM.TATT.6,(De Facto) Percent of teachers that performance matters for promotions,Global Education Policy Dashboard,World Bank,NA,83.34109
 SE.PRM.TATT.7,(De Jure) Is there a well-established career path for teachers?,Global Education Policy Dashboard,World Bank,NA,-999
 SE.PRM.TATT.8,(De Facto) Percent of teachers that report salary delays in the past 12 months,Global Education Policy Dashboard,World Bank,NA,42.07487
-SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.855486
+SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.774067
 SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,5
 SE.PRM.TENR,Net Adjusted Enrollment Rate,Global Education Policy Dashboard,World Bank,NA,95.28152
 SE.PRM.TENR.1,(De Facto) Percent of primary school age children who are enrolled at primary education,Global Education Policy Dashboard,World Bank,NA,95.28152

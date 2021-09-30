@@ -1,0 +1,355 @@
+---
+title: "Data Collection Notes - Ethiopia"
+author: ""
+output:
+  html_document: default
+
+always_allow_html: yes
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+#load relevant libraries
+library(knitr)
+library(tidyverse)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(kableExtra)
+library(DT)
+library(mice)
+library(stargazer)
+library(gt)
+library(wbstats)
+library(geosphere)
+library(rpart)       # performing regression trees
+library(rpart.plot)  # plotting regression trees
+library(randomForest)
+library(caret)
+library(modelr)
+#Load the data
+
+#read in school level file with sampling information
+#currentDate<-c("2019-07-22")
+#sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+
+```
+
+
+```{r data2021}
+
+#Country name and year of survey
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2021'
+
+
+#Add your UPI here and set the directory paths of your choice.
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  
+}
+
+#attach saved results
+attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
+school_gdp_2021 <- school_gdp
+school_dta_2021 <- school_dta_short %>%
+  left_join(school_gdp_2021)
+
+currentDate<-c("2020-02-14")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
+  select(-sample) #variable name causes conflict
+load(sample_frame_name)
+
+```
+
+```{r data2020}
+
+#Country name and year of survey
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2020'
+
+
+#Add your UPI here and set the directory paths of your choice.
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  
+}
+
+#attach saved results
+attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
+school_gdp_2020 <- school_gdp
+school_dta_2020 <- school_dta_short %>%
+  left_join(school_gdp_2020)
+
+
+
+```
+
+```{r combinedata}
+
+#combine the data from 2020 and 2021
+
+combine_gepd_data <- school_dta_2020 %>%
+  mutate(date=2020,
+         survey_time=as.character(survey_time)) %>%
+  bind_rows(school_dta_2021) %>%
+  mutate(date=if_else(is.na(date),2021,date)) 
+
+combine_gepd_data %>%
+  group_by(date) %>%
+  summarise(
+    GDP=mean(GDP, na.rm=T)
+  )
+
+
+```
+
+
+
+
+```{r country_map, include=FALSE}
+sample_map <- combine_gepd_data %>%
+    mutate(longitude=as.character(lon)) %>%
+    mutate(latitude=as.character(lat)) %>%
+    mutate(longitude=as.numeric(longitude)) %>%
+    mutate(latitude=as.numeric(latitude)) 
+
+
+  sample_map_chosen <- sample_map %>%
+     mutate(sample_text=if_else(
+       date==2020,
+       "2020",
+       "2021"
+     ))
+
+   
+
+   pal <- colorFactor(
+     palette = c("red", "green"),
+     domain = c("2020", "2021")
+   )
+   
+
+    
+
+```
+
+## Table of Ethiopia Regions Visited Prior to School Closures
+
+Below is a set of tables showing the regions visited by the enumerators prior to school closures.
+
+```{r provtab}
+
+prov_tab <- sample_map_chosen %>%
+  mutate(Province=school_address_preload) %>%
+  group_by(Province, sample_text) %>%
+  summarise(n=n()) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from=sample_text,
+    values_from=n
+  ) %>%
+  mutate(`2020`=if_else(is.na(`2020`),0,as.numeric(`2020`)),
+         `2021`=if_else(is.na(`2021`),0,as.numeric(`2021`))) %>%
+  select(Province, `2020`, `2021`)
+
+gt(prov_tab) %>%
+  tab_header(
+    title="Schools Visited/Not Visited by Province Prior to COVID-19."
+  ) %>%
+  summary_rows(
+    columns = c('2020','2021' ),
+    fns = list(
+      Total = "sum"),
+    formatter=fmt_number,
+    decimals=0
+  ) 
+
+```
+
+
+
+## Map of Ethiopia Schools Visited Prior to School Closures
+
+The below map shows the schools that were visited prior to COVID related school closures that stopped data collection.
+
+
+
+```{r country_map2, echo=FALSE}
+leaflet(data=sample_map_chosen) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(sample_map_chosen$sample_text),
+                      radius=7,
+                popup =  paste("Name: ", sample_map_chosen$orig_name, " <br>",
+                                  "Province: ", sample_map_chosen$school_address_preload, " <br>",
+                                  "Region: ", sample_map_chosen$school_province_preload, " <br>",
+                                  "Woreda: ", sample_map_chosen$school_district_preload, " <br>",
+                                  "EMIS: ", sample_map_chosen$school_emis_preload)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_map_chosen$sample_text, title="Schools Visited")
+```
+
+```{r ttest1}
+
+
+t1 <-  t.test(sample_map_chosen$GDP ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="2015 Satellite based GDP Estimate")
+                       
+
+
+t_df <- t1 %>%
+  #bind_rows(t1, t2, t3, t4, t5, t6) %>%
+  transmute(
+    Indicator=indicator,
+    `2020` = round(estimate1,1),
+    `2021`=round(estimate2,1),
+    Difference=round(estimate,1),
+    `P-value`=round(p.value,3), 
+    `95% CI`=paste0("[",round(conf.low,1),",",round(conf.high,1),"]")
+    
+    
+  ) 
+
+gt(t_df) %>%
+  tab_header(
+    title="Test of Differences for Indicators between Schools Visited 2020 and 2021"
+  )
+
+```
+
+## Predictions of Whether School Visited in 2020 or 2021
+
+In the next section, we will use regression to examine characteristics of schools that were visited in 2020 and 2021. Examine GDP as estimated using satellite data, distance from capital, other?
+
+```{r}
+
+#get coordinates of capital city from WDI
+wdi<-wbstats::wbcountries() %>%
+  filter(country=="Ethiopia")
+
+my_lat <- as.numeric(wdi$lat)
+my_lon <- as.numeric(wdi$long)
+
+pred_df <- sample_map_chosen %>% 
+  filter(!is.na(lon) & !is.na(GDP)) %>%
+  rowwise() %>% mutate(
+  dist = distm(c(my_lon, my_lat), c(lon, lat), fun=distHaversine) # this works
+  )
+ # mutate(GDP=GDP+0.01) #some GDP values set to 0
+
+#drop schools directly in addis
+
+#OLS
+reg_mod <- lm(sample_text ~ GDP + dist, data=pred_df)
+summary(reg_mod)
+
+#random forest
+set.seed(222)
+ind <- sample(2, nrow(pred_df), replace = TRUE, prob = c(0.7, 0.3))
+train <- pred_df[ind==1,] %>%
+  select(sample_text, GDP, dist) %>%
+  mutate(sample_text=factor(sample_text))
+
+test <- pred_df[ind==2,] %>%
+  select(sample_text, GDP, dist) %>%
+  mutate(sample_text=factor(sample_text))
+
+#tree
+rt <- rpart(
+  formula = sample_text ~ .,
+  data    = train,
+  method  = "anova"
+  )
+rpart.plot(rt)
+
+rf <- randomForest(sample_text~., data=train,) 
+print(rf)
+p2 <- predict(rf, test, type='prob')
+confusionMatrix(p2, test$ sample_text)
+importance(rf)
+varImpPlot(rf,
+           sort = T,
+           n.var = 10,
+           main = "Variable Importance")
+```
+
+Use random forest predicted probabilities to do inverse propensity weighting.
+
+Student attendance, teacher presense, and 1st grade assessment scores seem negatively affected.  Not much else.
+
+```{r}
+
+indicator <- 'presence_rate'
+
+predicted <- predict(rf, pred_df, type='prob')
+
+#add probabilites to data frame
+inv_weight_df <- pred_df %>%
+  mutate(sample_2021=sample_text=="2021") %>%
+  rename(outcome= !!indicator)
+
+inv_weight_df$prob2020 <- predicted[,1]
+inv_weight_df$prob2021 <- predicted[,2]
+
+inv_weight_df <- inv_weight_df %>%
+  filter(prob2021>0 & prob2021<100) %>%
+  mutate(ipw=if_else(sample_2021==TRUE, 1/prob2021, 1/prob2020))
+
+#regress student learning on whether data collected in 2021
+reg_simp <- lm(outcome ~ sample_2021, data= inv_weight_df)
+summary(reg_simp)
+
+#now use propensity weights
+reg_weight <- lm(outcome ~ sample_2021, data= inv_weight_df, weights=ipw)
+summary(reg_weight)
+
+# #Manual method
+# dta_2020 <- inv_weight_df %>%
+#   filter(sample_2021==FALSE) %>%
+#   mutate(ipw=1/prob2020)
+# 
+# mean_2020_wgt <- wtd.mean(dta_2020$student_knowledge, weights=dta_2020$ipw)
+# mean_2020_wgt
+# 
+# dta_2021 <- inv_weight_df %>%
+#   filter(sample_2021==TRUE) %>%
+#   mutate(ipw=1/prob2021)
+# 
+# mean_2021_wgt <- wtd.mean(dta_2021$student_knowledge, weights=dta_2021$ipw)
+# mean_2021_wgt
+# 
+# mean_2021_wgt-mean_2020_wgt
+
+```
+
