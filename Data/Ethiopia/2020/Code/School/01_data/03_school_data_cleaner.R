@@ -26,8 +26,13 @@ makeVlist <- function(dta) {
 
 
 
-
-
+#AC - Modification to the folder paths to be able to run the code localy
+if(Sys.info()["user"] == "AdrianoCiretto"){
+  
+  setwd(dir = "/Users/AdrianoCiretto/Documents/Github/GEPD")
+  download_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Raw/School"
+  confidential_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Clean/School"
+}
 
 ############################
 #read in teacher roster file
@@ -42,7 +47,7 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+school_dta<-read_dta(file.path(download_folder, "EPDash_school_survey_v1.dta"))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
@@ -65,7 +70,8 @@ school_metadta<-makeVlist(school_dta)
 indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
+  select(-contains("X1"))
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag
@@ -836,7 +842,7 @@ assess_4th_grade_anon <- assess_4th_grade_dta %>%
 assess_4th_grade_metadata <- makeVlist(assess_4th_grade_dta)
 
 
-save(assess_4th_grade_anon, assess_4th_grade_metadta, 
+save(assess_4th_grade_anon, assess_4th_grade_metadata, 
      file = file.path(confidential_folder, "dashboard_4th_grade_assessment_data.RData"))
 
 
