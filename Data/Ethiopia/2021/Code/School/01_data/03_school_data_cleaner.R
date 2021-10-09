@@ -1358,7 +1358,7 @@ pknw_actual_cont <- final_indicator_data_CONT %>%
 
 pknw_actual_exper <- teacher_questionnaire %>%
   select(school_code, m3sb_tnumber, m3sb_troster,m3saq5, m3saq6 ) %>%
-  mutate(experience=(2019-m3saq5)) %>%
+  mutate(experience=(2021-m3saq5)) %>%
   filter(experience <3) %>% 
   group_by(school_code) %>%
   summarise(teacher_count_experience_less3=n())
@@ -1465,8 +1465,8 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
     problem_solving_info_collect=(m7seq2_pman__1+m7seq2_pman__2 + m7seq2_pman__3 + m7seq2_pman__4)/4,
     problem_solving_stomach=case_when(
       (m7seq3_pman==4 ) ~ 1,
-      (m7seq1_pman==3 ) ~ 0.5,
-      (m7seq1_pman==1 | m7seq1_pman==2 | m7seq1_pman==98 ) ~ 0.25,
+      (m7seq3_pman==3 ) ~ 0.5,
+      (m7seq3_pman==1 | m7seq3_pman==2 | m7seq3_pman==98 ) ~ 0.25,
       TRUE ~ 0)
     
   ) %>%

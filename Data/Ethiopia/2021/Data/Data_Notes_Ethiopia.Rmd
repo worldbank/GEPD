@@ -296,7 +296,7 @@ rpart.plot(rt)
 rf <- randomForest(sample_text~., data=train,) 
 print(rf)
 p2 <- predict(rf, test, type='prob')
-confusionMatrix(p2, test$ sample_text)
+#confusionMatrix(p2, test$ sample_text)
 importance(rf)
 varImpPlot(rf,
            sort = T,
@@ -350,6 +350,25 @@ summary(reg_weight)
 # mean_2021_wgt
 # 
 # mean_2021_wgt-mean_2020_wgt
+
+```
+
+```{r}
+
+
+dens <- density(pred_df$dist/1000, from=min(pred_df$dist/1000), to=max(pred_df$dist/1000))
+df <- data.frame(x=dens$x, y=dens$y)
+
+probs <- c(0, 0.25, 0.5, 0.75, 1)
+
+
+quantiles <- quantile(pred_df$dist/1000, prob=probs)
+df$quant <- factor(findInterval(df$x,quantiles))
+ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)) + scale_x_continuous(labels=scales::comma) + scale_fill_brewer(guide="none") +
+  ggtitle('Distance (km) of School from Addis Ababa',
+          subtitle='Shaded by Quartile') +
+  theme_bw()
+
 
 ```
 

@@ -1194,7 +1194,7 @@ var.labels = c(route="Route ID",
                s_c8_2 = "8.2 The teacher has a positive attitude towards studens' challenges",
                s_c8_3 = "8.3 The teacher encourages goal-setting",
                s_c9 = "SOCIAL AND COLLABORATIVE SKILLS: Segment 1",
-               s_c9_1 = "9.1 The teacher promotes students,Äô collaboration through peer interaction",
+               s_c9_1 = "9.1 The teacher promotes students,?? collaboration through peer interaction",
                s_c9_2 = "9.2 The teacher promotes students' interpersonal skills",
                s_c9_3 = "9.3 Students collaborate with one another through peer interaction",
                enum_comments = "Additional comments by enumerator:"
@@ -1624,8 +1624,8 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
     problem_solving_info_collect=(m7seq2_pman__1+m7seq2_pman__2 + m7seq2_pman__3 + m7seq2_pman__4)/4,
     problem_solving_stomach=case_when(
                               (m7seq3_pman==4 ) ~ 1,
-                              (m7seq1_pman==3 ) ~ 0.5,
-                              (m7seq1_pman==1 | m7seq1_pman==2 | m7seq1_pman==98 ) ~ 0.25,
+                              (m7seq3_pman==3 ) ~ 0.5,
+                              (m7seq3_pman==1 | m7seq3_pman==2 | m7seq3_pman==98 ) ~ 0.25,
                               TRUE ~ 0)
                                  
     ) %>%
