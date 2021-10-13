@@ -2,7 +2,7 @@ library(tidyverse)
 library(haven)
 library(readxl)
 #score expert data (this requires a lot of hard coding and transcribing)
-expert_dir <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/MAD/Technical/Data/Raw/Policy"
+expert_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
@@ -23,7 +23,7 @@ read_var <- function(var) {
 
 #start with teachers
 ##########################
-  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
+  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -44,7 +44,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(A4),
-         teacher_salary=(12*54/3012)) # NOTE -here i inserted 54 instead of 414 as the expert indicated that the average salary was 54$
+         teacher_salary=(589.87/495.49)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=MG
 
 #teacher selection and deployment
 #
@@ -68,10 +68,10 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(evaluation_law=read_var(A10),
          evaluation_law_school=read_var(A11),
-         evaluation_criteria=read_var(A12),
+         evaluation_criteria=read_var(A12)/5,
          negative_evaluations=read_var(A14),
          positive_evaluations=read_var(A16)) %>%
-  mutate(teaching_evaluation=1+evaluation_law/4 + evaluation_law_school/4+evaluation_criteria/2+
+  mutate(teaching_evaluation=1+evaluation_law + evaluation_law_school+evaluation_criteria+
            negative_evaluations+positive_evaluations) 
 
 #Teacher Monitoring
@@ -93,7 +93,7 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 ##############################
 # Inputs
 ##############################
-expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
+expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -127,7 +127,7 @@ expert_dta_inputs_final<-expert_dta_inputs_final %>%
 ##############################
 # School Management
 ###############################
-expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
+expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -214,7 +214,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 ################################
 # Learners 
 ################################
-expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
+expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
 fill(Question..) %>% 
 filter(!is.na(Question))
 
