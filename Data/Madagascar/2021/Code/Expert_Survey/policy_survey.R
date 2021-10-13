@@ -71,7 +71,7 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
          evaluation_criteria=read_var(A12)/5,
          negative_evaluations=read_var(A14),
          positive_evaluations=read_var(A16)) %>%
-  mutate(teaching_evaluation=1+evaluation_law + evaluation_law_school+evaluation_criteria+
+  mutate(teaching_evaluation=1+evaluation_law/4 + evaluation_law_school/4+evaluation_criteria/2+
            negative_evaluations+positive_evaluations) 
 
 #Teacher Monitoring
