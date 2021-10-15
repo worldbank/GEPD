@@ -759,6 +759,45 @@ inpt_urban_rural
 
 ```
 
+```{r input}
+
+inpt_list<-c('blackboard_functional', 'share_pencil', 'share_exbook','share_textbook',   'used_ict', 'access_ict')
+
+input_plt <- final_indicator_data_INPT_anon %>%
+  select(hashed_school_code, inpt_list, ipw) %>%
+  pivot_longer(
+    cols=inpt_list,
+    names_to='indicator',
+    values_to='values'
+  ) %>%
+  mutate(indicator=case_when(
+    indicator=='blackboard_functional' ~ "Functional Blackboard", 
+    indicator=='share_pencil' ~ "Share with Pencils", 
+    indicator=='share_exbook' ~ "Share with Exercise Books",
+    indicator=='share_textbook' ~ "Share with Textbook",   
+    indicator=='used_ict' ~ "Used ICT", 
+    indicator=='access_ict' ~ "Access to ICT"
+  )) %>%
+  mutate(indicator=factor(indicator, levels=c("Functional Blackboard","Share with Pencils", "Share with Exercise Books", "Share with Textbook", "Used ICT", "Access to ICT" )))
+
+
+wgt_mean_input_plt <- input_plt %>%
+  group_by(indicator) %>%
+  summarise(values=weighted.mean(values, weights=ipw))
+
+  ggplot(data=wgt_mean_input_plt, aes(x=indicator, y=values, fill='#ff0000')) + #now plot the output in a bar graph
+    geom_col() +
+    # scale_x_discrete(labels = str_wrap(indicator_labels, width = 25)) + 
+  xlab(str_wrap("Inputs", width=75))+
+  scale_y_continuous(labels=scales::percent) +
+  ylab("Average") +
+  ggtitle(str_wrap("Average Availability of Inputs Across Schools", width=75)) +
+  theme_bw() +
+    theme(legend.position = "none",
+          axis.text = element_text(size=11)) +
+    coord_flip()
+
+```
 
 
 ## First Grade Assessment Score
@@ -787,7 +826,7 @@ inpt_urban_rural
           text = element_text(size = 14),
           legend.position='none'
         ) +
-        expand_limits(x = 0, y = 0) +
+        expand_limits(x = c(0,100), y = c(0,100)) +
         labs(colour = "Indicator") +
         ylab(paste0("4th Grade Score")) +
         xlab(paste0("1st Grade Score")) +
@@ -884,10 +923,10 @@ inpt_urban_rural
 - This is particularly true for teacher effort and skill.  
 - Below we plot teacher content knowledge by region to highlight some of these differences.  
 
-```{r content_knowledge_region, echo=FALSE, warning=FALSE}
+```{r content_knowledge_region, echo=FALSE, warning=FALSE, fig.height=6, fig.width=10}
 
 region_content <- school_dta_short_anon %>%
-  mutate(Type=dren)
+  mutate(Type=urban_rural)
 
 
 
@@ -900,7 +939,7 @@ region_content_plot <- region_content %>%
     geom_vline(xintercept=80) +
     theme_bw() +
   labs(x='Teacher Content Knowledge')+
-  ggtitle("Teacher Content Knowledge Across Territories")
+  ggtitle("Teacher Content Knowledge Across Urban/Rural")
   region_content_plot
   
 region_content_plot <- region_content %>%
@@ -914,7 +953,7 @@ region_content_plot <- region_content %>%
   labs(caption = "Weighted School Average Content Knowledge Shown in Diagram",
          x='Teacher Content Knowledge'
       )+
-  ggtitle("Teacher Content Knowledge Across Territories")
+  ggtitle("Teacher Content Knowledge Across Urban/Rural")
 
 
 #boxplot
@@ -973,6 +1012,30 @@ region_content_long <-region_content %>%
     ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Territory", 50)) +
       theme(
     legend.position="none"
+  ) 
+p1
+
+    contMean <- summarise(group_by(region_content_long,  Type, Assessment), MD = round(weighted.mean(content_proficiency, ipw, na.rm=T),1))
+
+  p1<-ggplot(contMean, aes(x=Assessment, y= MD, fill=Type)) + #now plot the output in a bar graph
+    geom_col( position="dodge") +
+    geom_text(data = contMean, aes(x=Assessment, y=MD, label=paste0(MD,"%")), 
+              position = position_dodge(width = 0.8), size = 5, hjust = -1) +
+    # geom_text(data = contMean, aes(x=Assessment, y=25, label=Type), 
+    #           position = position_dodge(width = 0.8), size = 5, hjust = 0) +
+  xlab(str_wrap("Subject", width=75))+
+  ylab(str_wrap("Teacher Content Knowledge Proficiency",35)) +
+  scale_fill_discrete(name="Urban/Rural") +
+
+  coord_flip() +
+  expand_limits(y=0:100) +
+    theme_bw() +
+    ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Territory", 50)) +
+      theme(
+    legend.position="top",
+    axis.text.y = element_text(size=11),
+    axis.text.x = element_text(size=11)
+    
   ) 
 p1
 
