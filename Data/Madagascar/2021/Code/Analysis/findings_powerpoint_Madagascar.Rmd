@@ -24,7 +24,7 @@ library(ggradar)
 library(Hmisc)
 library(ggpmisc)
 library(ggalt)
-
+library(waffle)
 library(patchwork)
 library(DT)
 # define stle for ggplot based on BBC plotting styles
@@ -706,6 +706,68 @@ learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD =
 
 ```
 
+## Absence
+
+```{r waffle, fig.height=7, fig.width=7}
+
+# 2nd visit
+
+absence_plt <- teacher_absence_final_anon %>%
+  mutate(absence_1st_cat = case_when(
+    s_m2ab1a_01==5 ~ 'Absent from School',
+    s_m2ab1a_01==3 ~ 'Absent from Classroom',
+    TRUE ~ 'Present'
+                ),
+    absence_2nd_cat = case_when(
+    s_m2ab1b_01==5 ~ 'Absent from School',
+    s_m2ab1b_01==3 ~ 'Absent from Classroom',
+    TRUE ~ 'Present'
+                )
+    )
+  
+absence_plt <- absence_plt %>%
+  mutate(absence_2nd_fact=factor(absence_2nd_cat, levels=c('Present','Absent from School', 'Absent from Classroom'))) %>%
+  arrange(absence_2nd_fact)
+
+ggplot(absence_plt, aes(fill=absence_2nd_fact, values=1)) +
+  facet_wrap(~urban_rural) +
+  geom_waffle(
+    n_rows = 32, color = "white", flip = TRUE
+  ) +
+  theme_void() +
+  theme(panel.spacing.x = unit(0, "npc")) +
+  theme(strip.text.x = element_text(hjust = 0.5),
+        legend.position = 'bottom'
+        ) +
+  ggtitle("Teacher Presense in 2nd visit") +
+  labs(caption='One tile = One teacher',
+       fill='Teacher Status')
+
+
+
+# 1st check
+
+absence_plt1 <- absence_plt %>%
+  mutate(absence_1st_fact=factor(absence_1st_cat, levels=c('Present','Absent from School', 'Absent from Classroom'))) %>%
+  arrange(absence_1st_fact)
+
+ggplot(absence_plt1, aes(fill=absence_1st_fact, values=1)) +
+  facet_wrap(~urban_rural) +
+  geom_waffle(
+    n_rows = 32, color = "white", flip = TRUE
+  ) +
+  theme_void() +
+  theme(panel.spacing.x = unit(0, "npc")) +
+  theme(strip.text.x = element_text(hjust = 0.5),
+        legend.position = 'top') +
+  ggtitle("Teacher Presense in 1st visit") +
+  labs(caption='One tile = One teacher',
+       fill='Teacher Status')
+
+
+```
+
+
 ## Breakdowns for Infrastructure/Inputs
 
 - We compare inputs and infrastructure for Urban/Rural schools 
@@ -1182,7 +1244,107 @@ main_indicator_labels<-c(
     )
     
 ```
+```{r radar2, echo=FALSE, warning=FALSE}
 
+#get list of de facto indicators
+main_indicator_labels<-c( 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         #'Teaching - Intrinsic Motivation', 
+                         'Inputs & Infrastructure - Monitoring',
+                         'Inputs & Infrastructure - Standards',
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
+
+    )  
+    
+    indicators_list<-c(
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                       # 'intrinsic_motivation', 
+                       'sch_monitoring', 
+                       'standards_monitoring',
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
+                       'principal_evaluation'
+
+    )
+
+    labels_df_radar<-data.frame(indicators=as.character(indicators_list),
+                          indicator_labels=as.character(main_indicator_labels))
+    
+    ipw<-school_dta_short_anon$ipw
+    
+    #get de facto data
+    data_radar <- school_dta_short_anon %>%
+      select(hashed_school_code, indicators_list, ipw) %>%
+      #mutate_at(.vars = indicators_list, scales::rescale) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=ipw, na.rm=TRUE) %>%
+      mutate(group="De Facto") %>%
+      select(group=group, everything())
+
+
+    data_radar2 <- data_radar %>%
+      mutate_at(.vars=indicators_list, ~as.numeric(sample_n(as_tibble(c(1:5)),1)[1,1])) %>%
+      mutate(group="De Jure") %>%
+      select(group=group, everything())
+
+    
+
+    
+    #score expert data (this requires a lot of hard coding and transcribing)
+    expert_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
+
+
+    expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
+
+    expert_dta_radar <- expert_dta_final %>%
+      select(colnames(data_radar)) %>%
+      rename(
+      sch_monitoring=, 
+       standards_monitoring=inputs_standards
+        
+      )
+    
+       data_radar<- data_radar %>%
+      bind_rows(expert_dta_radar)
+       
+   #create radar plot
+    ggradar(data_radar,
+            grid.min=1,
+            grid.mid=3,
+            grid.max=5,
+            values.radar=c("1", "3", "5"),
+            axis.label.size=3,
+            axis.label.offset = 1.25,
+            axis.labels= str_wrap(main_indicator_labels,15),
+            plot.extent.x.sf = 1.5, 
+            plot.extent.y.sf = 1.3,
+            legend.text.size = 3
+              ) +
+      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+      theme_minimal()+
+      theme(    axis.title = ggplot2::element_blank(),
+    axis.text.x = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank()
+
+    )
+    
+```
 
 
 - Next, we explore the De Facto scores for teachers by looking at differences across teachers in how they view the policy environment.  

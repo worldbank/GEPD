@@ -2452,8 +2452,9 @@ hist(final_indicator_data_SEVL$principal_positive_consequences)
     setNames(tolower(gsub("d_m1e_04","m1scq4_imon__",names(.)))) %>% 
     setNames(tolower(gsub("d_m1e_13","m1scq13_imon__",names(.)))) %>%
     setNames(tolower(gsub("d_m1e_14","m1scq14_imon__",names(.)))) %>%
-    mutate(across(matches("m1scq4_imon__|m1scq9_imon__"),~bin_var(.,1))) %>%
-    
+    mutate(across(matches("m1scq4_imon__|m1scq9_imon__"),~bin_var(.,1))) 
+ 
+school_data_IMON <- school_data_IMON %>%   
     mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
            system_in_place=case_when(
              m1scq5_imon==0 ~ 0,
