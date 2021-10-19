@@ -2,7 +2,7 @@ library(tidyverse)
 library(haven)
 library(readxl)
 #score expert data (this requires a lot of hard coding and transcribing)
-expert_dir <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/MAD/Technical/Data/Raw/Policy"
+expert_dir <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Madagascar/2021/Policy Survey Data"
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
@@ -23,7 +23,7 @@ read_var <- function(var) {
 
 #start with teachers
 ##########################
-  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
+  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep = "/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -93,9 +93,10 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 ##############################
 # Inputs
 ##############################
-expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
-  fill(Question..) %>% 
-  filter(!is.na(Question))
+expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal')%>% 
+  fill(`...1`) %>% 
+  rename(Question.. = `...1`) %>% 
+  filter(!is.na(Questions))
 
 
 expert_dta_inputs_shaped<-data.frame(t(expert_dta_inputs[-1]))
@@ -127,7 +128,7 @@ expert_dta_inputs_final<-expert_dta_inputs_final %>%
 ##############################
 # School Management
 ###############################
-expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
+expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -214,7 +215,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 ################################
 # Learners 
 ################################
-expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
+expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
 fill(Question..) %>% 
 filter(!is.na(Question))
 
