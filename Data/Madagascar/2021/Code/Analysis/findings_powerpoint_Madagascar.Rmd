@@ -860,7 +860,69 @@ wgt_mean_input_plt <- input_plt %>%
     coord_flip()
 
 ```
+```{r infra_plot, echo=FALSE, fig_height=8, fig_width=9}
+ #############################
+    # Create database with just learning outcomes for regressions
+    ##############################
 
+
+      df_reg<-school_dta_short_anon
+      
+
+      
+      
+      regplots<- ggplot(data=df_reg, aes(x=infrastructure, y=student_knowledge, weight=ipw, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = c(0,5), y = c(0,100)) +
+        labs(colour = "Indicator") +
+        ylab(paste0("4th Grade Score")) +
+        xlab(paste0("Infrastructure Score")) +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = 0.2,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      # regplots2<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#ff0000")) +
+      #   geom_point() +
+      #   geom_smooth(method='lm') +
+      #   scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#ff0000")) +
+      #   theme_bw() +
+      #   theme(
+      #     text = element_text(size = 14),
+      #     legend.position='none',
+      #     axis.text.y=element_blank(),
+      #     axis.title.y=element_blank()
+      #   ) +
+      #   expand_limits(x = 1, y = 0) +
+      #   labs(colour = "Indicator") +
+      #   ylab(paste0("4th Grade Score")) +
+      #   xlab(paste0("Pedagogy Score")) +
+      #   stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+      #                label.x.npc = "right", label.y.npc = 0.2,
+      #                formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      regplots +
+          plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against School Infrastructure Scores",90))
+
+      
+
+      
+   mod <- lm(student_knowledge~infrastructure, data=df_reg, weights = ipw)  
+      
+  summary(mod)
+    
+
+    
+    
+```
 
 ## First Grade Assessment Score
 
@@ -921,7 +983,6 @@ wgt_mean_input_plt <- input_plt %>%
           plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against 1st Grade Student Scores",90))
 
       
-
 
       
    mod <- lm(student_knowledge~ecd_student_knowledge, data=df_reg, weights = ipw)  
@@ -1104,7 +1165,69 @@ p1
 
 ```
 
+```{r intmot_plot, echo=FALSE, fig_height=8, fig_width=9}
+ #############################
+    # Create database with just learning outcomes for regressions
+    ##############################
 
+
+      df_reg<-school_dta_short_anon
+      
+
+      
+      
+      regplots<- ggplot(data=df_reg, aes(x=intrinsic_motivation, y=student_knowledge, weight=ipw, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = c(1,5), y = c(0,100)) +
+        labs(colour = "Indicator") +
+        ylab(paste0("4th Grade Score")) +
+        xlab(paste0("Teacher Intrinsic Motivation Score")) +
+        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                     label.x.npc = "right", label.y.npc = 0.2,
+                     formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      # regplots2<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#ff0000")) +
+      #   geom_point() +
+      #   geom_smooth(method='lm') +
+      #   scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#ff0000")) +
+      #   theme_bw() +
+      #   theme(
+      #     text = element_text(size = 14),
+      #     legend.position='none',
+      #     axis.text.y=element_blank(),
+      #     axis.title.y=element_blank()
+      #   ) +
+      #   expand_limits(x = 1, y = 0) +
+      #   labs(colour = "Indicator") +
+      #   ylab(paste0("4th Grade Score")) +
+      #   xlab(paste0("Pedagogy Score")) +
+      #   stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+      #                label.x.npc = "right", label.y.npc = 0.2,
+      #                formula = 'y~x', parse = TRUE, size = 5)
+      
+      
+      regplots +
+          plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against Teacher Intrinsic Motivation Scores",90))
+
+      
+
+      
+   mod <- lm(student_knowledge~intrinsic_motivation, data=df_reg, weights = ipw)  
+      
+  summary(mod)
+    
+
+    
+    
+```
 
 ## Do principals know their schools?
 
