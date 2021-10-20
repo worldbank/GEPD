@@ -1,5 +1,5 @@
 ---
-title: "Madagascar Teacher Cleaning"
+title: "Madagascar School Survey Cleaning"
 author: "Brian Stacy"
 date: "9/9/2021"
 output: html_document
@@ -146,6 +146,7 @@ Start with non-teacher files, including the school file.
 # load sampling frame
 
 sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'))
+sampling_strata_info <- read_csv(paste0(sampling_folder,'/school_strata_sampling.csv'))
 
 ## 1st grade assessment ----
 first_grade_raw <- read_dta(file.path(download_folder, "/21-M5.dta")) %>%
@@ -1835,7 +1836,7 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
   final_indicator_data_TATT <- teacher_questionnaire_dta %>%
     mutate(n_mssing_TATT=n_miss_row(.)) %>%
     group_by(s_ecole_code) %>%
-    select(s_ecole_code, teacher_attraction,teacher_satisfied_job,teacher_satisfied_status,better_teachers_promoted,teacher_bonus,salary_delays) %>%
+    select(s_ecole_code, teacher_attraction,teacher_satisfied_job,teacher_satisfied_status,better_teachers_promoted,teacher_bonus, teacher_bonus_hard_staff,salary_delays) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
   skim(final_indicator_data_TATT, one_of(ind_list))
@@ -1922,6 +1923,13 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
   
 
   teacher_questionnaire_dta <- teacher_questionnaire_dta %>%
+    mutate(m3sdq6_tsup=bin_var(d_m2bd_06,1),
+           m3sdq3_tsup=bin_var(d_m2bd_03,1),
+           m3sdq9_tsup=bin_var(d_m2bd_09,1),
+           m3sdq10_tsup=d_m2bd_10,
+           m3sdq11_tsup=d_m2bd_11,
+           m3sdq13_tsup=d_m2bd_13
+             ) %>%
     mutate(opportunities_teachers_share=bin_var(d_m2bd_14,1),
            pre_training_exists=bin_var(d_m2bd_03,1)/2,
            pre_training_useful=if_else(d_m2bd_03==1,
@@ -1965,7 +1973,7 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
     group_by(s_ecole_code) %>%
     select(s_ecole_code, teacher_support,pre_service,practicum,in_service,opportunities_teachers_share,
            pre_training_exists,pre_training_useful,pre_training_practicum,pre_training_practicum_lngth,
-           in_service_exists,in_servce_lngth,in_service_classroom) %>%
+           in_service_exists,in_servce_lngth,in_service_classroom, contains('tsup')) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))  
   
   skim(final_indicator_data_TSUP, one_of(ind_list))
@@ -2031,6 +2039,16 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
 
   
   teacher_questionnaire_dta <- teacher_questionnaire_dta %>%
+    mutate(m3sbq8_tmna__1=bin_var(d_m2bb2_08a,1),
+           m3sbq8_tmna__2=bin_var(d_m2bb2_08b,1),
+           m3sbq8_tmna__3=bin_var(d_m2bb2_08c,1),
+           m3sbq8_tmna__4=bin_var(d_m2bb2_08d,1),
+           m3sbq8_tmna__5=bin_var(d_m2bb2_08e,1),
+           m3sbq8_tmna__6=bin_var(d_m2bb2_08f,1),
+           m3sbq8_tmna__7=bin_var(d_m2bb2_08g,1),
+           m3sbq8_tmna__8=bin_var(d_m2bb2_08h,1),
+           m3sbq8_tmna__97=bin_var(d_m2bb2_08i,1)
+           ) %>%
     mutate(attendance_evaluated=if_else(d_m2bb2_06==1,
                                         case_when(
                                           (d_m2bb2_08a==1) ~ 1,
@@ -2065,7 +2083,7 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
   final_indicator_data_TMNA <- teacher_questionnaire_dta %>%
     mutate(n_mssing_TMNA=n_miss_row(.)) %>%
     group_by(s_ecole_code) %>% 
-    select(s_ecole_code,teacher_monitoring,attendance_evaluated,attendance_rewarded,attendence_sanctions,miss_class_admin ) %>%
+    select(s_ecole_code,teacher_monitoring,attendance_evaluated,attendance_rewarded,attendence_sanctions,miss_class_admin, starts_with("m3sbq8_tmna") ) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
   skim(final_indicator_data_TMNA, one_of(ind_list))
@@ -2123,6 +2141,7 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
              d_m2bc_09!=1 ~ 1,
              TRUE ~ as.numeric(NA)
            )) %>%
+    mutate(m3sdq2_tmna=bin_var(d_m2bd_02,1)) %>%
     mutate(intrinsic_motivation=1+(.2*acceptable_absent + .2*students_deserve_attention  + motivation_teaching+bin_var(d_m2bd_02,1))) 
 
 #plot the indicator  
@@ -2137,7 +2156,7 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
     mutate(n_mssing_TINM=n_miss_row(.)) %>%
     group_by(s_ecole_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))  %>%
-    select(s_ecole_code, intrinsic_motivation,acceptable_absent,students_deserve_attention,motivation_teaching,d_m2bd_02)
+    select(s_ecole_code, intrinsic_motivation,acceptable_absent,students_deserve_attention,motivation_teaching,d_m2bd_02,m3sdq2_tmna, starts_with("SE_PRM_TINM"))
   
   
   skim(final_indicator_data_TINM, one_of(ind_list))
@@ -2220,7 +2239,7 @@ the codes below does not work because I could not find the data about policy kno
     summarise_all(~first(na.omit(.))) %>%
     mutate(n_mssing_SATT=n_miss_row(.))  %>%
     select( -starts_with('interview'), -starts_with('enumerator'))  %>%
-    select(s_ecole_code, sch_management_attraction,principal_satisfaction,principal_salary_score )
+    select(s_ecole_code, sch_management_attraction,principal_satisfaction,principal_salary_score, principal_salary )
   
 hist(school_data_SATT$sch_management_attraction)  
 hist(school_data_SATT$principal_satisfaction)  
@@ -2307,7 +2326,7 @@ hist(school_data_SSLD$sch_selection_deployment)
   
   final_indicator_data_SSUP <- school_data_SSUP %>%
     mutate(n_mssing_SSUP=n_miss_row(.))  %>%
-    select(s_ecole_code, sch_support,prinicipal_trained,principal_training,principal_used_skills,principal_offered) %>%
+    select(s_ecole_code, sch_support,prinicipal_trained,principal_training,principal_used_skills,principal_offered, contains('_ssup')) %>%
     select( -starts_with('interview'), -starts_with('enumerator'))  
   
   hist(final_indicator_data_SSUP$principal_offered)
@@ -2443,10 +2462,12 @@ hist(final_indicator_data_SEVL$principal_positive_consequences)
     filter(s_type_ecole ==3) %>%
     
     rename(
-      m1scq3_imon = d_m1e_10, 
+      m1scq3_imon = d_m1e_03, 
       m1scq5_imon = d_m1e_05, # inventory for school intrants
       m1scq1_imon = d_m1e_01,
-      m1scq7_imon = d_m1e_07
+      m1scq7_imon = d_m1e_07,
+      m1scq10_imon = d_m1e_10,
+      m1scq11_imon = d_m1_e11
       ) %>% 
     setNames(tolower(gsub("d_m1_e11","m1scq9_imon__",names(.)))) %>% 
     setNames(tolower(gsub("d_m1e_04","m1scq4_imon__",names(.)))) %>% 
@@ -2817,15 +2838,40 @@ if (backup_onedrive=="yes") {
 
 anon_dta_list<-c()
 
-# Create a variable for Syrian Schools
-# These are typically evening schools, but the survey firm has provided a list 
+#create straturm weights
+sampling_strata_df <- sampling_strata_info %>%
+  select(id, urban_sample, rural_sample, urban_4th, rural_4th) %>%
+  pivot_longer(
+    cols=c('urban_sample', 'rural_sample', 'urban_4th', 'rural_4th'),
+    names_to='group',
+    values_to='size'
+  ) %>%
+  mutate(sample=if_else(grepl('sample',group),'Sample_Size','Total_Size'),
+         urban_rural=if_else(grepl('urban',group),'Urban','Rural')) %>%
+  select(-group) %>%
+  pivot_wider(
+    names_from=sample,
+    values_from=size
+  ) %>%
+  mutate(strata_prob= Total_Size/sum(Total_Size) )
+
+# merge on the sampling info.  This dataframe contains probabilities each school was selected in a stratum
+# strata were region and urban/rural.
 data_set_updated <- school_dta_preamble %>%
   left_join(sampling_frame, by=c("s_ecole_name"="NOM ETAB",
                                  "s_commune_name"="commune")) %>%
-  #filter(`Choisie (Dashboard)`==1) %>%
-  mutate(ipw=1/`P1 (SDI)`) 
-  
-
+  mutate(province=s_commune_name,
+           district=as.character(s_cisco_code),
+           rural=s_urbain>=3, #rural coded as greater than 3
+           urban_rural=if_else(rural==TRUE, "Rural", "Urban"),
+           public=if_else(s_public==2, "Private", "Public"),
+           ipw_school=1/(`P1 (SDI)`/4), #divide by 4 because dashboard schools make up randomly selected 25% of sample 
+                      ) %>%
+  left_join(sampling_strata_df, by=c("CODE REGION"="id",
+                                     "urban_rural"="urban_rural")) %>% # read in strata sampling info
+  mutate(ipw=ipw_school*(1/strata_prob), # incorporate stratum weights
+         ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)
+  )
 
 
 
@@ -2834,15 +2880,9 @@ df_weights_function <- function(dataset) {
   
   dataset %>%
     left_join(data_set_updated) %>%
-    mutate(province=s_commune_name,
-           district=as.character(s_cisco_code),
-           rural=s_urbain>=3, #rural coded as greater than 3
-           urban_rural=if_else(rural==TRUE, "Rural", "Urban"),
-           public=if_else(s_public==2, "Private", "Public"),
-           ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)
-                      ) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "province" | names(data_set_updated) == "district" |
-                                                      names(data_set_updated) == "rural" | names(data_set_updated) == "public")])))
+                                                      names(data_set_updated) == "rural" | names(data_set_updated) == "public"
+                                                      | names(data_set_updated) == "ipw" | names(data_set_updated) == "ipw_school")])))
 }
 
 

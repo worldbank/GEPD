@@ -124,10 +124,10 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.LPV.PRIM	= -999,
-      SE.LPV.PRIM.1	= -999,
-      SE.LPV.PRIM.BMP	= -999,
-      SE.LPV.PRIM.BMP.1	= -999,
+      SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
+      SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
+      SE.LPV.PRIM.BMP	= wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP.1	= wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
       SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
@@ -191,50 +191,50 @@ api_template <- api_template %>%
     mutate(
       SE.PRM.CONT     = indicator_means(content_proficiency, "school", "CONT",  "All"),
       SE.PRM.CONT.1   = indicator_means(content_proficiency, "school", "CONT",  "All"),
-      SE.PRM.CONT.1.F = indicator_means(content_proficiency, "school", "CONT",  "Female"),
-      SE.PRM.CONT.1.M = indicator_means(content_proficiency, "school", "CONT",  "Male"),
+      # SE.PRM.CONT.1.F = indicator_means(content_proficiency, "school", "CONT",  "Female"),
+      # SE.PRM.CONT.1.M = indicator_means(content_proficiency, "school", "CONT",  "Male"),
       SE.PRM.CONT.1.R = indicator_means(content_proficiency, "school", "CONT",  "Rural"),
       SE.PRM.CONT.1.U = indicator_means(content_proficiency, "school", "CONT",  "Urban"),
       SE.PRM.CONT.2   = indicator_means(literacy_content_proficiency, "school", "CONT",  "All"),  
-      SE.PRM.CONT.2.F = indicator_means(literacy_content_proficiency, "school", "CONT",  "Female"),
-      SE.PRM.CONT.2.M = indicator_means(literacy_content_proficiency, "school", "CONT",  "Male"),
+      # SE.PRM.CONT.2.F = indicator_means(literacy_content_proficiency, "school", "CONT",  "Female"),
+      # SE.PRM.CONT.2.M = indicator_means(literacy_content_proficiency, "school", "CONT",  "Male"),
       SE.PRM.CONT.2.R = indicator_means(literacy_content_proficiency, "school", "CONT",  "Rural"),
       SE.PRM.CONT.2.U = indicator_means(literacy_content_proficiency, "school", "CONT",  "Urban"),
       SE.PRM.CONT.3   = indicator_means(math_content_proficiency, "school", "CONT",  "All"),
-      SE.PRM.CONT.3.F = indicator_means(math_content_proficiency, "school", "CONT",  "Female"),
-      SE.PRM.CONT.3.M = indicator_means(math_content_proficiency, "school", "CONT",  "Male"),
+      # SE.PRM.CONT.3.F = indicator_means(math_content_proficiency, "school", "CONT",  "Female"),
+      # SE.PRM.CONT.3.M = indicator_means(math_content_proficiency, "school", "CONT",  "Male"),
       SE.PRM.CONT.3.R = indicator_means(math_content_proficiency, "school", "CONT",  "Rural"),
       SE.PRM.CONT.3.U = indicator_means(math_content_proficiency, "school", "CONT",  "Urban")
     )
   
-  #######################################
-  # Teacher Pedagogical Skills	(PEDG)
-  #######################################
-  
-  indicator_values_transpose <- indicator_values_transpose %>%
-    mutate(
-      SE.PRM.PEDG     = indicator_means(teach_prof, "school", "PEDG",  "All"),
-      SE.PRM.PEDG.1   = indicator_means(teach_prof, "school", "PEDG",  "All"),
-      #SE.PRM.PEDG.1.F = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Female"),
-      #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
-      SE.PRM.PEDG.1.R = indicator_means(teach_prof, "school", "PEDG",  "Rural"),
-      SE.PRM.PEDG.1.U = indicator_means(teach_prof, "school", "PEDG",  "Urban"),
-      SE.PRM.PEDG.2   = indicator_means(classroom_culture_prof, "school", "PEDG",  "All"),
-      #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
-      #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
-      SE.PRM.PEDG.2.R = indicator_means(classroom_culture_prof, "school", "PEDG",  "Rural"),
-      SE.PRM.PEDG.2.U = indicator_means(classroom_culture_prof, "school", "PEDG",  "Urban"),
-      SE.PRM.PEDG.3   = indicator_means(instruction_prof, "school", "PEDG",  "All"),
-      #SE.PRM.PEDG.3.F = 100*indicator_means(instruction>=3, "school", "PEDG",  "Female"),
-      #SE.PRM.PEDG.3.M = 100*indicator_means(instruction>=3, "school", "PEDG",  "Male"),
-      SE.PRM.PEDG.3.R = indicator_means(instruction_prof, "school", "PEDG",  "Rural"),
-      SE.PRM.PEDG.3.U = indicator_means(instruction_prof, "school", "PEDG",  "Urban"),
-      SE.PRM.PEDG.4   = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "All"),
-      #SE.PRM.PEDG.4.F = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Female"),
-      #SE.PRM.PEDG.4.M = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Male"),
-      SE.PRM.PEDG.4.R = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Rural"),
-      SE.PRM.PEDG.4.U = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Urban")
-    )
+  # #######################################
+  # # Teacher Pedagogical Skills	(PEDG)
+  # #######################################
+  # 
+  # indicator_values_transpose <- indicator_values_transpose %>%
+  #   mutate(
+  #     SE.PRM.PEDG     = indicator_means(teach_prof, "school", "PEDG",  "All"),
+  #     SE.PRM.PEDG.1   = indicator_means(teach_prof, "school", "PEDG",  "All"),
+  #     #SE.PRM.PEDG.1.F = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Female"),
+  #     #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
+  #     SE.PRM.PEDG.1.R = indicator_means(teach_prof, "school", "PEDG",  "Rural"),
+  #     SE.PRM.PEDG.1.U = indicator_means(teach_prof, "school", "PEDG",  "Urban"),
+  #     SE.PRM.PEDG.2   = indicator_means(classroom_culture_prof, "school", "PEDG",  "All"),
+  #     #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
+  #     #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
+  #     SE.PRM.PEDG.2.R = indicator_means(classroom_culture_prof, "school", "PEDG",  "Rural"),
+  #     SE.PRM.PEDG.2.U = indicator_means(classroom_culture_prof, "school", "PEDG",  "Urban"),
+  #     SE.PRM.PEDG.3   = indicator_means(instruction_prof, "school", "PEDG",  "All"),
+  #     #SE.PRM.PEDG.3.F = 100*indicator_means(instruction>=3, "school", "PEDG",  "Female"),
+  #     #SE.PRM.PEDG.3.M = 100*indicator_means(instruction>=3, "school", "PEDG",  "Male"),
+  #     SE.PRM.PEDG.3.R = indicator_means(instruction_prof, "school", "PEDG",  "Rural"),
+  #     SE.PRM.PEDG.3.U = indicator_means(instruction_prof, "school", "PEDG",  "Urban"),
+  #     SE.PRM.PEDG.4   = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "All"),
+  #     #SE.PRM.PEDG.4.F = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Female"),
+  #     #SE.PRM.PEDG.4.M = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Male"),
+  #     SE.PRM.PEDG.4.R = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Rural"),
+  #     SE.PRM.PEDG.4.U = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Urban")
+  #   )
 
   #######################################
   # 	Basic Inputs	(INPT)
@@ -257,9 +257,9 @@ api_template <- api_template %>%
       SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
 
       #(De Facto) Percent of classrooms with basic classroom furniture	
-      SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All"),
-      SE.PRM.INPT.4.R =100*indicator_means(share_desk, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.4.U =100*indicator_means(share_desk, "school", "INPT",  "Urban"),
+      # SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All"),
+      # SE.PRM.INPT.4.R =100*indicator_means(share_desk, "school", "INPT",  "Rural"),
+      # SE.PRM.INPT.4.U =100*indicator_means(share_desk, "school", "INPT",  "Urban"),
       #(De Facto) Percent of schools with access to EdTech	
       SE.PRM.INPT.5   =100*indicator_means(access_ict, "school", "INPT",  "All"),
       SE.PRM.INPT.5.R =100*indicator_means(access_ict, "school", "INPT",  "Rural"),
@@ -344,8 +344,8 @@ api_template <- api_template %>%
     mutate(
       SE.PRM.ATTD     = indicator_means(student_attendance	, "school", "ATTD",  "All"),
       SE.PRM.ATTD.1   = indicator_means(student_attendance	, "school", "ATTD",  "All"),
-      SE.PRM.ATTD.1.F = indicator_means(student_attendance	, "school", "ATTD",  "Female"),
-      SE.PRM.ATTD.1.M = indicator_means(student_attendance	, "school", "ATTD",  "Male"),
+      # SE.PRM.ATTD.1.F = indicator_means(student_attendance	, "school", "ATTD",  "Female"),
+      # SE.PRM.ATTD.1.M = indicator_means(student_attendance	, "school", "ATTD",  "Male"),
       SE.PRM.ATTD.1.R = indicator_means(student_attendance	, "school", "ATTD",  "Rural"),
       SE.PRM.ATTD.1.U = indicator_means(student_attendance	, "school", "ATTD",  "Urban"),
 
@@ -359,21 +359,21 @@ api_template <- api_template %>%
       SE.PRM.OPMN     = indicator_means(operational_management	, "school", "OPMN",  "All"),
       #(De Facto) Average score for the presence and quality of core operational management functions	
       SE.PRM.OPMN.1   = indicator_means(operational_management	, "school", "OPMN",  "All"),
-      SE.PRM.OPMN.1.F = indicator_means(operational_management	, "school", "OPMN",  "Female"),
-      SE.PRM.OPMN.1.M = indicator_means(operational_management	, "school", "OPMN",  "Male"),
-      SE.PRM.OPMN.1.R = indicator_means(operational_management	, "school", "OPMN",  "Rural"),
+      # SE.PRM.OPMN.1.F = indicator_means(operational_management	, "school", "OPMN",  "Female"),
+      # SE.PRM.OPMN.1.M = indicator_means(operational_management	, "school", "OPMN",  "Male"),
+      # SE.PRM.OPMN.1.R = indicator_means(operational_management	, "school", "OPMN",  "Rural"),
       SE.PRM.OPMN.1.U = indicator_means(operational_management	, "school", "OPMN",  "Urban"),
       #(De Facto) Average score for infrastructure repair/maintenance	
       SE.PRM.OPMN.2   = 1+2*indicator_means(vignette_1, "school", "OPMN",  "All"),  
-      SE.PRM.OPMN.2.F = 1+2*indicator_means(vignette_1, "school", "OPMN",  "Female"),
-      SE.PRM.OPMN.2.M = 1+2*indicator_means(vignette_1, "school", "OPMN",  "Male"),
+      # SE.PRM.OPMN.2.F = 1+2*indicator_means(vignette_1, "school", "OPMN",  "Female"),
+      # SE.PRM.OPMN.2.M = 1+2*indicator_means(vignette_1, "school", "OPMN",  "Male"),
       SE.PRM.OPMN.2.R = 1+2*indicator_means(vignette_1, "school", "OPMN",  "Rural"),
       SE.PRM.OPMN.2.U = 1+2*indicator_means(vignette_1, "school", "OPMN",  "Urban"),
       #(De Facto) Average score for ensuring  availability of school inputs	
       SE.PRM.OPMN.3   = 1+2*indicator_means(vignette_2, "school", "OPMN",  "All"),
-      SE.PRM.OPMN.3.F = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Female"),
-      SE.PRM.OPMN.3.M = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Male"),
-      SE.PRM.OPMN.3.R = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Rural"),
+      # SE.PRM.OPMN.3.F = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Female"),
+      # SE.PRM.OPMN.3.M = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Male"),
+      # SE.PRM.OPMN.3.R = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Rural"),
       SE.PRM.OPMN.3.U = 1+2*indicator_means(vignette_2, "school", "OPMN",  "Urban")
 
     )
@@ -389,50 +389,50 @@ api_template <- api_template %>%
       SE.PRM.ILDR     = indicator_means(instructional_leadership		, "school", "ILDR",  "All"),
       #(De Facto) Average score for the presence and quality of instructional leadership	
       SE.PRM.ILDR.1   = indicator_means(instructional_leadership		, "school", "ILDR",  "All"),
-      SE.PRM.ILDR.1.F = indicator_means(instructional_leadership		, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.1.M = indicator_means(instructional_leadership		, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.1.F = indicator_means(instructional_leadership		, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.1.M = indicator_means(instructional_leadership		, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.1.R = indicator_means(instructional_leadership		, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.1.U = indicator_means(instructional_leadership		, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting having had their class observed	
       SE.PRM.ILDR.2   = 100*indicator_means(classroom_observed, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.2.F = 100*indicator_means(classroom_observed, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.2.M = 100*indicator_means(classroom_observed, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.2.F = 100*indicator_means(classroom_observed, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.2.M = 100*indicator_means(classroom_observed, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.2.R = 100*indicator_means(classroom_observed, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.2.U = 100*indicator_means(classroom_observed, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting that the classroom observation happened recently
       SE.PRM.ILDR.3   = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "All"),
-      SE.PRM.ILDR.3.F = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.3.M = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.3.F = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.3.M = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.3.R = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.3.U = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting having discussed the results of the classroom observation	
       SE.PRM.ILDR.4   = 100*indicator_means(discussed_observation, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.4.F = 100*indicator_means(discussed_observation, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.4.M = 100*indicator_means(discussed_observation, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.4.F = 100*indicator_means(discussed_observation, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.4.M = 100*indicator_means(discussed_observation, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.4.R = 100*indicator_means(discussed_observation, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.4.U = 100*indicator_means(discussed_observation, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting that the discussion was over 30 minutes	
       SE.PRM.ILDR.5   = 100*indicator_means(discussion_30_min, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.5.F = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.5.M = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.5.F = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.5.M = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.5.R = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.5.U = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion	
       SE.PRM.ILDR.6   = 100*indicator_means(feedback_observation, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.6.F = 100*indicator_means(feedback_observation, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.6.M = 100*indicator_means(feedback_observation, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.6.F = 100*indicator_means(feedback_observation, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.6.M = 100*indicator_means(feedback_observation, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.6.R = 100*indicator_means(feedback_observation, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.6.U = 100*indicator_means(feedback_observation, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting having lesson plans	
       SE.PRM.ILDR.7   = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.7.F = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.7.M = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.7.F = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.7.M = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.7.R = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.7.U = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)	
       SE.PRM.ILDR.8   = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.8.F = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.8.M = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Male"),
+      # SE.PRM.ILDR.8.F = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Female"),
+      # SE.PRM.ILDR.8.M = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Male"),
       SE.PRM.ILDR.8.R = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.8.U = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Urban")
       
@@ -445,26 +445,26 @@ api_template <- api_template %>%
       SE.PRM.PKNW     = indicator_means(principal_knowledge_score		, "school", "PKNW",  "All"),
       #(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school		
       SE.PRM.PKNW.1   = indicator_means(principal_knowledge_score		, "school", "PKNW",  "All"),
-      SE.PRM.PKNW.1.F = indicator_means(principal_knowledge_score		, "school", "PKNW",  "Female"),
-      SE.PRM.PKNW.1.M = indicator_means(principal_knowledge_score		, "school", "PKNW",  "Male"),
+      # SE.PRM.PKNW.1.F = indicator_means(principal_knowledge_score		, "school", "PKNW",  "Female"),
+      # SE.PRM.PKNW.1.M = indicator_means(principal_knowledge_score		, "school", "PKNW",  "Male"),
       SE.PRM.PKNW.1.R = indicator_means(principal_knowledge_score		, "school", "PKNW",  "Rural"),
       SE.PRM.PKNW.1.U = indicator_means(principal_knowledge_score		, "school", "PKNW",  "Urban"),
       #(De Facto) Percent of principals familiar with teachers' content knowledge	
       SE.PRM.PKNW.2   = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "All"),  
-      SE.PRM.PKNW.2.F = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "Female"),
-      SE.PRM.PKNW.2.M = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "Male"),
+      # SE.PRM.PKNW.2.F = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "Female"),
+      # SE.PRM.PKNW.2.M = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "Male"),
       SE.PRM.PKNW.2.R = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "Rural"),
       SE.PRM.PKNW.2.U = 100*indicator_means((add_triple_digit_pknw+complete_sentence_pknw+multiply_double_digit_pknw)/3, "school", "PKNW",  "Urban"),
       #(De Facto) Percent of principals familiar with teachers' experience	
       SE.PRM.PKNW.3   = 100*indicator_means(experience_pknw, "school", "PKNW",  "All"),
-      SE.PRM.PKNW.3.F = 100*indicator_means(experience_pknw, "school", "PKNW",  "Female"),
-      SE.PRM.PKNW.3.M = 100*indicator_means(experience_pknw, "school", "PKNW",  "Male"),
+      # SE.PRM.PKNW.3.F = 100*indicator_means(experience_pknw, "school", "PKNW",  "Female"),
+      # SE.PRM.PKNW.3.M = 100*indicator_means(experience_pknw, "school", "PKNW",  "Male"),
       SE.PRM.PKNW.3.R = 100*indicator_means(experience_pknw, "school", "PKNW",  "Rural"),
       SE.PRM.PKNW.3.U = 100*indicator_means(experience_pknw, "school", "PKNW",  "Urban"),
       #(De Facto) Percent of principals familiar with availability of classroom inputs	
       SE.PRM.PKNW.4   = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "All"),  
-      SE.PRM.PKNW.4.F = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "Female"),
-      SE.PRM.PKNW.4.M = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "Male"),
+      # SE.PRM.PKNW.4.F = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "Female"),
+      # SE.PRM.PKNW.4.M = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "Male"),
       SE.PRM.PKNW.4.R = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "Rural"),
       SE.PRM.PKNW.4.U = 100*indicator_means((textbooks_pknw+blackboard_pknw)/2, "school", "PKNW",  "Urban")
     )
@@ -476,20 +476,20 @@ api_template <- api_template %>%
       SE.PRM.PMAN     = indicator_means(principal_management		, "school", "PMAN",  "All"),
       #(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term	
       SE.PRM.PMAN.1   = indicator_means(principal_management		, "school", "PMAN",  "All"),
-      SE.PRM.PMAN.1.F = indicator_means(principal_management		, "school", "PMAN",  "Female"),
-      SE.PRM.PMAN.1.M = indicator_means(principal_management		, "school", "PMAN",  "Male"),
+      # SE.PRM.PMAN.1.F = indicator_means(principal_management		, "school", "PMAN",  "Female"),
+      # SE.PRM.PMAN.1.M = indicator_means(principal_management		, "school", "PMAN",  "Male"),
       SE.PRM.PMAN.1.R = indicator_means(principal_management		, "school", "PMAN",  "Rural"),
       SE.PRM.PMAN.1.U = indicator_means(principal_management		, "school", "PMAN",  "Urban"),
       #(De Facto) Average score for the extent to which principals master problem-solving in the short-term	
       SE.PRM.PMAN.2   = indicator_means(goal_setting, "school", "PMAN",  "All"),  
-      SE.PRM.PMAN.2.F = indicator_means(goal_setting, "school", "PMAN",  "Female"),
-      SE.PRM.PMAN.2.M = indicator_means(goal_setting, "school", "PMAN",  "Male"),
+      # SE.PRM.PMAN.2.F = indicator_means(goal_setting, "school", "PMAN",  "Female"),
+      # SE.PRM.PMAN.2.M = indicator_means(goal_setting, "school", "PMAN",  "Male"),
       SE.PRM.PMAN.2.R = indicator_means(goal_setting, "school", "PMAN",  "Rural"),
       SE.PRM.PMAN.2.U = indicator_means(goal_setting, "school", "PMAN",  "Urban"),
       #(De Facto) Average score for the extent to which principals master goal-setting in the long term	
       SE.PRM.PMAN.3   = indicator_means(problem_solving, "school", "PMAN",  "All"),
-      SE.PRM.PMAN.3.F = indicator_means(problem_solving, "school", "PMAN",  "Female"),
-      SE.PRM.PMAN.3.M = indicator_means(problem_solving, "school", "PMAN",  "Male"),
+      # SE.PRM.PMAN.3.F = indicator_means(problem_solving, "school", "PMAN",  "Female"),
+      # SE.PRM.PMAN.3.M = indicator_means(problem_solving, "school", "PMAN",  "Male"),
       SE.PRM.PMAN.3.R = indicator_means(problem_solving, "school", "PMAN",  "Rural"),
       SE.PRM.PMAN.3.U = indicator_means(problem_solving, "school", "PMAN",  "Urban"),
     )
@@ -509,7 +509,7 @@ api_template <- api_template %>%
       #(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries	
       SE.PRM.TATT.4 = 100*indicator_means(teacher_bonus		, "school", "TATT",  "All"),    
       #(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas	
-      SE.PRM.TATT.5 = 100*indicator_means(if_else((teacher_bonus_hard_staff==1 | teacher_bonus_subj_shortages==1),1,0	)	, "school", "TATT",  "All"),
+      SE.PRM.TATT.5 = 100*indicator_means(if_else((teacher_bonus_hard_staff==1 ),1,0	)	, "school", "TATT",  "All"),
       #(De Facto) Percent of teachers that performance matters for promotions	
       SE.PRM.TATT.6  = 100*indicator_means(better_teachers_promoted		, "school", "TATT",  "All"),  
       #(De Jure) Is there a well-established career path for teachers?	
@@ -589,7 +589,7 @@ api_template <- api_template %>%
   SE.PRM.TEVL.2 =expert_df$evaluation_law_school, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools                    
   SE.PRM.TEVL.3 = 100*indicator_means(formally_evaluated		, "school", "TEVL",  "All"),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
   SE.PRM.TEVL.4 =expert_df$evaluation_criteria, #(De Jure) The criteria to evaluate teachers is clear                                                                     
-  SE.PRM.TEVL.5 = indicator_means(m3sbq8_tmna__1	+m3sbq8_tmna__2 + m3sbq8_tmna__3 + m3sbq8_tmna__4 + m3sbq8_tmna__5 + m3sbq8_tmna__6 + m3sbq8_tmna__7 + m3sbq8_tmna__8 + m3sbq8_tmna__97		, "school", "TEVL",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
+  SE.PRM.TEVL.5 = indicator_means(m3sbq8_tmna__1	+m3sbq8_tmna__2 + m3sbq8_tmna__3 + m3sbq8_tmna__4 + m3sbq8_tmna__5 + m3sbq8_tmna__6 + m3sbq8_tmna__7 + m3sbq8_tmna__8 + m3sbq8_tmna__97		, "school", "TMNA",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
   SE.PRM.TEVL.6 = 100*indicator_means(negative_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
   SE.PRM.TEVL.7 = 100*indicator_means(positive_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
   SE.PRM.TEVL.8 =expert_df$negative_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more negative evaluations                         
@@ -618,18 +618,18 @@ api_template <- api_template %>%
     mutate(
   SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
   SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-  SE.PRM.TINM.10 =indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+  #SE.PRM.TINM.10 =indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
   SE.PRM.TINM.11 = indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
-  SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
+  #SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
   SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
   SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
   SE.PRM.TINM.3 = indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
   SE.PRM.TINM.4 = indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
   SE.PRM.TINM.5 = indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
   SE.PRM.TINM.6 = indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
-  SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
-  SE.PRM.TINM.8 = indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
-  SE.PRM.TINM.9 = indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+  # SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+  # SE.PRM.TINM.8 = indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+  # SE.PRM.TINM.9 = indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
   SE.PRM.TINM.DF = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"), #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
   SE.PRM.TINM.DJ = expert_df$intrinsic_motivation #(De Jure) Policy Lever (Teaching) - Intrinsic Motivation   
     )
@@ -640,18 +640,18 @@ api_template <- api_template %>%
     mutate(
   SE.PRM.ISTD  =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"), #Policy Lever (Inputs & Infrastructure) - Standards                                                                       
   SE.PRM.ISTD.1  =expert_df$textbook_policy, #(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?                   
-  SE.PRM.ISTD.10 =  100*indicator_means(m1scq14_imon__4		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
+  SE.PRM.ISTD.10 =  100*indicator_means(m1scq14_imon__04		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
   SE.PRM.ISTD.11 =expert_df$toilet_policy, #(De Jure) Is there a policy in place to require that schools have functioning toilets?                                   
-  SE.PRM.ISTD.12 =  100*indicator_means(m1scq14_imon__1		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
+  SE.PRM.ISTD.12 =  100*indicator_means(m1scq14_imon__01		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
   SE.PRM.ISTD.13 =expert_df$disability_policy, #(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?              
-  SE.PRM.ISTD.14 =  100*indicator_means(m1scq14_imon__3		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
-  SE.PRM.ISTD.2  =  100*indicator_means(m1scq13_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
+  SE.PRM.ISTD.14 =  100*indicator_means(m1scq14_imon__03		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
+  SE.PRM.ISTD.2  =  100*indicator_means(m1scq13_imon__02		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
   SE.PRM.ISTD.3  =expert_df$connectivity_program, #(De Jure) Is there a national connectivity program?                                                                      
   SE.PRM.ISTD.4  =  -999,#(De Facto) Do you know if there is a national connectivity program?                                                      
   SE.PRM.ISTD.5  =expert_df$materials_policy, #(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computi~
-  SE.PRM.ISTD.6  =  100*indicator_means(m1scq13_imon__5		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/~
+  SE.PRM.ISTD.6  =  100*indicator_means(m1scq13_imon__05		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/~
   SE.PRM.ISTD.7  =expert_df$electricity_policy, #(De Jure) Is there a policy in place to require that schools have access to electricity?                                 
-  SE.PRM.ISTD.8  =  100*indicator_means(m1scq14_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?                 
+  SE.PRM.ISTD.8  =  100*indicator_means(m1scq14_imon__02		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?                 
   SE.PRM.ISTD.9  =expert_df$water_policy, #(De Jure) Is there a policy in place to require that schools have access to drinking water?                              
   SE.PRM.ISTD.DF =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"),#(De Facto) Policy Lever (Inputs & Infrastructure) - Standards                                                            
   SE.PRM.ISTD.DJ =expert_df$inputs_standards #(De Jure) Policy Lever (Inputs & Infrastructure) - Standards    
@@ -663,13 +663,13 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   SE.PRM.IMON  =  indicator_means(sch_monitoring		, "school", "IMON",  "All"),    #Policy Lever (Inputs & Infrastructure) - Monitoring                                                                      
-  SE.PRM.IMON.1  =  indicator_means(m1scq1_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
+  SE.PRM.IMON.1  =  indicator_means(bin_var(m1scq1_imon,1)		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
   SE.PRM.IMON.10 =-999, #(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored                         
   SE.PRM.IMON.2  =  indicator_means(parents_involved		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
   SE.PRM.IMON.3  =  indicator_means(m1scq5_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
   SE.PRM.IMON.4  =  indicator_means(m1scq7_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
   SE.PRM.IMON.5  =  indicator_means(bin_var(m1scq10_imon,1)		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-  SE.PRM.IMON.6  =  indicator_means(m1scq11_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
+  SE.PRM.IMON.6  =  indicator_means(bin_var(m1scq11_imon,1)		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
   SE.PRM.IMON.7  =-999, #(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?                          
   SE.PRM.IMON.8  =-999, #(De Jure) Number of basic inputs clearly articulated as needing to be monitored                                          
   SE.PRM.IMON.9  =-999, #(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?                  
@@ -688,10 +688,10 @@ api_template <- api_template %>%
   SE.PRM.LNTN.5  =expert_df$breastfeeding, #(De Jure) Does a national policy exist to encourage breastfeeding?
   SE.PRM.LNTN.6  =100*as.numeric(defacto_dta_learners_final$`Percentage of children born in the five (three) years preceding the survey who were ever breastfed`), #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed
   SE.PRM.LNTN.7  =expert_df$school_feeding, #(De Jure) Is there a publicly funded school feeding program?
-  SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
+  #SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
     ) %>%
     mutate(
-      SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6 +SE.PRM.LNTN.8)/400+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
+      SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6 )/300+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
       SE.PRM.LNTN.DJ =expert_df$nutrition_programs#(De Jure) Policy Lever (Learners) - Nutrition Programs
   ) %>%
   mutate(
@@ -706,7 +706,7 @@ api_template <- api_template %>%
   SE.PRM.LHTH.1 =expert_df$immunization, #(De Jure) Are young children required to receive a complete course of childhood immunizations?
   SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final[,5]), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
   SE.PRM.LHTH.3 =expert_df$healthcare_young_children, #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
-  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of  children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance
+  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance
   SE.PRM.LHTH.5 =expert_df$deworming, #(De Jure) Are deworming pills funded and distributed by the government?
   SE.PRM.LHTH.6 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children age 6-59 months who received deworming medication.`), #(De Facto) Percent of children age 6-59 months who received deworming medication
   SE.PRM.LHTH.7 =expert_df$antenatal_skilled_delivery, #(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?
@@ -763,11 +763,11 @@ api_template <- api_template %>%
     mutate(
   SE.PRM.LSKC.1 =expert_df$good_parent_sharing, #(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?
   SE.PRM.LSKC.2 =expert_df$promote_ece_stimulation, #(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early ~
-  SE.PRM.LSKC.3 =-999, #(De Facto) Percent of children under age 5 who have three or more children's books
+  SE.PRM.LSKC.3 =100*as.numeric(defacto_dta_learners_final$`Percentage of children under age 5 who have three or more children books`), #(De Facto) Percent of children under age 5 who have three or more children's books
   SE.PRM.LSKC.4 =100*as.numeric(defacto_dta_learners_final$`Percentage of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household`) #(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and respo~
   ) %>%
   mutate(
-    SE.PRM.LSKC.DF = 4*(SE.PRM.LSKC.4)/100+1,#(De Facto) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity
+    SE.PRM.LSKC.DF = 4*(SE.PRM.LSKC.3+SE.PRM.LSKC.4)/200+1,#(De Facto) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity
     SE.PRM.LSKC.DJ =expert_df$caregiver_skills
   ) %>%
   mutate(#(De Jure) Policy Lever (Learners) - Caregiver Capacity - Skills Capacity
@@ -778,22 +778,22 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-  SE.PRM.SCFN   = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),  #Policy Lever (School Management) - Clarity of Functions                                                                  
-  SE.PRM.SCFN.1 = 100*indicator_means(infrastructure_scfn		, "school", "SCFN",  "All"),  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance~
+  #SE.PRM.SCFN   = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),  #Policy Lever (School Management) - Clarity of Functions                                                                  
+  #SE.PRM.SCFN.1 = 100*indicator_means(infrastructure_scfn		, "school", "SCFN",  "All"),  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance~
   SE.PRM.SCFN.10 =expert_df$student_scfn, #(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?                   
-  SE.PRM.SCFN.11 = 100*indicator_means(principal_hiring_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hirin~
+  #SE.PRM.SCFN.11 = 100*indicator_means(principal_hiring_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hirin~
   SE.PRM.SCFN.12 =expert_df$principal_hiring_scfn,#(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?                
-  SE.PRM.SCFN.13 = 100*indicator_means(principal_supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal super~
+  #SE.PRM.SCFN.13 = 100*indicator_means(principal_supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal super~
   SE.PRM.SCFN.14 =expert_df$principal_supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?             
   SE.PRM.SCFN.2  =expert_df$infrastructure_scfn, #(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastruct~
-  SE.PRM.SCFN.3  = 100*indicator_means(materials_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement~
+  #SE.PRM.SCFN.3  = 100*indicator_means(materials_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement~
   SE.PRM.SCFN.4  =expert_df$materials_scfn,#(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?                       
-  SE.PRM.SCFN.5  = 100*indicator_means(hiring_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring ~
+  #SE.PRM.SCFN.5  = 100*indicator_means(hiring_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring ~
   SE.PRM.SCFN.6  =expert_df$hiring_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?                  
-  SE.PRM.SCFN.7  = 100*indicator_means(supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervi~
+  #SE.PRM.SCFN.7  = 100*indicator_means(supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervi~
   SE.PRM.SCFN.8  =expert_df$supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?    
-  SE.PRM.SCFN.9  = 100*indicator_means(student_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
-  SE.PRM.SCFN.DF = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),#(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
+  #SE.PRM.SCFN.9  = 100*indicator_means(student_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
+  #SE.PRM.SCFN.DF = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),#(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
   SE.PRM.SCFN.DJ =expert_df$sch_management_clarity#(De Jure) Policy Lever (School Management) - Clarity of Functions    
     )
   #######################################
@@ -823,13 +823,13 @@ api_template <- api_template %>%
   SE.PRM.SSLD.15 =  100*indicator_means(m7sgq2_ssld==7		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is eth~
   SE.PRM.SSLD.16 =  100*indicator_means(m7sgq2_ssld==8		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is kno~
   SE.PRM.SSLD.2  =expert_df$principal_factors,#(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?              
-  SE.PRM.SSLD.3  =  100*indicator_means(m7sgq1_ssld__1		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of exp~
-  SE.PRM.SSLD.4  =  100*indicator_means(m7sgq1_ssld__2		, "school", "SSLD",  "All"),#(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of ~
-  SE.PRM.SSLD.5  =  100*indicator_means(m7sgq1_ssld__3		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated~
-  SE.PRM.SSLD.6  =  100*indicator_means(m7sgq1_ssld__4		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relatio~
-  SE.PRM.SSLD.7  =  100*indicator_means(m7sgq1_ssld__6		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include political af~
+  SE.PRM.SSLD.3  =  100*indicator_means(bin_var(m7sgq1_ssld01,1)		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of exp~
+  SE.PRM.SSLD.4  =  100*indicator_means(bin_var(m7sgq1_ssld02,1)		, "school", "SSLD",  "All"),#(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of ~
+  SE.PRM.SSLD.5  =  100*indicator_means(bin_var(m7sgq1_ssld03,1)		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated~
+  SE.PRM.SSLD.6  =  100*indicator_means(bin_var(m7sgq1_ssld04,1)		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relatio~
+  SE.PRM.SSLD.7  =  100*indicator_means(bin_var(m7sgq1_ssld05,1)		, "school", "SSLD",  "All"),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include political af~
   SE.PRM.SSLD.8  =  -999,#(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group 
-  SE.PRM.SSLD.9  =  100*indicator_means(m7sgq1_ssld__8		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of~
+  SE.PRM.SSLD.9  =  100*indicator_means(bin_var(m7sgq1_ssld08,1)		, "school", "SSLD",  "All"), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of~
   SE.PRM.SSLD.DF =  indicator_means(sch_selection_deployment		, "school", "SSLD",  "All"), #(De Facto) Policy Lever (School Management) - Selection & Deployment                                                     
   SE.PRM.SSLD.DJ =expert_df$sch_selection_deployment #(De Jure) Policy Lever (School Management) - Selection & Deployment  
     )
@@ -840,16 +840,16 @@ api_template <- api_template %>%
     mutate(
   SE.PRM.SSUP    =  indicator_means(sch_support		, "school", "SSUP",  "All"), #Policy Lever (School Management) - Support                                                                        
   SE.PRM.SSUP.1  =expert_df$principal_training_required,#(De Jure) Are principals required to have training on how to manage a school?                                     
-  SE.PRM.SSUP.10 =  100*indicator_means(m7sgq5_ssup		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having used the skills they gained at the last training they attended
+  SE.PRM.SSUP.10 =  100*indicator_means(bin_var(m7sgq5_ssup,1)		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having used the skills they gained at the last training they attended
   SE.PRM.SSUP.11 =  indicator_means(if_else(m7sgq7_ssup!=98,m7sgq7_ssup, as.numeric(NA)) 		, "school", "SSUP",  "All"),#(De Facto) Average number of trainings that principals report having been offered to them in the past year        
   SE.PRM.SSUP.2  =expert_df$principal_training_type1,#(De Jure) Are principals required to have management training for new principals?                                 
   SE.PRM.SSUP.3  =expert_df$principal_training_type2,#(De Jure) Are principals required to have in-service training?                                                    
   SE.PRM.SSUP.4  =expert_df$principal_training_type3,#(De Jure) Are principals required to have mentoring/coaching by experienced principals?                           
   SE.PRM.SSUP.5  =expert_df$principal_training_frequency_2,#(De Jure) How many times per year do principals have trainings?                                                   
-  SE.PRM.SSUP.6  =  100*indicator_means(m7sgq3_ssup		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report ever having received formal training                                 
-  SE.PRM.SSUP.7  =  100*indicator_means(m7sgq4_ssup__1		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received management training for new principals               
-  SE.PRM.SSUP.8  =  100*indicator_means(m7sgq4_ssup__2		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report having received in-service training                                  
-  SE.PRM.SSUP.9  =  100*indicator_means(m7sgq4_ssup__3		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals         
+  SE.PRM.SSUP.6  =  100*indicator_means(bin_var(m7sgq3_ssup,1)		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report ever having received formal training                                 
+  SE.PRM.SSUP.7  =  100*indicator_means(bin_var(m7sgq4_ssup01,1)		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received management training for new principals               
+  SE.PRM.SSUP.8  =  100*indicator_means(bin_var(m7sgq4_ssup02,1)		, "school", "SSUP",  "All"), #(De Facto) Percent of principals that report having received in-service training                                  
+  SE.PRM.SSUP.9  =  100*indicator_means(bin_var(m7sgq4_ssup03,1)		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals         
   SE.PRM.SSUP.DF   =  indicator_means(sch_support		, "school", "SSUP",  "All"),  #(De Facto) Policy Lever (School Management) - Support                                                             
   SE.PRM.SSUP.DJ =expert_df$sch_support#(De Jure) Policy Lever (School Management) - Support 
     )
@@ -861,60 +861,60 @@ api_template <- api_template %>%
   SE.PRM.SEVL   =  indicator_means(principal_evaluation		, "school", "SEVL",  "All"), #Policy Lever (School Management) - Evaluation                                                          
   SE.PRM.SEVL.1  =expert_df$principal_monitor_law,#(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?  
   SE.PRM.SEVL.2  =expert_df$principal_monitor_criteria,#(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?                  
-  SE.PRM.SEVL.3 =  100*indicator_means(m7sgq8_sevl		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated  during the last school year        
+  SE.PRM.SEVL.3 =  100*indicator_means(bin_var(m7sgq8_sevl,1)		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated  during the last school year        
   SE.PRM.SEVL.4 =  100*indicator_means(principal_eval_tot>1		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated on multiple factors                 
   SE.PRM.SEVL.5 =  100*indicator_means(principal_negative_consequences	, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report there would be consequences after two negative evaluations
   SE.PRM.SEVL.6  =100*indicator_means(principal_positive_consequences	, "school", "SEVL",  "All"),#(De Facto) Percent of principals that report there would be consequences after two positive evaluations
   SE.PRM.SEVL.DF =  indicator_means(principal_evaluation		, "school", "SEVL",  "All"), #(De Facto) Policy Lever (School Management) - Evaluation                                               
   SE.PRM.SEVL.DJ =expert_df$principal_evaluation #(De Jure) Policy Lever (School Management) - Evaluation     
     )
-  #######################################
-  # Politics & Bureaucratic Capacity - Quality of Bureaucracy 	(BQBR)
-  #######################################
-  indicator_values_transpose <- indicator_values_transpose %>%
-    mutate(
-  SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy
-  SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
-  SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills
-  SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment
-  SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit
-  SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes
-)
-  #######################################
-  # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
-  #######################################
-  indicator_values_transpose <- indicator_values_transpose %>%
-    mutate(
-  SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making
-  SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-  SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management
-  SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making
-  SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation
-  SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators
-    )
-  #######################################
-  # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
-  #######################################
-  indicator_values_transpose <- indicator_values_transpose %>%
-    mutate(
-  SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability
-  SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-  SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence
-  SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency
-  SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials
-    )
-  #######################################
-  # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
-  #######################################
-  indicator_values_transpose <- indicator_values_transpose %>%
-    mutate(
-  SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals
-  SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
-  SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting
-  SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring
-  SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives
-  SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement
-    )
+#   #######################################
+#   # Politics & Bureaucratic Capacity - Quality of Bureaucracy 	(BQBR)
+#   #######################################
+#   indicator_values_transpose <- indicator_values_transpose %>%
+#     mutate(
+#   SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy
+#   SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
+#   SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills
+#   SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment
+#   SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit
+#   SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes
+# )
+#   #######################################
+#   # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
+#   #######################################
+#   indicator_values_transpose <- indicator_values_transpose %>%
+#     mutate(
+#   SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making
+#   SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+#   SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management
+#   SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making
+#   SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation
+#   SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators
+#     )
+#   #######################################
+#   # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
+#   #######################################
+#   indicator_values_transpose <- indicator_values_transpose %>%
+#     mutate(
+#   SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability
+#   SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+#   SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence
+#   SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency
+#   SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials
+#     )
+#   #######################################
+#   # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
+#   #######################################
+#   indicator_values_transpose <- indicator_values_transpose %>%
+#     mutate(
+#   SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals
+#   SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
+#   SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting
+#   SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring
+#   SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives
+#   SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement
+#     )
   #######################################
   # Politics & Bureaucratic Capacity - Financing 	(BFIN)
   #######################################
@@ -932,8 +932,9 @@ api_template <- api_template %>%
     )
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
-    rownames_to_column(var='Series') %>%
-    rename(value = V1  )
+    rownames_to_column(var='Series')
+  # %>%
+  #   rename(value = V1  )
   
 api_final<-api_template %>%
     dplyr::select(-value) %>%

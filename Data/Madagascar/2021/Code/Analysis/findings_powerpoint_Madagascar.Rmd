@@ -1367,7 +1367,7 @@ main_indicator_labels<-c(
     )
     
 ```
-```{r radar2, echo=FALSE, warning=FALSE}
+```{r radar2, eval=FALSE, warning=FALSE, include=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
@@ -1377,8 +1377,8 @@ main_indicator_labels<-c(
                          'Teaching - Evaluation', 
                          'Teaching - Monitoring & Accountability', 
                          #'Teaching - Intrinsic Motivation', 
-                         'Inputs & Infrastructure - Monitoring',
-                         'Inputs & Infrastructure - Standards',
+                         #'Inputs & Infrastructure - Monitoring',
+                         #'Inputs & Infrastructure - Standards',
                          'School Management - Attraction' ,                   
                          'School Management - Selection & Deployment'  ,      
                          'School Management - Support' ,                      
@@ -1393,8 +1393,8 @@ main_indicator_labels<-c(
                        'teaching_evaluation', 
                        'teacher_monitoring',
                        # 'intrinsic_motivation', 
-                       'sch_monitoring', 
-                       'standards_monitoring',
+                       #'sch_monitoring', 
+                       #'standards_monitoring',
                        'sch_management_attraction', 
                        'sch_selection_deployment', 
                        'sch_support', 
@@ -1474,7 +1474,7 @@ main_indicator_labels<-c(
 - Below are boxplots showing the 25th percentile, median, and 75th percentile ratings of teachers to these policy questions, along with outliers.  
 -  There is significant variation across teachers in how they understand or experience policies.
 
-```{r defacto, echo=FALSE}
+```{r defacto, eval=FALSE, include=FALSE}
 #get list of de facto indicators
 main_indicator_labels<-c( 
                         'Teaching - Attraction',
