@@ -190,7 +190,11 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_training_required=read_var(C8),
          principal_training_type=read_var(C9),
-         principal_training_frequency=read_var(C10)
+         principal_training_type1=1, #do this manual based on responses
+         principal_training_type2=1, #do this manual based on responses
+         principal_training_type3=0, #do this manual based on responses
+         principal_training_frequency=read_var(C10),
+         principal_training_frequency_2=4 #do this manual based on responses
          ) %>%
   mutate(sch_support=1+principal_training_required+2*principal_training_type/3+
            principal_training_frequency)
@@ -264,21 +268,21 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
 #school management
 #school_management_drop<-expert_dta_school_management$Question..
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
-  select(-starts_with("C"))
+  select(-starts_with("C", ignore.case=FALSE))
 
   #select(-all_of(school_management_drop))
 
 #inputs
 #inputs_drop<-expert_dta_inputs$Question..
 expert_dta_inputs_final <- expert_dta_inputs_final %>%
-  select(-starts_with("B"))
+  select(-starts_with("B", ignore.case=FALSE))
 #select(-all_of(inputs_drop))
 
 #teachers
 
 #teachers_drop<-expert_dta_teachers$Question..
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
-  select(-starts_with("A"))
+  select(-starts_with("A", ignore.case=FALSE))
 
   #select(-all_of(teachers_drop))
 
@@ -286,7 +290,7 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 
 #learners_drop<-expert_dta_learners$Question..
 expert_dta_learners_final <- expert_dta_learners_final %>%
-  select(-starts_with("D"))
+  select(-starts_with("D", ignore.case=FALSE))
 
   #select(-all_of(learners_drop))
 

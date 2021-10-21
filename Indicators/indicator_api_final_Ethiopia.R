@@ -200,7 +200,7 @@ wbopendat<-WDI(country="ET", indicator=ind_list, start=2000, end=2021, extra=T) 
 #read in databases for indicators
 
 load(paste(data_dir_2021, "School/school_indicators_data_anon.RData", sep="/"))
-#load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
+load(paste(data_dir_2021, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
 # 
 # 
 expert_df <- read_stata(paste(data_dir_2021, 'Policy_Survey/expert_dta_final.dta', sep="/" ))
@@ -239,7 +239,65 @@ source('R/api_data_fun_ETH.R', echo=TRUE)
 #export Indicators_metatdata section
 write_excel_csv(api_final, 'GEPD_Indicators_API_ETH_2021.csv')
 
-write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_ETH_2021.csv',sep=""))
+write_excel_csv(api_final, paste(data_dir_2021,'Indicators/', 'GEPD_Indicators_API_ETH_2021.csv',sep=""))
 
+# now do 2020 
+load(paste(data_dir_2020, "School/school_indicators_data_anon.RData", sep="/"))
+
+source('R/api_data_fun_ETH.R', echo=TRUE)
+
+
+
+#export Indicators_metatdata section
+write_excel_csv(api_final, 'GEPD_Indicators_API_ETH_2020.csv')
+
+write_excel_csv(api_final, paste(data_dir_2020,'Indicators/', 'GEPD_Indicators_API_ETH_2020.csv',sep=""))
+
+
+##################################
+### combine the 2020 and 2021 data
+##################################
+gc()
+rm(list = ls())
+
+#specify path to data
+data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
+data_dir_2021 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
+
+#attach saved results for 2021
+attach(paste0(data_dir_2021, "/School/school_indicators_data_anon.Rdata"))
+school_dta_2021 <- school_dta_short_anon
+
+#attach saved results for 2020
+attach(paste0(data_dir_2020, "/School/school_indicators_data_anon.Rdata"))
+school_dta_2020 <- school_dta_short_anon 
+
+#combine the data
+combine_gepd_data <- school_dta_2020 %>%
+  mutate(date=2020) %>%
+  bind_rows(school_dta_2021) %>%
+  mutate(date=if_else(is.na(date),2021,date)) 
+
+#create weights to weight each indicator for 2020 and 2021 based on school level weights.
+wgt_2020 <- sum(school_dta_2020$ipw)
+wgt_2021 <- sum(school_dta_2021$ipw)
+wgt_pooled  <- sum(combine_gepd_data$ipw)
+
+wgt_share_2020 <- wgt_2020/wgt_pooled
+wgt_share_2021 <- wgt_2021/wgt_pooled
+
+
+#now combine the data into one spreadsheet
+api_final_2020 <- read_csv('GEPD_Indicators_API_ETH_2020.csv') %>%
+  rename(value_2020=value)
+
+api_final_2021 <- read_csv('GEPD_Indicators_API_ETH_2021.csv') %>%
+  rename(value_2021=value)
+
+api_final_pooled <- api_final_2020 %>%
+  left_join(api_final_2021) %>%
+  mutate(value_pooled=value_2020*wgt_share_2020 + value_2021*wgt_share_2021)
+
+write_excel_csv(api_final_pooled, 'GEPD_Indicators_API_ETH_pooled.csv')
 
 

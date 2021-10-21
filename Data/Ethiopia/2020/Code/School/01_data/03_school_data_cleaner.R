@@ -47,7 +47,7 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash_school_survey_v1.dta"))
+school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
