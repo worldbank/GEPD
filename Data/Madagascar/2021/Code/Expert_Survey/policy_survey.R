@@ -2,7 +2,19 @@ library(tidyverse)
 library(haven)
 library(readxl)
 #score expert data (this requires a lot of hard coding and transcribing)
-expert_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
+#set directory to bring in data
+if(Sys.info()["user"] == "wb577189"){
+  
+  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Madagascar/2021/Policy Survey Data"
+  
+  
+  
+} else if (Sys.info()["user"] == "wb469649") {
+  
+  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
+  
+  
+}
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
@@ -94,8 +106,11 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 # Inputs
 ##############################
 expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
-  fill(Question..) %>% 
-  filter(!is.na(Question))
+  fill(`...1`) %>%
+  filter(!is.na(Questions)) %>% 
+  rename(`Question..` = `...1`,
+         Question = Questions)
+  
 
 
 expert_dta_inputs_shaped<-data.frame(t(expert_dta_inputs[-1]))

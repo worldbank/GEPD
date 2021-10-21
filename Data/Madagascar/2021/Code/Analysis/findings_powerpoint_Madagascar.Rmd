@@ -27,6 +27,16 @@ library(ggalt)
 library(waffle)
 library(patchwork)
 library(DT)
+
+## Packages
+  if(!require("pacman")) install.packages("pacman")
+  
+  pacman::p_load(
+    
+    tidyverse, haven, BiocManager, kebaleExtra, skimr, flextable, ggridges, scales, spatstat, ggradar, Hmisc, ggpmisc, ggalt, waffle, patchwork, DT, ggplot2, hrbrthemes
+    
+  )
+  
 # define stle for ggplot based on BBC plotting styles
 bbc_style <- function() {
   font <- "Helvetica"
@@ -122,8 +132,19 @@ Roadmap:
 ```{r data, include=FALSE}
 
 #set directory to bring in data
+  if(Sys.info()["user"] == "wb577189"){
 
-work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
+
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
+    work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
+
+    
+  }
+
 
 #load public official data
 #load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
@@ -149,7 +170,7 @@ bin_var <- function(var, val) {
 #create function to wrap text
 wrapper <- function(x, ...) 
 {
-  paste(strwrap(x, ...), collapse = "\n")
+  paste(strwrap(x, ...), collapse = "/n")
 }
 
 ```
@@ -729,19 +750,59 @@ absence_plt <- absence_plt %>%
   mutate(absence_2nd_fact=factor(absence_2nd_cat, levels=c('Present','Absent from School', 'Absent from Classroom'))) %>%
   arrange(absence_2nd_fact)
 
-ggplot(absence_plt, aes(fill=absence_2nd_fact, values=1)) +
-  facet_wrap(~urban_rural) +
-  geom_waffle(
+## AC - alternative because the lines above do not work for me
+#install.packages("waffle", repos = "https://cinc.rud.is")
+  absence_perc <- absence_plt %>%
+    ungroup() %>% 
+    select(-s_ecole_code) %>% 
+    count(urban_rural, absence_2nd_fact) %>% 
+    arrange(desc(n)) %>%
+    group_by(absence_2nd_fact) %>% 
+    mutate(cumulative = sum(n)) %>% 
+    ungroup() %>% 
+    mutate(Group = factor(absence_2nd_fact, levels = c("Present", "Absent from School", "Absent from Classroom")),
+         midpoint = cumulative - n / 2,
+         label = paste0(Group, " (", round(cumulative / sum(n) * 100, 1), "%)"))
+  
+  
+  ggplot(absence_perc, aes(fill=label, values=n)) +
+  facet_wrap(~urban_rural, nrow = 1, strip.position = "bottom") +
+    geom_waffle(
     n_rows = 32, color = "white", flip = TRUE
   ) +
-  theme_void() +
-  theme(panel.spacing.x = unit(0, "npc")) +
+  scale_x_discrete() +
+  scale_y_continuous(labels = function(x) x * 32, # make this multiplyer the same as n_rows
+                     expand = c(0,0)) +
+  ggthemes::scale_fill_tableau(name=NULL) +
+  coord_equal() +
   theme(strip.text.x = element_text(hjust = 0.5),
-        legend.position = 'bottom'
-        ) +
+        legend.position = 'bottom') +
+    theme(panel.spacing.x = unit(0, "npc")) +
+  theme(strip.text.x = element_text(hjust = 0.5),
+        legend.position = 'bottom') +
   ggtitle("Teacher Presense in 2nd visit") +
   labs(caption='One tile = One teacher',
-       fill='Teacher Status')
+       fill='Teacher Status') +
+  theme_minimal(base_family = "Roboto Condensed") +
+  theme(panel.grid = element_blank(), axis.ticks.y = element_line()) +
+  guides(fill = guide_legend(reverse = TRUE))
+  
+
+
+# ggplot(absence_perc, aes(fill=label, values=n)) +
+#   
+#   facet_wrap(~urban_rural) +
+#   geom_waffle(
+#     n_rows = 32, color = "white", flip = TRUE
+#   ) +
+#   theme_void() +
+#   theme(panel.spacing.x = unit(0, "npc")) +
+#   theme(strip.text.x = element_text(hjust = 0.5),
+#         legend.position = 'bottom'
+#         ) +
+#   ggtitle("Teacher Presence in 2nd visit") +
+#   labs(caption='One tile = One teacher',
+#        fill='Teacher Status') 
 
 
 
@@ -751,18 +812,59 @@ absence_plt1 <- absence_plt %>%
   mutate(absence_1st_fact=factor(absence_1st_cat, levels=c('Present','Absent from School', 'Absent from Classroom'))) %>%
   arrange(absence_1st_fact)
 
-ggplot(absence_plt1, aes(fill=absence_1st_fact, values=1)) +
-  facet_wrap(~urban_rural) +
-  geom_waffle(
+absence_perc1 <- absence_plt1 %>%
+    ungroup() %>% 
+    select(-s_ecole_code) %>% 
+    count(urban_rural, absence_1st_fact) %>% 
+    arrange(desc(n)) %>%
+    group_by(absence_1st_fact) %>% 
+    mutate(cumulative = sum(n)) %>% 
+    ungroup() %>% 
+    mutate(Group = factor(absence_1st_fact, levels = c("Present", "Absent from School", "Absent from Classroom")),
+         midpoint = cumulative - n / 2,
+         label = paste0(Group, " (", round(cumulative / sum(n) * 100, 1), "%)"))
+
+
+
+
+
+ggplot(absence_perc1, aes(fill=label, values=n)) +
+  facet_wrap(~urban_rural, nrow = 1, strip.position = "bottom") +
+    geom_waffle(
     n_rows = 32, color = "white", flip = TRUE
   ) +
-  theme_void() +
-  theme(panel.spacing.x = unit(0, "npc")) +
+  scale_x_discrete() +
+  scale_y_continuous(labels = function(x) x * 32, # make this multiplyer the same as n_rows
+                     expand = c(0,0)) +
+  ggthemes::scale_fill_tableau(name=NULL) +
+  coord_equal() +
   theme(strip.text.x = element_text(hjust = 0.5),
-        legend.position = 'top') +
+        legend.position = 'bottom') +
+    theme(panel.spacing.x = unit(0, "npc")) +
+  theme(strip.text.x = element_text(hjust = 0.5),
+        legend.position = 'bottom') +
   ggtitle("Teacher Presense in 1st visit") +
   labs(caption='One tile = One teacher',
-       fill='Teacher Status')
+       fill='Teacher Status') +
+  theme_minimal(base_family = "Roboto Condensed") +
+  theme(panel.grid = element_blank(), axis.ticks.y = element_line()) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+
+
+
+# ggplot(absence_perc1, aes(fill=label, values=n)) +
+# facet_wrap(~urban_rural) +
+# geom_waffle(
+# n_rows = 32, color = "white", flip = true
+# ) +
+# theme_void() +
+# theme(panel.spacing.x = unit(0, "npc")) +
+# theme(strip.text.x = element_text(hjust = 0.5),
+#      legend.position = 'bottom') +
+# ggtitle("teacher presense in 1st visit") +
+# labs(caption='one tile = one teacher',
+#     fill='teacher status')
 
 
 ```
@@ -1329,12 +1431,28 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
+      if(Sys.info()["user"] == "wb577189"){
+
+  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Madagascar/2021/Policy Survey Data"
+
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
     expert_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
 
+    
+  }
+    
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
     expert_dta_radar <- expert_dta_final %>%
+                  rename(
+      sch_monitoring= principal_monitor_criteria, 
+       standards_monitoring=inputs_standards
+        
+      ) %>% 
       select(colnames(data_radar))
     
        data_radar<- data_radar %>%
@@ -1425,18 +1543,28 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
+      if(Sys.info()["user"] == "wb577189"){
+
+  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Madagascar/2021/Policy Survey Data"
+
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
     expert_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
 
+    
+  }
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
     expert_dta_radar <- expert_dta_final %>%
-      select(colnames(data_radar)) %>%
-      rename(
-      sch_monitoring=, 
+            rename(
+      sch_monitoring= principal_monitor_criteria, 
        standards_monitoring=inputs_standards
         
-      )
+      ) %>% 
+      select(colnames(data_radar)) 
     
        data_radar<- data_radar %>%
       bind_rows(expert_dta_radar)
@@ -1755,7 +1883,7 @@ public_officials_dta_clean_anon <- public_officials_dta_clean_anon %>%
 
 data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
-  mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
+  mutate(govt_tier=str_remove(govt_tier, "/\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   mutate(govt_tier=case_when(
     govt_tier=='District office ' ~ 'District Office',
