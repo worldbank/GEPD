@@ -429,44 +429,111 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
 
   # We are trying to compare the schools for which the data collection took place before Covid-19 started with the ones for which data collection was completed in 2021. To do that, we are drawing a random sample of ~ 50-60 schools from the ones that were done at the beginning of 2020. Each school from this first sample is then match with the schools from 2021 based on 1) observable characteristics (GDP + number of students) and 2) geographic location (closest GPS distance)
 
+   ## Shortest path with distance ---- 
 
-  # Drawing the sample
-
-  sample_random_2020 <- school_dta_2020 %>% 
-  sample_n(50, replace = F, weight = NULL)
-
-  # Matching with the list from 2021
-
-    # Keep only variables of interest
-     random_2020 <- sample_random_2020 %>% 
-       select(school_code, lat, lon) %>% 
-       mutate(year = 2020)
-     
-     schools_2021 <- school_dta_2021 %>% 
-       select(school_code, lat, lon) %>% 
-       rename(school_id = school_code) %>% 
-       mutate(year = 2021) %>% filter(!is.na(.)) #some do not have GPS points to match on
-
-     
-   ## Shortest path with distance this time---- 
       library(geosphere)
+
+
+      schools_2021 <- school_dta_2021%>% filter(!is.na(lon)|!is.na(lat))
+      schools_2020 <- school_dta_2020
+
       
       # create distance matrix
-      mat <- distm(random_2020[,c('lon','lat')], schools_2021[,c('lon','lat')], fun=distVincentyEllipsoid) 
+       mat <- distm(schools_2021[,c('lon','lat')], schools_2020[,c('lon','lat')], fun=distVincentyEllipsoid) 
       
-      # assign the name to the point in list1 based on shortest distance in the matrix
-      random_2020$Closest_school_Post_covid <- schools_2021$school_id[max.col(-mat)]
-      random_2020$Distance_btw_schools <- apply(mat, 1, min)
+       # assign the name to the point in list1 based on shortest distance in the matrix
+      schools_2021$Closest_school_Pre_covid <- schools_2020$school_code[max.col(-mat)]
+      schools_2021$Distance_btw_schools <- apply(mat, 1, min)
       
-      shortest <- random_2020
-
+      #shortest <- random_2020
           
+    
       
-      
+    ## Drawing the sample from 2021 -----
+
+  sample_full <- schools_2021 %>% 
+      sample_n(60, replace = F, weight = NULL) %>% 
+      rename_with(~paste0(., "_POST"), school_code:GDP) %>% 
+      rename(school_code=Closest_school_Pre_covid) %>% 
+      left_join(schools_2020, by =c("school_code")) %>% 
+      rename_with(~paste0(., "_PRE"), school_name_preload:GDP) 
       
     
+      ## Pivot for graphs --------
+    sample_full_long <- sample_full  %>% 
+          
+        select(-school_code, -Distance_btw_schools) %>% 
+          
+         mutate(across(where(is.numeric),
+                    
+                    ~ as.character(.)
+                    )) %>% 
+          
+            pivot_longer(
+                    cols = school_code_POST:GDP_PRE,
+                    names_to = c("Indicator", "Covid"),
+                    names_pattern = "(.*)_(PRE|POST)",
+                    values_to = "Value"
+      ) %>% 
+        
+        # get rid off the names and character like variables that are no use for comparison here
+        
+        dplyr::filter(!str_detect(Value, "[A-Za-z]")) %>% 
+        mutate_at(c("Value"),
+                  ~ as.numeric(.)) %>% 
+                dplyr::filter(!is.na(Value)) %>% 
+        
+        group_by(Covid, Indicator) %>%
+
+        summarise(Value = mean(Value, na.rm = T)) %>%
+        
+        ## Remove indicator not used for comparison
+        
+        dplyr::filter(!str_detect(Indicator, "school_code")) %>% 
+        
+        dplyr::filter(!str_detect(Indicator, "sch_management_attraction")) %>% 
+        
+        ungroup() %>% 
+        
+        convert_as_factor(Covid)
+
+ #sample_full_long[sample_full_long$Indicator %in% names(which(table(sample_full_long$Indicator) <2 )), ]
 
 
+      
+# Compute t-test
+library(rstatix)
+      
+# res.aov <- anova_test(sample_full_long$Value ~ sample_full_long$Covid)
+
+  stat.test <- sample_full_long  %>% 
+    
+    ungroup() %>% 
+    
+    group_by(Indicator) %>%
+    
+    t_test(data = . ,Value ~ Covid) %>%
+    
+    adjust_pvalue(method = "bonferroni") %>%
+    
+    add_significance("p.adj")
+
+
+
+  # Create the plot
+  library(ggpubr)
+  
+    myplot <- ggboxplot(
+      sample_full_long, x = "Covid", y = "Value",
+      fill = "Covid", palette = "npg", legend = "none",
+      ggtheme = theme_pubr(border = TRUE)
+      ) +
+      facet_wrap(~Indicator, ncol = 3)
+    
+  # Add statistical test p-values
+    
+  stat.test <- stat.test %>% add_xy_position(x = "Species")
+  myplot + stat_pvalue_manual(stat.test, label = "p.adj.signif")
 
 
 
