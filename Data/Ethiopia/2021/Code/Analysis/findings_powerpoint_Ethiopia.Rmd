@@ -123,7 +123,19 @@ Roadmap:
 
 #set directory to bring in data
 
+ if(Sys.info()["user"] == "wb577189"){
+
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
 work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+
+    
+  }
+
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
@@ -1084,8 +1096,16 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
+      if(Sys.info()["user"] == "wb577189"){
 
+  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Ethiopia/2021/Data/clean/Policy_Survey"
+
+
+  } else if (Sys.info()["user"] == "wb469649") {
+    
+        expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
+    
+}
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
 
@@ -1123,6 +1143,40 @@ main_indicator_labels<-c(
     
 ```
 
+
+
+
+
+## Overall performance
+
+```{r overall, echo=FALSE}
+
+
+data_plot <- school_dta_short_anon %>%
+  select(hashed_school_code,  indicators_list) %>%
+  pivot_longer(cols=c("teacher_attraction", "teacher_selection_deployment", "teacher_support", "teaching_evaluation",
+                      "teacher_monitoring","sch_management_attraction", "sch_selection_deployment", "sch_support", "principal_evaluation"),
+               names_to = "indicators",
+               values_to = "indicator_values") 
+
+dataMedian <- summarise(group_by(data_plot, indicators), MD = round(median(indicator_values, na.rm=T),1))
+
+  ggplot(data_plot, aes(x=indicators, y=indicator_values, fill=govt_tier)) + #now plot the output in a bar graph
+    geom_boxplot(position="dodge") +
+    geom_text(data = dataMedian, aes(x=indicators, y=MD, label=MD), 
+              position = position_dodge(width = 0.8), size = 3, vjust = -0.5) +
+    scale_x_discrete(labels = str_wrap(c("Impartial Decision Making",
+                                         "Mandates & Accountability",
+                                         "National Learning Goals",
+                                         "Quality of the Bureaucracy"), width = 25)) + 
+  xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
+  ylab("Scale (1-5)") +
+  ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
+  scale_fill_discrete(name="Government Level") +
+  theme_bw() +
+    theme(legend.position = "bottom") 
+
+```
 
 
 - Next, we explore the De Facto scores for teachers by looking at differences across teachers in how they view the policy environment.  

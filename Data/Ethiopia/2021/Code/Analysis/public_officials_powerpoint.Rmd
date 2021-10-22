@@ -1,17 +1,10 @@
 ---
 title: "Global Education Policy Dashboard"
 author: "Education Global Practice, World Bank"
-date: "02/20/2020"
+date: "10/22/2021"
 output: html_document
-
 ---
-<style type="text/css">
-.main-container {
-  max-width: 1500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -131,11 +124,11 @@ bbc_style <- function() {
 #set directory to bring in data
  if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
 
-    work_dir  <- "C:/Users/wb577189/OneDrive - WBG/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+    work_dir  <- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/confidential/"
     
  } else {
     
-   work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+   work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/confidential/"
 
    
   }
@@ -223,6 +216,7 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     theme(legend.position = "bottom") 
 
 ```
+
 
 ## Breakdowns by Central, Regional, District Level
 
@@ -404,54 +398,6 @@ df<-final_indicator_data_BIMP
 
 
 
-```{r datatable, echo=FALSE}
- #add in custom column sub-headers
-  sketch = htmltools::withTags(table(
-    class = 'display',
-    thead(
-      tr(
-        th( rowspan = 2, 'Indicator'),
-        th( rowspan = 2, 'Label'),
-        th(colspan = 2, 'Overall'),
-        th(colspan = 2, 'Central'),
-        th(colspan = 2, 'Regional'),
-        th(colspan = 2, 'District'),
-      ),
-      tr(
-        lapply(rep(c('Mean', '95% Confident Interval'), 4), th)
-      )
-    )
-  ))
-  
-  # create 19 breaks and 20 rgb color values ranging from white to red
-  
-
-  DT::datatable(sumstats_df, 
-                caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
-                container = sketch,
-                rownames=FALSE,
-                class='cell-border stripe',
-                escape = FALSE,
-                extensions = c ('Buttons', 'FixedHeader'), 
-                options=list(
-                  dom = 'Bfrtip',
-                  buttons = c('csv'),
-                  pageLength = 80,
-                  scrollX = TRUE, 
-                  paging=FALSE,
-                  ordering=F)) %>%
-    formatRound(columns = c('mean', 'ci', 'mean_mineduc', 'ci_mineduc', 'mean_region', 'ci_region','mean_district', 'ci_district'  ),
-                digits=2)  
-
-  
-
-
-
-```
-
-
-
-
 ## Breakdowns by Managers vs Technical Staff
 
 
@@ -546,8 +492,6 @@ df<-final_indicator_data_BIMP
    
 ```
 
-
-
 ```{r datatable2, echo=FALSE}
  #add in custom column sub-headers
   sketch = htmltools::withTags(table(
@@ -569,7 +513,7 @@ df<-final_indicator_data_BIMP
   # create 19 breaks and 20 rgb color values ranging from white to red
   
 
-  DT::datatable(sumstats_df2, caption="Summary Statistics of Dashboard Indicators - Jordan 2019",
+  DT::datatable(sumstats_df2, caption="Summary Statistics of Dashboard Indicators - Ethiopia 2021",
                 container = sketch,
                 rownames=FALSE,
                 class='cell-border stripe',
@@ -590,4 +534,3 @@ df<-final_indicator_data_BIMP
 
 
 ```
-
