@@ -106,7 +106,7 @@ indicators <- indicators %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 indicators <- indicators %>%
-  select(-c('X1', 'X8'))
+  select(-c('...1', '...8'))
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)

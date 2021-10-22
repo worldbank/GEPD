@@ -1,0 +1,83 @@
+---
+title: "Learner Data Gathering"
+author: "Brian Stacy"
+date: "10/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rsdmx)
+
+country <- "Ethiopia"
+country_iso3c <- "ETH"
+country_iso2c<-"ET"
+
+dhs_year <- '2019'
+```
+
+# DHS
+
+Pull data from DHS for country.
+
+```{r dhsapi}
+
+#pull data from DHS api
+
+#set up query
+dhs_indicators <- 
+
+
+dhs_url <- paste0('https://api.dhsprogram.com/rest/dhs/data?countryIds=',country_iso2c,'&surveyYear=',dhs_year,'&f=csv')
+
+
+dhs_df <- read_csv(dhs_url)
+
+
+
+```
+
+```{r}
+orphan <- c('Percentage of schools reporting having publicly funded school feeding program',
+            'MICS/Other - Percentage of children under 5 covered by health insurance',
+            'MICS/Other - Percentage of children age 6-59 months who received deworming medication.',
+            'Percentage of ECE Classrooms with Effective Practices',
+            'Measure of early childhood education quality (best source to be identified)',
+            'Coverage of social protection programs (Best data source to be identified)',
+            )
+```
+
+
+```{r micsapi}
+
+#pull data from MICS api
+
+#set up query
+mics_indicators <- c(
+                    'NT_IOD_ANY_TH'	='Percentage of households with salt testing positive for any iodide among households',
+                    'NT_CF_MDD'='Percentage of children age 6–23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day',
+                    'NT_BF_EBF'='PPercentage of children born in the five (three) years preceding the survey who were ever breastfed',
+                    'IM_DTP3'=	'Percentage of children who at age: a) 12-23 months had received all basic vaccinations at any time before the survey, b) 24-35 months had received all vaccinations recommended in the national immunization schedule – DTP vaccine proxy',
+                    'MNCH_INSTDEL'='MICS/DHS - Percentage of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility',
+                    'ECD_CHLD_36-59M_EDU-PGM'='Percentage of children age 36-59 months who are attending ECE',
+                    'ECD_CHLD_U5_BKS-HM'='Percentage of children under age 5 who have three or more children’s books',
+                    'ECD_CHLD_36-59M_ADLT_SRC'='Percentage of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household',
+                    'ECD_CHLD_36-59M_LMPSL' = 'Percentage of children (aged 36-59 months) developmentally on track in at least 3 of the 4 following domains: literacy-numeracy, physical, social-emotional and learning'
+                    )
+
+mics_indicators_df <- data.frame(indicator_name=mics_indicators, INDICATOR=names(mics_indicators))
+
+
+mics_url <- paste0('https://sdmx.data.unicef.org/ws/public/sdmxapi/rest/data/UNICEF,GLOBAL_DATAFLOW,1.0/',country_iso3c,'.',paste(names(mics_indicators), collapse="+"))
+
+# mics_url <- 'https://sdmx.data.unicef.org/ws/public/sdmxapi/rest/data/UNICEF,GLOBAL_DATAFLOW,1.0/ALB+DZA.MNCH_INSTDEL.?format=sdmx-json'
+
+mics_df <- readSDMX(mics_url, isURL=TRUE) %>%
+  as_tibble() %>%
+  filter(SEX=="_T" ) %>%
+  right_join(mics_indicators_df) %>%
+  select(indicator_name, everything())
+
+```
+

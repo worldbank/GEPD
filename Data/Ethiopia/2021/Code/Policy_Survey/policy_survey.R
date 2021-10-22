@@ -5,13 +5,13 @@ library(readxl)
 #set directory to bring in data
 if(Sys.info()["user"] == "wb577189"){
   
-  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Madagascar/2021/Policy Survey Data"
+  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Ethiopia/2021/Policy Survey Data"
   
   
   
 } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
   
-  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/Policy_Survey"
+  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/Policy_Survey"
   
   
 }
@@ -35,7 +35,7 @@ read_var <- function(var) {
 
 #start with teachers
 ##########################
-  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
+  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'Final PolicySurvey_Ethiopia_Revised_10_18_21.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -56,7 +56,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(A4),
-         teacher_salary=(589.87/495.49)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=MG
+         teacher_salary=(1202/936.34)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=ET
 
 #teacher selection and deployment
 #
@@ -78,11 +78,11 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
   
 #Teacher Evaluation
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
-  mutate(evaluation_law=read_var(A10),
-         evaluation_law_school=read_var(A11),
-         evaluation_criteria=read_var(A12)/5,
-         negative_evaluations=read_var(A14),
-         positive_evaluations=read_var(A16)) %>%
+  mutate(evaluation_law=read_var(A11),
+         evaluation_law_school=read_var(A12),
+         evaluation_criteria=read_var(A13)/5,
+         negative_evaluations=read_var(A15),
+         positive_evaluations=read_var(A17)) %>%
   mutate(teaching_evaluation=1+evaluation_law/4 + evaluation_law_school/4+evaluation_criteria/2+
            negative_evaluations+positive_evaluations) 
 
@@ -99,13 +99,13 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 #Teacher Intrinsic Motivation
 #based on whether or not probationary period
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
-  mutate(probationary_period=read_var(A18)) %>%
+  mutate(probationary_period=read_var(A19)) %>%
   mutate(intrinsic_motivation=1+4*probationary_period)
   
 ##############################
 # Inputs
 ##############################
-expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
+expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'Final PolicySurvey_Ethiopia_Revised_10_18_21.xlsx', sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
   fill(`Question..`) %>%
   filter(!is.na(Question)) 
   
@@ -140,7 +140,7 @@ expert_dta_inputs_final<-expert_dta_inputs_final %>%
 ##############################
 # School Management
 ###############################
-expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
+expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'Final PolicySurvey_Ethiopia_Revised_10_18_21.xlsx', sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -190,13 +190,12 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_training_required=read_var(C8),
          principal_training_type=read_var(C9),
-         principal_training_type1=0, #do this manual based on responses
-         principal_training_type2=1,#do this manual based on responses
-         principal_training_type3=0,#do this manual based on responses
+         principal_training_type1=1, #do this manual based on responses
+         principal_training_type2=1, #do this manual based on responses
+         principal_training_type3=0, #do this manual based on responses
          principal_training_frequency=read_var(C10),
-         principal_training_frequency_2=1 #do this manual based on responses
-         
-  ) %>%
+         principal_training_frequency_2=4 #do this manual based on responses
+         ) %>%
   mutate(sch_support=1+principal_training_required+2*principal_training_type/3+
            principal_training_frequency)
 
@@ -209,7 +208,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 ################################
 # Learners 
 ################################
-expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
+expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, 'Final PolicySurvey_Ethiopia_Revised_10_18_21.xlsx', sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
 fill(Question..) %>% 
 filter(!is.na(Question))
 
@@ -233,7 +232,6 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
          breastfeeding=read_var(D3),
          school_feeding=read_var(D5)) %>%
   mutate(nutrition_programs=1+iodization + iron_fortification + breastfeeding + school_feeding)
-
 
 #health programs
 expert_dta_learners_final <- expert_dta_learners_final %>%
@@ -268,10 +266,11 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
 #trim to just important variables
 ##############################
 #school management
+#school_management_drop<-expert_dta_school_management$Question..
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   select(-starts_with("C", ignore.case=FALSE))
 
-#select(-all_of(school_management_drop))
+  #select(-all_of(school_management_drop))
 
 #inputs
 #inputs_drop<-expert_dta_inputs$Question..
@@ -285,14 +284,13 @@ expert_dta_inputs_final <- expert_dta_inputs_final %>%
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   select(-starts_with("A", ignore.case=FALSE))
 
-#select(-all_of(teachers_drop))
+  #select(-all_of(teachers_drop))
 
 #learners
 
 #learners_drop<-expert_dta_learners$Question..
 expert_dta_learners_final <- expert_dta_learners_final %>%
   select(-starts_with("D", ignore.case=FALSE))
-
 
   #select(-all_of(learners_drop))
 
