@@ -495,47 +495,145 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
         
         ungroup() %>% 
         
-        convert_as_factor(Covid)
+        mutate(Covid = as.factor(Covid))
 
  #sample_full_long[sample_full_long$Indicator %in% names(which(table(sample_full_long$Indicator) <2 )), ]
 
 
+
+# # Compute t-test
+# library(rstatix)
+#       
+# # res.aov <- anova_test(sample_full_long$Value ~ sample_full_long$Covid)
+# 
+#       
+# for(ii in unique(sample_full_long$Indicator)){    
+#       
+#       
+#       
+#   stat.test <- sample_full_long  %>% 
+#     
+#     group_by(ii, Covid) %>%
+#     
+#     t_test(Value ~ Covid) %>%
+#     
+#     adjust_pvalue(method = "bonferroni") %>%
+#     
+#     add_significance("p.adj")
+# 
+#   
+#   stat.test
+#   
+# }
+  
+sample_full_wide <- sample_full_long %>% 
+  pivot_wider(names_from = Indicator, values_from  = Value) %>% 
+  mutate(across(where(is.numeric),
+             ~ as.double(.)))
+  
       
-# Compute t-test
-library(rstatix)
+
+x <- sample_full  %>% 
+          
+        select(-school_code, -Distance_btw_schools) %>% 
+          
+         mutate(across(where(is.numeric),
+                    
+                    ~ as.character(.)
+                    )) %>% 
+          
+            pivot_longer(
+                    cols = school_code_POST:GDP_PRE,
+                    names_to = c("Indicator", "Covid"),
+                    names_pattern = "(.*)_(PRE|POST)",
+                    values_to = "value"
+      )  %>% 
+  # select(tip, total_bill, sex) %>% 
+  # gather(key = variable, value = value, -sex) %>% 
+  group_by(Covid, Indicator) %>% 
+  summarise(value = list(value)) %>% 
+  spread(Covid, Indicator) #%>% 
+  group_by(Indicator) %>% 
+  mutate(p_value = t.test(unlist(PRE), unlist(POST))$p.value,
+         t_value = t.test(unlist(PRE), unlist(POST))$statistic)
+
+# boxplots and t-tests for the 4 variables at once
+for (i in names(sample_full_wide[ ,2:5])) { # variables to compare are variables 1 to 4
+  boxplot(sample_full_wide[, i] ~ sample_full_wide$Covid, # draw boxplots by group
+    ylab = names(sample_full_wide[i]), # rename y-axis with variable's name
+    xlab = "Pre-Post Covid"
+  )
+  print(t.test(sample_full_wide[, i] ~ sample_full_wide$Covid)) # print results of t-test
+}
       
-# res.aov <- anova_test(sample_full_long$Value ~ sample_full_long$Covid)
-
-  stat.test <- sample_full_long  %>% 
-    
-    ungroup() %>% 
-    
-    group_by(Indicator) %>%
-    
-    t_test(data = . ,Value ~ Covid) %>%
-    
-    adjust_pvalue(method = "bonferroni") %>%
-    
-    add_significance("p.adj")
+   
 
 
+
+dat <- iris
+
+# remove one level to have only two groups
+dat <- subset(dat, Species != "setosa")
+dat$Species <- factor(dat$Species)
+
+# boxplots and t-tests for the 4 variables at once
+for (i in 1:4) { # variables to compare are variables 1 to 4
+  boxplot(dat[, i] ~ dat$Species, # draw boxplots by group
+    ylab = names(dat[i]), # rename y-axis with variable's name
+    xlab = "Species"
+  )
+  print(t.test(dat[, i] ~ dat$Species)) # print results of t-test
+}
+
+
+
+   dat <- sample_full_wide
 
   # Create the plot
-  library(ggpubr)
-  
-    myplot <- ggboxplot(
-      sample_full_long, x = "Covid", y = "Value",
-      fill = "Covid", palette = "npg", legend = "none",
-      ggtheme = theme_pubr(border = TRUE)
-      ) +
-      facet_wrap(~Indicator, ncol = 3)
-    
-  # Add statistical test p-values
-    
-  stat.test <- stat.test %>% add_xy_position(x = "Species")
-  myplot + stat_pvalue_manual(stat.test, label = "p.adj.signif")
+
+library(ggpubr)
+
+# Edit from here #
+x <- which(names(dat) == "COvid") # name of grouping variable
+y <- which(names(dat) == "student_proficient" # names of variables to test
+| names(dat) == "ecd_student_knowledge"
+| names(dat) == "experience_pknw"
+| names(dat) == "student_attendance")
+method <- "t.test" # one of "wilcox.test" or "t.test"
+paired <- FALSE # if paired make sure that in the dataframe you have first all individuals at T1, then all individuals again at T2
+# Edit until here
 
 
+# Edit at your own risk
+for (i in y) {
+  for (j in x) {
+    ifelse(paired == TRUE,
+      p <- ggpaired(dat,
+        x = colnames(dat[j]), y = colnames(dat[i]),
+        color = colnames(dat[j]), line.color = "gray", line.size = 0.4,
+        palette = "npg",
+        legend = "none",
+        xlab = colnames(dat[j]),
+        ylab = colnames(dat[i]),
+        add = "jitter"
+      ),
+      p <- ggboxplot(dat,
+        x = colnames(dat[j]), y = colnames(dat[i]),
+        color = colnames(dat[j]),
+        palette = "npg",
+        legend = "none",
+        add = "jitter"
+      )
+    )
+    #  Add p-value
+    print(p + stat_compare_means(aes(label = paste0(..method.., ", p-value = ", ..p.format..)),
+      method = method,
+      paired = paired,
+      # group.by = NULL,
+      ref.group = NULL
+    ))
+  }
+}
 
 ```
 
