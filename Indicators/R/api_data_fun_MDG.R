@@ -778,22 +778,22 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-  #SE.PRM.SCFN   = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),  #Policy Lever (School Management) - Clarity of Functions                                                                  
-  #SE.PRM.SCFN.1 = 100*indicator_means(infrastructure_scfn		, "school", "SCFN",  "All"),  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance~
+  SE.PRM.SCFN   = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),  #Policy Lever (School Management) - Clarity of Functions                                                                  
+  SE.PRM.SCFN.1 = 100*indicator_means(infrastructure_scfn		, "school", "SCFN",  "All"),  #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance~
   SE.PRM.SCFN.10 =expert_df$student_scfn, #(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?                   
-  #SE.PRM.SCFN.11 = 100*indicator_means(principal_hiring_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hirin~
+  SE.PRM.SCFN.11 = 100*indicator_means(principal_hiring_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hirin~
   SE.PRM.SCFN.12 =expert_df$principal_hiring_scfn,#(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?                
-  #SE.PRM.SCFN.13 = 100*indicator_means(principal_supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal super~
+  SE.PRM.SCFN.13 = 100*indicator_means(principal_supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal super~
   SE.PRM.SCFN.14 =expert_df$principal_supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?             
   SE.PRM.SCFN.2  =expert_df$infrastructure_scfn, #(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastruct~
-  #SE.PRM.SCFN.3  = 100*indicator_means(materials_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement~
+  SE.PRM.SCFN.3  = 100*indicator_means(materials_scfn		, "school", "SCFN",  "All"), #(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement~
   SE.PRM.SCFN.4  =expert_df$materials_scfn,#(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?                       
-  #SE.PRM.SCFN.5  = 100*indicator_means(hiring_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring ~
+  SE.PRM.SCFN.5  = 100*indicator_means(hiring_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring ~
   SE.PRM.SCFN.6  =expert_df$hiring_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?                  
-  #SE.PRM.SCFN.7  = 100*indicator_means(supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervi~
+  SE.PRM.SCFN.7  = 100*indicator_means(supervision_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervi~
   SE.PRM.SCFN.8  =expert_df$supervision_scfn, #(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?    
-  #SE.PRM.SCFN.9  = 100*indicator_means(student_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
-  #SE.PRM.SCFN.DF = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),#(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
+  SE.PRM.SCFN.9  = 100*indicator_means(student_scfn		, "school", "SCFN",  "All"),#(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learnin~
+  SE.PRM.SCFN.DF = indicator_means(sch_management_clarity		, "school", "SCFN",  "All"),#(De Facto) Policy Lever (School Management) - Clarity of Functions                                                       
   SE.PRM.SCFN.DJ =expert_df$sch_management_clarity#(De Jure) Policy Lever (School Management) - Clarity of Functions    
     )
   #######################################

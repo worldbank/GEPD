@@ -328,5 +328,174 @@ ggplot(data=knowledge_regs, aes(x=type, y=r2)) +
   geom_point() + 
   coord_flip() +
   theme_bw() +
-  ggtitle(str_wrap("R^2 of Indicators in Regression Without GDP Satellite Controls", 60))
+  ggtitle(str_wrap("R Squared of Indicators in Bivariate Regression with 4th Grade Student Test Scores", 60))
 
+
+# literacy 
+
+reg_plot_df_lit <- school_dta_short_anon %>%
+  dplyr::select(literacy_student_knowledge, covariates) %>% # just keep indicators for regression on GDP
+  pivot_longer(
+    cols=c(             'sch_absence_rate',
+                        'content_knowledge',
+                        #'teach_score',
+                        'student_attendance',
+                        'ecd_student_knowledge',
+                        'inputs',
+                        'infrastructure',
+                        'operational_management',
+                        'instructional_leadership',
+                        'principal_knowledge_score',
+                        'principal_management',
+                        'teacher_attraction', 
+                        'teacher_selection_deployment', 
+                        'teacher_support', 
+                        'teaching_evaluation', 
+                        'teacher_monitoring',
+                        'intrinsic_motivation', 
+                        'standards_monitoring',
+                        'sch_monitoring', 
+                        #'sch_management_clarity',
+                        'sch_management_attraction', 
+                        'sch_selection_deployment', 
+                        'sch_support', 
+                        'principal_evaluation'),
+    names_to = "type",
+    values_to="indicators"
+  )
+
+
+mod_fun <- function(df) {      
+  lm_robust(literacy_student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
+}
+
+mod_fun_gdp <- function(df) {      
+  lm_robust(literacy_student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
+}
+
+b_fun <- function(mod)   {   
+  coef(summary(mod))[2,1] 
+}
+
+se_fun <- function(mod)   {   
+  coef(summary(mod))[2,2] 
+}
+
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+knowledge_regs_lit <- reg_plot_df_lit %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(model_gdp=purrr::map(data, mod_fun_gdp)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            se = map_dbl(model, se_fun),
+            r2 = map_dbl(model, r2_fun),
+            beta_gdp = map_dbl(model_gdp, b_fun),
+            se_gdp = map_dbl(model_gdp, se_fun),
+            r2_gdp = map_dbl(model_gdp, r2_fun)) %>%
+  dplyr::select(type, beta, beta_gdp, se, r2,  se_gdp, r2_gdp, everything())
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs_lit, aes(x=type, y=beta)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta-1.96*se),
+                    ymax=(beta+1.96*se))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Bivariate Regression with 4th Grade Literacy Student Test Scores", 60))
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs_lit, aes(x=type, y=r2)) +
+  geom_point() + 
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("R Squared of Indicators in Bivariate Regression with 4th Grade Literacy Student Test Scores", 60))
+
+
+# numeracy
+
+reg_plot_df_math <- school_dta_short_anon %>%
+  dplyr::select(math_student_knowledge, covariates) %>% # just keep indicators for regression on GDP
+  pivot_longer(
+    cols=c(             'sch_absence_rate',
+                        'content_knowledge',
+                        #'teach_score',
+                        'student_attendance',
+                        'ecd_student_knowledge',
+                        'inputs',
+                        'infrastructure',
+                        'operational_management',
+                        'instructional_leadership',
+                        'principal_knowledge_score',
+                        'principal_management',
+                        'teacher_attraction', 
+                        'teacher_selection_deployment', 
+                        'teacher_support', 
+                        'teaching_evaluation', 
+                        'teacher_monitoring',
+                        'intrinsic_motivation', 
+                        'standards_monitoring',
+                        'sch_monitoring', 
+                        #'sch_management_clarity',
+                        'sch_management_attraction', 
+                        'sch_selection_deployment', 
+                        'sch_support', 
+                        'principal_evaluation'),
+    names_to = "type",
+    values_to="indicators"
+  )
+
+
+mod_fun <- function(df) {      
+  lm_robust(math_student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
+}
+
+mod_fun_gdp <- function(df) {      
+  lm_robust(math_student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
+}
+
+b_fun <- function(mod)   {   
+  coef(summary(mod))[2,1] 
+}
+
+se_fun <- function(mod)   {   
+  coef(summary(mod))[2,2] 
+}
+
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+knowledge_regs_math <- reg_plot_df_math %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(model_gdp=purrr::map(data, mod_fun_gdp)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            se = map_dbl(model, se_fun),
+            r2 = map_dbl(model, r2_fun),
+            beta_gdp = map_dbl(model_gdp, b_fun),
+            se_gdp = map_dbl(model_gdp, se_fun),
+            r2_gdp = map_dbl(model_gdp, r2_fun)) %>%
+  dplyr::select(type, beta, beta_gdp, se, r2,  se_gdp, r2_gdp, everything())
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs_math, aes(x=type, y=beta)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta-1.96*se),
+                    ymax=(beta+1.96*se))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Bivariate Regression with 4th Grade Numeracy Student Test Scores", 60))
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs_math, aes(x=type, y=r2)) +
+  geom_point() + 
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("R Squared of Indicators in Bivariate Regression with 4th Grade Numeracy Student Test Scores", 60))

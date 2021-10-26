@@ -252,7 +252,6 @@ finance_df_final <- finance_df_shaped %>%
 
 source('R/api_data_fun_MDG.R', echo=TRUE)
 
-RWA_data_2019 <- api_final
 
 
 #export Indicators_metatdata section

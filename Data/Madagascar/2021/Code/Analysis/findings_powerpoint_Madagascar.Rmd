@@ -138,7 +138,7 @@ Roadmap:
 
 
     
-  } else if (Sys.info()["user"] == "wb469649") {
+  } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
     
     work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
 
@@ -724,8 +724,67 @@ learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD =
           axis.text = ggplot2::element_text(
                                       size=12
                                       )) 
+  
+  
 
 ```
+
+```{r item_stats}
+# Calculate share of each question answered correctly
+  items <- c('m8sbq3a_arithmetic',
+             'm8sbq3f_arithmetic',
+             'm8sbq3j_arithmetic',
+             'm8sbq3g_arithmetic',
+             'm8saq2_id',
+             'm8saq3_id',
+             'm8saq5_story'
+             )
+
+  item_desc <- c('Student correctly answers 8+7',
+                 'Student correctly answers 7x8',
+                 'Student correctly answers 75/5',
+                 'Student correctly answers 37x40',
+                 'Average fraction of letters recognized',
+                 'Average fraction of words recognized',
+                 'Student correctly answers question about short text'
+                 )
+  
+ item_meta_df <- data.frame(item=items, desc=item_desc)  
+ 
+g4_weights <-  school_dta_short_anon %>%
+  select(hashed_school_code, g4_stud_weight_component)
+
+item_df <- assess_4th_grade_anon_anon %>%
+  select(hashed_school_code, items, ipw) 
+
+weight <- item_df$ipw
+
+item_df_stats <- item_df %>%
+  summarise(across(items, wtd.mean, weights=ipw, .names='{.col}_mean'),
+            across(items, wtd.quantile, probs=0.5, weights=ipw, .names='{.col}_median')) %>%
+  pivot_longer(
+    cols=everything(),
+    names_to='item',
+    values_to='score'
+  ) %>%
+  mutate(type=if_else(grepl('mean',item),"Mean", "Median"),
+         item=str_remove(item,"_mean"),
+         item=str_remove(item,"_median")) %>%
+  pivot_wider(
+    names_from=type,
+    values_from=score
+  )
+  
+items_df_tab <-  item_df_stats %>%
+  left_join(item_meta_df) %>%
+  select(item, desc, everything())
+
+flextable(items_df_tab) %>%
+  autofit()
+
+
+```
+
 
 ## Absence
 
