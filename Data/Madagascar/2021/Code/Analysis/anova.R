@@ -16,10 +16,22 @@ year <- '2021'
 
 backup_onedrive="no"
 
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  
 project_folder<-"C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT"
 data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Anonymized", sep="/"))
 
-load(paste(data_folder, "School/school_indicators_data_anon.RData", sep="/"))
+
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+  project_folder<-"C:/Users/wb577189/OneDrive - WBG/CNT/"
+  data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized", sep="/"))
+
+  
+}
+
+
+load(paste(data_folder, "/School/school_indicators_data_anon.RData", sep="/"))
 
 
 #################################
@@ -330,3 +342,175 @@ ggplot(data=knowledge_regs, aes(x=type, y=r2)) +
   theme_bw() +
   ggtitle(str_wrap("R^2 of Indicators in Regression Without GDP Satellite Controls", 60))
 
+
+
+
+
+
+
+  ### Checking difference between community teacher and regular teachers -------
+
+covariates_teacher <- c(covariates, "community_teacher")
+
+long_community <- school_dta_short_anon %>%
+  left_join(school_dta_anon %>% select(hashed_school_code,s_fokontany_code, s_m1a_04)) %>%
+  
+  left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/raw/School/06-M1SECC.dta") %>% select(s_type_ecole,s_fokontany_code)) %>%
+  
+  
+  filter(s_type_ecole == 3) %>% 
+  
+  mutate(community_teacher = if_else(s_m1a_04 ==4, "Community Teacher", "Other")) %>%
+  dplyr::select(student_knowledge, covariates_teacher) %>% # just keep indicators for regression on GDP
+  pivot_longer(
+    cols=c(             'sch_absence_rate',
+                        'content_knowledge',
+                        #'teach_score',
+                        'student_attendance',
+                        'ecd_student_knowledge'),
+                        #' 'inputs',
+                        #' 'infrastructure',
+                        #' 'operational_management',
+                        #' 'instructional_leadership',
+                        #' 'principal_knowledge_score',
+                        #' 'principal_management',
+                        #' 'teacher_attraction', 
+                        #' 'teacher_selection_deployment', 
+                        #' 'teacher_support', 
+                        #' 'teaching_evaluation', 
+                        #' 'teacher_monitoring',
+                        #' 'intrinsic_motivation', 
+                        #' 'standards_monitoring',
+                        #' 'sch_monitoring', 
+                        #' #'sch_management_clarity',
+                        #' 'sch_management_attraction', 
+                        #' 'sch_selection_deployment', 
+                        #' 'sch_support', 
+                        #' 'principal_evaluation',
+    names_to = "type",
+    values_to="indicators"
+  ) %>% select(-teach_score, -sch_management_clarity)
+
+  # quick summary stat
+long_community %>%
+  group_by(type, community_teacher) %>%
+  summarise(
+    n = n(),
+    mean = mean(indicators, na.rm = T),
+    sd = sd(indicators, na.rm = T)
+  ) %>%
+  ungroup()
+
+
+library(rstatix)
+
+
+  stat.test <- long_community %>%
+    group_by(type) %>%
+    t_test(indicators ~ community_teacher, p.adjust.method = "bonferroni")
+
+  
+    stat.test %>% select(-.y., -statistic, -df)
+
+    # Create the plot
+    library(ggpubr)
+    
+    com_teacher_plot <- ggboxplot(
+      long_community, x = "community_teacher", y = "indicators",
+      fill = "community_teacher", palette = "npg", legend = "none",
+      ggtheme = theme_pubr(border = TRUE)
+    ) +
+      facet_wrap(~type)
+    # Add statistical test p-values
+    stat.test <- stat.test %>% add_xy_position(x = "community_teacher")
+    com_teacher_plot + stat_pvalue_manual(stat.test, label = "p.adj.signif")+ theme(axis.text.x = element_text(angle = 45))
+
+  ### Checking difference between the various languages of instruction -------
+
+    covariates_language <- c(covariates, "language_instruction")
+    
+    long_language <- school_dta_short_anon %>%
+      left_join(school_dta_anon %>% select(hashed_school_code, s_fokontany_code)) %>%
+      left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/raw/School/21-M5.dta") %>% select(s_fokontany_code, d_lng_instr)) %>%
+      left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/raw/School/06-M1SECC.dta") %>% select(s_type_ecole,s_fokontany_code)) %>%
+
+
+      filter(s_type_ecole == 3) %>%
+      
+      distinct() %>% 
+    
+      
+      mutate(language_instruction = case_when(
+        
+        d_lng_instr == 1 ~ "Malagasy",
+        d_lng_instr == 2 ~ "French",
+        d_lng_instr == 3 ~ "Both"
+        
+        
+        
+      )) %>%
+      dplyr::select(student_knowledge, covariates_language) %>% # just keep indicators for regression on GDP
+      pivot_longer(
+        cols=c(             'sch_absence_rate',
+                            'content_knowledge',
+                            #'teach_score',
+                            'student_attendance',
+                            'ecd_student_knowledge'),
+        #' 'inputs',
+        #' 'infrastructure',
+        #' 'operational_management',
+        #' 'instructional_leadership',
+        #' 'principal_knowledge_score',
+        #' 'principal_management',
+        #' 'teacher_attraction', 
+        #' 'teacher_selection_deployment', 
+        #' 'teacher_support', 
+        #' 'teaching_evaluation', 
+        #' 'teacher_monitoring',
+        #' 'intrinsic_motivation', 
+        #' 'standards_monitoring',
+        #' 'sch_monitoring', 
+        #' #'sch_management_clarity',
+        #' 'sch_management_attraction', 
+        #' 'sch_selection_deployment', 
+        #' 'sch_support', 
+        #' 'principal_evaluation',
+        names_to = "type",
+        values_to="indicators"
+      ) %>% select(-teach_score, -sch_management_clarity) 
+    
+    
+    # quick summary stat
+    long_language %>%
+      group_by(type, language_instruction) %>%
+      summarise(
+        n = n(),
+        mean = mean(indicators, na.rm = T),
+        sd = sd(indicators, na.rm = T)
+      ) %>%
+      ungroup()
+    
+    
+    library(rstatix)
+    
+    
+    stat.test <- long_language %>%
+      group_by(type) %>%
+      t_test(indicators ~ language_instruction, p.adjust.method = "bonferroni")
+    
+    
+    stat.test %>% select(-.y., -statistic, -df)
+    
+    # Create the plot
+    library(ggpubr)
+    
+    language_plot <- ggboxplot(
+      long_language, x = "language_instruction", y = "indicators",
+      fill = "language_instruction", palette = "npg", legend = "none",
+      ggtheme = theme_pubr(border = TRUE)
+    ) +
+      facet_wrap(~type)
+    # Add statistical test p-values
+    stat.test <- stat.test %>% add_xy_position(x = "language_instruction")
+    language_plot + stat_pvalue_manual(stat.test, label = "p.adj.signif")+ theme(axis.text.x = element_text(angle = 45))
+    
