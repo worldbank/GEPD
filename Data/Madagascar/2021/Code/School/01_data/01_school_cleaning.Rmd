@@ -2164,10 +2164,10 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
 ```
 ## School Management Clarity of Functions
 
-the codes below does not work because I could not find the data about policy knowledge from the principal.  Can we pull from other questions to infer whether school management is clear.
 
 
-```{r SCFN, eval=FALSE, include=FALSE}
+
+```{r SCFN, echo=FALSE}
 
   #############################################
   ##### School School Management Clarity of Functions  ###########
@@ -2176,14 +2176,16 @@ the codes below does not work because I could not find the data about policy kno
   #------------------------------------------------------------------------------#
   ##### NOTE - the codes below does not work because I could not find the data about policy knowledge from the principal
   
+
+
                           school_data_SCFN <- management_dta %>%
-                            mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
-                                   materials_scfn=if_else((m7sfq15b_pknw__0==1 | m7sfq15b_pknw__98==1),0,1),
-                                   hiring_scfn=if_else((m7sfq15c_pknw__0==1 | m7sfq15c_pknw__98==1),0,1),
-                                   supervision_scfn=if_else((m7sfq15d_pknw__0==1 | m7sfq15d_pknw__98==1),0,1),
-                                   student_scfn=if_else((m7sfq15e_pknw__0==1 | m7sfq15e_pknw__98==1),0,1),
-                                   principal_hiring_scfn=if_else((m7sfq15f_pknw__0==1 | m7sfq15f_pknw__98==1),0,1),
-                                   principal_supervision_scfn=if_else((m7sfq15g_pknw__0==1 | m7sfq15g_pknw__98==1),0,1)
+                            mutate(infrastructure_scfn=if_else(( d_m3af_0101==98),0,1),
+                                   materials_scfn=if_else((d_m3af_0102==98),0,1),
+                                   hiring_scfn=if_else((d_m3af_0103==98),0,1),
+                                   supervision_scfn=if_else((d_m3af_0104==98),0,1),
+                                   student_scfn=if_else((d_m3af_0105==98),0,1),
+                                   principal_hiring_scfn=if_else((d_m3af_0106==98),0,1),
+                                   principal_supervision_scfn=if_else((d_m3af_0107==98),0,1)
                             ) %>%
                             mutate(sch_management_clarity=1+
                                      (infrastructure_scfn+materials_scfn)/2+
@@ -2192,8 +2194,6 @@ the codes below does not work because I could not find the data about policy kno
                                      (principal_hiring_scfn+ principal_supervision_scfn)/2
                             )
                           final_indicator_data_SCFN <- school_data_SCFN %>%
-                            group_by(s_ecole_code) %>%
-                            summarise_all(~first(na.omit(.))) %>%
                             mutate(n_mssing_SCFN=n_miss_row(.))  %>%
                             select( -starts_with('interview'), -starts_with('enumerator')) %>%
                             select(s_ecole_code,
@@ -2202,6 +2202,20 @@ the codes below does not work because I could not find the data about policy kno
                                      hiring_scfn , supervision_scfn,
                                      student_scfn ,
                                      principal_hiring_scfn, principal_supervision_scfn)
+                          
+  #plot the indicator  
+ hist(school_data_SCFN$d_m3af_0101)
+ hist(school_data_SCFN$d_m3af_0102)
+ hist(final_indicator_data_SCFN$infrastructure_scfn)
+ hist(final_indicator_data_SCFN$materials_scfn)
+ hist(final_indicator_data_SCFN$hiring_scfn)
+ hist(final_indicator_data_SCFN$supervision_scfn)
+ hist(final_indicator_data_SCFN$student_scfn)
+ hist(final_indicator_data_SCFN$principal_hiring_scfn)
+ hist(final_indicator_data_SCFN$principal_supervision_scfn)          
+hist(final_indicator_data_SCFN$sch_management_clarity)                        
+
+  skim(final_indicator_data_SCFN, one_of(ind_list))
 
 ```
 
