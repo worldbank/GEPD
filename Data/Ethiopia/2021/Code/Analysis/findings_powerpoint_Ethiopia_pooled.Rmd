@@ -170,12 +170,20 @@ wrapper <- function(x, ...)
 ```{r data2020}
 
 
+#set directory to bring in data
 
-#specify path to data
-data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
+ if(Sys.info()["user"] == "wb577189"){
+
+    data_dir_2020<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_RAW/Data/anonymized/"
 
 
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
+data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/anonymized/"
 
+    
+  }
 
 #attach saved results for 2020
 load(paste0(data_dir_2020, "/School/school_indicators_data_anon.Rdata"))
@@ -1133,7 +1141,16 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
+          if(Sys.info()["user"] == "wb577189"){
+
+  expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Ethiopia/2021/Data/clean/Policy_Survey"
+
+
+  } else if (Sys.info()["user"] == "wb469649") {
+    
+        expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
+    
+}
 
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
