@@ -130,8 +130,8 @@ api_template <- api_template %>%
     mutate(
       SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
       SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
       SE.PRM.TENR	 =-999,

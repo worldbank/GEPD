@@ -173,7 +173,7 @@ data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/JOR-19
 #pull data for learning poverty from wbopendata
 #list of indicators
 ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.OOS",  "SE.LPV.PRIM.OOS.FE", "SE.LPV.PRIM.OOS.MA",
-               "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA")
+               "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA", "SE.PRM.TENR", "SE.PRM.TENR.FE", "SE.PRM.TENR.MA")
 #read in data from wbopendata
 #get WDI metadata infor
 cache_list<-wbstats::wbcache()
@@ -184,8 +184,8 @@ wbopendat<-wbstats::wb(country="JOR",
             return_wide = T,
             removeNA=FALSE)
 
-wbopendat<-WDI(country="JO", indicator=ind_list, start=2015, end=2015, extra=T) %>%
-  filter(!is.na(SE.LPV.PRIM) & !is.na(country)) %>%
+wbopendat<-WDI(country="JO", indicator=ind_list, start=2000, end=2021, extra=T) %>%
+  fill(starts_with("SE.")) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n())

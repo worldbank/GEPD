@@ -203,7 +203,8 @@ for (x in frames_2021) {
   
 }
 
-
+save(list = frames_2021,
+  file = "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
 
 ```
 
