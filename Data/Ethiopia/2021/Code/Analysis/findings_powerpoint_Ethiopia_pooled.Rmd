@@ -125,7 +125,18 @@ rm(list = ls())
 
 #set directory to bring in data
 
+ if(Sys.info()["user"] == "wb577189"){
+
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
 work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+
+    
+  }
 
 
 #load school data for comparisons
@@ -203,8 +214,24 @@ for (x in frames_2021) {
   
 }
 
+
+
+
+
+ if(Sys.info()["user"] == "wb577189"){
+
+save(list = frames_2021,
+  file = "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
 save(list = frames_2021,
   file = "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+    
+  }
+
+
 
 ```
 
