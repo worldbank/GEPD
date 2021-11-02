@@ -100,78 +100,42 @@ df <- df_raw %>%
       LIBELLE_TYPE_SYSTEME_ENSEIGNEMENT=="Education de Base" ~ "Basic Education",
       LIBELLE_TYPE_SYSTEME_ENSEIGNEMENT=="Enseignement Préscolaire" ~ "Preschool Education"
     ),
-    religious_status=LIBELLE_TYPE_ETABLISSEMENT
+    religious_status=LIBELLE_TYPE_ETABLISSEMENT,
+    rural=as.numeric(urban_rural=="Rural"),
+    public=as.numeric(ownership=="Public"),
+    basic_education=as.numeric(school_type=="Basic Education"),
+    total_students_grade_4=as.numeric(NB_G_CM1) + as.numeric(NB_F_CM1),
+    total_students_grade_4_female= as.numeric(NB_F_CM1),
+    total_students_grade_4_male=as.numeric(NB_G_CM1) 
     ) 
   
 
-
-samp_cut <- df %>%
-  mutate(rural=(classification_area=="Village")) %>%
-  filter(total_students_grade_4>=1 & total_students_grade_1>=1 & total_teachers>=1 ) %>%
-  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private") %>%
-  mutate(cut=(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3 )) %>%
-  group_by(cut) %>%
-  summarise(schools=n(),
-            g4_stud=sum(total_students_grade_4),
-            g1_stud=sum(total_students_grade_1)) 
-# #create variable ID for strata and keep schools with more than 3 1st and 4th grade students.  
-# Also keep only private schools and schools supervised by Ministry of Education
-df<-df %>%
-  mutate(rural=(classification_area=="Village")) %>%
-  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3 ) %>%
-  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private") %>%
-  mutate(private=if_else(supervisory_authority=="Private",1,0),
-         rural=if_else(rural==TRUE,1,0),
-         all_boy=if_else(total_female_students==0,1,0),
-         all_girl=if_else(total_male_students==0,1,0),
-         north=if_else(territory=="North",1,0),
-         middle=if_else(territory=="Middle",1,0),
-         south=if_else(territory=="South",1,0),
-         shift_1=if_else(foundation_period=="Morning",1,0),
-         shift_2=if_else(foundation_period=="Evening",1,0),
-         shift_both=if_else(foundation_period=="One Period",1,0))
-
-  indicator_list2<-c('total_male_students',
-                    'total_female_students',
-                    'total_teachers',
-                    'male_teachers',
-                    'female_teachers',
-                    'private',
+#create list of indicators for 
+  indicator_list2<-c('total_students_grade_4_male',
+                    'total_students_grade_4_female',
+                    'total_students_grade_4',
+                    'public',
                     'rural',
-                    'north',
-                    'middle',
-                    'south',
-                    'shift_1',
-                    'shift_2',
-                    'shift_both',
-                    'all_boy',
-                    'all_girl'
-                  )
+                    'basic_education'                  )
 
-indicator_labels2<-c('Total Male Students',
-                    'Total Female Students',
-                    'Total Teachers',
-                    'Total Male Teachers',
-                    'Total Female Teachers',
-                    'Private Schools',
+indicator_labels2<-c('Total 4th Grade Male Students',
+                    'Total 4th Grade Female Students',
+                    'Total 4th Grade Students',
+                    'Public Schools',
                     'Rural Schools',
-                    'North',
-                    'Middle',
-                    'South',
-                    'Morning Shift',
-                    'Evening Shift',
-                    'One Period',
-                    'All Boy Schools',
-                    'All Girl Schools'
+                    'Basic Education School'
                     )
 
 sumstats<-df %>%
   dplyr::select(indicator_list2) 
 
+frame_size=nrow(df)
+
 sumstats_df<-skim(sumstats) %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  rename(variable=skim_variable) %>%
+  rename_with(~str_replace(.,"numeric.","")) %>%
+  mutate(N=frame_size) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100,N, n_missing, complete_rate) %>%
   mutate(variable=factor(variable, levels=indicator_list2,
                          labels=indicator_labels2)) %>%
   arrange(match(variable, indicator_labels2))
@@ -183,12 +147,26 @@ sumstats_df<-skim(sumstats) %>%
 
 ```{r stats_kable, echo=FALSE}
 
-kable(sumstats_df, caption="Summary Statistics for Sampling Frame" , ) %>%
+kbl(sumstats_df, caption="Summary Statistics for Sampling Frame" , 
+      digits=2) %>%
   kable_styling()
 
 ```
 
-```{r department_count, echo=FALSE}
+```{r missing_region}
+
+#calculate missing by region
+
+df %>% group_by(REGION) %>% summarise(n=n(),complete=mean(!is.na(total_students_grade_4))) %>%
+  kbl( caption="Summary Statistics for Missing Student Country by Region" , 
+      digits=2) %>%
+  kable_styling()
+
+
+```
+
+
+```{r department_count, eval=FALSE, include=FALSE}
 
 #summary stats for optimally stratified schools 
   sumstats_rand<-sample_updated %>%
@@ -205,7 +183,7 @@ sumstats_rand %>%
 
 ## Summary Statistics for Sampled Schools 
 
-```{r stats, echo=FALSE}
+```{r stats, eval=FALSE, include=FALSE}
 
   sumstats_rand2<-sample_updated %>%
     filter(sample=="Sampled School") %>%
@@ -281,7 +259,7 @@ sumstats_df2 %>%
 
 
 
-```{r country_map, include=FALSE}
+```{r country_map, eval=FALSE, include=FALSE}
 
 
 
@@ -338,7 +316,7 @@ map2 <- function(df_input) {    leaflet(df_input) %>%
 
 ```
 
-```{r country_map2, echo=FALSE, fig.height=8, fig.width=9}
+```{r country_map2, eval=FALSE, fig.height=8, fig.width=9, include=FALSE}
 linked_df<-SharedData$new(sample_map_chosen)
 
 
@@ -364,7 +342,7 @@ map(sample_map_chosen)
 
 
 
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 linked_df_orphan<-SharedData$new(sample_map)
 
 
