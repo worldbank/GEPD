@@ -85,6 +85,9 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
               sheet=frame_sheet)
 
+write_excel_csv(df_raw, paste(sampling_folder, 'Year_Book_2021_final.csv', sep="/"))
+
+
 # create some columns
 df <- df_raw %>%
   mutate(
