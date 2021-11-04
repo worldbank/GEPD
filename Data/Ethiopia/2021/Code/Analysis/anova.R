@@ -42,11 +42,12 @@ anova <- aov(student_knowledge~factor(hashed_school_code), data=assess_4th_grade
 
 summary(anova)
 print(anova)
-#10336371815/(10336371815+14063203040)
-#[1] 0.4236292
+4892418   /(4892418 +5388570    )
+#[1] 0.4758704
 
-# fit = lm(student_knowledge ~ factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
-# anova(fit)
+
+fit = lm(student_knowledge ~ factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
+ anova(fit)
 
 
 wtd.mean(school_dta_short_anon$student_knowledge, weights =school_dta_short_anon$ipw )
@@ -73,7 +74,7 @@ school_dta_short_merge <- school_dta_short_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
-               'teach_score',
+               # 'teach_score',
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
@@ -95,6 +96,7 @@ covariates<-c( 'presence_rate',
                'sch_selection_deployment', 
                'sch_support', 
                'principal_evaluation')
+
 
 my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
 multi_reg_school<-lm(my_formula, school_dta_short_anon)   

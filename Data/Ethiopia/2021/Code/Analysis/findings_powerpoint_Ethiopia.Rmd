@@ -1261,7 +1261,7 @@ summary(datagap)
 
 
 
-```{r dejure_defacto_gap, eval=FALSE, include=FALSE}
+```{r dejure_defacto_gap, eval=FALSE, include=T}
 #calculate gap between de_jure and de_facto
 
 defacto_dejure<-data_radar %>%
