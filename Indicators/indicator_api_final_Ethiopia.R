@@ -164,9 +164,6 @@ api_template <- api_template %>%
 #use api_data function to pull in data collected
 ##########################
 
-###########
-# Rwanda
-###########
 
 # Example:
 

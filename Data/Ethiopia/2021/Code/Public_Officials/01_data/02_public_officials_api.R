@@ -96,15 +96,20 @@ makeVlist <- function(dta) {
 #read in public officials interview file
 #read in public officials interview file
 
-public_officials_dta<-read_dta(file.path(download_folder, po_file)) 
-
-public_officials_metadata<-makeVlist(public_officials_dta)
-
+public_officials_dta_2021<-read_dta(file.path(download_folder, po_file_2021)) 
+public_officials_dta_2020<-read_dta(file.path(download_folder, po_file_2020)) 
 
 
-public_officials_dta <- public_officials_dta %>%
-  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) 
+
+
+
+
+public_officials_dta <- public_officials_dta_2020 %>%
+  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) %>%
+  bind_rows(public_officials_dta_2021)
+
+
+  
 
 write_dta(public_officials_dta, file.path(download_folder, po_file))
 
-public_officials_metadata<-makeVlist(public_officials_dta)

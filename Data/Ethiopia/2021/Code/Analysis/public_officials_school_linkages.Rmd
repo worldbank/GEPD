@@ -86,8 +86,18 @@ bbc_style <- function() {
 ```{r data, include=FALSE}
 
 #set directory to bring in data
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2021'
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/confidential/"
+#directories
+project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+
+
+
+work_dir<- confidential_folder
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))

@@ -1,0 +1,123 @@
+---
+title: "GEPD Geospatial Admin Linkaged"
+author: "Brian Stacy"
+date: "11/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggthemes)
+library(patchwork)
+
+eth_map <- ne_countries(country="Ethiopia", scale = "medium", returnclass = "sf", type='map_units')
+
+
+#set directory to bring in data
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2020_2021'
+
+#directories
+project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+
+# load the world bank admin boundaries
+load("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/WB_admin_boundaries.Rdata")
+
+# load the public officials data
+load(file.path(confidential_folder, "/Public_Officials/public_officials_indicators_data.RData"))
+
+# load the school data
+load(file.path(confidential_folder, "/School/school_survey_data.RData"))
+
+
+```
+
+
+## Introduction
+
+This file will read in the World Bank spatial polygon files containing the admin1 and admin2 boundaries for all countries. It will then read in the lat/long data in the GEPD school and public officials files and match them to the official admin1 and admin2 boundaries.  This informatin will then be saved.
+
+```{r linkages}
+
+m.po <- public_officials_dta_clean
+m.school <- school_dta_short
+
+# convert po + school dataset to sf objects
+po <- st_as_sf(m.po,
+               coords = c("lon", "lat"), # set geometry/point column first
+               na.fail = FALSE)
+
+school <- st_as_sf(m.school,
+                   coords = c("lon", "lat"),
+                   na.fail = FALSE)
+
+
+
+# set the crs of school + po as the same as the world poly crs
+st_crs(po) <- st_crs(wb.poly.2)
+st_crs(school) <- st_crs(wb.poly.2)
+
+st_is_longlat(po)
+st_is_longlat(school)
+
+
+
+# set the variable order
+order <- c("ADM0_NAME", "ADM1_NAME", "ADM2_NAME",
+           "ADM0_CODE", "ADM1_CODE", "ADM2_CODE",
+           "g0", "g1", "g2")
+
+
+
+# - - - - - - - - -  join poly and po datasets - - - - - - - - -
+# note, this is very important to see that the datasets will be
+# joined NOT by the region or dsitrict -level polygon datasets, but
+# instead the will be joined by the dataset that defines the polygons
+# by the decision-making level
+
+main_po_data <- st_join(po, # points
+                        wb.poly.2, #polys
+                        largest = TRUE) %>%
+  select( interview__id,  order, everything())
+
+
+# join poly and school datasets: should be joing with wb.poly.2 since schools don't apply to dm level
+main_school_data <- st_join(school, # points
+                            wb.poly.2, #polys
+                            largest = TRUE) %>%
+  select(school_code, order, everything())
+```
+```{r poplot}
+
+po_map <- ggplot() +
+  geom_sf(data=eth_map) +
+  geom_sf(data=po) +
+  theme_map() +
+  ggtitle("Locations of Interviews for Survey of Public Officials")
+  
+school_map <- ggplot() +
+  geom_sf(data=eth_map) +
+  geom_sf(data=school) +
+  theme_map() +
+  ggtitle("Locations of Interviews for School Survey")
+  
+po_map + school_map
+
+combined_map <- ggplot() +
+  geom_sf(data=eth_map) +
+  geom_sf(data=school, color='red', shape=1) +
+  geom_sf(data=po, color='blue', shape=2) +
+  theme_map() +
+  labs(title="Locations of Interviews for School Survey and Survey of Public Officials",
+       caption = "School interviews in red.  Public Offiicals interview in blue.")
+  
+combined_map  
+```
+
