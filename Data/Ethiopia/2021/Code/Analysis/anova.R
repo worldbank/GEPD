@@ -7,7 +7,7 @@ library(questionr)
 #Country name and year of survey
 country <-'ETH'
 country_name <- "Ethiopia"
-year <- '2021'
+year <- '2020_2021'
 
 #########################
 # File paths #
@@ -19,7 +19,7 @@ backup_onedrive="no"
 
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
-project_folder<-"//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/"
+project_folder<-"C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT"
 data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data", sep="/"))
 
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
@@ -31,7 +31,7 @@ data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", s
   
 }
 
-load(paste(data_folder, "anonymized/School/school_indicators_data_anon.RData", sep="/"))
+load(paste(data_folder, "School/school_indicators_data_anon.RData", sep="/"))
 
 
 #################################
@@ -74,7 +74,11 @@ school_dta_short_merge <- school_dta_short_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
+<<<<<<< HEAD
                # 'teach_score',
+=======
+               #'teach_score',
+>>>>>>> 0b7c1fefae1d93a47efccbca650726c82ee7aad6
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
