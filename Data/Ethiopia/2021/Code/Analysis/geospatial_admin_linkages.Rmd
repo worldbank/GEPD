@@ -44,6 +44,45 @@ load(file.path(confidential_folder, "/School/school_survey_data.RData"))
 
 This file will read in the World Bank spatial polygon files containing the admin1 and admin2 boundaries for all countries. It will then read in the lat/long data in the GEPD school and public officials files and match them to the official admin1 and admin2 boundaries.  This informatin will then be saved.
 
+```{r geojson_prelim}
+
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+
+
+# load wb polygon data 
+
+## import at district level (adm2 level)
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == country_name) %>%
+  distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+# ## import at district level (adm1 level)
+# geo1 <- geojson_sf(
+#   file.path(wbgis, "GeoJSON/g2015_2014_1.geojson") # where _1 has region-level polys
+#   ) %>%
+#   filter( ADM0_NAME == country_name) %>%
+#   distinct(ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+# 
+# ## keep only the adm0 code and the geometry column.
+# geo1 <- geo1 %>%
+#   select(ADM1_CODE, geometry)
+
+
+
+# plot to show different geometries: rwa1 has 5 regions and rwa has 30 districts 
+#geo1 %>% select(ADM1_CODE) %>% plot(., main = 'region geometry')
+wb.poly.2 %>% select(ADM2_CODE) %>% plot(., main = 'district geometry')
+
+
+
+```
+
+
 ```{r linkages}
 
 m.po <- public_officials_dta_clean
