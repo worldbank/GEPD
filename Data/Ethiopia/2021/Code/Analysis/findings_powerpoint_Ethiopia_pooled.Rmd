@@ -131,9 +131,9 @@ rm(list = ls())
 
 
     
-  } else if (Sys.info()["user"] == "wb469649") {
+  } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
     
-work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
 
     
   }
@@ -189,9 +189,9 @@ wrapper <- function(x, ...)
 
 
     
-  } else if (Sys.info()["user"] == "wb469649") {
+  } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
     
-data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/anonymized/"
+data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
 
     
   }
@@ -224,7 +224,7 @@ save(list = frames_2021,
   file = "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
 
     
-  } else if (Sys.info()["user"] == "wb469649") {
+  } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
     
 save(list = frames_2021,
   file = "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
@@ -262,9 +262,9 @@ save(list = frames_2021,
                        'teacher_monitoring',
                        'intrinsic_motivation', 
                        'standards_monitoring',
-                       'monitoring', 
-                       'management_clarity',
-                       'management_attraction', 
+                       'sch_monitoring', 
+                       'sch_management_clarity',
+                       'sch_management_attraction', 
                        'sch_selection_deployment', 
                        'sch_support', 
                        'principal_evaluation', 
@@ -1174,7 +1174,7 @@ main_indicator_labels<-c(
   expert_dir<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Ethiopia/2021/Data/clean/Policy_Survey"
 
 
-  } else if (Sys.info()["user"] == "wb469649") {
+  } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
     
         expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/Expert_Survey"
     
