@@ -459,7 +459,8 @@ first_grade<- first_grade %>%
            ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
            math_items, lit_items, soc_items, exec_items)
   
-  
+  save(first_grade_anon, first_grade_metadata, 
+       file = file.path(confidential_folder, "dashboard_ecd_data.dta"))
   save(first_grade_anon, first_grade_metadata, 
        file = file.path(confidential_folder, "dashboard_ecd_data.RData"))
   
