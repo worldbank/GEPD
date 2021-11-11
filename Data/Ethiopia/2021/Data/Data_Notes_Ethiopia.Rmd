@@ -462,7 +462,7 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
       ## Pivot for graphs --------
     sample_full_long <- sample_full  %>% 
           
-        select(-school_code, -Distance_btw_schools) %>% 
+        # select(-school_code, -Distance_btw_schools) %>% 
           
          mutate(across(where(is.numeric),
                     
@@ -481,159 +481,334 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
         dplyr::filter(!str_detect(Value, "[A-Za-z]")) %>% 
         mutate_at(c("Value"),
                   ~ as.numeric(.)) %>% 
-                dplyr::filter(!is.na(Value)) %>% 
         
-        group_by(Covid, Indicator) %>%
-
-        summarise(Value = mean(Value, na.rm = T)) %>%
+        mutate_if(is.numeric, ~replace(., is.na(.), 0))  %>%       # group_by(Covid, Indicator) %>%
+        # 
+        # summarise(Value = mean(Value, na.rm = T)) %>%
         
         ## Remove indicator not used for comparison
         
-        dplyr::filter(!str_detect(Indicator, "school_code")) %>% 
+        dplyr::filter(!str_detect(Indicator, "school_code$")) %>% 
         
         dplyr::filter(!str_detect(Indicator, "sch_management_attraction")) %>% 
         
         ungroup() %>% 
         
-        mutate(Covid = as.factor(Covid))
+        mutate(Covid = as.factor(Covid)) 
 
- #sample_full_long[sample_full_long$Indicator %in% names(which(table(sample_full_long$Indicator) <2 )), ]
+ # sample_full_long[sample_full_long$Indicator %in% names(which(table(sample_full_long$Indicator) <2 )), ]
 
 
-
-# # Compute t-test
-# library(rstatix)
-#       
-# # res.aov <- anova_test(sample_full_long$Value ~ sample_full_long$Covid)
-# 
-#       
-# for(ii in unique(sample_full_long$Indicator)){    
-#       
-#       
-#       
-#   stat.test <- sample_full_long  %>% 
-#     
-#     group_by(ii, Covid) %>%
-#     
-#     t_test(Value ~ Covid) %>%
-#     
-#     adjust_pvalue(method = "bonferroni") %>%
-#     
-#     add_significance("p.adj")
-# 
-#   
-#   stat.test
-#   
-# }
-  
-sample_full_wide <- sample_full_long %>% 
-  pivot_wider(names_from = Indicator, values_from  = Value) %>% 
-  mutate(across(where(is.numeric),
-             ~ as.double(.)))
-  
       
-
-x <- sample_full  %>% 
-          
-        select(-school_code, -Distance_btw_schools) %>% 
-          
-         mutate(across(where(is.numeric),
-                    
-                    ~ as.character(.)
-                    )) %>% 
-          
-            pivot_longer(
-                    cols = school_code_POST:GDP_PRE,
-                    names_to = c("Indicator", "Covid"),
-                    names_pattern = "(.*)_(PRE|POST)",
-                    values_to = "value"
-      )  %>% 
-  # select(tip, total_bill, sex) %>% 
-  # gather(key = variable, value = value, -sex) %>% 
-  group_by(Covid, Indicator) %>% 
-  summarise(value = list(value)) %>% 
-  spread(Covid, Indicator) #%>% 
-  group_by(Indicator) %>% 
-  mutate(p_value = t.test(unlist(PRE), unlist(POST))$p.value,
-         t_value = t.test(unlist(PRE), unlist(POST))$statistic)
-
-# boxplots and t-tests for the 4 variables at once
-for (i in names(sample_full_wide[ ,2:5])) { # variables to compare are variables 1 to 4
-  boxplot(sample_full_wide[, i] ~ sample_full_wide$Covid, # draw boxplots by group
-    ylab = names(sample_full_wide[i]), # rename y-axis with variable's name
-    xlab = "Pre-Post Covid"
-  )
-  print(t.test(sample_full_wide[, i] ~ sample_full_wide$Covid)) # print results of t-test
-}
-      
-   
-
-
-
-dat <- iris
-
-# remove one level to have only two groups
-dat <- subset(dat, Species != "setosa")
-dat$Species <- factor(dat$Species)
-
-# boxplots and t-tests for the 4 variables at once
-for (i in 1:4) { # variables to compare are variables 1 to 4
-  boxplot(dat[, i] ~ dat$Species, # draw boxplots by group
-    ylab = names(dat[i]), # rename y-axis with variable's name
-    xlab = "Species"
-  )
-  print(t.test(dat[, i] ~ dat$Species)) # print results of t-test
-}
-
-
-
-   dat <- sample_full_wide
-
-  # Create the plot
-
-library(ggpubr)
-
-# Edit from here #
-x <- which(names(dat) == "COvid") # name of grouping variable
-y <- which(names(dat) == "student_proficient" # names of variables to test
-| names(dat) == "ecd_student_knowledge"
-| names(dat) == "experience_pknw"
-| names(dat) == "student_attendance")
-method <- "t.test" # one of "wilcox.test" or "t.test"
-paired <- FALSE # if paired make sure that in the dataframe you have first all individuals at T1, then all individuals again at T2
-# Edit until here
-
-
-# Edit at your own risk
-for (i in y) {
-  for (j in x) {
-    ifelse(paired == TRUE,
-      p <- ggpaired(dat,
-        x = colnames(dat[j]), y = colnames(dat[i]),
-        color = colnames(dat[j]), line.color = "gray", line.size = 0.4,
-        palette = "npg",
-        legend = "none",
-        xlab = colnames(dat[j]),
-        ylab = colnames(dat[i]),
-        add = "jitter"
-      ),
-      p <- ggboxplot(dat,
-        x = colnames(dat[j]), y = colnames(dat[i]),
-        color = colnames(dat[j]),
-        palette = "npg",
-        legend = "none",
-        add = "jitter"
-      )
+      #create subset with just main indicators
+    indicators_list<- c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
+                        #'student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 
+                        'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                # 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                # 'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                # 'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                # 'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
     )
-    #  Add p-value
-    print(p + stat_compare_means(aes(label = paste0(..method.., ", p-value = ", ..p.format..)),
-      method = method,
-      paired = paired,
-      # group.by = NULL,
-      ref.group = NULL
-    ))
-  }
-}
+ 
+main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", 
+                          #"4th Grade Student Proficiency - No Lonely Giraffe","4th Grade Student Proficiency Literacy - No Lonely Giraffe", 
+                          "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
+                        "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
+                        "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
+                        "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
+                        "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
+                        "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                        "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
+                        'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                        'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                        'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                        'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                        'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 'principal_salary',
+                        "School Management Selection & Deployment",
+                        "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                        # "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        # "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        # "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
+                        # "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+                        )
 
+  ## Create referential dataframe
+  labels_df_2<-data.frame(Indicator=as.character(indicators_list),
+                      indicator_labels=as.character(main_indicator_labels2))
+      
+      
+  ## add labels to sampled schools drawn for comparison
+  main_comparison <- labels_df_2 %>% 
+    left_join(sample_full_long) %>% 
+    select(-Indicator) %>% 
+    group_by(indicator_labels) %>%
+    mutate(row = row_number()) %>%
+    tidyr::pivot_wider(names_from = indicator_labels, values_from = Value) %>%
+    select(-row) %>% 
+    mutate(Group = case_when(
+      
+      Covid == "PRE" ~ 0,
+      Covid == "POST" ~ 1
+      
+    )) %>% select(-Covid) %>% 
+    relocate(Group) %>% 
+    mutate(Group = as.factor(Group)) %>% 
+    distinct() %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+
+      
+  main_comparison %>% select(Group) %>%  map(table)
+      
+    ## Run t test
+      result<- t(sapply(main_comparison[-1], function(x) 
+     unlist(t.test(x~main_comparison$Group)[c("estimate","p.value","statistic","conf.int")])))
+        
+      results <- result %>% as.data.frame(.) %>% 
+          mutate(Indicator = rownames(.)) %>% 
+          filter(!str_detect(Indicator, "TEACH")) %>% 
+          filter(!`estimate.mean in group 0`==0) %>% 
+
+        rename(`Mean School Pre-Covid` = `estimate.mean in group 0`,
+               `Mean Schools Post-Covid` = `estimate.mean in group 1`,
+               `P-Value` = `p.value`,
+               `T-test` = `statistic.t`,
+               `95% CI` = `conf.int1`) %>% 
+        select(-`conf.int2`) %>% 
+        relocate(Indicator)
+  
+    rownames(results) <- c()
+      
+    
+ gt(results) %>%
+  tab_header(
+    title="Test of Differences for Indicators between Schools Visited 2020 and 2021"
+  ) %>% 
+    tab_style(
+    style = cell_fill(color = "lightgreen"),
+    locations = cells_body(
+      rows = `P-Value` < 0.05)
+  ) 
+
+
+ 
+  
+    
+
+```
+```{r, include=FALSE}
+      
+#         main_comparison %>% 
+#     select_if(is.numeric) %>%
+#     map_df(~ broom::tidy(t.test(elect_if(is.numeric) ~ main_comparison$Group)), .id = 'var')
+#       
+#     
+#       
+#       
+#     
+# 
+# # # Compute t-test
+# # library(rstatix)
+# #       
+# # # res.aov <- anova_test(sample_full_long$Value ~ sample_full_long$Covid)
+# # 
+# #       
+# # for(ii in unique(sample_full_long$Indicator)){    
+# #       
+# #       
+# #       
+# #   stat.test <- sample_full_long  %>% 
+# #     
+# #     group_by(ii, Covid) %>%
+# #     
+# #     t_test(Value ~ Covid) %>%
+# #     
+# #     adjust_pvalue(method = "bonferroni") %>%
+# #     
+# #     add_significance("p.adj")
+# # 
+# #   
+# #   stat.test
+# #   
+# # }
+#   
+#       
+#       
+#       
+#       
+# # average_all <- combine_gepd_data %>% 
+# #   
+# #   summarise(across(where(is.numeric),
+# #                          ~ mean(.x, na.rm = T))) %>% 
+# #   pivot_longer(cols=school_code:date,
+# #     names_to = c("Indicator"),
+# #                values_to = "value")
+# 
+# 
+# 
+#       
+# sample_full_wide <- sample_full_long %>% 
+#   pivot_wider(names_from = Indicator, values_from  = Value) %>% 
+#   mutate(across(where(is.numeric),
+#              ~ as.double(.)))
+#   
+# 
+# 
+# 
+# data_test2 <- tibble(measure = c(rnorm(100,30,5),rnorm(100,15,5)),
+#                     group = factor(rep(c("A","B"),c(100,100))))
+# 
+# table(data_test2$group) ##Notice that you have the required two levels
+# t.test(measure~group, data = data_test2,paired = TRUE) ##Test will now run
+# 
+# 
+#       
+# 
+# 
+# 
+# 
+#  test_data <- sample_full  %>% 
+#           
+#         select(-school_code, -Distance_btw_schools) %>% 
+#           
+#          mutate(across(where(is.numeric),
+#                     
+#                     ~ as.character(.)
+#                     )) %>% 
+#           
+#             pivot_longer(
+#                     cols = school_code_POST:GDP_PRE,
+#                     names_to = c("Indicator", "Covid"),
+#                     names_pattern = "(.*)_(PRE|POST)",
+#                     values_to = "value"
+#       )  %>%
+#   
+#   filter(!str_detect(value, "[A-Za-z]")) %>% 
+#   filter(str_detect(value, "[0-9]")) %>% 
+#   pivot_wider(names_from = Indicator, values_from = value) %>% 
+#   group_by(Covid, Indicator) %>% 
+#   summarise(value = list(value)) %>% 
+#   ungroup() %>% 
+#   # group_by(Covid) %>% 
+#   # arrange(Covid, Indicator) %>% 
+#   # mutate(id = row_number()) %>% 
+#   pivot_wider(names_from = Covid, values_from = value) %>% 
+#   filter(!str_detect(Indicator, "school_address_preload|school_code|m1s0q2_name|school_name_preload|_preload")) %>% 
+#   group_by(Indicator) %>% 
+#   mutate(p_value = t.test(unlist(PRE), unlist(POST))$p.value,
+#          t_value = t.test(unlist(PRE), unlist(POST))$statistic)
+# 
+# # boxplots and t-tests for the 4 variables at once
+# for (i in names(sample_full_wide[ ,2:5])) { # variables to compare are variables 1 to 4
+#   boxplot(sample_full_wide[, i] ~ sample_full_wide$Covid, # draw boxplots by group
+#     ylab = names(sample_full_wide[i]), # rename y-axis with variable's name
+#     xlab = "Pre-Post Covid"
+#   )
+#   print(t.test(sample_full_wide[, i] ~ sample_full_wide$Covid)) # print results of t-test
+# }
+#       
+#    
+# 
+# 
+# sample_full_long <- sample_full_long %>% mutate(Group = case_when(
+#   
+#   Covid == "PRE" ~ 0,
+#   Covid == "POST" ~ 1
+#   
+# )) %>% select(-Covid) %>% 
+#   group_by(Indicator) %>%
+#   mutate(row = row_number()) %>%
+#   tidyr::pivot_wider(names_from = Indicator, values_from = Value) %>%
+#   select(-row)
+# 
+# 
+# t(sapply(sample_full_long[-1], function(x) 
+#      unlist(t.test(x~sample_full_long$Group)[c("estimate","p.value","statistic","conf.int")])))
+#   
+#   
+# 
+#   # Create the plot
+# 
+# library(ggpubr)
+# 
+# # Edit from here #
+# x <- which(names(dat) == "COvid") # name of grouping variable
+# y <- which(names(dat) == "student_proficient" # names of variables to test
+# | names(dat) == "ecd_student_knowledge"
+# | names(dat) == "experience_pknw"
+# | names(dat) == "student_attendance")
+# method <- "t.test" # one of "wilcox.test" or "t.test"
+# paired <- FALSE # if paired make sure that in the dataframe you have first all individuals at T1, then all individuals again at T2
+# # Edit until here
+# 
+# 
+# # Edit at your own risk
+# for (i in y) {
+#   for (j in x) {
+#     ifelse(paired == TRUE,
+#       p <- ggpaired(dat,
+#         x = colnames(dat[j]), y = colnames(dat[i]),
+#         color = colnames(dat[j]), line.color = "gray", line.size = 0.4,
+#         palette = "npg",
+#         legend = "none",
+#         xlab = colnames(dat[j]),
+#         ylab = colnames(dat[i]),
+#         add = "jitter"
+#       ),
+#       p <- ggboxplot(dat,
+#         x = colnames(dat[j]), y = colnames(dat[i]),
+#         color = colnames(dat[j]),
+#         palette = "npg",
+#         legend = "none",
+#         add = "jitter"
+#       )
+#     )
+#     #  Add p-value
+#     print(p + stat_compare_means(aes(label = paste0(..method.., ", p-value = ", ..p.format..)),
+#       method = method,
+#       paired = paired,
+#       # group.by = NULL,
+#       ref.group = NULL
+#     ))
+#   }
+# }
 ```
 
