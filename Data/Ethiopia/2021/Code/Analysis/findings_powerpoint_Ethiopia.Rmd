@@ -1040,7 +1040,7 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw, color=Type)) +
 - Generally, the policy environment, as indicated by the De Jure, is quite strong.  
 - However, teachers often report a different experience of the policies in practice.
 
-```{r radar, eval=FALSE, warning=FALSE, include=FALSE}
+```{r overall, echo=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
@@ -1140,7 +1140,18 @@ main_indicator_labels<-c(
     panel.grid.major.x = ggplot2::element_blank()
 
     )
+  
     
+    
+# test <- data_radar %>% 
+#   pivot_longer(cols = teacher_attraction:principal_evaluation,
+#                names_to = "Indicator",
+#                values_to = "Value") %>% 
+#   group_by(group) %>% 
+#   summarise(average = mean(Value, na.rm = T)) %>% 
+  
+  
+  
     
 ```
 

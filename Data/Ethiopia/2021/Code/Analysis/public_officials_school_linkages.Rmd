@@ -86,8 +86,22 @@ bbc_style <- function() {
 ```{r data, include=FALSE}
 
 #set directory to bring in data
+#set directory to bring in data
 
+ if(Sys.info()["user"] == "wb577189"){
+
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_RAW/Data/anonymized/"
+
+
+    
+  } else if (Sys.info()["user"] == "wb469649") {
+    
 work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/confidential/"
+
+    
+  }
+
+
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))

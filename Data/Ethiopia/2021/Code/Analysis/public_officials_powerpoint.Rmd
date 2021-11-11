@@ -137,6 +137,7 @@ bbc_style <- function() {
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
 
+
 #load school data for comparisons
 #load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
 
