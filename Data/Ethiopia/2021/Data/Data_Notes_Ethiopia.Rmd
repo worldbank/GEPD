@@ -569,7 +569,7 @@ linked_map <- ggplot() +
   geom_point(data=sample_full, aes(x=lon_PRE, y=lat_PRE), color='red') +
   geom_point(data=sample_full, aes(x=lon_POST, y=lat_POST), color='blue') +
   theme_map() +
-  labs(title="Locations of ",bandwidth_N," Schools Matched in 2020 and 2021",
+  labs(title=paste0("Locations of ",bandwidth_N," Schools Matched in 2020 and 2021"),
        caption='Schools in 2020 in red.  Schools in 2021 in blue.'
        )+
   theme(panel.background = element_rect(fill='#ece4db')
