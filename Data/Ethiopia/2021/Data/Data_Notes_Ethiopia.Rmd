@@ -446,7 +446,7 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
 
       selector_bandwidth="Distance" # values: "Distance", "Number".  Set either distance based bandwidth or number of schools to match
       bandwidth_N = 60 # set bandwidth for number of schools
-      bandwidth_km = 10 # set bandwidth for distance in km
+      bandwidth_km = 20 # set bandwidth for distance in km
       
       
       schools_2021 <- school_dta_2021 %>% filter(!is.na(lon)|!is.na(lat))
@@ -721,6 +721,9 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
 
       
   main_comparison %>% select(Group) %>%  map(table)
+  
+  
+  
       
     ## Run t test
       result<- t(sapply(main_comparison[-1], function(x) 
