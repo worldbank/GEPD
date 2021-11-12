@@ -481,11 +481,12 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
   if (selector_bandwidth=="Distance") {
       sample_full <- comparison_full %>%    
         filter(Distance_btw_schools/1000<=bandwidth_km)
+       bandwidth_N=nrow(sample_full)
   
   } else if (selector_bandwidth=="Number") {
       sample_full <- comparison_full %>%    
         filter(row_number()<=bandwidth_N) #take top N number of observations
-
+        bandwidth_km=mean(sample_full$Distance_btw_schools)
   }
       
    #get basic summary stats on GDP
@@ -747,7 +748,7 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
     
  gt(results) %>%
   tab_header(
-    title=paste0("Test of Differences for Indicators between Schools Visited 2020 and 2021 for ",bandwidth_N," Schools")
+    title=paste0("Test of Differences for Indicators between Schools Visited 2020 and 2021 for ",bandwidth_N," Matched Schools")
   ) %>% 
    fmt_number(columns=c(`Mean School Pre-Covid`, `Mean Schools Post-Covid`, `P-Value`, `T-test`, `95% CI`),
               decimals=2) %>%
