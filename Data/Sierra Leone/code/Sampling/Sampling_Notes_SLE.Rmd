@@ -1,0 +1,213 @@
+---
+title: "Sampling Notes - Sierra Leone"
+author: ""
+output:
+  html_document: default
+
+always_allow_html: yes
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+library(knitr)
+library(tidyverse)
+library(readxl)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(kableExtra)
+library(DT)
+library(stargazer)
+library(skimr)
+library(fuzzyjoin)
+#Load the data
+#Country name
+country <-'SLE'
+country_name <- "Sierra Leone"
+year <- '2022'
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"EGRA EGMA/ASC/2020 files/Annual School Census EMIS (2020) for Share.xlsx"
+frame_sheet <- "Annual School Census EMIS (2020"
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+## Introduction
+
+This file outlines the sampling strategy for Niger.
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+For our Survey of Public Officials, we will sample a total of 200 public officials.  Roughly 40 officials will be surveyed at the federal level, while 160 officials will be surveyed at the reginoal/district level.  For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where 12 Governorate offices are chosen at random from among the regions in which schools were sampled.  Then among these 12 Governorates, we also select at random 12 Directorates from among the Directorates in which schools werer sampled.  The result of this sampling approach is that for 12 clusters we will have links from the school to the Directorates office to the Governorate office to the central office.  Within the Governorates/Directorates five or six officials will be sampled, including the head of organization, HR director, two division directors from finance and planning, and one or two randomly selected professional employees among the finance, planning, and one other service related department chosen at random.  At the federal level, we will interview the HR director, finance director, planning director, and three randomly selected service focused departments.  In addition to the directors of each of these departments, a sample of 9 professional employees will be chosen in each department at random on the day of the interview.
+
+ 
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions.  New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below.  The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years).  Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+## Sierra Leone  Specific Comments
+
+```{r geojson_prelim, echo=FALSE}
+
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+
+
+# load wb polygon data 
+
+## import at district level (adm2 level)
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == country_name) %>%
+  distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+# ## import at district level (adm1 level)
+# geo1 <- geojson_sf(
+#   file.path(wbgis, "GeoJSON/g2015_2014_1.geojson") # where _1 has region-level polys
+#   ) %>%
+#   filter( ADM0_NAME == country_name) %>%
+#   distinct(ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+# 
+# ## keep only the adm0 code and the geometry column.
+# geo1 <- geo1 %>%
+#   select(ADM1_CODE, geometry)
+
+
+# plot to show different geometries: rwa1 has 5 regions and rwa has 30 districts 
+#geo1 %>% select(ADM1_CODE) %>% plot(., main = 'region geometry')
+#wb.poly.2 %>% select(ADM2_CODE) %>% plot(., main = 'district geometry')
+
+
+
+```
+
+
+```{r include=FALSE}
+#read sample frame
+df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet) 
+
+miss_plt <- gg_miss_var(df_raw, show_pct = TRUE)  +
+  theme(axis.text.y = element_blank()) 
+
+
+  plotly::ggplotly(miss_plt)
+  
+df_selected <- df_raw %>%
+    select(c(
+    "startdate",
+    "key",
+    "idregion",
+    "iddistrict",
+    "idcouncil",
+    "idchiefdom",
+    "idward",
+    "idsection",
+    "idtown",
+    "sch_type",
+    "idschool_name",
+    "idemis_code",
+    "new_emis_code_id",
+    "geopointlatitude",
+    "geopointlongitude",
+    "geopointaltitude",
+    "geopointaccuracy",
+    "accessibility",
+    "school_districthq_distance",
+    "school_districthq_distance_hrs",
+    "mixed_school",
+    "class1_combined",
+    "class2_combined",
+    "class3_combined",
+    "class4_combined",
+    "class5_combined",
+    "class6_combined",
+    "classes_primary",
+    "classes_primary_1",
+    "classes_primary_2",
+    "classes_primary_3",
+    "classes_primary_4",
+    "classes_primary_5",
+    "classes_primary_6",
+    "total_male_teachers",
+    "total_female_teachers",
+    "total_male_pupils",
+    "total_female_pupils",
+    "total_permanent_classrooms",
+    "total_nonperm_classrooms",
+    "total_teachers",
+    "total_pupils",
+    "total_classrooms",
+    "sch_owner",
+    "shift_status",
+    "pri_lang_instruct",
+    "electricity",
+    "water_source",
+    "sch_feeding",
+    "internet",
+    "computers"
+  ))
+
+
+
+#merge on the list of EGRA/EGMA schools
+frame_2019 <- read_csv( paste(sampling_folder, 'EGRA EGMA/ASC/2019 Files/Data Files/2019 Annual School Census Data_Final_20191016.csv', sep="/")) %>%
+  select(c(
+    "idregion",
+    "iddistrict",
+    "idcouncil",
+    "idchiefdom",
+    "idward",
+    "idsection",
+    "idtown",
+    "sch_type",
+    "idschool_name",
+    "idemis_code"
+  ))
+
+#link up the egra data with the EMIS code in the frame_2019
+egra_df <- read_excel(path=paste(sampling_folder, 'EGRA EGMA/List of 260 schools - UNICEF SL EGRA EGMA study .xlsx', sep="/")) %>%
+  mutate(idschool_name=`School Name`,
+         iddistrict=District) %>%
+  left_join(frame_2019)
+
+
+
+
+
+
+```

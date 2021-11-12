@@ -124,6 +124,17 @@ wb.poly.2 %>% select(ADM2_CODE) %>% plot(., main = 'district geometry')
 m.po <- public_officials_dta_clean
 m.school <- school_dta_short
 
+#get coordinates
+po_coord_df <- public_officials_dta_clean %>%
+  select(interview__id, lat, lon) %>%
+  rename(office_lat=lat,
+         office_lon=lon)
+
+school_coord_df <- school_dta_short %>%
+  select(school_code, lat, lon) %>%
+  rename(school_lat=lat,
+         school_lon=lon) 
+
 # convert po + school dataset to sf objects
 po <- st_as_sf(m.po,
                coords = c("lon", "lat"), # set geometry/point column first
@@ -201,19 +212,24 @@ Merge the school and PO data
 ```{r}
 #district linkages
 po_district_df <- main_po_data %>%
+  left_join(po_coord_df) %>%
   filter(govt_tier=='District office (or equivalent)') %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
-  summarise(across(one_of(po_ind_list),mean)) %>%
+  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean)) %>%
   as_tibble() %>%
   select(-geometry)
 
+
+
 linked_school_data <- main_school_data %>%
+  left_join(school_coord_df) %>%
   left_join(po_district_df) %>%
   filter(!is.na(quality_bureaucracy))
 
 #write to csv
-linked_school_data %>%
+linked_school_data_csv <- linked_school_data %>%
   as_tibble() %>% 
+  ungroup() %>%
   select(-geometry) %>%
   left_join(keyfile) %>%
   select(-c("school_code", "school_name_preload",
@@ -228,15 +244,25 @@ linked_school_data %>%
             "m1s0q2_emis",
             "survey_time",
             
-            )) %>%
-  write_excel_csv(file.path(confidential_folder, "/School/linked_po_school_data_ETH.csv"))
+            )) 
 
+  write_excel_csv(linked_school_data_csv, file.path(confidential_folder, "/School/linked_po_school_data_ETH.csv"))
+
+linked_school_data_csv <- linked_school_data_csv %>%
+  mutate(dist=distm(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')], fun = distHaversine),
+                                 dist_miles=dist/1609.35)
+
+hist(linked_school_data_csv$dist_miles) #distance in miles
+  
 linked_map <- ggplot() +
-  geom_sf(data=wb.poly.2) +
+  geom_sf(data=wb.poly.2, fill='#d8e2dc') +
   geom_sf(data=linked_school_data, color='black', shape=1) +
+  geom_point(data=linked_school_data_csv, aes(x=office_lon, y=office_lat), color='red') +
   theme_map() +
   labs(title="Locations of linkable observations for School Survey and Survey of Public Officials"
-       )
+       )+
+  theme(panel.background = element_rect(fill='#ece4db')
+  )
 linked_map
 
 po_region_df <- main_po_data %>%
