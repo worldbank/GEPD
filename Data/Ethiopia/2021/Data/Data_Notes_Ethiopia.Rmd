@@ -29,12 +29,14 @@ library(mice)
 library(stargazer)
 library(gt)
 library(wbstats)
-library(geosphere)
 library(rpart)       # performing regression trees
 library(rpart.plot)  # plotting regression trees
 library(randomForest)
 library(caret)
 library(modelr)
+library(geosphere)
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+library(ggthemes)
 #Load the data
 
 #read in school level file with sampling information
@@ -84,18 +86,24 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
 }
 
-#attach saved results
-attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
-school_gdp_2021 <- school_gdp
-school_dta_2021 <- school_dta_short %>%
-  left_join(school_gdp_2021)
-
 currentDate<-c("2020-02-14")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
   select(-sample) #variable name causes conflict
 load(sample_frame_name)
+
+#attach saved results
+attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
+school_gdp_2021 <- school_gdp
+school_dta_2021 <- school_dta_short %>%
+  left_join(weights_df %>% mutate(school_code=Code_School)) %>%
+  distinct(school_code, .keep_all = TRUE) %>%
+  mutate(rural=as.numeric(Location=="Rural")) %>%
+  left_join(school_gdp_2021) 
+
+
+
 
 ```
 
@@ -142,6 +150,9 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
 school_gdp_2020 <- school_gdp
 school_dta_2020 <- school_dta_short %>%
+  left_join(weights_df %>% mutate(school_code=Code_School)) %>%
+  distinct(school_code, .keep_all = TRUE) %>%
+  mutate(rural=as.numeric(Location=="Rural")) %>%  
   left_join(school_gdp_2020)
 
 
@@ -423,7 +434,9 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
 
 
 ```
-```{r}
+
+
+```{r covidanalysis}
 
   ## NOTE ####
 
@@ -431,10 +444,12 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
 
    ## Shortest path with distance ---- 
 
-      library(geosphere)
-
-
-      schools_2021 <- school_dta_2021%>% filter(!is.na(lon)|!is.na(lat))
+      selector_bandwidth="Distance" # values: "Distance", "Number".  Set either distance based bandwidth or number of schools to match
+      bandwidth_N = 60 # set bandwidth for number of schools
+      bandwidth_km = 10 # set bandwidth for distance in km
+      
+      
+      schools_2021 <- school_dta_2021 %>% filter(!is.na(lon)|!is.na(lat))
       schools_2020 <- school_dta_2020
 
       
@@ -451,14 +466,123 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
       
     ## Drawing the sample from 2021 -----
 
-  sample_full <- schools_2021 %>% 
-      sample_n(60, replace = F, weight = NULL) %>% 
-      rename_with(~paste0(., "_POST"), school_code:GDP) %>% 
+  comparison_full <- schools_2021 %>% 
+      arrange(Distance_btw_schools)   %>%     #arrange by distance, so the closest schools are on top of df
+       rename_with(~paste0(., "_POST"), school_code:GDP) %>% 
       rename(school_code=Closest_school_Pre_covid) %>% 
       left_join(schools_2020, by =c("school_code")) %>% 
       rename_with(~paste0(., "_PRE"), school_name_preload:GDP) 
       
+      
+  sample_full <- comparison_full %>%    
+      #filter(row_number()<=bandwidth_N) #take top N number of observations
+      filter(Distance_btw_schools/1000<=bandwidth_km)
+  
+  if (selector_bandwidth=="Distance") {
+      sample_full <- comparison_full %>%    
+        filter(Distance_btw_schools/1000<=bandwidth_km)
+  
+  } else if (selector_bandwidth=="Number") {
+      sample_full <- comparison_full %>%    
+        filter(row_number()<=bandwidth_N) #take top N number of observations
+
+  }
+      
+   #get basic summary stats on GDP
+  
+    comp_gdp<-comparison_full$GDP_PRE-comparison_full$GDP_POST
+    samp_gdp<-sample_full$GDP_PRE-sample_full$GDP_POST
+
+    comp_rural<-comparison_full$rural_PRE-comparison_full$rural_POST
+    samp_rural<-sample_full$rural_PRE-sample_full$rural_POST    
     
+  t_full <- t.test(comp_gdp ) %>% broom::tidy() %>% mutate(indicator="All Schools - GDP")
+  t_sample <-  t.test(samp_gdp) %>% broom::tidy() %>% mutate(indicator=paste0(bandwidth_N, " Nearest Schools - GDP"))
+  
+  t_full_dist <- t.test(comparison_full$Distance_btw_schools/1000 ) %>% broom::tidy() %>% mutate(indicator="All Schools - Distance (km)")
+  t_sample_dist <-  t.test(sample_full$Distance_btw_schools/1000) %>% broom::tidy() %>% mutate(indicator=paste0(bandwidth_N, " Nearest Schools - Distance (km)"))
+  
+     
+  t_full_rural <- t.test(comp_rural ) %>% broom::tidy() %>% mutate(indicator="All Schools - Rural")
+  t_sample_rural <-  t.test(samp_rural) %>% broom::tidy() %>% mutate(indicator=paste0(bandwidth_N, " Nearest Schools - Rural"))
+   
+  means_2020 <- c(mean(sample_full$GDP_PRE), mean(comparison_full$GDP_PRE), as.numeric(NA), as.numeric(NA),mean(sample_full$rural_PRE), mean(comparison_full$rural_PRE))
+  means_2021 <- c(mean(sample_full$GDP_POST), mean(comparison_full$GDP_POST), as.numeric(NA), as.numeric(NA),mean(sample_full$rural_POST), mean(comparison_full$rural_POST))
+
+t_df <- t_sample %>%
+  bind_rows(t_full) %>%
+  bind_rows(t_sample_dist) %>%
+  bind_rows(t_full_dist) %>%
+  bind_rows(t_sample_rural) %>%
+  bind_rows(t_full_rural) %>%  
+  #bind_rows(t1, t2, t3, t4, t5, t6) %>%
+  transmute(
+    Indicator=indicator,
+    `2020` = round(means_2020,1),
+    `2021`=round(means_2021,1),
+    Difference=round(estimate,1),
+    `P-value`=round(p.value,3), 
+    `95% CI`=paste0("[",round(conf.low,1),",",round(conf.high,1),"]")
+  
+  ) 
+
+gt(t_df) %>%
+  tab_header(
+    title="Test of Differences for GDP Estimates between Schools Visited 2020 and 2021"
+  )
+    
+
+```
+
+```{r compmap}
+
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+
+
+# load wb polygon data 
+
+## import at district level (adm2 level)
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == "Ethiopia") 
+  #distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+overall_map <- ggplot() +
+  geom_sf(data=wb.poly.2, fill='#d8e2dc') +
+  geom_point(data=comparison_full, aes(x=lon_PRE, y=lat_PRE), color='red') +
+  geom_point(data=comparison_full, aes(x=lon_POST, y=lat_POST), color='blue') +
+  theme_map() +
+  labs(title="Locations of All Schools in 2020 and 2021",
+       caption='Schools in 2020 in red.  Schools in 2021 in blue.'
+       )+
+  theme(panel.background = element_rect(fill='#ece4db')
+  )
+overall_map
+
+
+
+linked_map <- ggplot() +
+  geom_sf(data=wb.poly.2, fill='#d8e2dc') +
+  geom_point(data=sample_full, aes(x=lon_PRE, y=lat_PRE), color='red') +
+  geom_point(data=sample_full, aes(x=lon_POST, y=lat_POST), color='blue') +
+  theme_map() +
+  labs(title="Locations of ",bandwidth_N," Schools Matched in 2020 and 2021",
+       caption='Schools in 2020 in red.  Schools in 2021 in blue.'
+       )+
+  theme(panel.background = element_rect(fill='#ece4db')
+  )
+linked_map
+
+
+```
+
+
+
+```{r testing}
+
+ 
       ## Pivot for graphs --------
     sample_full_long <- sample_full  %>% 
           
@@ -620,8 +744,10 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
     
  gt(results) %>%
   tab_header(
-    title="Test of Differences for Indicators between Schools Visited 2020 and 2021"
+    title=paste0("Test of Differences for Indicators between Schools Visited 2020 and 2021 for ",bandwidth_N," Schools")
   ) %>% 
+   fmt_number(columns=c(`Mean School Pre-Covid`, `Mean Schools Post-Covid`, `P-Value`, `T-test`, `95% CI`),
+              decimals=2) %>%
     tab_style(
     style = cell_fill(color = "lightgreen"),
     locations = cells_body(
@@ -630,10 +756,10 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
 
 
  
-  
-    
 
 ```
+
+
 ```{r, include=FALSE}
       
 #         main_comparison %>% 
