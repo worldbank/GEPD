@@ -67,8 +67,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
 
-    project_folder  <- "C:/Users/wb577189/OneDrive - WBG/CNT/"
-    
+    project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
+   
     download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
     
     confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
@@ -87,14 +87,14 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 }
 
 currentDate<-c("2020-02-14")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(project_folder,paste(country, paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
   select(-sample) #variable name causes conflict
 load(sample_frame_name)
 
 #attach saved results
-attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
+attach(paste0(confidential_folder, "/school_indicators_data.RData"))
 school_gdp_2021 <- school_gdp
 school_dta_2021 <- school_dta_short %>%
   left_join(weights_df %>% mutate(school_code=Code_School)) %>%
@@ -127,7 +127,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
 
-    project_folder  <- "C:/Users/wb577189/OneDrive - WBG/CNT/"
+    project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
     
     download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
     
@@ -181,7 +181,7 @@ combine_gepd_data %>%
 
 
 
-```{r country_map, include=FALSE}
+```{r country_map}
 sample_map <- combine_gepd_data %>%
     mutate(longitude=as.character(lon)) %>%
     mutate(latitude=as.character(lat)) %>%
@@ -444,7 +444,7 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
 
    ## Shortest path with distance ---- 
 
-      selector_bandwidth="Distance" # values: "Distance", "Number".  Set either distance based bandwidth or number of schools to match
+      selector_bandwidth="Number" # values: "Distance", "Number".  Set either distance based bandwidth or number of schools to match
       bandwidth_N = 60 # set bandwidth for number of schools
       bandwidth_km = 20 # set bandwidth for distance in km
       
@@ -535,10 +535,18 @@ gt(t_df) %>%
 
 ```
 
-```{r compmap}
+```{r compmap, eval=F, include=FALSE}
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 
 wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+  
+  } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+  wbgis <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/General/"
 
+  
+}
 
 
 # load wb polygon data 
@@ -764,7 +772,7 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
 ```
 
 
-```{r, include=FALSE}
+```{r, eval=F, include=FALSE}
       
 #         main_comparison %>% 
 #     select_if(is.numeric) %>%
