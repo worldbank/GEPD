@@ -43,6 +43,62 @@ library(ggthemes)
 #currentDate<-c("2019-07-22")
 #sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 
+# define stle for ggplot based on BBC plotting styles
+bbc_style <- function() {
+  font <- "Helvetica"
+  
+  ggplot2::theme(
+    
+    #Text format:
+    #This sets the font, size, type and colour of text for the chart's title
+    plot.title = ggplot2::element_text(family=font,
+                                       size=12,
+                                       face="bold",
+                                       color="#222222"),
+    #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+    plot.subtitle = ggplot2::element_text(family=font,
+                                          size=12,
+                                          margin=ggplot2::margin(9,0,9,0)),
+    plot.caption = ggplot2::element_blank(),
+    #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+    
+    #Legend format
+    #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+    legend.position = "none",
+    legend.text.align = 0,
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    legend.key = ggplot2::element_blank(),
+    legend.text = ggplot2::element_text(family=font,
+                                        size=14,
+                                        color="#222222"),
+    
+    #Axis format
+    #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_text(family=font,
+                                      size=8,
+                                      color="#222222"),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    
+    #Grid lines
+    #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank(),
+    
+    #Blank background
+    #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+    panel.background = ggplot2::element_blank(),
+    
+    #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+    strip.background = ggplot2::element_rect(fill="white"),
+    strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+
 
 ```
 
@@ -445,7 +501,7 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
    ## Shortest path with distance ---- 
 
       selector_bandwidth="Number" # values: "Distance", "Number".  Set either distance based bandwidth or number of schools to match
-      bandwidth_N = 60 # set bandwidth for number of schools
+      bandwidth_N = 80 # set bandwidth for number of schools
       bandwidth_km = 20 # set bandwidth for distance in km
       
       
@@ -535,7 +591,7 @@ gt(t_df) %>%
 
 ```
 
-```{r compmap, eval=F, include=FALSE}
+```{r compmap, echo=FALSE ,eval=F, include=FALSE}
 
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 
@@ -662,7 +718,9 @@ linked_map
                 'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
                 'sch_selection_deployment', 
                 'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                
+                "GDP", "rural"
                 # 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
                 # 'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
                 # 'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
@@ -697,7 +755,8 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
                         "School Management Attraction", 'principal_satisfaction', 'principal_salary',
                         "School Management Selection & Deployment",
                         "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                        "GDP", "rural"
                         # "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
                         # "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
                         # "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
@@ -772,7 +831,321 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
 ```
 
 
-```{r, eval=F, include=FALSE}
+```{r regression}
+
+
+  ## The numbers from above are showing an unexpected narrative, that is schools where data was collected post covid seems to be doing better than schools from pre covid. To make sense of this, we are running a regression accounting for 1)urban/rural, 2) pre/post, 3)GDP on both 1st grade and 4th grade.
+  library(stargazer)
+  library(sandwich)
+
+  
+  covariates <-main_comparison %>% 
+    select(GDP, rural, Group) %>% 
+    names(.)
+  
+  
+  ##Regression
+  
+  my_formula <- as.formula(paste('`4th Grade Student Knowledge` ~ ', paste(covariates, collapse=" + "), sep=""))
+  my_formula_bis <- as.formula(paste('`1st Grade Assessment Score` ~ ', paste(covariates, collapse=" + "), sep=""))
+
+  fourth_grade_lm<-lm(my_formula, main_comparison) 
+  first_grade_lm<-lm(my_formula_bis, main_comparison)
+  
+  ##GT tables
+  
+  tbl_regression(fourth_grade_lm) %>% 
+  modify_header(label = "**Variable**") %>% # update the column header
+  bold_labels() 
+
+  tbl_regression(first_grade_lm) %>% 
+  modify_header(label = "**Variable**") %>% # update the column header
+  bold_labels() 
+
+  
+  ## Regular regression tables
+  cov1_multi         <- vcovHC(fourth_grade_lm, type = "HC1")
+  robust_multi_se    <- sqrt(diag(cov1_multi))
+  
+  
+  cov2_multi         <- vcovHC(first_grade_lm, type = "HC1")
+  robust_multi_se_2    <- sqrt(diag(cov2_multi))
+  
+  
+  fourth_table<- summary(fourth_grade_lm)
+  first_table<- summary(first_grade_lm)
+
+
+  # load package
+  library(sjPlot)
+  
+  tab_model(fourth_table)
+  tab_model(first_table)
+
+  
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+  ## 15 indicators that are most likely to be significant ----------
+  
+  ## Here, we investigate which indicator are most often statistically significant when we vary the sample size from 20 to 100.
+
+  rounds <- seq(from=20, to=100, by=5) %>% 
+  as.data.frame() 
+
+  names(rounds)[1] <-  "Size"
+  
+  rounds <- rounds %>% mutate(Sample = rownames(.))
+
+
+  for (i in 1:17) {
+    
+    
+    ## Keep sample that match the loop
+    bandwidth_n <- rounds %>% 
+      dplyr::filter(Sample == i) %>% 
+      pull(Size)
+    
+    ## Shortest path with distance ----
+      
+      
+      schools_2021 <- school_dta_2021 %>% filter(!is.na(lon)|!is.na(lat))
+      schools_2020 <- school_dta_2020
+
+      
+      # create distance matrix
+       mat <- distm(schools_2021[,c('lon','lat')], schools_2020[,c('lon','lat')], fun=distVincentyEllipsoid) 
+      
+       # assign the name to the point in list1 based on shortest distance in the matrix
+      schools_2021$Closest_school_Pre_covid <- schools_2020$school_code[max.col(-mat)]
+      schools_2021$Distance_btw_schools <- apply(mat, 1, min)
+      
+      #shortest <- random_2020
+          
+    
+      
+    ## Drawing the sample from 2021 -----
+
+  comparison_full <- schools_2021 %>% 
+      arrange(Distance_btw_schools)   %>%     #arrange by distance, so the closest schools are on top of df
+       rename_with(~paste0(., "_POST"), school_code:GDP) %>% 
+      rename(school_code=Closest_school_Pre_covid) %>% 
+      left_join(schools_2020, by =c("school_code")) %>% 
+      rename_with(~paste0(., "_PRE"), school_name_preload:GDP) 
+
+  
+
+  sample_full <- comparison_full %>%    
+        filter(row_number()<=bandwidth_n) #take top N number of observations
+  
+        # bandwidth_km=mean(sample_full$Distance_btw_schools)
+
+
+
+
+      ## Pivot for graphs --------
+    sample_full_long <- sample_full  %>% 
+          
+        # select(-school_code, -Distance_btw_schools) %>% 
+          
+         mutate(across(where(is.numeric),
+                    
+                    ~ as.character(.)
+                    )) %>% 
+          
+            pivot_longer(
+                    cols = school_code_POST:GDP_PRE,
+                    names_to = c("Indicator", "Covid"),
+                    names_pattern = "(.*)_(PRE|POST)",
+                    values_to = "Value"
+      ) %>% 
+        
+        # get rid off the names and character like variables that are no use for comparison here
+        
+        dplyr::filter(!str_detect(Value, "[A-Za-z]")) %>% 
+        mutate_at(c("Value"),
+                  ~ as.numeric(.)) %>% 
+        
+        mutate_if(is.numeric, ~replace(., is.na(.), 0))  %>%      
+        
+        dplyr::filter(!str_detect(Indicator, "school_code$")) %>% 
+        
+        dplyr::filter(!str_detect(Indicator, "sch_management_attraction")) %>% 
+        
+        ungroup() %>% 
+        
+        mutate(Covid = as.factor(Covid)) 
+
+
+
+
+  ## Create referential dataframe
+  labels_df_2<-data.frame(Indicator=as.character(indicators_list),
+                      indicator_labels=as.character(main_indicator_labels2))
+      
+      
+  ## add labels to sampled schools drawn for comparison
+  main_comparison <- labels_df_2 %>% 
+    left_join(sample_full_long) %>% 
+    select(-Indicator) %>% 
+    group_by(indicator_labels) %>%
+    mutate(row = row_number()) %>%
+    tidyr::pivot_wider(names_from = indicator_labels, values_from = Value) %>%
+    select(-row) %>% 
+    mutate(Group = case_when(
+      
+      Covid == "PRE" ~ 0,
+      Covid == "POST" ~ 1
+      
+    )) %>% select(-Covid) %>% 
+    relocate(Group) %>% 
+    mutate(Group = as.factor(Group)) %>% 
+    distinct() %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+
+      
+  main_comparison %>% select(Group) %>%  map(table)
+  
+  
+  
+      
+    ## Run t test
+      result<- t(sapply(main_comparison[-1], function(x) 
+     unlist(t.test(x~main_comparison$Group)[c("estimate","p.value","statistic","conf.int")])))
+        
+      results <- result %>% as.data.frame(.) %>% 
+          mutate(Indicator = rownames(.)) %>% 
+          filter(!str_detect(Indicator, "TEACH")) %>% 
+          filter(!`estimate.mean in group 0`==0) %>% 
+
+        rename(`Mean School Pre-Covid` = `estimate.mean in group 0`,
+               `Mean Schools Post-Covid` = `estimate.mean in group 1`,
+               `P-Value` = `p.value`,
+               `T-test` = `statistic.t`,
+               `95% CI` = `conf.int1`) %>% 
+        select(-`conf.int2`) %>% 
+        relocate(Indicator)
+  
+    rownames(results) <- c()
+
+  ## Keep only indicator with p-value significant
+  
+  indicator_significant <- results %>% 
+  dplyr::filter(`P-Value` < 0.05) %>% 
+  dplyr::mutate(Size = bandwidth_n)
+
+  assign(paste("indicator_significant", i, sep = "_") , indicator_significant)      
+    
+  }
+  
+  library(data.table)
+  ##Bind all dataframe
+  indicator_significant_overall <- rbindlist(mget(ls(pattern = "indicator_significant")), idcol = F)
+  
+  ##Keep the 15 top
+  indicator_significant <- indicator_significant_overall %>% 
+    filter(Indicator != "GDP") %>% 
+    group_by(Indicator) %>% 
+    mutate(Time = n()) %>%
+    distinct(Indicator, .keep_all =T) %>% 
+    arrange(desc(Time)) %>% 
+    ungroup() %>% 
+    top_n(10) %>% 
+    
+    mutate(
+      
+      Indicator = gsub("school_goals_clear", "Clear School Goals", Indicator),
+      Indicator = gsub("school_goals_exist", "Existing School Goals", Indicator),
+      Indicator = gsub("school_goals_relevant", "Relevant School Goals", Indicator),
+      Indicator = gsub("monitoring_infrastructure", "Monitoring of Infrastructure", Indicator)
+
+    )
+  
+  
+  
+        p<-  indicator_significant %>% 
+           select(Indicator, Time) %>% 
+          mutate(Country = "Ethiopia") %>% 
+        ggplot(., aes(x=reorder(Indicator, Time), y= Time, fill=Country)) +
+        geom_bar(stat='identity', position='dodge') +
+        scale_fill_manual(values = c(
+           "#054C70"
+        ))+        geom_text(aes(label=Time), position=position_dodge(width=0.9), vjust=-0.25)+
+        ggtitle("10 indicators that are most likely to be statistically significant out of 17 simulations") +
+        scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+        ylim(0, 20)
+      
+      
+      library(scales)
+      
+      
+      p + bbc_style() + expand_limits(y=c(0,20))
+  
+
+  
+  
+
+  
+    
+
+```
+
+```{r}
+  ## Basic questions ----------
+  
+  ## Here, we investigate the differences in the basic questions whenever the overall indicator shows a statistically significant difference.
+
+  list_indicator_sig <- indicator_significant_overall %>% 
+  distinct(Indicator) %>% 
+  filter(Indicator != "GDP") %>% 
+  mutate(
+      
+      Indicator = gsub("school_goals_clear", "Clear School Goals", Indicator),
+      Indicator = gsub("school_goals_exist", "Existing School Goals", Indicator),
+      Indicator = gsub("school_goals_relevant", "Relevant School Goals", Indicator),
+      Indicator = gsub("monitoring_infrastructure", "Monitoring of Infrastructure", Indicator),
+      Indicator = gsub("pre_service", "Pre service training", Indicator),
+      Indicator = gsub("salary_delays", "Delays in salary", Indicator),
+      Indicator = gsub("school_goals_measured", "Measurement of School Goals", Indicator)
+
+
+
+    ) %>% 
+  pull
+  
+# master <- readxl::read_xlsx(file.choose(), sheet = 2)
+
+load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_indicators_data.Rdata")
+
+load("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+
+
+
+
+
+```
+
+
+
+
+
+
+```{r, echo=FALSE ,eval=F, include=FALSE}
       
 #         main_comparison %>% 
 #     select_if(is.numeric) %>%
