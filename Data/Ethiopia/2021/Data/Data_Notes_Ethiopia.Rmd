@@ -853,7 +853,7 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
   first_grade_lm<-lm(my_formula_bis, main_comparison)
   
   ##GT tables
-  
+  library(gtsummary)
   tbl_regression(fourth_grade_lm) %>% 
   modify_header(label = "**Variable**") %>% # update the column header
   bold_labels() 
@@ -1130,13 +1130,20 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
   
 # master <- readxl::read_xlsx(file.choose(), sheet = 2)
 
-load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_indicators_data.Rdata")
+ load("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
 
-load("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+  ## Executive function for ECD
+ 
+ ex_functioning <- ecd_dta_anon %>% 
+   select(hashed_school_code,starts_with("m6s2q14"))
 
 
-
-
+ 
+   ## Student literacy profiency 4th frade
+ 
+ literacy_prof <- assess_4th_grade_anon_anon %>% 
+   select(hashed_school_code,m8saq2_id, m8saq3_id , m8saq4_id , m8saq5_story  , m8saq6_story  , m8saq7_word_choice)
+ 
 
 ```
 
