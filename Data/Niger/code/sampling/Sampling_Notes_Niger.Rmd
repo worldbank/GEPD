@@ -20,9 +20,8 @@ library(naniar)
 library(crosstalk)
 library(leaflet)
 library(Hmisc)
-library(kableExtra)
+library(flextable)
 library(DT)
-library(stargazer)
 library(skimr)
 #Load the data
 #Country name
@@ -87,6 +86,10 @@ df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
 
 write_excel_csv(df_raw, paste(sampling_folder, 'Year_Book_2021_final.csv', sep="/"))
 
+#############################################################
+# May want to use CI for CP (kindergarten instead of 1st grade) as the cohorts will graduate
+# Same for G3 and G4 (CE2 and CM1).
+################################################################
 
 # create some columns
 df <- df_raw %>%
@@ -109,21 +112,49 @@ df <- df_raw %>%
     basic_education=as.numeric(school_type=="Basic Education"),
     total_students_grade_4=as.numeric(NB_G_CM1) + as.numeric(NB_F_CM1),
     total_students_grade_4_female= as.numeric(NB_F_CM1),
-    total_students_grade_4_male=as.numeric(NB_G_CM1) 
+    total_students_grade_4_male=as.numeric(NB_G_CM1),
+    total_students_grade_1=as.numeric(NB_G_CP) + as.numeric(NB_F_CP),
+    total_students_grade_1_female= as.numeric(NB_F_CP),
+    total_students_grade_1_male=as.numeric(NB_G_CP)    
     ) 
-  
+
+#calculate total number of students
+df <- df %>%
+  mutate(
+    across(starts_with("NB_F"),as.numeric),
+    across(starts_with("NB_G"),as.numeric)
+  ) %>%
+  mutate(    
+    total_students_female=rowSums(.[grep(x=colnames(df), pattern="NB_F")], na.rm=TRUE),
+    total_students_male=rowSums(.[grep(x=colnames(df), pattern="NB_G")], na.rm=TRUE),
+    total_students=total_students_female+total_students_male
+  )
+
+
 
 #create list of indicators for 
-  indicator_list2<-c('total_students_grade_4_male',
+  indicator_list2<-c('total_students_male',
+                    'total_students_female',
+                    'total_students',
+                    'total_students_grade_4_male',
                     'total_students_grade_4_female',
                     'total_students_grade_4',
+                    'total_students_grade_1_male',
+                    'total_students_grade_1_female',
+                    'total_students_grade_1',                    
                     'public',
                     'rural',
                     'basic_education'                  )
 
-indicator_labels2<-c('Total 4th Grade Male Students',
+indicator_labels2<-c('Total Male Students',
+                    'Total Female Students',
+                    'Total Students',
+                    'Total 4th Grade Male Students',
                     'Total 4th Grade Female Students',
                     'Total 4th Grade Students',
+                    'Total 1st Grade Male Students',
+                    'Total 1st Grade Female Students',
+                    'Total 1st Grade Students',                    
                     'Public Schools',
                     'Rural Schools',
                     'Basic Education School'
@@ -150,23 +181,71 @@ sumstats_df<-skim(sumstats) %>%
 
 ```{r stats_kable, echo=FALSE}
 
-kbl(sumstats_df, caption="Summary Statistics for Sampling Frame" , 
-      digits=2) %>%
-  kable_styling()
+sumstats_df %>%
+  mutate(across(where(is.numeric), round,2)) %>%
+  flextable() %>%
+  add_header_lines("Summary Statistics for Sampling Frame") %>%
+  theme_booktabs() 
+```
+
+
+## Sampling Frame
+
+```{r setframe}
+#restrict to schools of at least 15 students
+df_filtered <- df %>%
+  filter(total_students>=15) %>%
+  filter(basic_education==1)
+
+# merge LIRE database
+
+lire_df <- read_excel(path = paste0(sampling_folder,"/Liste_Ecoles_Primaires_Projet_LIRE_GEPD.xlsx"),
+                      sheet = "3000_ecoles_primaires_effsup50") %>%
+  transmute(REGION=Drep,
+         DEPARTEMENT=Departement,
+         COMMUNE=commune,
+         NOM_ETABLISSEMENT=NOM_ETABLISSEMENT) %>%
+  mutate(LIRE="LIRE School")
+
+lire_matchable <- lire_df %>%
+  left_join(df_filtered %>% select(REGION, DEPARTEMENT, COMMUNE, village, NOM_ETABLISSEMENT, CODE_ADMINISTRATIF,CODE_ETABLISSEMENT, total_students ))
+
+df_updated <- df_filtered %>%
+  left_join(lire_df) %>%
+  distinct(CODE_ETABLISSEMENT, .keep_all = TRUE)
+
+#only able to match 2408 of the 3000 lire schools.
+df_updated %>% group_by(LIRE) %>% summarise(n=n())
 
 ```
 
-```{r missing_region}
+From the `r nrow(df_raw)` schools in the original frame, we will restrict to schools with at least 15 students of primary age, and schools classified as "basic education" schools, as opposed to "Preschool Education" schools.  This restriction eliminates `r nrow(df_raw)-nrow(df_updated)` schools.
 
-#calculate missing by region
 
-df %>% group_by(REGION) %>% summarise(n=n(),complete=mean(!is.na(total_students_grade_4))) %>%
-  kbl( caption="Summary Statistics for Missing Student Country by Region" , 
-      digits=2) %>%
-  kable_styling()
+```{r framestats}
 
+df_updated %>%
+  dplyr::select(indicator_list2) %>%
+  skim() %>%
+  rename(variable=skim_variable) %>%
+  rename_with(~str_replace(.,"numeric.","")) %>%
+  mutate(N=frame_size) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100,N, n_missing, complete_rate) %>%
+  mutate(variable=factor(variable, levels=indicator_list2,
+                         labels=indicator_labels2)) %>%
+  arrange(match(variable, indicator_labels2)) %>%
+  mutate(across(where(is.numeric), round,2)) %>%
+  flextable() %>%
+  add_header_lines("Summary Statistics for Sampling Frame") %>%
+  theme_booktabs() 
 
 ```
+### Merge to LIRE Schools
+
+There is a World Bank project targeting schools (LIRE) schools that will be sampled from
+
+
+
 
 
 ```{r department_count, eval=FALSE, include=FALSE}
@@ -179,7 +258,7 @@ df %>% group_by(REGION) %>% summarise(n=n(),complete=mean(!is.na(total_students_
     arrange(governorate, rural)
 
 sumstats_rand %>%
-  kable( caption="Counts of Schools Sampled per Governorate and Urban/Rural Status") %>%
+  kable( caption="Counts of Schools Sampled per Region and Urban/Rural Status") %>%
   kable_styling()
 
 ```
