@@ -307,13 +307,13 @@ ggplot(df_updated, aes(x=REGION, y=total_students)) +
 
 # Select the Sample   
 
-Stratification will be done on the basis of region and the urban/rural status of the schools. 
+Stratification will be done on the basis of region and the urban/rural status of the school.  The number of schools per strata is based on the sum of primary students (total_students) in the school.  The schools chosen within each strata are done with probability proportional to the total number of primary students in the school.
 
 
 ```{r statacounts, echo=TRUE}
 
 #in this code chunk, the number of schools to be selected in each stratum will be set.  This will be based on the population of the stratum.
-# The strata are based on the 16 districts 
+# The strata are based on the 8 regions and urban/rural status
 set.seed(2435345)
 
 strata_size <- df_updated %>%
