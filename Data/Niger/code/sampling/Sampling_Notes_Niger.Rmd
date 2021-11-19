@@ -76,7 +76,47 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 
 ## Niger  Specific Comments
 
+```{r geojson_prelim, eval=FALSE, include=FALSE}
 
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+library(rnaturalearth)
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+#sle.poly.2 <- ne_countries(country="Sierra Leone", returnclass="sf")
+
+# load wb polygon data 
+
+# 
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == 'Niger')
+  #distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+
+wb.poly.2 <- wb.poly.2 %>%
+  filter( ADM0_NAME == 'Niger') %>%
+  distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+# ## import at district level (adm1 level)
+# geo1 <- geojson_sf(
+#   file.path(wbgis, "GeoJSON/g2015_2014_1.geojson") # where _1 has region-level polys
+#   ) %>%
+#   filter( ADM0_NAME == country_name) %>%
+#   distinct(ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+# 
+# ## keep only the adm0 code and the geometry column.
+# geo1 <- geo1 %>%
+#   select(ADM1_CODE, geometry)
+
+
+# plot to show different geometries: rwa1 has 5 regions and rwa has 30 districts 
+#geo1 %>% select(ADM1_CODE) %>% plot(., main = 'region geometry')
+#wb.poly.2 %>% select(ADM2_CODE) %>% plot(., main = 'district geometry')
+
+
+
+```
 
 
 ```{r include=FALSE}
@@ -239,205 +279,104 @@ df_updated %>%
   add_header_lines("Summary Statistics for Sampling Frame") %>%
   theme_booktabs() 
 
+
+ggplot(df_updated, aes(x=REGION, group=urban_rural, fill=urban_rural)) +
+  geom_bar(color='black',
+           position='dodge') +
+  theme_classic() +
+  scale_y_continuous(labels=scales::comma) +
+  scale_fill_manual(
+    values=c(
+      'Rural'='#bb3e03',
+      'Urban'='#005f73'
+    )
+  ) +
+  labs(fill="Urban/Rural Status") +
+  coord_flip() +
+  ggtitle('Number of Schools per Region in Sampling Frame')
+
+ggplot(df_updated, aes(x=REGION, y=total_students)) +
+  geom_col(fill="#0a9396") +
+  theme_classic() +
+  scale_y_continuous(labels=scales::comma) +
+  ylab('Total Primary Students') +
+  coord_flip() +
+  ggtitle('Number of Primary Students per Region in Sampling Frame')
+
 ```
-### Merge to LIRE Schools
 
-There is a World Bank project targeting schools (LIRE) schools that will be sampled from
+# Select the Sample   
 
-
-
+Stratification will be done on the basis of region and the urban/rural status of the school.  The number of schools per strata is based on the sum of primary students (total_students) in the school.  The schools chosen within each strata are done with probability proportional to the total number of primary students in the school.
 
 
-```{r department_count, eval=FALSE, include=FALSE}
+```{r statacounts, echo=TRUE}
 
-#summary stats for optimally stratified schools 
-  sumstats_rand<-sample_updated %>%
-    filter(sample==1) %>%
-    group_by(governorate, rural) %>%
-    summarise(N=n()) %>%
-    arrange(governorate, rural)
+#in this code chunk, the number of schools to be selected in each stratum will be set.  This will be based on the population of the stratum.
+# The strata are based on the 8 regions and urban/rural status
+set.seed(2435345)
 
-sumstats_rand %>%
-  kable( caption="Counts of Schools Sampled per Region and Urban/Rural Status") %>%
-  kable_styling()
-
-```
-
-## Summary Statistics for Sampled Schools 
-
-```{r stats, eval=FALSE, include=FALSE}
-
-  sumstats_rand2<-sample_updated %>%
-    filter(sample=="Sampled School") %>%
-  mutate(private=if_else(supervisory_authority=="Private",1,0),
-         rural=if_else(rural==TRUE,1,0),
-         all_boy=if_else(total_female_students==0,1,0),
-         all_girl=if_else(total_male_students==0,1,0),
-         north=if_else(territory=="North",1,0),
-         middle=if_else(territory=="Middle",1,0),
-         south=if_else(territory=="South",1,0),
-         shift_1=if_else(foundation_period=="Morning",1,0),
-         shift_2=if_else(foundation_period=="Evening",1,0),
-         shift_both=if_else(foundation_period=="One Period",1,0))
-    
-        
-           
-
-
-  indicator_list2<-c('total_male_students',
-                    'total_female_students',
-                    'total_teachers',
-                    'male_teachers',
-                    'female_teachers',
-                    'private',
-                    'rural',
-                    'north',
-                    'middle',
-                    'south',
-                    'shift_1',
-                    'shift_2',
-                    'shift_both',
-                    'all_boy',
-                    'all_girl'
-                  )
-
-indicator_labels2<-c('Total Male Students',
-                    'Total Female Students',
-                    'Total Teachers',
-                    'Total Male Teachers',
-                    'Total Female Teachers',
-                    'Private Schools',
-                    'Rural Schools',
-                    'North',
-                    'Middle',
-                    'South',
-                    'Morning Shift',
-                    'Evening Shift',
-                    'One Period',
-                    'All Boy Schools',
-                    'All Girl Schools'
-                    )
-
-sumstats2<-sumstats_rand2 %>%
+strata_size <- df_updated %>%
+  group_by(REGION,urban_rural) %>%
+  summarise(
+    n_schools=n(),
+    n_students=sum(total_students),
+    share_students=n_students/sum(df_updated$total_students),
+    exp_num_schools=200*share_students,
+    ini_num_schools=round(exp_num_schools,0)
+  ) %>%
   ungroup() %>%
-    dplyr::select(indicator_list2) 
-
-sumstats_df2<-skim(sumstats2) %>%
-  dplyr::select(-level, -type, -value) %>%
-  spread(stat, formatted) %>%
-  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
-  mutate(variable=factor(variable, levels=indicator_list2,
-                         labels=indicator_labels2)) %>%
-  arrange(match(variable, indicator_labels2))
-
-sumstats_df2 %>%
-  kable( caption="Summary Statistics of Sampled Schools") %>%
-  kable_styling()
-
-```
+  sample_n(nrow(.)) #randomly order the rows
 
 
-## Map of Niger Schools
+#pick number of schools in each strata so that total adds to 200
+# get vector of exp_num_schools
+num_schools <- strata_size$ini_num_schools
 
-
-
-```{r country_map, eval=FALSE, include=FALSE}
-
-
-
-sample_map <- sample_updated %>%
-    mutate(longitude=as.character(longitude)) %>%
-    mutate(latitude=as.character(latitude)) %>%
-    mutate(longitude=as.numeric(longitude)) %>%
-    mutate(latitude=as.numeric(latitude)) 
-
-  sample_map_chosen <- sample_updated %>%
-     filter(sample=='Sampled School') %>%
-     mutate(longitude=as.character(longitude)) %>%
-     mutate(latitude=as.character(latitude)) %>%
-     mutate(longitude=as.numeric(longitude)) %>%
-     mutate(latitude=as.numeric(latitude)) 
-   
-   
-   pal <- colorFactor(
-     palette = c("red", "green", "blue"),
-     domain = sample_map$sample
-   )
-   
-map <- function(df_input) {    leaflet(df_input) %>% 
-    addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
-    addMarkers( lng=~longitude,  lat=~latitude,
-                popup =  paste("School Code: ", sample_map_chosen$organization_code, " <br>",
-                               "School Name: ", sample_map_chosen$school_name, " <br>",
-                                  "Governorate", sample_map_chosen$governorate, "<br>",
-                                  "Directorate: ", sample_map_chosen$directorate, " <br>",
-                                  "School Type:",  sample_map_chosen$foundation_period, " <br>",
-                                  "Total # of 1st Graders", sample_map_chosen$total_students_grade_1, " <br>",
-                                  "Total # of 4th Graders", sample_map_chosen$total_students_grade_4, " <br>",
-                                  "Total # of Boys", sample_map_chosen$total_male_students, " <br>",
-                                  "Total # of Girls", sample_map_chosen$total_female_students, " <br>",
-                                  "Total # of Teachers", sample_map_chosen$total_teachers )) 
+#do a while loop sequentially randomly adding or subtracting a school to the list for a randomly selected strata until total is 200
+while (sum(num_schools)!=200) {
+  
+  if (sum(num_schools)<200) {
+    
+    nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+    extra_schools <- rep(0,16) #create vector of 0s
+    extra_schools[nr] <- 1 # for one random strata add one.
+    num_schools <- num_schools + extra_schools #add to list of schools.
+  } else {
+    nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+    extra_schools <- rep(0,16) #create vector of 0s
+    extra_schools[nr] <- -1 # for one random strata add one.
+    num_schools <- num_schools + extra_schools #add to list of schools.
+  }
+  
 }
 
 
-map2 <- function(df_input) {    leaflet(df_input) %>% 
-    addTiles()  %>%
-    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(sample),
-                popup =  paste("School Code: ", sample_map$organization_code, " <br>",
-                               "School Name: ", sample_map$school_name, " <br>",
-                               "Replacement for Governorate:", sample_map$replace_governorate, " <br>",
-                                  "Governorate", sample_map$governorate, "<br>",
-                                  "Directorate: ", sample_map$directorate, " <br>",
-                                  "Total # of 1st Graders", sample_map$total_students_grade_1, " <br>",
-                                  "Total # of 4th Graders", sample_map$total_students_grade_4, " <br>",
-                                  "Total # of Boys", sample_map$total_male_students, " <br>",
-                                  "Total # of Girls", sample_map$total_female_students, " <br>",
-                                  "Total # of Teachers", sample_map$total_teachers )) %>%
-  addLegend(position="bottomright", pal=pal, values=~sample, title="Schools w/ Replacements")
-}    
+sum(num_schools)
+strata_size$num_schools <- num_schools
+
+sum(strata_size$chosen_num_schools)
+
+# There are 34 schools, so we need to choose 6 more randomly
+districts <- strata_size %>%
+  group_by(REGION,urban_rural) %>%
+  summarise(num_schools=sum(num_schools),
+            n_students=sum(n_students))
+
+
+districts %>% group_by(urban_rural) %>% summarise(num_schools=sum(num_schools))
+
 
 ```
 
-```{r country_map2, eval=FALSE, fig.height=8, fig.width=9, include=FALSE}
-linked_df<-SharedData$new(sample_map_chosen)
+
+```{r echo=TRUE}
+#now choose the schools within strata
+school_sample_df <- df_updated %>%
+  left_join(strata_size) %>%
+  group_by(REGION,urban_rural) %>%
+  sample_n(size=num_schools, weight=total_students)
 
 
-
-bscols(widths=c(3,NA),
-  list(
-  filter_select("school", "School Code", linked_df, ~organization_code),
-  filter_select("prov", "Governorate", linked_df, ~governorate),
-  filter_select("reg", "Directorate", linked_df, ~directorate),
-  filter_select("evening", "School Type", linked_df, ~foundation_period)
-  ),
-  map(linked_df) 
-  )
-  
-map(sample_map_chosen)
-
-```
-
-## Map of Niger Schools with Replacements
-
-
-
-
-
-
-```{r eval=FALSE, include=FALSE}
-linked_df_orphan<-SharedData$new(sample_map)
-
-
-
-bscols(widths=c(3,NA),
-  list(
-  filter_select("school", "School Code", linked_df_orphan, ~organization_code),
-  filter_select("prov", "Governorate", linked_df_orphan, ~governorate),
-  filter_select("reg", "Directorate", linked_df_orphan, ~directorate),
-  filter_select("evening", "School Type", linked_df_orphan, ~foundation_period)
-  
-  ),
-  map2(linked_df_orphan) 
-
-)
+write_excel_csv(school_sample_df, paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
 ```
