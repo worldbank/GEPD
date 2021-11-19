@@ -134,7 +134,7 @@ Roadmap:
 #set directory to bring in data
   if(Sys.info()["user"] == "wb577189"){
 
-    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
 
 
     

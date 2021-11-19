@@ -1,3 +1,44 @@
+---
+title: "Anova"
+author: 
+output:
+  html_document: default
+
+always_allow_html: yes
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+#load relevant libraries
+library(knitr)
+library(tidyverse)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(kableExtra)
+library(DT)
+library(mice)
+library(stargazer)
+library(gt)
+library(wbstats)
+library(rpart)       # performing regression trees
+library(rpart.plot)  # plotting regression trees
+library(randomForest)
+library(caret)
+library(modelr)
+library(geosphere)
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+library(ggthemes)
+#Load the data
+
 #anova to examine fraction of variance between and within schools
 library(tidyverse)
 library(estimatr)
@@ -8,6 +49,75 @@ country <-'MDG'
 country_name <- "Madagascar"
 year <- '2021'
 
+#read in school level file with sampling information
+#currentDate<-c("2019-07-22")
+#sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+# define stle for ggplot based on BBC plotting styles
+bbc_style <- function() {
+  font <- "Helvetica"
+  
+  ggplot2::theme(
+    
+    #Text format:
+    #This sets the font, size, type and colour of text for the chart's title
+    plot.title = ggplot2::element_text(family=font,
+                                       size=12,
+                                       face="bold",
+                                       color="#222222"),
+    #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+    plot.subtitle = ggplot2::element_text(family=font,
+                                          size=12,
+                                          margin=ggplot2::margin(9,0,9,0)),
+    plot.caption = ggplot2::element_blank(),
+    #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+    
+    #Legend format
+    #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+    legend.position = "none",
+    legend.text.align = 0,
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    legend.key = ggplot2::element_blank(),
+    legend.text = ggplot2::element_text(family=font,
+                                        size=14,
+                                        color="#222222"),
+    
+    #Axis format
+    #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_text(family=font,
+                                      size=8,
+                                      color="#222222"),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    
+    #Grid lines
+    #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank(),
+    
+    #Blank background
+    #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+    panel.background = ggplot2::element_blank(),
+    
+    #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+    strip.background = ggplot2::element_rect(fill="white"),
+    strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+
+```
+
+# Introduction
+
+This documents aims at analysing the possible differences that might exist between various groups. Most specifically, it takes a deeper look at the type of teacher and the language of instruction to better understand whether any notable difference exist along these lines. The analysis thus far consists merely in 1) a summary statistics table, 2) tests of differences on various indicators from the school survey, 3) graphs highlighting the results.
+
+## Type of teachers
+
+```{r, include=F}
 #########################
 # File paths #
 #########################
@@ -34,28 +144,13 @@ data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", s
 load(paste(data_folder, "/School/school_indicators_data_anon.RData", sep="/"))
 
 
+```
+
+
+```{r anova, include=FALSE, echo=FALSE}
 #################################
 # ANOVA
 #################################
-
-anova <- aov(student_knowledge~factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
-
-summary(anova)
-print(anova)
-#10336371815/(10336371815+14063203040)
-#[1] 0.4236292
-
-# fit = lm(student_knowledge ~ factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
-# anova(fit)
-
-
-wtd.mean(school_dta_short_anon$student_knowledge, weights =school_dta_short_anon$ipw )
-
-wtd.mean(school_dta_short_anon$student_knowledge, weights =school_dta_short_anon$ipw )
-
-
-write_excel_csv( assess_4th_grade_anon_aov, path =  file.path(paste(save_folder, 'assess_fourth_grade_anon.csv', sep="/" )) )
-
 
 
 library(stargazer)
@@ -96,92 +191,6 @@ covariates<-c( 'sch_absence_rate',
                'sch_support', 
                'principal_evaluation')
 
-my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg_school<-lm(my_formula, school_dta_short_anon)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg_school, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg_school)
-
-df_plot_reg <- school_dta_short_anon %>%
-  select(student_knowledge, covariates, ipw) %>%
-  add_predictions(multi_reg_school)
-
-p1<-ggplot(df_plot_reg, aes(x=pred, y=student_knowledge)) + 
-  geom_point() +
-  geom_smooth(method = 'lm')
-p1
-
-my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg_school_weights<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg_school, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg_school_weights)
-
-df_plot_reg_w <- school_dta_short_anon %>%
-  select(student_knowledge, covariates, ipw) %>%
-  add_predictions(multi_reg_school_weights)
-
-p_w<-ggplot(df_plot_reg_w, aes(x=pred, y=student_knowledge)) + 
-  geom_point() +
-  geom_smooth(method = 'lm')
-p_w
-
-
-my_formula <- as.formula(paste('math_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg_school<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg_school, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg_school)
-
-my_formula <- as.formula(paste('literacy_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg_school<-lm(my_formula, school_dta_short_anon, weights = school_dta_short_anon$ipw)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg_school, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg_school)
-
-
-nogiraffe_df<-final_indicator_data_LERN_anon %>%
-  left_join(school_dta_short_anon            )
-
-
-my_formula <- as.formula(paste('literacy_student_knowledge_nogiraffe ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg_school<-lm(my_formula, nogiraffe_df, weights = nogiraffe_df$ipw)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg_school, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg_school)
-# 
-# stargazer( multi_reg, type = "html",
-#            se        = list(robust_multi_se),
-#            title = "Multivariate OLS Regression using School Level GEPD Data",
-#            style='aer',
-#            notes= c('Observations weighted using sampling weights.',
-#                     'Heteroskedasticity robust standard errors in parenthesis.', 
-#                     'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
-#                     'GDP measures were produced by researchers at the World Bank DECRG.',  
-#                     'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
-# )
-
-
-
-
-
-
-reg_df<- assess_4th_grade_anon_anon %>%
-  group_by(hashed_school_code) %>%
-  mutate(total_4th_count=n()) %>%
-  ungroup() %>%
-  left_join(school_dta_short_merge, by="hashed_school_code") %>%
-  mutate(ipw=ipw.x/total_4th_count)
 
 
 covariates<-c( 'sch_absence_rate',
@@ -209,21 +218,6 @@ covariates<-c( 'sch_absence_rate',
                'sch_support', 
                'principal_evaluation')
 
-my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg<-lm(my_formula, reg_df, weights = reg_df$ipw)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg)
-
-my_formula <- as.formula(paste('literacy_student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-multi_reg<-lm(my_formula, reg_df, weights = reg_df$ipw)   
-# Adjust standard errors
-cov1_multi         <- vcovHC(multi_reg, type = "HC3")
-robust_multi_se    <- sqrt(diag(cov1_multi))
-
-summary(multi_reg)
 
 # stargazer( multi_reg, type = "html",
 #            se        = list(robust_multi_se),
@@ -242,54 +236,13 @@ summary(multi_reg)
 # Regression by Indicator
 ################
 
-ipw <- school_dta_short_anon$ipw
 
 mod_fun <- function(df) {
   lm_robust(student_knowledge ~ .x  , data = school_dta_short_anon, se_type='HC3', weights=ipw)
 }
 
-partial_regression <- school_dta_short_anon %>%
-  dplyr::select(student_knowledge, covariates) %>% # just keep indicators for regression on GDP
-  purrr::map(~lm_robust(student_knowledge ~ .x  , data = school_dta_short_anon, se_type='HC3', weights=ipw)) %>%
-  purrr::map(coef) %>%
-  map_dbl(".x") %>% 
-  tidy %>% 
-  dplyr::arrange(desc(x)) %>% 
-  rename(.x = x) 
-
-kable(partial_regression)
 
 
-reg_plot_df <- school_dta_short_anon %>%
-  dplyr::select(student_knowledge, covariates) %>% # just keep indicators for regression on GDP
-  pivot_longer(
-    cols=c(             'sch_absence_rate',
-                        'content_knowledge',
-                        #'teach_score',
-                        'student_attendance',
-                        'ecd_student_knowledge',
-                        'inputs',
-                        'infrastructure',
-                        'operational_management',
-                        'instructional_leadership',
-                        'principal_knowledge_score',
-                        'principal_management',
-                        'teacher_attraction', 
-                        'teacher_selection_deployment', 
-                        'teacher_support', 
-                        'teaching_evaluation', 
-                        'teacher_monitoring',
-                        'intrinsic_motivation', 
-                        'standards_monitoring',
-                        'sch_monitoring', 
-                        #'sch_management_clarity',
-                        'sch_management_attraction', 
-                        'sch_selection_deployment', 
-                        'sch_support', 
-                        'principal_evaluation'),
-    names_to = "type",
-    values_to="indicators"
-  )
 
 
 mod_fun <- function(df) {      
@@ -313,40 +266,16 @@ r2_fun <- function(mod) {
   summary(mod)$r.squared
 }
 
-knowledge_regs <- reg_plot_df %>%
-  group_by(type) %>%
-  nest() %>%
-  mutate(model=purrr::map(data, mod_fun)) %>% 
-  mutate(model_gdp=purrr::map(data, mod_fun_gdp)) %>% 
-  mutate(   beta = map_dbl(model, b_fun),
-            se = map_dbl(model, se_fun),
-            r2 = map_dbl(model, r2_fun),
-            beta_gdp = map_dbl(model_gdp, b_fun),
-            se_gdp = map_dbl(model_gdp, se_fun),
-            r2_gdp = map_dbl(model_gdp, r2_fun)) %>%
-  dplyr::select(type, beta, beta_gdp, se, r2,  se_gdp, r2_gdp, everything())
-
-#plot of coefficient plots without GDP
-ggplot(data=knowledge_regs, aes(x=type, y=beta)) +
-  geom_point() + 
-  geom_errorbar(aes(ymin=(beta-1.96*se),
-                    ymax=(beta+1.96*se))) +
-  coord_flip() +
-  theme_bw() +
-  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Regression Without GDP Satellite Controls", 60))
-
-#plot of coefficient plots without GDP
-ggplot(data=knowledge_regs, aes(x=type, y=r2)) +
-  geom_point() + 
-  coord_flip() +
-  theme_bw() +
-  ggtitle(str_wrap("R^2 of Indicators in Regression Without GDP Satellite Controls", 60))
 
 
 
+```
 
 
 
+### Summary statistics by type of teachers
+
+```{r Type of teacher, echo=FALSE, message=FALSE, warning=FALSE}
 
   ### Checking difference between community teacher and regular teachers -------
 library(haven)
@@ -399,8 +328,14 @@ long_community %>%
     mean = mean(indicators, na.rm = T),
     sd = sd(indicators, na.rm = T)
   ) %>%
-  ungroup()
+  ungroup() %>% gt()%>%
+  tab_header(
+    title = md("Summary statistics by type of teacher")  )
+    
+```
+### Tests differences of school indicators between type of teachers
 
+```{r tests differences teacher}
 
 library(rstatix)
 
@@ -410,8 +345,16 @@ library(rstatix)
     t_test(indicators ~ community_teacher, p.adjust.method = "bonferroni")
 
   
-    stat.test %>% select(-.y., -statistic, -df)
+    stat.test %>% select(-.y., -statistic, -df) %>% gt() %>% 
+  tab_header(
+    title = md("Test of differences for indicators between type of teacher")  )
+```
 
+
+
+### Graph differences between type of teacher
+
+```{r graphs teacher}
     # Create the plot
     library(ggpubr)
     
@@ -423,8 +366,20 @@ library(rstatix)
       facet_wrap(~type)
     # Add statistical test p-values
     stat.test <- stat.test %>% add_xy_position(x = "community_teacher")
-    com_teacher_plot + stat_pvalue_manual(stat.test, label = "p.adj.signif")+ theme(axis.text.x = element_text(angle = 45))
+    com_teacher_plot + stat_pvalue_manual(stat.test, label = "p.adj.signif")
+    
 
+
+```
+
+
+
+
+## Language of instruction 
+
+### Summary statistics by language of instruction
+
+```{r language of instruction}
   ### Checking difference between the various languages of instruction -------
 
     covariates_language <- c(covariates, "language_instruction")
@@ -487,23 +442,42 @@ library(rstatix)
         n = n(),
         mean = mean(indicators, na.rm = T),
         sd = sd(indicators, na.rm = T)
-      ) %>%
-      ungroup()
+      ) %>% 
+      ungroup()%>% gt()%>%
+  tab_header(
+    title = md("Summary statistics by language of instruction")  )
     
     
+    
+```
+### Tests differences of school indicators between the various languages of instruction
+
+
+
+```{r tests differences languages}
     library(rstatix)
     
     
     stat.test <- long_language %>%
       group_by(type) %>%
-      t_test(indicators ~ language_instruction, p.adjust.method = "bonferroni")
+      t_test(indicators ~ language_instruction, p.adjust.method = "bonferroni") 
     
     
-    stat.test %>% select(-.y., -statistic, -df)
-    
-    # Create the plot
+    stat.test %>% select(-.y., -statistic, -df) %>% gt() %>% 
+  tab_header(
+    title = md("Test of differences for indicators between language of instruction")  )
+```
+
+
+
+
+### Graph differences between language of instructions
+
+
+```{r plot}
+    #Create the plot
     library(ggpubr)
-    
+
     language_plot <- ggboxplot(
       long_language, x = "language_instruction", y = "indicators",
       fill = "language_instruction", palette = "npg", legend = "none",
@@ -512,5 +486,6 @@ library(rstatix)
       facet_wrap(~type)
     # Add statistical test p-values
     stat.test <- stat.test %>% add_xy_position(x = "language_instruction")
-    language_plot + stat_pvalue_manual(stat.test, label = "p.adj.signif")+ theme(axis.text.x = element_text(angle = 45))
-    
+    language_plot + stat_pvalue_manual(stat.test, label = "p.adj.signif")
+```
+
