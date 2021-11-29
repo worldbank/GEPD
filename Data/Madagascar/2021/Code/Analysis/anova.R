@@ -261,7 +261,7 @@ kable(partial_regression)
 
 
 reg_plot_df <- school_dta_short_anon %>%
-  dplyr::select(student_knowledge, covariates) %>% # just keep indicators for regression on GDP
+  dplyr::select(math_student_knowledge, covariates) %>% # just keep indicators for regression on GDP
   pivot_longer(
     cols=c(             'sch_absence_rate',
                         'content_knowledge',
@@ -293,11 +293,11 @@ reg_plot_df <- school_dta_short_anon %>%
 
 
 mod_fun <- function(df) {      
-  lm_robust(student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
+  lm_robust(math_student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
 }
 
 mod_fun_gdp <- function(df) {      
-  lm_robust(student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
+  lm_robust(math_student_knowledge ~ indicators  , data = df, se_type='HC3', weights = ipw) 
 }
 
 b_fun <- function(mod)   {   
@@ -337,10 +337,9 @@ ggplot(data=knowledge_regs, aes(x=type, y=beta)) +
 
 #plot of coefficient plots without GDP
 ggplot(data=knowledge_regs, aes(x=type, y=r2)) +
-  geom_point() + 
-  coord_flip() +
+  geom_bar(stat='identity') + coord_flip() +
   theme_bw() +
-  ggtitle(str_wrap("R^2 of Indicators in Regression Without GDP Satellite Controls", 60))
+  ggtitle(str_wrap("R Squared of Indicators in Bivariate Regression with 4th Grade Numeracy Students Test Scores ", 60))
 
 
 

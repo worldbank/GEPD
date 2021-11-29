@@ -17,7 +17,7 @@ library(plotly)
 library(glue)
 library(DT)
 library(rvg)
-library(officer)
+#library(officer)
 library(kableExtra)
 library(ggcorrplot)
 library(stargazer)
@@ -31,7 +31,7 @@ library(quantreg)
 library(psych)
 library(tidyverse)
 
-library(wbgcharts)
+#library(wbgcharts)
 
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
@@ -93,30 +93,30 @@ bbc_style <- function() {
 }
 
 # Define UI for application that examines GEPD data
-ui <- navbarPage("Global Education Policy Dashboard",
+ui <- navbarPage("Tableau de bord mondial des politiques d'éducation",
                  #####################################################
                  # Dashboard Section
                  ####################################################
-                 tabPanel("Dashboard",
+                 tabPanel("Tableau de bord",
                           fluidPage(theme = shinytheme("cerulean"),
                                     includeMarkdown("header.md"),          
-                                    h2("What are the results?"),
-                                    selectInput('table_weights', "Use Survey Weights?", choices=c("Yes", "No"), selected="Yes"),
+                                    h2("Quels sont les résultats ?"),
+                                    selectInput('table_weights', "Utiliser des poids d'enquête ?", choices=c("Oui", "Non"), selected="Oui"),
                                     withSpinner(DT::dataTableOutput("indicators_table")),
-                                    h2("How are the indicators scored?"),
+                                    h2("Comment les indicateurs sont-ils calculés ?"),
                                     DT::dataTableOutput("indicators_choices"),
                                     includeMarkdown("footer.md")
                           )
                  ),
                  
                  #############################################
-                 # Data Explorer Section
+                 # Explorateur de données Section
                  #############################################
-                 tabPanel("GEPD Data Explorer",
+                 tabPanel("GEPD Explorateur de données",
                           fluidPage(
                             
                             # Application title
-                            titlePanel("GEPD Data Explorer"),
+                            titlePanel("GEPD Explorateur de données"),
                             
                             # Sidebar with an input for the specific indicator 
                             sidebarLayout(
@@ -128,10 +128,10 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                                choices=NULL),
                                 selectizeInput("gender", "Gender:",
                                                choices=NULL),
-                                selectInput('explorer_weights', "Use Survey Weights?", choices=c("Yes", "No"), selected="Yes"),
-                                h1('Details'),
-                                p('Statistics are based on data aggregated to the School level or Public Official level in all cases.'),
-                                h2("Scoring Metadata on Indicator"),
+                                selectInput('explorer_weights', "Utiliser des poids d'enquête ?", choices=c("Oui", "Non"), selected="Oui"),
+                                h1('Détails'),
+                                p("Les statistiques sont basées sur des données agrégées au niveau de l'école ou de l'agent public dans tous les cas."),
+                                h2("Notation des métadonnées sur l'indicateur"),
                                 htmlOutput('metadata' )
                                 
                               ),
@@ -143,71 +143,71 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                 # Output: Tabset w/ plot, summary, and table ----
                                 tabsetPanel(type = "tabs",
                                             id='tabset',
-                                            tabPanel("Distribution Plot", value=1, 
-                                                     selectInput("stud_level", "Use Student Level Data?",
-                                                                 choices=c('No', 'Yes'),
-                                                                 selected='No'),
+                                            tabPanel("Graphique de distribution", value=1, 
+                                                     selectInput("stud_level", "Utiliser les données au niveau des élèves ?",
+                                                                 choices=c('Non', 'Oui'),
+                                                                 selected='Non'),
                                                      uiOutput("hist_choices")  %>% withSpinner(), 
                                                      downloadButton("downloadhist", "Download") ,
                                                      plotOutput("distPlot", height=600)  %>% withSpinner()),
                                             tabPanel("BoxPlot", value=2, 
                                                      downloadButton("downloadboxplot", "Download"),
                                                      plotOutput("boxPlot", height=600)),
-                                            tabPanel("Summary", value=3, DT::dataTableOutput("tableset") ),
+                                            tabPanel("Résumé", value=3, DT::dataTableOutput("tableset") ),
                                             tabPanel("Correlations", value=4, 
                                                      downloadButton("downloadcorr", "Download"),
                                                      plotlyOutput("corrPlot", height=1000)),
-                                            tabPanel("Bivariate Regression Analysis", value=5, 
-                                                     p('This tool generates scatter plots between any two indicators, and shows the regression line and coefficients from 
-                                   a simple bivariate OLS regression of the first indicator on the second.'),
+                                            tabPanel("Analyse de régression bivariée", value=5, 
+                                                     p("Cet outil génère des diagrammes de dispersion entre deux indicateurs quelconques, et montre la ligne de régression et les coefficients 
+                                   d'une simple régression OLS bivariée du premier indicateur sur le second."),
                                                      
-                                                     selectizeInput("reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
+                                                     selectizeInput("reg_choices", "Choisissez la variable de résultat pour les régressions : (Par défaut : Apprentissage en 4ème année)", 
                                                                     choices=NULL)   ,
                                                      uiOutput("plot_choices")  %>% withSpinner(), 
                                                      downloadButton("downloadregplot", "Download"),
                                                      plotOutput("regplot", height=600)
                                             ),
-                                            tabPanel("Multivariate Regression Tool", value=7, 
-                                                     p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
-                                   the set of X variables in the regression.  This tool can give some information on whether relationships between variables
-                                   persist after controlling for other covariates.  These estimates, even though they control for some other covariates, are not 
-                                   necessarily causal.  The X variables include our Dashboard indicators, as well as the option to include
-                                   the rural status of the school, as well as GDP per square kilometer within one square kilometer of the school.  GDP per square kilometer data 
-                                   is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  Additionally, 
-                                   the user has the option to include regional fixed effects.  In the case of Madagascar, these are Madagascarn District fixed effects.'),
-                                                     selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
+                                            tabPanel("Outil de régression multivariable", value=7, 
+                                                     p("Cet outil permet à l'utilisateur de produire des tableaux de régression MCO multivariés en sélectionnant une variable de résultat ainsi qu'un ensemble de variables X dans la régression. 
+                                   l'ensemble des variables X de la régression.  Cet outil peut fournir des informations sur la persistance des relations entre les variables après le contrôle d'autres covariables.
+                                   persistent après avoir contrôlé d'autres covariables.  Ces estimations, même si elles contrôlent pour d'autres covariables, ne sont pas nécessairement causales. 
+                                   Les variables X comprennent les indicateurs de notre tableau de bord, ainsi que l'option d'inclure le statut rural de l'école, en tant qu'indicateur de la qualité de vie.
+                                   Le statut rural de l'école, ainsi que le PIB par kilomètre carré dans un rayon d'un kilomètre carré autour de l'école.  Les données relatives au PIB par kilomètre carré 
+                                   ont été produites par le personnel de la Banque mondiale, initialement pour le Rapport d'évaluation globale de la réduction des risques (GAR) en 2010.  Ces données peuvent être consultées sur le site https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  
+                                   En outre, l'utilisateur a la possibilité d'inclure des effets fixes régionaux.  Dans le cas de Madagascar, il s'agit des effets fixes du district de Madagascar."),
+                                                     selectizeInput("multi_reg_choices", "Choisissez la variable de résultat pour les régressions : (Par défaut : Apprentissage en 4ème année)", 
                                                                     choices=NULL)   ,
                                                      
-                                                     selectizeInput("control_choices", "Choose X Variables to Include in Regressions", 
+                                                     selectizeInput("control_choices", "Choisir X variables à inclure dans les régressions", 
                                                                     choices=NULL  , 
                                                                     selected=NULL,
                                                                     multiple=TRUE),
-                                                     selectizeInput("province_dummies", "Include Province Fixed Effects in Regresion?", 
-                                                                    choices=c("No", "Yes"),
-                                                                    selected="No")   ,
-                                                     selectizeInput("imputed", "Use Dataset that uses imputation for missing values, rather than raw dataset?", 
-                                                                    choices=c("No", "Yes"),
-                                                                    selected="No")   ,
-                                                     selectInput("stud_level_reg", "Use Student Level Data?",
-                                                                 choices=c('No', 'Yes'),
-                                                                 selected='No'),
+                                                     selectizeInput("province_dummies", "Inclure les effets fixes de province dans la régression?", 
+                                                                    choices=c("NoN", "Oui"),
+                                                                    selected="Non")   ,
+                                                     selectizeInput("imputed", "Utiliser un ensemble de données qui utilise l'imputation pour les valeurs manquantes, plutôt qu'un ensemble de données brutes ?", 
+                                                                    choices=c("No", "Oui"),
+                                                                    selected="Non")   ,
+                                                     selectInput("stud_level_reg", "Utiliser les données au niveau des élèves ?",
+                                                                 choices=c('Non', 'Oui'),
+                                                                 selected='Non'),
                                                      downloadButton("downloadmultireg", "Download"),
                                                      htmlOutput("multivariate_regs", height=1400)
                                             ),
-                                            tabPanel("Sub-Indicator Regression Analysis", value=6,
-                                                     p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
-                                   the set of sub-indicators in the regression.  This is meant to provide information on how each sub-indicator relates
-                                   to certain outcomes.'),
-                                                     selectizeInput("sub_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
+                                            tabPanel("Analyse de régression des sous-indicateurs", value=6,
+                                                     p("Cet outil permet à l'utilisateur de produire des tableaux de régression MCO multivariés en sélectionnant une variable de résultat ainsi qu'un ensemble de sous-indicateurs dans la régression. 
+                                   l'ensemble des sous-indicateurs de la régression.  L'objectif est de fournir des informations sur la manière dont chaque sous-indicateur est lié à certains résultats.
+                                   à certains résultats."),
+                                                     selectizeInput("sub_reg_choices", "Choisissez la variable de résultat pour les régressions : (Par défaut : Apprentissage en 4ème année)", 
                                                                     choices=NULL)   ,
                                                      downloadButton("downloadscoring", "Download"),
                                                      htmlOutput('scoring')
                                             ),
-                                            tabPanel("Factor Analysis of Sub-Indicators", value=4, 
+                                            tabPanel("Analyse factorielle des sous-indicateurs", value=4, 
                                                      downloadButton("downloadfa", "Download"),
-                                                     p( 'In this analysis we use factor analysis to produce a single factor, which maximizes the variation explained 
-                                     in our sub-indicators.  This factor is then compared to our indicator to check whether scoring based on our approach versus 
-                                     factor analysis produces similar results.'
+                                                     p( "Dans cette analyse, nous utilisons l'analyse factorielle pour produire un facteur unique, qui maximise la variation expliquée 
+                                     dans nos sous-indicateurs.  Ce facteur est ensuite comparé à notre indicateur afin de vérifier si la notation basée sur notre approche ou sur l'analyse factorielle produit des résultats similaires. 
+                                     l'analyse factorielle produit des résultats similaires."
                                                      ),
                                                      verbatimTextOutput('fa_summary'),
                                                      plotOutput("fa_plot",  height=800))
@@ -216,6 +216,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                           )
                  )
 )
+
 # Define server logic required to produce output
 server <- function(input, output, session) {
   
@@ -402,7 +403,7 @@ server <- function(input, output, session) {
   
   
   ################################################################################################################
-  # Data Explorer Section
+  # Explorateur de données Section
   ################################################################################################################     
   #fix a few issues with Survey of Public Officials naming
   
@@ -411,7 +412,7 @@ server <- function(input, output, session) {
   
   updateSelectizeInput(session, 'reg_choices', choices = indicator_labels, server = TRUE)
   updateSelectizeInput(session, 'multi_reg_choices', choices = indicator_labels, selected='4th Grade Student Knowledge', server = TRUE)
-  updateSelectizeInput(session, 'control_choices', choices = append(indicator_labels, c('Log GDP per Sq km', 'Rural')), 
+  updateSelectizeInput(session, 'control_choices', choices = append(indicator_labels, c('Log PIB per Sq km', 'Rural')), 
                        selected=c( "Student Attendance Rate",
                                    "Teacher Classroom Presence Rate", 
                                    "Teacher Content Knowledge", 
@@ -436,7 +437,7 @@ server <- function(input, output, session) {
                                    "School Management Selection & Deployment",
                                    "School Management Support", 
                                    "School Management Evaluation", 
-                                   "Log GDP per Sq km", 
+                                   "Log PIB per Sq km", 
                                    "Rural"), server = TRUE)
   
   updateSelectizeInput(session, 'sub_reg_choices', choices = main_indicator_labels, server = TRUE)
@@ -535,7 +536,7 @@ server <- function(input, output, session) {
             filter(urban_rural=="Urban")  
         }
         
-      } else if (input$stud_level=="Yes") {
+      } else if (input$stud_level=="Oui") {
         if (input$gender=="All") {
           
           df<-assess_4th_grade_anon_anon
@@ -705,7 +706,7 @@ server <- function(input, output, session) {
   output$hist_choices = renderUI({
     
     
-    selectizeInput('hist_choose',"Choose Additional Sub-Indicators to plot",  choices = histo_choices(),
+    selectizeInput('hist_choose',"Choisissez des sous-indicateurs supplémentaires à tracer",  choices = histo_choices(),
                    selected=histo_selected(), 
                    multiple = TRUE)
     
@@ -834,7 +835,7 @@ server <- function(input, output, session) {
       
       sch_ipw<-weights$ipw 
       
-      if (input$explorer_weights=="Yes") {
+      if (input$explorer_weights=="Oui") {
         #add function to produce weighted summary stats
         my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
                                                sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
@@ -1070,7 +1071,7 @@ server <- function(input, output, session) {
   output$plot_choices = renderUI({
     
     
-    selectizeInput('plot_choose',"Choose Additional Sub-Indicators to plot",  choices = ploto_choices(),
+    selectizeInput('plot_choose',"Choisissez des sous-indicateurs supplémentaires à tracer",  choices = ploto_choices(),
                    selected=plot_selected(), 
                    multiple = TRUE)
     
@@ -1095,7 +1096,7 @@ server <- function(input, output, session) {
         
       ) +
       expand_limits(x = 0, y = 0) +
-      ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices),50)) +
+      ggtitle(str_wrap(paste0("Régression linéaire des indicateurs du tableau de bord sur les sous-indicateurs pour ", input$reg_choices),50)) +
       labs(colour = "Indicator") +
       ylab(input$reg_choices) +
       stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
@@ -1122,7 +1123,7 @@ server <- function(input, output, session) {
   # Downloadable png of selected dataset ----
   output$downloadregplot <- downloadHandler(
     filename = function() {
-      paste('Regression Plot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      paste("Graphique de régression - ",input$indicators," - ",input$subgroup, ".png", sep = "")
     },
     content = function(file) {
       ggsave(file, plot = regp(), device = "png", width=16, height=12)
@@ -1140,13 +1141,13 @@ server <- function(input, output, session) {
   # get tags for indicators selected for regressions
   get_tag_mult_cov <- reactive({
     
-    labels_gdp <- data.frame(
-      indicators=c("GDP",'rural'),
-      indicator_labels=c("Log GDP per Sq km", "Rural")
+    labels_PIB <- data.frame(
+      indicators=c("PIB",'rural'),
+      indicator_labels=c("Log PIB par km^2", "Rural")
     )
     
     get_tag_df_cov<-labels_df %>%
-      bind_rows(labels_gdp) %>%
+      bind_rows(labels_PIB) %>%
       filter(indicator_labels %in% input$control_choices)
     
     
@@ -1171,13 +1172,13 @@ server <- function(input, output, session) {
   #select either dataset that is imputed or raw, unimputed, dataset
   dat_for_regs <- reactive({
     
-    if (input$imputed=="Yes") {
+    if (input$imputed=="Oui") {
       
       school_dta_short_imp_anon
       
-    } else if (input$imputed=="No") {
+    } else if (input$imputed=="Non") {
       
-      if (input$stud_level_reg=="Yes") {
+      if (input$stud_level_reg=="Oui") {
         
         school_dta_short_merge <- school_dta_short_anon %>%
           select(-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
@@ -1220,7 +1221,7 @@ server <- function(input, output, session) {
       select(hashed_school_code, as.character(get_tag_outcome()[1]), ipw, province, rural ) %>%
       rename(y=2) 
     
-    if (input$explorer_weights=="No") {
+    if (input$explorer_weights=="Non") {
       #add function to produce weighted summary stats
       df_mult_reg <- df_mult_reg %>%
         mutate(ipw=1)
@@ -1235,13 +1236,13 @@ server <- function(input, output, session) {
   
   mult_regs<-reactive({
     
-    gdp <- school_gdp_anon %>%
-      select(hashed_school_code, GDP) %>%
-      mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
+    PIB <- school_PIB_anon %>%
+      select(hashed_school_code, PIB) %>%
+      mutate(PIB=if_else(PIB>0,log(PIB),log(0.0001)))
     
     if (input$province_dummies=="No") {
       df_multi_reg <- dat_for_regs() %>%
-        left_join(gdp) %>%
+        left_join(PIB) %>%
         select(one_of(get_tag_mult_cov()), hashed_school_code) %>%
         left_join(dat_mult_reg()) %>%
         select(-hashed_school_code, -ipw,  -province) 
@@ -1253,9 +1254,9 @@ server <- function(input, output, session) {
       cov1_multi         <- vcovHC(multi_reg, type = "HC1")
       robust_multi_se    <- sqrt(diag(cov1_multi))
       
-    } else if (input$province_dummies=="Yes") {
+    } else if (input$province_dummies=="Oui") {
       df_multi_reg <- dat_for_regs() %>%
-        left_join(gdp) %>%
+        left_join(PIB) %>%
         select(one_of(get_tag_mult_cov()), hashed_school_code) %>%
         left_join(dat_mult_reg()) %>%
         select(-hashed_school_code, -ipw) 
@@ -1271,15 +1272,15 @@ server <- function(input, output, session) {
     
     stargazer( multi_reg, type = "html",
                se        = list(robust_multi_se),
-               title = "Multivariate OLS Regression using School Level GEPD Data",
+               title = "Régression OLS multivariables utilisant les données GEPD au niveau de l'école",
                column.labels = input$multi_reg_choices,
                covariate.labels = input$control_choices,
                style='aer',
-               notes= c('Observations weighted using sampling weights.',
-                        'Heteroskedasticity robust standard errors in parenthesis.', 
-                        'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
-                        'GDP measures were produced by researchers at the World Bank DECRG.',  
-                        'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
+               notes= c("Observations pondérées par les poids d'échantillonnage",
+                        "Erreurs standard robustes à l'hétéroscédasticité entre parenthèses", 
+                        "Le logarithme du PIB par km² est le logarithme du PIB en 2010 dans un rayon d'un kilomètre carré autour de l'école", 
+                        "Les mesures du PIB ont été produites par des chercheurs du DECRG de la Banque mondiale.",  
+                        "Données disponibles ici : https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010")
     )
     
   })        
@@ -1300,7 +1301,7 @@ server <- function(input, output, session) {
     
     
     filename = function() {
-      paste('Multivariate Regressions - '," - ",input$subgroup, ".html", sep = "")
+      paste('Régressions multivariables -'," - ",input$subgroup, ".html", sep = "")
     },
     content = function(file) {
       
@@ -1343,7 +1344,7 @@ server <- function(input, output, session) {
       select(hashed_school_code, as.character(get_tag_sub_reg()[1]), ipw ) %>%
       rename(y=2) 
     
-    if (input$explorer_weights=="No") {
+    if (input$explorer_weights=="Non") {
       #add function to produce weighted summary stats
       df_sub_reg <- df_sub_reg %>%
         mutate(ipw=1)
@@ -1371,7 +1372,7 @@ server <- function(input, output, session) {
     
     stargazer( scoring_reg, type = "html",
                se        = list(robust_se),
-               title = "Regressions of Indicator variables on Set of Sub-Indicators",
+               title = "Régressions des variables de l'indicateur sur un ensemble de sous-indicateurs",
                column.labels = input$sub_reg_choices
     )
     
@@ -1398,7 +1399,7 @@ server <- function(input, output, session) {
     
     
     filename = function() {
-      paste('Subindicator Regressions - ',input$indicators," - ",input$subgroup, ".html", sep = "")
+      paste("Régressions des sous-indicateurs -",input$indicators," - ",input$subgroup, ".html", sep = "")
     },
     content = function(file) {
       
@@ -1484,8 +1485,8 @@ server <- function(input, output, session) {
                                           color="#222222")
       ) +
       xlab(input$indicators) +
-      ylab('First Factor Score') +
-      ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on First Factor for ", input$indicators)),45) +
+      ylab('Score du premier facteur') +
+      ggtitle(str_wrap(paste0("Régression linéaire des indicateurs du tableau de bord sur le premier facteur pour ", input$indicators)),45) +
       stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                    label.x.npc = "right", label.y.npc = 0.2,
                    formula = 'y~x', parse = TRUE, size = 5) 
@@ -1503,7 +1504,7 @@ server <- function(input, output, session) {
   # Downloadable png of selected dataset ----
   output$downloadfa <- downloadHandler(
     filename = function() {
-      paste('Factor Score Plot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      paste("Graphique du score des facteurs - ",input$indicators," - ",input$subgroup, ".png", sep = "")
     },
     content = function(file) {
       ggsave(file, plot = fa_plot(), device = "png", width=16, height=12)
@@ -1581,7 +1582,7 @@ server <- function(input, output, session) {
     
     sch_ipw<-school_dta_short_anon$ipw 
     
-    if (input$table_weights=="Yes") {
+    if (input$table_weights=="Oui") {
       #add function to produce weighted summary stats
       my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
                                              sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
@@ -1745,12 +1746,12 @@ server <- function(input, output, session) {
       class = 'display',
       thead(
         tr(
-          th( rowspan = 2, 'Indicator'),
-          th( rowspan = 2, 'Value Range'),
-          th(colspan = 2, 'Overall'),
-          th(colspan = 2, 'Urban'),
+          th( rowspan = 2, 'Indicateurr'),
+          th( rowspan = 2, 'Fourchette de valeurs'),
+          th(colspan = 2, 'Global'),
+          th(colspan = 2, 'Urbain'),
           th(colspan = 2, 'Rural'),
-          th(rowspan = 2, str_wrap('Ratio of Rural to Urban',10))
+          th(rowspan = 2, str_wrap('Ratio rural/urbain',10))
         ),
         tr(
           lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
@@ -1767,7 +1768,7 @@ server <- function(input, output, session) {
     clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
       {paste0("rgb(255,", ., ",", ., ")")}
     
-    DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Madagascar 2021",
+    DT::datatable(sumstats_df, caption="Statistiques des indicateurs du tableau de bord - Madagascar 2021",
                   container = sketch, rownames=FALSE,
                   class='cell-border stripe',
                   escape = FALSE,
@@ -1810,7 +1811,7 @@ server <- function(input, output, session) {
     if (length(s)) {
       indicator_choices_table <- indicator_choices_table[s,]
     }
-    DT::datatable(indicator_choices_table, caption="Indicator Scoring",
+    DT::datatable(indicator_choices_table, caption="Scores des indicateurs",
                   rownames=FALSE,
                   class='cell-border stripe',
                   escape = FALSE,
