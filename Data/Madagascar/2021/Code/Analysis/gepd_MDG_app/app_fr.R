@@ -93,19 +93,19 @@ bbc_style <- function() {
 }
 
 # Define UI for application that examines GEPD data
-ui <- navbarPage("Tableau de bord mondial des politiques d'éducation",
+ui <- navbarPage("Tableau de bord des politiques mondiales de l'éducation",
                  #####################################################
                  # Dashboard Section
                  ####################################################
                  tabPanel("Tableau de bord",
                           fluidPage(theme = shinytheme("cerulean"),
-                                    includeMarkdown("header.md"),          
+                                    includeMarkdown("header_fr.md"),          
                                     h2("Quels sont les résultats ?"),
                                     selectInput('table_weights', "Utiliser des poids d'enquête ?", choices=c("Oui", "Non"), selected="Oui"),
                                     withSpinner(DT::dataTableOutput("indicators_table")),
                                     h2("Comment les indicateurs sont-ils calculés ?"),
                                     DT::dataTableOutput("indicators_choices"),
-                                    includeMarkdown("footer.md")
+                                    includeMarkdown("footer_fr.md")
                           )
                  ),
                  
