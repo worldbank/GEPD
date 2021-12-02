@@ -735,7 +735,7 @@ server <- function(input, output, session) {
         
       ) +
       expand_limits(x = 0, y = 0) +
-      ggtitle("Probability Density Functions of Dashboard Indicators") +
+      ggtitle("Fonctions de densité de probabilité des indicateurs du tableau de bord") +
       labs(colour = "Indicator")
     
     p
@@ -786,7 +786,7 @@ server <- function(input, output, session) {
         text = element_text(size = 16),
       ) +
       expand_limits(x = 0, y = 0) +
-      ggtitle("Boxplot of Dashboard Indicators")+
+      ggtitle("Boxplot des indicateurs du tableau de bord")+
       xlab("Indicator") +
       coord_flip()
     
@@ -885,7 +885,7 @@ server <- function(input, output, session) {
       #mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
       select(variable,  mean, sd, p0, p25, p50, p75, p100, complete, hist)
     
-    DT::datatable(sumstats_df, caption="Summary Statistics of Key Indicator Variables and Components of Indicator",
+    DT::datatable(sumstats_df, caption="Statistiques descriptives des variables clés de l'indicateur et des composantes de l'indicateur",
                   colnames=c("Indicator", "Label", "Mean", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases",  "Histogram"),
                   extensions = 'Buttons', options=list(
                     dom = 'Bfrtip',
@@ -920,7 +920,7 @@ server <- function(input, output, session) {
                        ggtheme = theme_bw(),
                        colors = c("#F8696B", "#FFEB84", "#63BE7B"),
                        legend.title = "Correlation",
-                       title = "Correlation Between Questionnaire Items") + 
+                       title = "Corrélation entre les éléments du questionnaire") + 
       bbc_style() +
       theme(
         text = element_text(size = 16),
