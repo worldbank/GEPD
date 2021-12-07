@@ -36,13 +36,15 @@ frame_sheet <- "Feuil1"
 #########################
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
-
-
-
-if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
-  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  
   project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
   sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))  
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -80,7 +82,17 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 
 library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
 library(rnaturalearth)
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  
 wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+wbgis <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/General/"
+ 
+  
+}
 
 #sle.poly.2 <- ne_countries(country="Sierra Leone", returnclass="sf")
 
@@ -128,7 +140,7 @@ write_excel_csv(df_raw, paste(sampling_folder, 'Year_Book_2021_final.csv', sep="
 
 #############################################################
 # May want to use CI for CP (kindergarten instead of 1st grade) as the cohorts will graduate
-# Same for G3 and G4 (CE2 and CM1).
+# Same for G3 and G4 (CE2 and CE2).
 ################################################################
 
 # create some columns
@@ -150,12 +162,12 @@ df <- df_raw %>%
     rural=as.numeric(urban_rural=="Rural"),
     public=as.numeric(ownership=="Public"),
     basic_education=as.numeric(school_type=="Basic Education"),
-    total_students_grade_4=as.numeric(NB_G_CM1) + as.numeric(NB_F_CM1),
-    total_students_grade_4_female= as.numeric(NB_F_CM1),
-    total_students_grade_4_male=as.numeric(NB_G_CM1),
-    total_students_grade_1=as.numeric(NB_G_CP) + as.numeric(NB_F_CP),
-    total_students_grade_1_female= as.numeric(NB_F_CP),
-    total_students_grade_1_male=as.numeric(NB_G_CP)    
+    total_students_grade_4=as.numeric(NB_G_CE2) + as.numeric(NB_F_CE2),
+    total_students_grade_4_female= as.numeric(NB_F_CE2),
+    total_students_grade_4_male=as.numeric(NB_G_CE2),
+    total_students_grade_1=as.numeric(NB_G_CI) + as.numeric(NB_F_CI),
+    total_students_grade_1_female= as.numeric(NB_F_CI),
+    total_students_grade_1_male=as.numeric(NB_G_CI)    
     ) 
 
 #calculate total number of students
@@ -379,4 +391,40 @@ school_sample_df <- df_updated %>%
 
 
 write_excel_csv(school_sample_df, paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
+```
+```{r}
+
+map_sampled_schools <- wb.poly.2 %>% 
+  mutate(across(ends_with("_NAME"),
+                
+                ~ str_to_upper(.))) %>% 
+  
+  left_join(school_sample_df %>% 
+              
+              rename(ADM1_NAME = REGION) %>% 
+              
+              select(ADM1_NAME, n_schools, num_schools))
+
+
+pal <- colorNumeric("viridis", NULL)
+
+leaflet(wb.poly.2) %>%
+  addTiles() %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
+    fillColor = ~pal(log10(pop)),
+    label = ~paste0(county, ": ", formatC(pop, big.mark = ",")))
+
+
+
+leaflet(wb.poly.2) %>% 
+  addTiles()  %>%
+  addPolygons(
+    #fillColor = ~pal(N_Sampled),
+    weight = 1,
+    opacity=1,
+    fillOpacity = 0.2,
+    label=labels
+  ) 
+
+
 ```
