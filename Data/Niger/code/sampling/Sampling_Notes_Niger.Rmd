@@ -392,39 +392,127 @@ school_sample_df <- df_updated %>%
 
 write_excel_csv(school_sample_df, paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
 ```
+
+
+
 ```{r}
+# The strata are based on the 8 regions and urban/rural status
+set.seed(2435345)
+
+
+  ## Adding the 70 LIRE schools
+
+  lire_sampled_first <- school_sample_df %>% filter(LIRE == "LIRE School") %>% pull(CODE_ETABLISSEMENT)
+
+  lire_matchable_sample <- lire_matchable %>% filter(!CODE_ETABLISSEMENT %in%  lire_sampled_first)
+  
+    #pick number of schools in each strata so that total adds to 200
+  # get vector of exp_num_schools
+  num_schools <- strata_size$ini_num_schools
+  
+  #do a while loop sequentially randomly adding or subtracting a school to the list for a randomly selected strata until total is 200
+  while (sum(num_schools)!=70) {
+    
+    if (sum(num_schools)<70) {
+      
+      nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+      extra_schools <- rep(0,16) #create vector of 0s
+      extra_schools[nr] <- 1 # for one random strata add one.
+      num_schools <- num_schools + extra_schools #add to list of schools.
+    } else {
+      nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+      extra_schools <- rep(0,16) #create vector of 0s
+      extra_schools[nr] <- -1 # for one random strata add one.
+      num_schools <- num_schools + extra_schools #add to list of schools.
+    }
+    
+  }
+  
+  
+  sum(num_schools)
+  strata_size$num_schools <- num_schools
+  
+  sum(strata_size$chosen_num_schools)
+  
+  # There are 34 schools, so we need to choose 6 more randomly
+  districts <- strata_size %>%
+    group_by(REGION,urban_rural) %>%
+    summarise(num_schools=sum(num_schools),
+              n_students=sum(n_students))
+  
+  
+   #now choose the schools LIRE within strata
+  school_sample_LIRE_df <- lire_matchable_sample %>%
+    left_join(strata_size) %>%
+    group_by(REGION,urban_rural) %>%
+    sample_n(size=num_schools, weight=total_students)
+
+```
+
+
+
+
+
+
+## Map of Nigerien Sample of Schools
+
+We lack geocode information on schools at this sampling stage, but never the less we can still map our sampled schools to Region and sector (Departement) to see how they are allocated.  The map below shows a heat map based on the number of schools per regions.
+
+
+```{r country_map, echo=FALSE, warning=FALSE}
 
 map_sampled_schools <- wb.poly.2 %>% 
   mutate(across(ends_with("_NAME"),
                 
                 ~ str_to_upper(.))) %>% 
   
+  group_by(ADM1_NAME) %>% 
+  
+    summarise(geometry = sf::st_union(geometry)) %>%
+  
+    ungroup() %>% 
+  
   left_join(school_sample_df %>% 
               
               rename(ADM1_NAME = REGION) %>% 
               
-              select(ADM1_NAME, n_schools, num_schools))
+              select(ADM1_NAME, n_schools, num_schools) %>% 
+              
+              group_by(ADM1_NAME) %>% 
+              
+              mutate(sample_schools= n()) %>% 
+              
+              mutate(ADM1_NAME = str_replace(ADM1_NAME, "TILLABERY", "TILLABERI")) %>% 
+              
+              distinct(ADM1_NAME, .keep_all=T)
+            
+            )
 
 
-pal <- colorNumeric("viridis", NULL)
 
-leaflet(wb.poly.2) %>%
-  addTiles() %>%
-  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = 1,
-    fillColor = ~pal(log10(pop)),
-    label = ~paste0(county, ": ", formatC(pop, big.mark = ",")))
+pal <- colorNumeric("YlOrRd", domain = map_sampled_schools$num_schools)
 
 
+labels <- sprintf(
+  "<strong>%s</strong><br/> %g schools sampled <br/> %g schools total ",
+  map_sampled_schools$ADM1_NAME, map_sampled_schools$num_schools, map_sampled_schools$n_schools
+) %>% lapply(htmltools::HTML)
 
-leaflet(wb.poly.2) %>% 
+
+leaflet(map_sampled_schools) %>% 
   addTiles()  %>%
   addPolygons(
-    #fillColor = ~pal(N_Sampled),
+    fillColor = ~pal(num_schools),
     weight = 1,
     opacity=1,
     fillOpacity = 0.2,
     label=labels
-  ) 
+  ) %>%
+  addLegend(pal=pal, values=~num_schools, opacity=0.7, title="N Sampled Schools", position="bottomright")
+
+
+
+
 
 
 ```
