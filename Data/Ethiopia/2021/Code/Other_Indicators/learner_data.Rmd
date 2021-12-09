@@ -60,7 +60,7 @@ mics_indicators <- c(
                     'NT_BF_EBF'='PPercentage of children born in the five (three) years preceding the survey who were ever breastfed',
                     'IM_DTP3'=	'Percentage of children who at age: a) 12-23 months had received all basic vaccinations at any time before the survey, b) 24-35 months had received all vaccinations recommended in the national immunization schedule – DTP vaccine proxy',
                     'MNCH_INSTDEL'='MICS/DHS - Percentage of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility',
-                    'ECD_CHLD_36-59M_EDU-PGM'='Percentage of children age 36-59 months who are attending ECE',
+                    'ECD_CHLD_36-59M_EDU-PGM'='Percentage of children age 36-59 months who are attending ECE who are attending ECE',
                     'ECD_CHLD_U5_BKS-HM'='Percentage of children under age 5 who have three or more children’s books',
                     'ECD_CHLD_36-59M_ADLT_SRC'='Percentage of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household',
                     'ECD_CHLD_36-59M_LMPSL' = 'Percentage of children (aged 36-59 months) developmentally on track in at least 3 of the 4 following domains: literacy-numeracy, physical, social-emotional and learning'
@@ -77,7 +77,22 @@ mics_df <- readSDMX(mics_url, isURL=TRUE) %>%
   as_tibble() %>%
   filter(SEX=="_T" ) %>%
   right_join(mics_indicators_df) %>%
-  select(indicator_name, everything())
+  select(indicator_name, everything()) %>% 
+  
+  ## Here inserting the data for ECE coverage based on the document shared by the CO team from 2012 : 9.2%
+  mutate(
+    
+    REF_AREA = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "ETH", REF_AREA),
+    SEX = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "_T", SEX),     
+    TIME_PERIOD = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "2012", TIME_PERIOD),
+    OBS_VALUE = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "9.2", OBS_VALUE),     
+    UNIT_MULTIPLIER = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "0", UNIT_MULTIPLIER),     
+    UNIT_MEASURE = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "PCNT", UNIT_MEASURE),
+    OBS_FOOTNOTE = if_else(str_detect(indicator_name, "Percentage of children age 36-59 months who are attending ECE"), "This number was provided by the CO team that forwarded us a document on the subject dating back to 2012", OBS_FOOTNOTE)    
+
+
+      
+         )  
 
 ```
 
