@@ -72,7 +72,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch file to access data from API
 need_api=0
-teach_avail=0
+teach_avail=1
 source('02_school_api.R', local=TRUE)
  
 # #launch file to clear data=
