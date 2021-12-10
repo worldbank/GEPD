@@ -597,11 +597,8 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
 ### Teacher Pedagogy ###
 #############################################
 if (teach_avail==1) {
-  #############################################
-  ### Teacher Pedagogy ###
-  #############################################
   
-  teacher_pedagogy <- read.csv("C:/Users/wb577189/OneDrive - WBG/Desktop/teach_raw_data_eth.csv")
+  teacher_pedagogy <- read.csv("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/confidential/School/teach_raw_data_eth.csv")
   
   score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
   
@@ -1852,7 +1849,7 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
     SE_PRM_TINM_7 = 100*if_else(m3scq7_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
     SE_PRM_TINM_8 = 100*if_else(m3scq10_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
     SE_PRM_TINM_9 = 100*if_else(m3scq11_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
-    SE_PRM_TINM_10 = 100*if_else(m3scq14_tinm>=3,1,0) #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+    SE_PRM_TINM_10 = 100*if_else(m3scq14_tinm>=3,1,0) #(De Facto) Percent of teachers that agree or strongly agrees with /"Students can change even their basic intelligence l~
   ) %>%
   mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
   mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
