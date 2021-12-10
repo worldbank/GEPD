@@ -597,23 +597,34 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
 ### Teacher Pedagogy ###
 #############################################
 if (teach_avail==1) {
-  teacher_pedagogy <- school_dta %>%
-    select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+  #############################################
+  ### Teacher Pedagogy ###
+  #############################################
+  
+  teacher_pedagogy <- read.csv("C:/Users/wb577189/OneDrive - WBG/Desktop/teach_raw_data_eth.csv")
+  
+  score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
+  
+  ## Wrangling
+  
+  teacher_pedagogy <- teacher_pedagogy  %>% 
+    
+    ## Cleaning the scores
+    mutate_all(funs(str_replace(., "Y", "1"))) %>% 
+    mutate_all(funs(str_replace(., "N", "0"))) %>% 
+    mutate_all(funs(str_replace(., "L", "2"))) %>% 
+    mutate_all(funs(str_replace(., "M", "3"))) %>% 
+    mutate_all(funs(str_replace(., "H", "4"))) %>% 
+    mutate_all(funs(str_replace(., "NA", "1")))%>% 
+    rename(school_code = ï..school_code) %>% 
+    select(-Enumerator, -starts_with("X"))%>%
+    mutate(across(everything(), as.numeric)) %>% distinct(school_code, Segment, .keep_all=T)
+
+  
   
   # Generate useful variables
   
-  # One observation per segment
-  
-  segment2 <- teacher_pedagogy %>%
-    select(-starts_with('s1'))
-  
-  segment1 <- teacher_pedagogy %>%
-    select(-starts_with('s2'))
-  
-  names(segment1) <- str_replace(names(segment1), "s1", "s")
-  names(segment2) <- str_replace(names(segment2), "s2", "s")
-  
-  teacher_pedagogy_segments <- bind_rows(segment1, segment2)
+  teacher_pedagogy_segments <- teacher_pedagogy
   
   #create sub-indicators from TEACH
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
@@ -661,7 +672,7 @@ if (teach_avail==1) {
            instruction_prof=100*as.numeric(instruction>=3),
            socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
     filter(!is.na(teach_score)) %>%
-    write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    #write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
     group_by(school_code) %>%
     mutate(number_segments=  sum(!is.na(teach_score))) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -672,7 +683,10 @@ if (teach_avail==1) {
   
   
   write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+  
 }
+  
+  #############################################
 #############################################
 ##### 4th Grade Assessment ###########
 #############################################
