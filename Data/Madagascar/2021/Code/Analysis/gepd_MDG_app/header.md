@@ -2,22 +2,23 @@
 
 ![gepd_logo](gepd_logo.png)
 
-## What is the Global Education Policy Dashboard?
+## Qu'est-ce que le tableau de bord des politiques éducatives mondiales ?
 <!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
 
 
 <!-- /MDTOC -->
-Policymakers in low- and middle-income countries who are working to improve student learning often find themselves flying blind. They see the budget that goes into education and (sometimes) the learning that students come out with, but they lack information on the crucial factors in between— the practices, policies, and politics—that drive those learning outcomes. The new Global Education Policy Dashboard initiative will fill that gap.
+Les responsables politiques des pays à revenu faible et intermédiaire qui s'efforcent d'améliorer l'apprentissage des élèves se retrouvent souvent à l'aveuglette. Ils voient le budget consacré à l'éducation et (parfois) l'apprentissage des élèves, mais ils manquent d'informations sur les facteurs cruciaux qui se trouvent entre les deux : les pratiques, les politiques et les politiques qui déterminent ces résultats d'apprentissage. La nouvelle initiative Global Education Policy Dashboard comblera cette lacune.
 
-The World Bank, with support from the Bill and Melinda Gates Foundation and the UK’s Department for International Development, has designed a Global Education Policy Dashboard, which measures the drivers of learning outcomes in basic education around the world. In doing so, it highlight gaps between current practice and  what the evidence suggests would be most effective in promoting learning, and it gives governments a way to set priorities and track progress as they work to close those gaps. This collaboration advances the goals of the Human Capital Project, a global effort to accelerate more and better investments in people for greater equity and economic growth.
+La Banque mondiale, avec le soutien de la Fondation Bill et Melinda Gates et du ministère britannique du développement international, a conçu un tableau de bord mondial des politiques éducatives, qui mesure les moteurs des résultats d'apprentissage dans l'éducation de base à travers le monde. Ce faisant, il met en évidence les écarts entre les pratiques actuelles et ce qui, selon les données disponibles, serait le plus efficace pour promouvoir l'apprentissage, et il donne aux gouvernements un moyen de fixer des priorités et de suivre les progrès accomplis dans leurs efforts pour combler ces écarts. Cette collaboration fait avancer les objectifs du Projet sur le capital humain, un effort mondial visant à accélérer des investissements plus nombreux et plus efficaces dans les personnes pour une plus grande équité et une meilleure croissance économique.
 
-For more information, you can visit our World Bank topic page:
+Pour plus d'informations, vous pouvez consulter notre page thématique sur la Banque mondiale :
 https://www.worldbank.org/en/topic/education/brief/global-education-policy-dashboard
 
-## How to use this tool
-In the table below, you will find our primary indicators - the practices, policies, and politics - that we think are driving learning outcomes.  The data below come from our Dashboard survey in the country of Madagascar in 2021. Our survey took place in 300 schools. For a deeper dive, click on the GEPD Data Explorer tab in the top navigation bar of this page.
+### Comment utiliser cet outil
+Dans le tableau ci-dessous, vous trouverez nos principaux indicateurs - les pratiques, les politiques et les politiques - qui, selon nous, déterminent les résultats d'apprentissage.  Les données ci-dessous proviennent de notre enquête Dashboard menée dans le pays de Madagascar en 2021. Notre enquête s'est déroulée dans 300 écoles. Pour une plongée plus profonde, cliquez sur l'onglet GEPD Data Explorer dans la barre de navigation supérieure de cette page.
 
-Please consult our project Github repository for more details on how our indicators are constructed and how our sampling is done.  https://github.com/worldbank/GEPD
+Veuillez consulter le dépôt Github de notre projet pour plus de détails sur la façon dont nos indicateurs sont construits et comment notre échantillonnage est réalisé. https://github.com/worldbank/GEPD
 
-Please contact our team at educationdashboard@worldbank.org with any questions.
+N'hésitez pas à contacter notre équipe à educationdashboard@worldbank.org pour toute question.
+
