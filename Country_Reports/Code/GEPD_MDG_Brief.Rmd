@@ -35,22 +35,23 @@ here()
 setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
 #Set year to pull data for LAYS and LP from WB APIs
 year <- "2019"
-#Run code to pull and create dataframe with LP and LAYS data
-source('./Code/HCI_LP_fileload.R')
+
+
 
 #Set the country name here
 country_file_name <- "MDG"
 country <- "Madagascar"
-country_year <- "2020 - 2021"
+country_year <- "2019 - 2021"
+
+
 
 takeaway <- "
-- Learning outcomes are low, and rural children lag far behind urban children in learning.
-- Practices related to teacher skill and children’s preparation for learning have most room for improvement.
-- Of all practice indicators, children’s preparation for learning at primary entry explains low learning the best.
-- Policy frameworks are comprehensive, but the de facto implementation varies across types of policies – E.g. teaching support.
-- Teacher presence is high, near levels seen in middle income countries such as Jordan and Peru.
-- Improving learning outcomes in Rwanda will require a whole-of- government approach since capacity for learning depends on multiple sectors.
-"
+- Learning outcomes are low, and children in public school are lagging far behind in terms of learning. No difference however between gender.
+- Practices related to Input and Infrastructure has the most room for improvement.
+- Teacher presence and content knowledge is very low. It coincides with weak de facto and de jure Teacher Support and Monitoring.
+- Of all practice indicators, children’s capacity for learning at primary entry, teacher’s motivation & infrastructure explain low learning the best. 
+- Policy frameworks are not comprehensive and falls short on number of policy points – e.g., school management support.
+- Improving learning outcomes in Madagascar will require a whole-of- government approach since capacity for learning depends on multiple sectors."
 
 
 #########################
@@ -208,6 +209,10 @@ Series == "SE.PRM.BMAC" ~ "Mandates & Accountability",
 Series == "SE.PRM.BNLG" ~ "National Learning Goals",
 Series == "SE.PRM.BQBR" ~ "Characteristics of Bureaucracy"
 ))
+
+#Run code to pull and create dataframe with LP and LAYS data
+source('./Code/HCI_LP_fileload.R')
+source('./Code/Learning poverty_lays.R')
 ```
 
 ### **INTRODUCTION** ###  
@@ -224,13 +229,14 @@ The **School Survey** consists of 8 modules to collect data across 200-300 schoo
 The **Policy Survey** collects information via interviews with ~200 officials per country at federal and regional level to feed into the policy de jure indicators and identify key elements of the policy framework.  
 The **Survey of public officials** collects information about the capacity and orientation of the bureaucracy and political factors affecting education outcomes. This survey is an education-focused version of the civil-servant surveys from the Bureaucracy Lab, WBG. 
   
-### **KEY TAKEAWAYS, /uppercase{`r country`}, `r country_year`** ###  
+### **KEY TAKEAWAYS, `r country`, `r country_year`** ###  
 `r takeaway`
 
 ```{r, code = readLines("Learning poverty_lays.R"), include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
 ```
 
 ```{r color_codes, echo=FALSE, message = FALSE, warning = FALSE}
+
 
 grep_color <- c('PROE|TENR|PRIM|ATTD|CONT|EFFT|LCAP|PEDG|LERN')
 blank <- "NA"
@@ -252,6 +258,9 @@ blank <- "NA"
       (value >= lays_90 &      (Series == "HD.HCI.LAYS")) ~ paste("#85C546", sep=""),
       (value >= lays_85 & value<lays_90 & (Series == "HD.HCI.LAYS")) ~ paste("#FCD606", lays_units, sep=""),
       (value <  lays_85 &      (Series == "HD.HCI.LAYS")) ~ paste("#FF0000", sep=""),
+      (value >= 90 &      (Series == "SE.LPV.PRIM")) ~ paste("#FF0000", sep=""),
+      (value >=85 & value<90 & value<lays_90 & (Series == "SE.LPV.PRIM")) ~ paste("#FCD606", lays_units, sep=""),
+      (value <85 &      (Series == "SE.LPV.PRIM")) ~ paste("#85C546", sep=""),
       (value >=90 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("#85C546",sep=""),
       (value >=85 & value<90 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("#FCD606",sep=""),
       (value <85 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("#FF0000", sep=""),
@@ -274,11 +283,11 @@ blank <- "NA"
     )
     )
 lays_lp_choice <- if_else(marker ==0, lays, lp)
-lays_lp_units <- if_else(marker == 0, 
-                         input$value_units[input$Series=="HD.HCI.LAYS"],
-                         input$value_units[input$Series=="SE.LPV.PRIM"])
-lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS"],
-                                    input$value_color[input$Series=="SE.LPV.PRIM"])
+# lays_lp_units <- if_else(marker == 0, 
+#                          input$value_units[input$Series=="HD.HCI.LAYS"],
+#                          input$value_units[input$Series=="SE.LPV.PRIM"])
+# lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS"],
+#                                     input$value_color[input$Series=="SE.LPV.PRIM"])
 ```
 
 
@@ -473,7 +482,7 @@ FitFlextableToPage(reg_table) %>%
 lays_figure_name <- paste("lays_figure_", country_file_name, ".png", sep = '')
 lp_figure_name <- paste("lp_figure_", country_file_name, ".png", sep = '')
 figure <- if_else(marker == 0, lays_figure_name, lp_figure_name)
-figure2 <- paste(here(), "/LP_LAYS_figures/", figure, sep="")
+figure2 <- paste("C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/LP_LAYS_figures/", figure, sep="")
 knitr::include_graphics(figure2)
 ```
 
@@ -548,9 +557,10 @@ Teacher effectiveness is determined by a teacher's own knowledge level, pedagogi
 ```{r teach_tab, echo=FALSE, message=FALSE, warning=FALSE}
 
 group <- "teacher"
+setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
 
 #teacher linkages
-link <- read_csv(paste(here(),"/Data/",group,"_link.csv",sep=""),
+link <- read_csv(paste("./Data/",group,"_link.csv",sep=""),
                  trim_ws = FALSE)
 
 #create practice and polcy df
@@ -633,9 +643,10 @@ Early learning is affected by quality of implementation of health and nutrition 
 ```{r learn_tab, echo=FALSE, message=FALSE, warning=FALSE}
 
 group <- "learners"
+setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
 
 #teacher linkages
-link <- read_csv(paste(here(),"/Data/",group,"_link.csv",sep=""),
+link <- read_csv(paste("./Data/",group,"_link.csv",sep=""),
                  trim_ws = FALSE)
 
 #create practice and polcy df
