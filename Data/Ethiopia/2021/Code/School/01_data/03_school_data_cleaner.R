@@ -598,7 +598,7 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
 #############################################
 if (teach_avail==1) {
   
-  teacher_pedagogy <- read.csv("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/confidential/School/teach_raw_data_eth.csv")
+  teacher_pedagogy <- read.csv(paste0(confidential_folder,"/teach_raw_data_eth.csv"))
   
   score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
   
@@ -613,7 +613,7 @@ if (teach_avail==1) {
     mutate_all(funs(str_replace(., "M", "3"))) %>% 
     mutate_all(funs(str_replace(., "H", "4"))) %>% 
     mutate_all(funs(str_replace(., "NA", "1")))%>% 
-    rename(school_code = ï..school_code) %>% 
+    rename(school_code = 1) %>% 
     select(-Enumerator, -starts_with("X"))%>%
     mutate(across(everything(), as.numeric)) %>% distinct(school_code, Segment, .keep_all=T)
 

@@ -602,82 +602,92 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
 #############################################
 ### Teacher Pedagogy ###
 #############################################
-
-teacher_pedagogy <- school_dta %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
-
-# Generate useful variables
-
-# One observation per segment
-
-segment2 <- teacher_pedagogy %>%
-  select(-starts_with('s1'))
-
-segment1 <- teacher_pedagogy %>%
-  select(-starts_with('s2'))
-
-names(segment1) <- str_replace(names(segment1), "s1", "s")
-names(segment2) <- str_replace(names(segment2), "s2", "s")
-
-teacher_pedagogy_segments <- bind_rows(segment1, segment2)
-
-#create sub-indicators from TEACH
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
-         instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
-         socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
-  ) %>%
-  mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
-
-# Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
-# Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
-# We are only taking into account teachers for which we have at least 2 snapshots observed
-
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
-  mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
-
-#een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
-#replace tt_yes=tt_yes*100
-#egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
-#replace tt_no=tt_no*100
-
-# Time on task - Second measure
-# Proportion of classes where a low number of students are on task, a medium number of students are on task
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
-         tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
-         tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
-
-# We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
-
-# For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
-# We are only taking into account teachers for which we have at least 2 snapshots observed
-
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
-         tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
-         tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
-         tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
-
-
-final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
-  mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
-         classroom_culture_prof=100*as.numeric(classroom_culture>=3),
-         instruction_prof=100*as.numeric(instruction>=3),
-         socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
-  filter(!is.na(teach_score)) %>%
-  write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
-  group_by(school_code) %>%
-  mutate(number_segments=  sum(!is.na(teach_score))) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'),
-          -starts_with('m4saq1'))
-
-#Breakdowns by Male/Female
-
-
-write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+if (teach_avail==1) {
+  
+  teacher_pedagogy <- read.csv(paste0(confidential_folder,"/teach_raw_data_eth.csv"))
+  
+  score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
+  
+  ## Wrangling
+  
+  teacher_pedagogy <- teacher_pedagogy  %>% 
+    
+    ## Cleaning the scores
+    mutate_all(funs(str_replace(., "Y", "1"))) %>% 
+    mutate_all(funs(str_replace(., "N", "0"))) %>% 
+    mutate_all(funs(str_replace(., "L", "2"))) %>% 
+    mutate_all(funs(str_replace(., "M", "3"))) %>% 
+    mutate_all(funs(str_replace(., "H", "4"))) %>% 
+    mutate_all(funs(str_replace(., "NA", "1")))%>% 
+    rename(school_code = 1) %>% 
+    select(-Enumerator, -starts_with("X"))%>%
+    mutate(across(everything(), as.numeric)) %>% distinct(school_code, Segment, .keep_all=T)
+  
+  
+  
+  # Generate useful variables
+  
+  teacher_pedagogy_segments <- teacher_pedagogy
+  
+  #create sub-indicators from TEACH
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
+           instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
+           socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
+    ) %>%
+    mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
+  
+  # Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
+  # Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
+  # We are only taking into account teachers for which we have at least 2 snapshots observed
+  
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
+    mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
+  
+  #een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
+  #replace tt_yes=tt_yes*100
+  #egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
+  #replace tt_no=tt_no*100
+  
+  # Time on task - Second measure
+  # Proportion of classes where a low number of students are on task, a medium number of students are on task
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
+           tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
+           tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
+  
+  # We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
+  
+  # For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
+  # We are only taking into account teachers for which we have at least 2 snapshots observed
+  
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
+           tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
+           tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
+           tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
+  
+  
+  final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
+    mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+           classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+           instruction_prof=100*as.numeric(instruction>=3),
+           socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+    filter(!is.na(teach_score)) %>%
+    #write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    group_by(school_code) %>%
+    mutate(number_segments=  sum(!is.na(teach_score))) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'),
+            -starts_with('m4saq1'))
+  
+  #Breakdowns by Male/Female
+  
+  
+  write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+  
+}
 
 #############################################
 ##### 4th Grade Assessment ###########
