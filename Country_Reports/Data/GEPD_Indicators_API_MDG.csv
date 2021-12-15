@@ -1,14 +1,14 @@
 ﻿Series,Indicator.Name,value
 SE.LPV.PRIM,Learning poverty: Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%),96.7203
 SE.LPV.PRIM.1,(De Facto) Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%),96.7203
-SE.LPV.PRIM.BMP,Proficiency by End of Primary,95.8
-SE.LPV.PRIM.BMP.1,"(De Facto) Percent of children proficient in literacy and numeracy by end of primary, as reported by UIS",95.8
+SE.LPV.PRIM.BMP,Proficiency by End of Primary,4.199997
+SE.LPV.PRIM.BMP.1,"(De Facto) Percent of children proficient in literacy and numeracy by end of primary, as reported by UIS",4.199997
 SE.PRM.ATTD,Student Attendance,NA
-SE.PRM.ATTD.1,(De Facto) Percent of 4th grade students present during an unannounced visit,99.54135
+SE.PRM.ATTD.1,(De Facto) Percent of 4th grade students present during an unannounced visit,NA
 SE.PRM.ATTD.1.F,(De Facto) Percent of 4th grade students present during an unannounced visit - Female,NA
 SE.PRM.ATTD.1.M,(De Facto) Percent of 4th grade students present during an unannounced visit - Male,NA
-SE.PRM.ATTD.1.R,(De Facto) Percent of 4th grade students present during an unannounced visit - Rural,99.57976
-SE.PRM.ATTD.1.U,(De Facto) Percent of 4th grade students present during an unannounced visit - Urban,99.47859
+SE.PRM.ATTD.1.R,(De Facto) Percent of 4th grade students present during an unannounced visit - Rural,NA
+SE.PRM.ATTD.1.U,(De Facto) Percent of 4th grade students present during an unannounced visit - Urban,NA
 SE.PRM.BFIN,Politics & Bureaucratic Capacity - Financing,4.310976
 SE.PRM.BFIN.1,"Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, efficiency, and equity.",4.310976
 SE.PRM.BFIN.2,(Financing) - Adequacy expressed by the per child spending,5
@@ -101,11 +101,11 @@ SE.PRM.ILDR.7.F,(De Facto) Percent of teachers reporting having lesson plans - F
 SE.PRM.ILDR.7.M,(De Facto) Percent of teachers reporting having lesson plans - Male,NA
 SE.PRM.ILDR.7.R,(De Facto) Percent of teachers reporting having lesson plans - Rural,54.67125
 SE.PRM.ILDR.7.U,(De Facto) Percent of teachers reporting having lesson plans - Urban,38.37107
-SE.PRM.ILDR.8,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)",168.2916
+SE.PRM.ILDR.8,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)",9.178191
 SE.PRM.ILDR.8.F,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Female",NA
 SE.PRM.ILDR.8.M,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Male",NA
-SE.PRM.ILDR.8.R,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Rural",173.47
-SE.PRM.ILDR.8.U,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Urban",160.3763
+SE.PRM.ILDR.8.R,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Rural",8.729036
+SE.PRM.ILDR.8.U,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Urban",9.864737
 SE.PRM.IMON,Policy Lever (Inputs & Infrastructure) - Monitoring,2.057707
 SE.PRM.IMON.1,(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students,0.5722384
 SE.PRM.IMON.10,(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored,-999
@@ -409,7 +409,7 @@ SE.PRM.TATT.7,(De Jure) Is there a well-established career path for teachers?,-9
 SE.PRM.TATT.8,(De Facto) Percent of teachers that report salary delays in the past 12 months,240.1241
 SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,3.349987
 SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,5
-SE.PRM.TENR,Net Adjusted Enrollment Rate,NA
+SE.PRM.TENR,Net Adjusted Enrollment Rate,96.86561
 SE.PRM.TENR.1,(De Facto) Percent of primary school age children who are enrolled at primary education,96.86561
 SE.PRM.TEVL,Policy Lever (Teaching) - Evaluation,3.545591
 SE.PRM.TEVL.1,"(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national, regional, local)",1
