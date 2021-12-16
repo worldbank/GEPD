@@ -1,0 +1,392 @@
+---
+title: 'Measuring the Drivers of the Learning Crisis Across Countries using the Global Education Policy Dashboard'
+author: "GEPD Team"
+date: "`r Sys.Date()`"
+output:
+  bookdown::word_document2: 
+    toc: yes
+    fig_width: 9
+    fig_height: 6
+abstract: "To help countries put an end to Learning Poverty, the World Bank's Education Global Practice has developed and is supporting countries in the deployment of the Global Education Policy Dashboard (GEPD). This new tool offers a strong basis for identifying priorities for investment and policy reforms that are suited to each country context. It does so by (1) highlighting gaps between what the evidence suggests is effective in promoting learning and what is happening in practice in each system; and (2) allowing governments to track progress as they take action to close those gaps.  In this article, the conceptual foundations of the GEPD will be presented along with the methodology behind data collection. Additionally, findings from five countries will be discussed: Peru, Jordan, Rwanda, Ethiopia, and Madagascar."
+bibliography: ./bibliography.bib
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	fig.width = 9, fig.height = 6, fig.path = "plots/", dev = c("png"), dpi=500
+)
+#libraries
+library(tidyverse)
+library(foreign)
+library(here)
+library(vtable)
+library(flextable)
+library(ggthemes)
+library(Hmisc)
+library(httr)
+library(patchwork)
+library(ggrepel)
+library(lubridate)
+library(haven)
+library(zoo)
+library(readxl)
+library(ggbeeswarm)
+library(gtsummary)
+
+#directories
+dir <- here()
+indicators_dir <- paste(dir, 'Indicators', sep="/")
+out_dir <- paste(dir, 'Output', sep="/")
+
+#path to confidential directory
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+    
+    confidential_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+
+  }
+
+
+#list countries
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH")
+
+```
+
+```{r functions}
+#functions
+FitFlextableToPage <- function(ft, pgwidth = 5){
+
+  ft_out <- ft %>% autofit()
+
+  ft_out <- width(ft_out, width = dim(ft_out)$widths*pgwidth /(flextable_dim(ft_out)$widths))
+  return(ft_out)
+}
+```
+
+
+```{r load}
+
+#read in indicator metadata
+indicators <- read_csv(here::here('Indicators','indicators.csv'))
+
+# read in indicator data
+PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
+  mutate(country="Peru",
+         date='2019')
+
+RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
+  mutate(country="Rwanda",
+         date='2020')
+
+JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
+  mutate(country="Jordan",
+         date='2019')
+
+ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
+  mutate(country="Ethiopia",
+         date='2020-2021') %>%
+  rename(value=value_pooled)
+
+MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
+  mutate(country="Madagascar",
+         date='2021')
+
+# Indicator names
+indicator_names_df <- PER_data %>%
+  select(Series, `Indicator Name`)
+
+combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
+
+#add color coding
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG"
+
+#function to create score data for a specified country and year
+
+  combined_df_fn_p <- combined_df_raw %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", `Indicator Name`)) %>%
+    select(country, date, Series, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  combined_df_fn_c <- combined_df_raw %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", `Indicator Name`))) %>%
+    select(country, date, Series,  value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  combined_df <- combined_df_fn_p %>%
+    bind_rows(combined_df_fn_c) %>%
+    arrange(Series) %>%
+    mutate(
+           value=round(value,1),
+           value_color=case_when(
+             value_metadata=="Needs Improvement" ~ "#FF0000",
+             value_metadata=="Caution" ~ "#FCD606",
+             value_metadata=="On Target" ~ "#85C546",
+             TRUE ~ "#808080"
+           ),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+
+
+combined_wide_df <- combined_df %>%
+  select(Series, country, value) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_color <- combined_df %>%
+  select(Series, country, value_color) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value_color
+  ) %>%
+  left_join(indicator_names_df)
+
+```
+
+
+# Introduction
+
+[The next three paragraphs are pulled verbatim from technical note.  This is just a placeholder, as we should add custom motivation]
+
+Many countries, despite having significantly increased access to education for their children and youth, now realize that they are facing a learning crisis. In low- and middle-income countries, where enrollment in primary school is nearly universal, even before the COVID-19 pandemic hit, 53% of children suffered from Learning Poverty—meaning that they could not read and understand a short age-appropriate story by age 10. This reality underlines that schooling is not the same as learning, even though education policy often assumes that it is. The learning crisis has only deepened with the extended school closures and the sharp recessions caused by the pandemic.
+
+The World Development Report 2018 argued that the learning crisis has multiple causes: poor service delivery in schools and communities, policies that are not aligned toward learning for all, and unhealthy politics and low bureaucratic capacity. To tackle the crisis and improve student learning for all, countries need to know where they stand on these three key dimensions—practices (or service delivery), policies, and politics. But providing such a systemwide overview requires better measurement. Many drivers of learning are not captured by existing administrative systems. And although new measurement tools capture some of these drivers well, no single instrument pulls together data on all these areas. This gap leaves policymakers in the dark about what is working and what isn’t.
+
+To fill this gap, the World Bank, with support from the Bill and Melinda Gates Foundation, the UK’s Department for International Development, and the Government of Japan, has launched a Global Education Policy Dashboard, which measures the key drivers of learning outcomes in basic education around the world. In doing so, the GEPD highlights where systems are falling short in providing quality education for all children,  identifies gaps between current practice and what evidence suggests would be most effective in promoting learning for all, and helps governments in setting priorities and tracking progress as they work to close those gaps.  
+
+[@filmer2018learning]
+
+[@azevedo2021will]
+
+What is the key message from this work?   
+  - 
+  
+![](plots/gepd_framework.png)  
+
+# Methodology
+
+The Dashboard project collects new data in each country using three new instruments: A School Survey, a Policy Survey, and a Survey of Public Officials. Data collection involves school visits, classroom observations, legislative reviews, teacher and student assessments, and interviews with teachers, principals, and public officials. In addition, the project draws on some existing data sources to complement the new data it collects. A major objective of the GEPD project was to develop focused, cost-effective instruments and data-collection procedures, so that the dashboard can be inexpensive enough to be implemented (and re-implemented) in many countries. The team achieved this by streamlining and simplifying existing instruments, and thereby reducing the time required for data collection and training of enumerators.
+
+![](plots/cost_fig.png)
+
+## Instruments 
+
+A detailed description of the GEPD instruments is available in the [GEPD Technical Note](https://www.educationpolicydashboard.org/sites/epd/files/resources-documents/GEPD%20Technical%20Note.pdf).  Additionally, all code used to construct the indicators is available in the Global Education Policy Dashboard [Github page](https://github.com/worldbank/GEPD).  A shorter description pertaining to each of the three instruments can be found below:
+
+•	School Survey: The School Survey collects data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy indicators.  It consists of streamlined versions of existing instruments used by the World Bank and partners—including Service Delivery Indicators (SDI) Surveys on teachers and inputs/infrastructure, TEACH on pedagogical practice, Global Early Child Development Database (GECDD) and Measuring Early Learning Quality and Outcomes (MELQO) on school readiness of young children, and the Development World Management Survey (D-WMS) on management quality—together with new questions to fill gaps in those instruments. Though the number of modules in the School Survey is similar to the full version of the Service Delivery Indicators (SDI) Survey, the number of items and the complexity of the questions within each module have been reduced to streamline the survey, while additional items and assessments have been added from other instruments. The School Survey includes 8 short modules: School Information, Teacher Presence, Teacher Survey, Classroom Observation, Teacher Assessment, 1st-Grade Direct Assessment, School Management Survey, and 4th-Grade Student Assessment. 
+
+•	Policy Survey: The Policy Survey collects information to feed into the Policy de jure indicators. This survey is filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 9 years).  The survey includes questions on policies related to teachers, school management, inputs and infrastructure, and learners. 
+
+•	Survey of Public Officials: The Survey of Public Officials collects information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey is a streamlined and education-focused version of the civil-servant surveys that the Bureaucracy Lab (a joint initiative of the Governance Global Practice and the Development Impact Evaluation unit of the World Bank) has implemented recently in several countries. The survey includes questions about technical and leadership skills, work environment, stakeholder engagement, impartial decision-making, and attitudes and behaviors. 
+
+## Sampling
+
+The aim of the GEPD surveys is to produce nationally representative estimates with enough precision to allow detection of changes over time at a minimum power of 80% and at a 0.05 significance level. The GEPD also sets aims to detect differences by urban/rural location and by gender on relevant indicators.  In some cases, we can provide statistics by region, but this will depend on the geography of the country and the number of regions making up that country.  
+
+For the GEPD School Survey, a two-stage random sample design is used.  In the first stage, Bank staff select a random sample of around 200 schools.  The sample is stratified based on urban/rural classification and the region in which schools are located. When stratifying by region, the GEPD team works with partners within the country to make sure all relevant geographical divisions are included. In the second stage, a random sample of teachers and students is selected to answer questions from the survey modules; this sampling is done by enumerators in the field at each school. Ten teachers per school are sampled for attendance checks, and five teachers are interviewed and given a teacher assessment. Three randomly selected 1st grade students are assessed, as is a randomly selected classroom of 4th grade students.  We could only interview three 1st grade students, compared to an entire 4th grade classroom, because the 1st grade assessment is done face to face by our enumerators and takes a considerable amount of time per student (~15-20 minutes).  The 4th grade assessment can be given to an entire class simultaneously.
+
+For the GEPD Survey of Public Officials, 200 public education officials in each country are randomly selected for interviews.  These public officials are typically professional staff at the Ministry of Education central office, as well as from the regional or district offices. Roughly 60 officials are surveyed at the federal (or central-government) level, while 140 officials are surveyed at the regional/district level.  To select officials at the regional and district level, the team employs a cluster sampling strategy, where 10 regional offices are chosen at random from among the regions in which schools were sampled. Among these 10 regions, 10 districts are selected (one in each region) from among the districts in which schools are sampled. The result of this sampling approach is that for 10 clusters, the GEPD captures the links from the school to the district office, to the regional office, and then to the central office. In each regional/district office, 7 officials are sampled: the head of the office, the HR director, and 5 officials working in finance and planning chosen at random.  At the federal level, the GEPD team works with the Ministry of Education to identify the offices that should be included in the sample according to the functions they serve. In each office, the director of the office is interviewed along with a randomly selected number of public officials. The team aims to maintain roughly the same sampling strategy for the Survey of Public Officials for all countries, with some adaptation to country characteristics. For instance, in countries with smaller district offices, a larger number of district offices will be sampled, with fewer public officials interviewed at each of them. In countries with smaller offices at the federal level, fewer public officials will be interviewed at the federal level and more will be interviewed at the decentralized level. Ultimately, these adaptations are the result of extensive dialogue with the country counterparts. 
+
+
+Before producing the sample using the stratification approach, the sampling frame is defined. Typically, the sampling frame includes all schools with at least three 1st-grade and at least three 4th-grade students, according to the latest school census. This minimum size was set to ensure that enough teachers and students would be interviewed on the limited budget available for each country.  To develop this sampling frame, the GEPD team works with the World Bank country teams and the country counterparts to compile an up-to-date and detailed database containing information on schools. Depending on the country, the sampling frame may include private schools, typically because a large share of students attends private schools. This sampling decision is jointly made by World Bank and country counterparts. As an example, in Peru only public schools were sampled, because private schools represent a small share of the schools in the country. Alternatively, in Jordan, the percentage of private schools was larger, and so a decision was made to include both public and private schools. 
+
+For the stratified sampling, the stratification variables used are the rural/urban status of each school as well as the 1st- or 2nd-level administrative division (while the denomination changes, in most cases, the 1st administrative division is the province/department-level and the 2nd division corresponds to districts). For example, in Peru, the department and urban/rural status of the school made up the stratification variables. In cases where private schools are also included in the sampling frame, as in Jordan, the public/private status of the school is also included as a stratification variable.
+
+In each country, the sampling strategy is slightly customized to reflect ongoing efforts and meet country needs. This is discussed further in the Data section below.
+
+
+
+
+![](plots/GEPD_comprehensive.png)
+
+
+
+
+
+
+# Data
+
+Table 1: GEPD Data Collection Overview
+
+
+| Country | Dates | Number of Schools | Description |
+|---|---|---|---|
+| Peru | November 2019 | 205 |     MELQO data was merged with the Peru school sampling frame to allow optimal stratification. The stratification was done on the basis of urban/rural   location and department. There are 25 departments in Peru. In 2017, Peru   conducted an examination of around 4,500 children aged 5-8, with a median age   of 6. The MELQO assessment is quite similar to the GEPD 1st-Grade Direct   Assessment. Using data from this 2017 survey, the team calculated means and   standard deviations by province and fed this information into the optimal   stratification algorithm. Provinces with low standard deviations among   students in terms of their MELQO development scores are allocated fewer   schools compared to an allocation that is simply based on population, and   provinces with high standard deviations are allocated more schools. 205   schools were chosen for the GEPD School Survey after optimally stratifying.    |
+| Jordan | December 2019 | 250 |     For the GEPD School Survey, both public and private schools that are supervised   by the Ministry or Education were included in the sampling frame. Schools   supervised by Ministry of Defense, Ministry of Endowments, Ministry of Higher   Education, or Ministry of Social Development were excluded from the sampling   frame. This left a sampling frame containing 3,330 schools, with 1297 private   schools and 2003 public schools. Schools kept needed to have at least three 1st-grade   students, three 4th-grade students, and three teachers. Southern   schools were oversampled (to reach a total of 50 Southern schools) to allow regional   comparisons. Additionally, second-shift (evening) schools were oversampled,   for a total of 40 second-shift schools, to allow reporting on this unique   type of school.   Second-shift schools   make up around 16% of our total sample, while they make up 7.6% of the   schools in our sampling frame.  When   producing a national estimate, we reweight the schools to be reflective of   their totals in the population. 250 schools were sampled for the School   Survey after the discussed adaptations.     |
+| Rwanda | February 2020 | 200 |     In the case of Rwanda, the GEPD team tested the possibility of each field team   visiting 2 schools per day. To allow visits to two schools per day, the team clustered   at the sector level and chose two schools per cluster. With a sample of 200   schools, this means that 100 PSUs had to be allocated. This clustering was   combined with stratification by district and by the urban/rural status of the   schools. The number of PSUs allocated to each stratum is proportionate to the   number of schools in each stratum (i.e., the district X urban/rural status   combination).    |
+| Ethiopia | March 2020, June 2021 | 300 | In Ethiopia, a sample of 300 public schools from each of the provinces of Ethiopia was taken.  As a comparison to the total number of schools in Ethiopia, this constitutes an approximately 1% sample.  Because of the large size of the country, and because there can be very large distances between Woredas within the same province, a cluster sampling approach was chosen.  In this approach, 100 woredas were chosen with probability proportional to 4th grade size, with the number of woredas chosen within each province proportional to the regional 4th grade population.  Then within each woreda two rural and one urban school were chosen with probability proportional to 4th grade size.  Data collection started in March 2020, but because of school closures related to COVID, only 128 schools were visited at this time.  In June 2021, data collection was resumed for the other 182 schools.  During the June 2021 data collection, security issues in Tigray meant that 6 schools out of 15 originally chosen in the original sample could not be visited.  These 6 schools were replaced by schools in Amhara province. |
+| Madagascar | June 2021 | 200 | In Madagascar, the sample for the GEPD school survey was drawn to be representative of primary schools at the national and regional levels, using EMIS data of 2019. The sampling frame consisted of 33,120 public and private primary schools – 25,869 public and 7,251 private schools - across the 1,567 communes covered by EMIS data in Madagascar’s 22 regions. 200 schools were selected for the GEPD survey, where the strata are regions and urban/rural status of schools. |
+
+
+# Findings
+
+## Overview of Indicators
+
+Show low levels of learning across countries.  E.g. how manys students in 4th grade can identify basic words, 8+6, etc.  Low levels of teacher pedagogy.  Highlight some interesting Bureaucracy findings
+
+```{r countrytabfn}
+#create function for creating country comparison tables
+country_tab_fn <- function(variables, title) {
+  
+  
+tab_df <- combined_wide_df %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+#set colors
+tab_color_df <- combined_wide_color %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+Peru_col <- tab_color_df$Peru
+Jordan_col <- tab_color_df$Jordan
+Rwanda_col <- tab_color_df$Rwanda
+Ethiopia_col <- tab_color_df$Ethiopia
+Madagascar_col <- tab_color_df$Madagascar
+
+
+#build table
+tab_df <- tab_df  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar)
+
+
+ovr_table <- flextable(tab_df) %>%
+  add_header_lines(title) %>%
+  add_footer( Group = paste0('Source: UIS, GLAD, GEPD, World Bank. 
+(1) Proficiency on GEPD assessment means % students with knowledge 80%.\n  (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS).\n (3) All indicators are on a scale of 0-5 unless measured in %. \n (4) Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' )) %>%
+  merge_at( j = 1:4, part = "footer") %>%
+  theme_vanilla()
+
+#colors
+ovr_table <- ovr_table %>%
+  bg(j = c('Peru'),
+     bg = Peru_col) %>%
+  bg(j = c('Jordan'),
+     bg = Jordan_col) %>%
+  bg(j = c('Ethiopia'),
+     bg = Ethiopia_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
+  bg(j = c('Madagascar'),
+     bg = Madagascar_col)   
+
+
+FitFlextableToPage(ovr_table) %>%
+  set_table_properties(layout = "autofit")
+
+  
+}
+```
+
+
+The
+
+```{r ovltab}
+# Produce a table showing means by country for select practice indicators
+practice_indicators <- c(
+  'SE.PRM.LERN',
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.INPT',
+  'SE.PRM.INFR',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD',
+  'SE.PRM.OPMN',
+  'SE.PRM.ILDR',
+  'SE.PRM.PKNW',
+  'SE.PRM.PMAN'
+)
+
+country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
+
+```
+
+
+
+```{r poltab}
+# Produce a table showing means by country for select practice indicators
+policy_indicators <- c(
+'SE.PRM.TATT',
+'SE.PRM.TSDP',
+'SE.PRM.TSUP',
+'SE.PRM.TEVL',
+'SE.PRM.TMNA',
+'SE.PRM.TINM',
+'SE.PRM.ISTD',
+'SE.PRM.IMON',
+'SE.PRM.LNTN',
+'SE.PRM.LHTH',
+'SE.PRM.LCBC',
+'SE.PRM.LFCP',
+'SE.PRM.LSKC',
+'SE.PRM.SCFN',
+'SE.PRM.SATT',
+'SE.PRM.SSLD',
+'SE.PRM.SSUP',
+'SE.PRM.SEVL'
+
+)
+
+country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
+
+```
+
+```{r ptictab}
+# Produce a table showing means by country for select practice indicators
+politics_indicators <- c(
+'SE.PRM.BQBR',
+'SE.PRM.BIMP',
+'SE.PRM.BMAC',
+'SE.PRM.BNLG',
+'SE.PRM.BFIN'
+
+)
+
+country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
+
+```
+
+## Systems View of Indicators
+
+Share of learning variation explained by the Dashboard’s Practice indicators
+
+
+```{r}
+# data prepared for Rwanda, Peru, Jordan
+geo_links_df <- read_csv(paste0(confidential_dir, "/General/school_office_geo_links.csv")) 
+
+school_office_df <- read_csv(paste0(confidential_dir, "/General/school_office_data.csv"))
+
+#ethiopia data
+
+
+```
+
+
+[Discussion of the linkages between indicators.  E.g. How the teacher pedagogy relates to student outcomes.  Interesting findings on De-Facto versus De-Jure.  Findings on implementation differences across geographies within a country.  Findings on Bureaucracy and school outcomes.  Can maybe highlight link with poor bureaucracy with poor inputs/infrastructure.]
+
+# Conclusions
+
+# References
