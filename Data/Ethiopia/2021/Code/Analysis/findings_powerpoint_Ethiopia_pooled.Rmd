@@ -127,7 +127,7 @@ rm(list = ls())
 
  if(Sys.info()["user"] == "wb577189"){
 
-    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
 
 
     
@@ -185,7 +185,7 @@ wrapper <- function(x, ...)
 
  if(Sys.info()["user"] == "wb577189"){
 
-    data_dir_2020<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_RAW/Data/anonymized/"
+    data_dir_2020<- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
 
 
     
@@ -221,7 +221,7 @@ for (x in frames_2021) {
  if(Sys.info()["user"] == "wb577189"){
 
 save(list = frames_2021,
-  file = "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+  file = "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
 
     
   } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
@@ -311,7 +311,7 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
 labels_df_2<-data.frame(indicators=as.character(indicators_list),
                       indicator_labels=as.character(main_indicator_labels2))
 
-
+teach_gender <- teacher_roster_anon %>% select(1:6, 9)
 
 # School Survey
     metadata<-metadta
@@ -1561,8 +1561,8 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
                 'student_attendance',
                 'presence_rate',  'absence_rate', 'sch_absence_rate', 
                 'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
-                #'teach_score','classroom_culture','instruction','socio_emotional_skills',
-                #'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
                 'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
                 'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
                 'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
@@ -1594,8 +1594,8 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
                         "Student Attendance Rate",
                         "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
                         "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
-                        #'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
-                        #'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
                         "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
                         "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
                         "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
