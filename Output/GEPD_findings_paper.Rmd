@@ -36,7 +36,16 @@ library(haven)
 library(zoo)
 library(readxl)
 library(ggbeeswarm)
+library(estimatr)
+library(ggpmisc)
+library(ggthemes)
+library(ggtext)
 library(gtsummary)
+library(geosphere)
+library(fixest)
+library(modelsummary)
+options(modelsummary_factory_word = 'flextable')
+
 
 #directories
 dir <- here()
@@ -46,8 +55,9 @@ out_dir <- paste(dir, 'Output', sep="/")
 #path to confidential directory
 
   if (str_to_lower(Sys.info()["user"]) == "wb469649") {
-    
+    #directories
     confidential_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
 
   }
 
@@ -65,6 +75,18 @@ FitFlextableToPage <- function(ft, pgwidth = 5){
 
   ft_out <- width(ft_out, width = dim(ft_out)$widths*pgwidth /(flextable_dim(ft_out)$widths))
   return(ft_out)
+}
+
+#add equations to plots
+eq_plot_txt <- function(y,x,data) {
+  
+  f <- as.formula(paste(y,x, sep="~"))
+  
+  eq <- lm_robust(f, data=data, se_type='HC2')
+  coef <- coef(eq)
+  std_err <- sqrt(diag(vcov(eq)))
+  r_2<- summary(eq)$r.squared
+  glue::glue("y = {round(coef[1],3)} + {round(coef[2],3)} x, R<sup>2</sup> = {round(r_2[1],3)} <br> &nbsp;   &nbsp;  	&nbsp; 	&nbsp;   ({round(std_err[1],3)}) &nbsp;   &nbsp;  ({round(std_err[2],3)})" )
 }
 ```
 
@@ -239,6 +261,10 @@ Table 1: GEPD Data Collection Overview
 | Madagascar | June 2021 | 200 | In Madagascar, the sample for the GEPD school survey was drawn to be representative of primary schools at the national and regional levels, using EMIS data of 2019. The sampling frame consisted of 33,120 public and private primary schools – 25,869 public and 7,251 private schools - across the 1,567 communes covered by EMIS data in Madagascar’s 22 regions. 200 schools were selected for the GEPD survey, where the strata are regions and urban/rural status of schools. |
 
 
+## GDP Data
+
+ GDP per square kilometer data is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.
+
 # Findings
 
 ## Overview of Indicators
@@ -300,7 +326,7 @@ FitFlextableToPage(ovr_table) %>%
 ```
 
 
-The
+Below is a table showing the means by country on the GEPD Practice Indicators.
 
 ```{r ovltab}
 # Produce a table showing means by country for select practice indicators
@@ -323,7 +349,7 @@ country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
 
 ```
 
-
+Below is a table showing the means by country on the GEPD Policy Indicators.
 
 ```{r poltab}
 # Produce a table showing means by country for select practice indicators
@@ -353,6 +379,8 @@ country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
 
 ```
 
+Below is a table showing the means by country on the GEPD Bureaucracy or Politics Indicators.
+
 ```{r ptictab}
 # Produce a table showing means by country for select practice indicators
 politics_indicators <- c(
@@ -370,19 +398,465 @@ country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
 
 ## Systems View of Indicators
 
-Share of learning variation explained by the Dashboard’s Practice indicators
+```{r}
+# read in the microdata
 
+########
+## Peru
+########
+
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+PER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+PER_school_office_link_df <- PER_school_anon_df %>%
+  left_join(PER_school_gdp) %>%
+  left_join(PER_school_office_linkages)
+
+########
+## Jordan
+########
+
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+JOR_school_anon_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/"))
+
+JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+JOR_school_gdp <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.dta", sep="/")) %>%
+  select(hashed_school_code, GDP)
+
+
+JOR_school_office_link_df <- JOR_school_anon_df %>%
+  left_join(JOR_school_gdp) %>%
+  left_join(JOR_school_office_linkages)
+
+########
+## Rwanda
+########
+
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+RWA_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+RWA_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+
+
+RWA_school_office_link_df <- RWA_school_anon_df %>%
+  left_join(RWA_school_gdp) %>%
+  left_join(RWA_school_office_linkages)
+########
+
+########
+## Ethiopia
+########
+
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+ETH_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+
+
+ETH_school_office_link_df <- ETH_school_anon_df %>%
+  left_join(ETH_school_gdp) %>%
+  left_join(ETH_school_office_linkages)
+########
+
+########
+## Madagascar
+########
+
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+# MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+
+
+MDG_school_office_link_df <- MDG_school_anon_df %>%
+  left_join(MDG_school_gdp) %>%
+  select(-district)
+# %>%
+#   left_join(MDG_school_office_linkages)
+
+
+###########
+# Combined
+##########
+
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) %>%
+    mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural2=if_else(urban_rural=="Rural",1,0),
+         rural=if_else(is.na(rural),rural2,rural )) 
+```
+
+
+## Share of learning variation explained by the Dashboard’s Practice indicators
+
+## Relationship between School Practices and 4th Grade Learning Outcomes
+
+Next the relationships between 4th grade learning outcomes and practices in the school are shown. The practices considered are teacher presence, teacher content knowledge, teacher pedagogical skills, availability of basic inputs, basic infrastructure, student readiness (1st grade assessment scores), operational management scores, instructional leadership, principal school knowledge, and principal management skills.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
+Data downloaded from:
+https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
+https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
+ In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
+ 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
+ The method also distinguishes between rural and urban population, assuming the latter to have a higher 
+ GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
+ product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
+ Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
+ LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
+ extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
+ constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
+ is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
+ suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
+ Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
+ extrapolation UNEP/GRID-Geneva.].  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
 
 ```{r}
-# data prepared for Rwanda, Peru, Jordan
-geo_links_df <- read_csv(paste0(confidential_dir, "/General/school_office_geo_links.csv")) 
+models <- list(
+  
+'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-school_office_df <- read_csv(paste0(confidential_dir, "/General/school_office_data.csv"))
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-#ethiopia data
+'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("presence_rate"  = "Teacher Presence",
+                             "content_knowledge" = "Teacher Content Knowledge",
+                             "teach_score" = "Teacher Pedagogy",
+                             "inputs" = "Basic Inputs",
+                             "infrastructure" = "Basic Infrastructure",
+                             "ecd_student_knowledge" = "1st Grade Student Knoweldge",
+                             "operational_management" = "Operational Management",
+                             "instructional_leadership" = "Instructional Leadership",
+                             "principal_knowledge_score" = "Principal Knowledge",
+                             "principal_management" = "Principal Management")
+             )
+```
+
+
+## Relationship between School Practice Outcomes and Bureaucracy Indicators
+
+The plots below show that the (geodesic) distance between a school and the district office managing the school.
+
+In the first plot, the relationship between distance of the office and average 4th grade student knowledge, according to the 4th grade GEPD assessment, are shown.
+
+
+```{r distscat, echo=FALSE}
+
+#scatterplot of distance between school and office
+school_office_dist_df <- combined_school_office_df %>%
+  select(student_knowledge, inputs, infrastructure, principal_management, quality_bureaucracy, bureau_index, dist, dist_km, dist_log, ADM0_NAME) %>%
+  mutate(bi_on_target=if_else(bureau_index>=4, "Yes", "No")) %>%
+  group_by(ADM0_NAME) %>% #demean outcomes by country
+  mutate(student_knowledge_dm=student_knowledge-mean(student_knowledge, na.rm=T),
+         dist_log_dm=dist_log-mean(dist_log, na.rm=T))
+
+
+lab <- eq_plot_txt('student_knowledge', 'dist_log', school_office_dist_df)
+
+p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=student_knowledge)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  theme_bw() +
+  scale_x_log10(labels=scales::comma) +
+  expand_limits(y=c(0,100)) +
+  xlab('Log Distance between School and District Office (km)') +
+  ylab('Average 4th Grade Student Knowledge Scores at School') +
+  geom_richtext(
+    aes(x = 20, y = 5,label = lab, hjust=0.2)
+  ) +
+  ggtitle(str_wrap('Unadjusted ', 100))
+
+
+
+
+
+school_office_dist_df_on <- school_office_dist_df %>%
+  filter(bi_on_target=="Yes")
+
+school_office_dist_df_off <- school_office_dist_df %>%
+  filter(bi_on_target=='No')
+
+lab1 <- eq_plot_txt('student_knowledge', 'dist_log', school_office_dist_df_on)
+lab2 <- eq_plot_txt('student_knowledge', 'dist_log', school_office_dist_df_off)
+
+  col_pal <- c("#457b9d","#e63946")  
+  names(col_pal) <- c( "Yes","No")
+  
+  
+# p2 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=student_knowledge, color=bi_on_target)) +
+#   geom_point() +
+#   geom_smooth(method='lm') +
+#   theme_bw() +
+#   scale_x_log10(labels=scales::comma) +
+#   expand_limits(y=c(0,100)) +
+#   xlab('Log Distance between School and District Office (km)') +
+#   ylab('Average 4th Grade Student Knowledge Scores at School') +
+#   scale_color_manual(
+#     name="Quality of Bureaucracy Score",
+#     labels=c("No"="Caution/Needs Improvement","Yes"="On Target"),
+#     values=col_pal,
+#     na.translate = F
+#   ) +
+#   geom_richtext(
+#    aes(x = 0.1, y = 5,label = lab2, hjust=0.2), color='#e63946'
+#   ) +
+#   geom_richtext(
+#    aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
+#   ) +
+#   theme(
+#     legend.position = 'bottom'
+#   )
+# 
+# 
+# 
+# p2
+
+lab2 <- eq_plot_txt('student_knowledge_dm', 'dist_log_dm', school_office_dist_df)
+
+p3 <- ggplot(data=school_office_dist_df, aes(x=dist_log_dm, y=student_knowledge_dm)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  theme_bw() +
+  expand_limits(y=c(0,100)) +
+  xlab('Log Distance between School and District Office (km)') +
+  ylab('Average 4th Grade Student Knowledge Scores at School') +
+  scale_color_manual(
+    name="Bureaucracy Index",
+    labels=c("No"="Caution/Needs Improvement","Yes"="On Target"),
+    values=col_pal,
+    na.translate = F
+  )+
+  geom_richtext(
+   aes(x = 0.1, y = 5,label = lab2, hjust=0.2)
+  ) +
+  # geom_richtext(
+  #  aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
+  # ) +
+  theme(
+    legend.position = 'bottom'
+  ) +
+  ggtitle(str_wrap(' Demeaned by Country ', 100))
+
+
+p1 + p3 +
+  plot_annotation(title='Scatterplot of Average 4th Grade Student Knowledge Against Distance of School to District Office',
+                  caption='Distance is the geodesic distance between the school and office.')
 
 
 ```
+
+In the second plot, the relationship between the distance to the office and school input availability is shown.  This indicator measures the availability of basic inputs in the average school. These inputs, based on the literature and general expectations, are (i) functioning blackboard and chalk, (ii) pens, pencils, and exercise books in 4th-grade classrooms, (iii) textbooks, (iv) basic classroom furniture, and (v) access to ICT.
+
+
+```{r}
+lab <- eq_plot_txt('inputs', 'dist_log', school_office_dist_df)
+
+p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  theme_bw() +
+  scale_x_log10(labels=scales::comma) +
+  expand_limits(y=c(0,100)) +
+  xlab('Log Distance between School and District Office (km)') +
+  ylab('School Input Availability at School') +
+  geom_richtext(
+    aes(x = 20, y = 5,label = lab, hjust=0.2)
+  ) +
+  ggtitle(str_wrap('Unadjusted ', 100))
+
+
+
+
+
+
+  
+  
+# p2 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs, color=bi_on_target)) +
+#   geom_point() +
+#   geom_smooth(method='lm') +
+#   theme_bw() +
+#   scale_x_log10(labels=scales::comma) +
+#   expand_limits(y=c(0,100)) +
+#   xlab('Log Distance between School and District Office (km)') +
+#   ylab('Average 4th Grade Student Knowledge Scores at School') +
+#   scale_color_manual(
+#     name="Quality of Bureaucracy Score",
+#     labels=c("No"="Caution/Needs Improvement","Yes"="On Target"),
+#     values=col_pal,
+#     na.translate = F
+#   ) +
+#   geom_richtext(
+#    aes(x = 0.1, y = 5,label = lab2, hjust=0.2), color='#e63946'
+#   ) +
+#   geom_richtext(
+#    aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
+#   ) +
+#   theme(
+#     legend.position = 'bottom'
+#   )
+# 
+# 
+# 
+# p2
+
+lab2 <- eq_plot_txt('inputs_dm', 'dist_log_dm', school_office_dist_df)
+
+p3 <- ggplot(data=school_office_dist_df, aes(x=dist_log_dm, y=inputs_dm)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  theme_bw() +
+  expand_limits(y=c(0,100)) +
+  xlab('Log Distance between School and District Office (km)') +
+  ylab('School Input Availability at School') +
+
+  geom_richtext(
+   aes(x = 0.1, y = 5,label = lab2, hjust=0.2)
+  ) +
+  # geom_richtext(
+  #  aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
+  # ) +
+  theme(
+    legend.position = 'bottom'
+  ) +
+  ggtitle(str_wrap(' Demeaned by Country ', 100))
+
+
+p1 + p3 +
+  plot_annotation(title='Scatterplot of Availability of School Inputs Against Distance of School to District Office',
+                  caption='Distance is the geodesic distance between the school and office.')
+
+
+```
+
+
+
+Next the relationships between an overall index of the functioning of the bureaucracy in the school district and school level outcomes are shown.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
+Data downloaded from:
+https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
+https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
+ In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
+ 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
+ The method also distinguishes between rural and urban population, assuming the latter to have a higher 
+ GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
+ product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
+ Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
+ LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
+ extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
+ constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
+ is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
+ suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
+ Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
+ extrapolation UNEP/GRID-Geneva.].  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
+ 
+ 
+```{r breg}
+
+models <- list(
+  
+'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'Teacher Presence' =  feols(presence_rate ~ 0 +  bureau_index  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'Teacher Pedagogy' =  feols(teach_score ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'School Inputs' =  feols(inputs ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'School Infrastructure' =  feols(infrastructure ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'Operations Management' =  feols(operational_management ~ 0 +  bureau_index  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'Principal Management Skills' =  feols(principal_management ~ 0 +  bureau_index  + log(GDP) + rural  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("bureau_index" = "Bureuacracy Index")
+             )
+
+```
+
+
+```{r breg2, echo=FALSE}
+
+models <- list(
+  
+'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+
+```
+
 
 
 [Discussion of the linkages between indicators.  E.g. How the teacher pedagogy relates to student outcomes.  Interesting findings on De-Facto versus De-Jure.  Findings on implementation differences across geographies within a country.  Findings on Bureaucracy and school outcomes.  Can maybe highlight link with poor bureaucracy with poor inputs/infrastructure.]
