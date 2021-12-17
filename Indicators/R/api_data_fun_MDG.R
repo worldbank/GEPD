@@ -340,16 +340,16 @@ api_template <- api_template %>%
   # Student Attendance	(ATTD)
   #######################################
   
-  indicator_values_transpose <- indicator_values_transpose %>%
-    mutate(
-      SE.PRM.ATTD     = indicator_means(student_attendance	, "school", "ATTD",  "All"),
-      SE.PRM.ATTD.1   = indicator_means(student_attendance	, "school", "ATTD",  "All"),
-      # SE.PRM.ATTD.1.F = indicator_means(student_attendance	, "school", "ATTD",  "Female"),
-      # SE.PRM.ATTD.1.M = indicator_means(student_attendance	, "school", "ATTD",  "Male"),
-      SE.PRM.ATTD.1.R = indicator_means(student_attendance	, "school", "ATTD",  "Rural"),
-      SE.PRM.ATTD.1.U = indicator_means(student_attendance	, "school", "ATTD",  "Urban"),
-
-    )
+  # indicator_values_transpose <- indicator_values_transpose %>%
+  #   mutate(
+  #     SE.PRM.ATTD     = indicator_means(student_attendance	, "school", "ATTD",  "All"),
+  #     SE.PRM.ATTD.1   = indicator_means(student_attendance	, "school", "ATTD",  "All"),
+  #     # SE.PRM.ATTD.1.F = indicator_means(student_attendance	, "school", "ATTD",  "Female"),
+  #     # SE.PRM.ATTD.1.M = indicator_means(student_attendance	, "school", "ATTD",  "Male"),
+  #     SE.PRM.ATTD.1.R = indicator_means(student_attendance	, "school", "ATTD",  "Rural"),
+  #     SE.PRM.ATTD.1.U = indicator_means(student_attendance	, "school", "ATTD",  "Urban"),
+  # 
+  #   )
   #######################################
   # Operactional Management (OPMN)
   #######################################
@@ -430,11 +430,11 @@ api_template <- api_template %>%
       SE.PRM.ILDR.7.R = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Rural"),
       SE.PRM.ILDR.7.U = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Urban"),
       #(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)	
-      SE.PRM.ILDR.8   = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "All"),  
+      SE.PRM.ILDR.8   = 100*indicator_means(bin_var(m3sdq24_ildr,1), "school", "ILDR",  "All"),  
       # SE.PRM.ILDR.8.F = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Female"),
       # SE.PRM.ILDR.8.M = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.8.R = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.8.U = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Urban")
+      SE.PRM.ILDR.8.R = 100*indicator_means(bin_var(m3sdq24_ildr,1), "school", "ILDR",  "Rural"),
+      SE.PRM.ILDR.8.U = 100*indicator_means(bin_var(m3sdq24_ildr,1), "school", "ILDR",  "Urban")
       
     )
   #######################################

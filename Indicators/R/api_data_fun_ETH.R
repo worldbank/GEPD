@@ -211,30 +211,30 @@ api_template <- api_template %>%
   # # Teacher Pedagogical Skills	(PEDG)
   # #######################################
   # 
-  # indicator_values_transpose <- indicator_values_transpose %>%
-  #   mutate(
-  #     SE.PRM.PEDG     = indicator_means(teach_prof, "school", "PEDG",  "All"),
-  #     SE.PRM.PEDG.1   = indicator_means(teach_prof, "school", "PEDG",  "All"),
-  #     #SE.PRM.PEDG.1.F = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Female"),
-  #     #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
-  #     SE.PRM.PEDG.1.R = indicator_means(teach_prof, "school", "PEDG",  "Rural"),
-  #     SE.PRM.PEDG.1.U = indicator_means(teach_prof, "school", "PEDG",  "Urban"),
-  #     SE.PRM.PEDG.2   = indicator_means(classroom_culture_prof, "school", "PEDG",  "All"),
-  #     #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
-  #     #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
-  #     SE.PRM.PEDG.2.R = indicator_means(classroom_culture_prof, "school", "PEDG",  "Rural"),
-  #     SE.PRM.PEDG.2.U = indicator_means(classroom_culture_prof, "school", "PEDG",  "Urban"),
-  #     SE.PRM.PEDG.3   = indicator_means(instruction_prof, "school", "PEDG",  "All"),
-  #     #SE.PRM.PEDG.3.F = 100*indicator_means(instruction>=3, "school", "PEDG",  "Female"),
-  #     #SE.PRM.PEDG.3.M = 100*indicator_means(instruction>=3, "school", "PEDG",  "Male"),
-  #     SE.PRM.PEDG.3.R = indicator_means(instruction_prof, "school", "PEDG",  "Rural"),
-  #     SE.PRM.PEDG.3.U = indicator_means(instruction_prof, "school", "PEDG",  "Urban"),
-  #     SE.PRM.PEDG.4   = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "All"),
-  #     #SE.PRM.PEDG.4.F = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Female"),
-  #     #SE.PRM.PEDG.4.M = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Male"),
-  #     SE.PRM.PEDG.4.R = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Rural"),
-  #     SE.PRM.PEDG.4.U = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Urban")
-  #   )
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.PEDG     = indicator_means(teach_prof, "school", "PEDG",  "All"),
+      SE.PRM.PEDG.1   = indicator_means(teach_prof, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.1.F = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.1.M = 100*indicator_means(teach_score>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.1.R = indicator_means(teach_prof, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.1.U = indicator_means(teach_prof, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.2   = indicator_means(classroom_culture_prof, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.2.F = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.2.M = 100*indicator_means(classroom_culture>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.2.R = indicator_means(classroom_culture_prof, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.2.U = indicator_means(classroom_culture_prof, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.3   = indicator_means(instruction_prof, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.3.F = 100*indicator_means(instruction>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.3.M = 100*indicator_means(instruction>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.3.R = indicator_means(instruction_prof, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.3.U = indicator_means(instruction_prof, "school", "PEDG",  "Urban"),
+      SE.PRM.PEDG.4   = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "All"),
+      #SE.PRM.PEDG.4.F = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Female"),
+      #SE.PRM.PEDG.4.M = 100*indicator_means(socio_emotional_skills>=3, "school", "PEDG",  "Male"),
+      SE.PRM.PEDG.4.R = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Rural"),
+      SE.PRM.PEDG.4.U = indicator_means(socio_emotional_skills_prof, "school", "PEDG",  "Urban")
+    )
 
   #######################################
   # 	Basic Inputs	(INPT)

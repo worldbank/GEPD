@@ -2275,12 +2275,12 @@ final_school_data <- final_school_data %>%
 
 
 write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
-write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+#write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
 write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
-write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+#write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
 if (backup_onedrive=="yes") {
   write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
-  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+  #write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
 
@@ -2300,11 +2300,11 @@ school_dta_short <- final_school_data %>%
   select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
 
 write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
-write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
+#write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
   write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
-  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+  #write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
 

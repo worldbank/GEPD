@@ -217,14 +217,15 @@ po_district_df <- main_po_data %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
   summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean)) %>%
   as_tibble() %>%
-  select(-geometry)
+  select(-geometry) %>%
+  filter(!is.na(ADM2_NAME))
 
 
 
 linked_school_data <- main_school_data %>%
   left_join(school_coord_df) %>%
-  left_join(po_district_df) %>%
-  filter(!is.na(quality_bureaucracy))
+  left_join(po_district_df) 
+  #filter(!is.na(quality_bureaucracy))
 
 #write to csv
 linked_school_data_csv <- linked_school_data %>%
@@ -232,21 +233,9 @@ linked_school_data_csv <- linked_school_data %>%
   ungroup() %>%
   select(-geometry) %>%
   left_join(keyfile) %>%
-  select(-c("school_code", "school_name_preload",
-            "school_address_preload",
-            "school_province_preload",
-            "school_district_preload",
-            "school_code_preload",
-            "school_emis_preload",
-            "school_info_correct",
-            "m1s0q2_name",
-            "m1s0q2_code",
-            "m1s0q2_emis",
-            "survey_time",
-            
-            )) 
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
 
-write_excel_csv(linked_school_data_csv, file.path(confidential_folder, "/School/linked_po_school_data_ETH.csv"))
+write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 
 ```
 

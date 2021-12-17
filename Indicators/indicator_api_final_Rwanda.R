@@ -57,8 +57,6 @@ indicators <- indicators %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 
-indicators <- indicators %>%
-  select(-c('X1', 'X8'))
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
@@ -75,7 +73,19 @@ indicator_choices <- indicator_choices %>%
 
 
 indicator_choices <- indicator_choices %>%
-  select(-c('X1', 'X6')) %>%
+  select(-c('...1', '...6')) %>%
+  rename("Source Note"="How is the indicator scored?" ) 
+
+#get metadata on indicators
+#Read in list of indicators
+indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
+indicator_choices <- indicator_choices %>%
+  filter(Series!="---") %>%
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+
+
+indicator_choices <- indicator_choices %>%
+  select(-c('...1', '...6')) %>%
   rename("Source Note"="How is the indicator scored?" ) 
 
 
@@ -98,7 +108,7 @@ df<-indicators %>%
 
 df_overall <- df %>%
   select(Series, Indicator.Name, indicator_tag ) 
-  
+
 
 df_defacto_dejure <- df %>%
   filter(grepl("Policy Lever", Indicator.Name )) %>%
@@ -111,7 +121,7 @@ df_defacto_dejure <- df %>%
   mutate(Series=paste(Series, type_val, sep="."),
          Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
   select(Series, Indicator.Name)
-  
+
 # Prepare a data frame, on which we can add values
 
 ##########################
@@ -226,7 +236,7 @@ expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', se
 
 #score expert data (this requires a lot of hard coding and transcribing)
 #read in data
-defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal') %>%
+defacto_dta_learners <- read_csv(file=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.csv', sep="/")) %>%
   filter(!is.na(indicator))
 defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
 colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
