@@ -598,7 +598,9 @@ school_office_dist_df <- combined_school_office_df %>%
   mutate(bi_on_target=if_else(bureau_index>=4, "Yes", "No")) %>%
   group_by(ADM0_NAME) %>% #demean outcomes by country
   mutate(student_knowledge_dm=student_knowledge-mean(student_knowledge, na.rm=T),
-         dist_log_dm=dist_log-mean(dist_log, na.rm=T))
+         dist_log_dm=dist_log-mean(dist_log, na.rm=T),
+         inputs_dm=inputs-mean(inputs, na.rm=T),
+         infrastructure_dm=infrastructure-mean(infrastructure, na.rm=T))
 
 
 lab <- eq_plot_txt('student_knowledge', 'dist_log', school_office_dist_df)
@@ -698,7 +700,7 @@ p1 + p3 +
 In the second plot, the relationship between the distance to the office and school input availability is shown.  This indicator measures the availability of basic inputs in the average school. These inputs, based on the literature and general expectations, are (i) functioning blackboard and chalk, (ii) pens, pencils, and exercise books in 4th-grade classrooms, (iii) textbooks, (iv) basic classroom furniture, and (v) access to ICT.
 
 
-```{r}
+```{r inputscat}
 lab <- eq_plot_txt('inputs', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs)) +
@@ -706,11 +708,11 @@ p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs)) +
   geom_smooth(method='lm') +
   theme_bw() +
   scale_x_log10(labels=scales::comma) +
-  expand_limits(y=c(0,100)) +
+  expand_limits(y=c(0,5)) +
   xlab('Log Distance between School and District Office (km)') +
   ylab('School Input Availability at School') +
   geom_richtext(
-    aes(x = 20, y = 5,label = lab, hjust=0.2)
+    aes(x = 10, y = 1,label = lab, hjust=0.2)
   ) +
   ggtitle(str_wrap('Unadjusted ', 100))
 
@@ -755,12 +757,12 @@ p3 <- ggplot(data=school_office_dist_df, aes(x=dist_log_dm, y=inputs_dm)) +
   geom_point() + 
   geom_smooth(method='lm') +
   theme_bw() +
-  expand_limits(y=c(0,100)) +
+  expand_limits(y=c(5)) +
   xlab('Log Distance between School and District Office (km)') +
   ylab('School Input Availability at School') +
 
   geom_richtext(
-   aes(x = 0.1, y = 5,label = lab2, hjust=0.2)
+   aes(x = -0.1, y = 1,label = lab2, hjust=0.2)
   ) +
   # geom_richtext(
   #  aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
@@ -779,8 +781,91 @@ p1 + p3 +
 ```
 
 
+In the third plot, the relationship between the distance to the office and school infrastructure availability is shown.  This indicator measures the availability of basic inputs in the average school. The infrastructure aspects included, based on the literature and general expectations, are availability of (i) drinking water, (ii) functioning toilets, (iii) electricity, (iv) internet connectivity, and (v) accessibility for people with disabilities.
 
-Next the relationships between an overall index of the functioning of the bureaucracy in the school district and school level outcomes are shown.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
+
+```{r infrascat}
+lab <- eq_plot_txt('infrastructure', 'dist_log', school_office_dist_df)
+
+p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=infrastructure)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  theme_bw() +
+  scale_x_log10(labels=scales::comma) +
+  expand_limits(y=c(0,5)) +
+  xlab('Log Distance between School and District Office (km)') +
+  ylab('School Infrastructure Availability at School') +
+  geom_richtext(
+    aes(x = 10, y = 1,label = lab, hjust=0.2)
+  ) +
+  ggtitle(str_wrap('Unadjusted ', 100))
+
+
+
+
+
+
+  
+  
+# p2 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs, color=bi_on_target)) +
+#   geom_point() +
+#   geom_smooth(method='lm') +
+#   theme_bw() +
+#   scale_x_log10(labels=scales::comma) +
+#   expand_limits(y=c(0,100)) +
+#   xlab('Log Distance between School and District Office (km)') +
+#   ylab('Average 4th Grade Student Knowledge Scores at School') +
+#   scale_color_manual(
+#     name="Quality of Bureaucracy Score",
+#     labels=c("No"="Caution/Needs Improvement","Yes"="On Target"),
+#     values=col_pal,
+#     na.translate = F
+#   ) +
+#   geom_richtext(
+#    aes(x = 0.1, y = 5,label = lab2, hjust=0.2), color='#e63946'
+#   ) +
+#   geom_richtext(
+#    aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
+#   ) +
+#   theme(
+#     legend.position = 'bottom'
+#   )
+# 
+# 
+# 
+# p2
+
+lab2 <- eq_plot_txt('infrastructure_dm', 'dist_log_dm', school_office_dist_df)
+
+p3 <- ggplot(data=school_office_dist_df, aes(x=dist_log_dm, y=infrastructure_dm)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  theme_bw() +
+  expand_limits(y=c(5)) +
+  xlab('Log Distance between School and District Office (km)') +
+  ylab('School Infrastructure Availability at School') +
+
+  geom_richtext(
+   aes(x = -0.1, y = 1,label = lab2, hjust=0.2)
+  ) +
+  # geom_richtext(
+  #  aes(x = 10, y = 5,label = lab1, hjust=0.2), color='#457b9d'
+  # ) +
+  theme(
+    legend.position = 'bottom'
+  ) +
+  ggtitle(str_wrap(' Demeaned by Country ', 100))
+
+
+p1 + p3 +
+  plot_annotation(title='Scatterplot of Availability of School Infrastructure Against Distance of School to District Office',
+                  caption='Distance is the geodesic distance between the school and office.')
+
+
+```
+
+
+Next the relationships between an overall index of the functioning of the bureaucracy in the school district and school level outcomes are shown.  The index is formed by taking the unweighted average of the quality of bureaucracy score, the mandates and accountability score, the national learning goals score, and the impartial decision making score.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
 Data downloaded from:
 https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
 https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
@@ -828,6 +913,7 @@ modelsummary(models,
 
 ```
 
+The next table breakds out the effects into the underlying components of the bureaucracy index.
 
 ```{r breg2, echo=FALSE}
 
