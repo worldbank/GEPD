@@ -145,7 +145,20 @@ Start with non-teacher files, including the school file.
 ## 2. Calling in datasets ----  
 # load sampling frame
 
-sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'))
+sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx')) %>%
+  mutate(m1saq7=`Éleves Total`) %>%
+  mutate(students_enrolled=case_when(
+        m1saq7<25 ~ 1,
+        m1saq7>=25 &  m1saq7<50 ~ 2,
+        m1saq7>=50 &  m1saq7<75 ~ 3,
+        m1saq7>=75 &  m1saq7<100 ~ 4,
+        m1saq7>=100 &  m1saq7<150 ~ 5,
+        m1saq7>=150 &  m1saq7<300 ~ 6,
+        m1saq7>=300 &  m1saq7<500 ~ 7,
+        m1saq7>=500  ~ 8
+      )) %>%
+      mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))
+
 sampling_strata_info <- read_csv(paste0(sampling_folder,'/school_strata_sampling.csv'))
 
 ## 1st grade assessment ----
@@ -2896,6 +2909,7 @@ df_weights_function <- function(dataset) {
     left_join(data_set_updated) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "province" | names(data_set_updated) == "district" |
                                                       names(data_set_updated) == "rural" | names(data_set_updated) == "public"
+                                                      | names(data_set_updated) == "students_enrolled"
                                                       | names(data_set_updated) == "ipw" | names(data_set_updated) == "ipw_school")])))
 }
 

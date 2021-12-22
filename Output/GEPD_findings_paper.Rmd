@@ -275,6 +275,7 @@ Table 1: GEPD Data Collection Overview
 
 ## Overview of Indicators
 
+
 Show low levels of learning across countries.  E.g. how manys students in 4th grade can identify basic words, 8+6, etc.  Low levels of teacher pedagogy.  Highlight some interesting Bureaucracy findings
 
 ```{r countrytabfn}
@@ -331,6 +332,7 @@ FitFlextableToPage(ovr_table) %>%
 }
 ```
 
+### Practice Indicators
 
 Below is a table showing the means by country on the GEPD Practice Indicators.
 
@@ -354,6 +356,122 @@ practice_indicators <- c(
 country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
 
 ```
+
+The table above highlights the low levels of learning seen in children in 4th grade in even middle income countries such as Peru and Jordan.  The Low income countries (Rwanda, Ethiopia, and Madagascar) fare even worse.
+
+The figure breaks down the 4th Grade Learning Assessment scores, highlighting specific items.
+
+```{r g4dat}
+
+########
+# Peru
+#######
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+
+PER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country)
+
+########
+# Jordan
+#######
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+
+JOR_g4_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.dta", sep="/")) %>%
+  mutate(iso3c=country)
+
+########
+# Rwanda
+#######
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+
+RWA_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country)
+
+########
+# Ethiopia
+#######
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+
+ETH_g4_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2020.csv", sep="/")) %>%
+  mutate(iso3c=country)
+
+ETH_g4_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2021.csv", sep="/")) %>%
+  mutate(iso3c=country)
+
+########
+# Madagascar
+#######
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+
+MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(-district)
+
+########
+#combined
+########
+
+combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df)
+
+
+```
+
+
+```{r}
+
+indicators <- c("m8saq2_id", "m8saq5_story", "m8sbq3a_arithmetic", "m8sbq3f_arithmetic")
+indicator_desc <- c("Identify Three Letters", "Answer Story Question", "8+7", "7x8")
+
+
+combined_g4_mn <- combined_g4_df %>% 
+  mutate(m8saq2_id=if_else(m8saq2_id==1,1,0)) %>%
+  group_by(iso3c) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+
+colnames(combined_g4_mn) <- c('country', indicator_desc)
+
+combined_g4_mn <- combined_g4_mn %>%
+  pivot_longer(
+    cols = c(2:5),
+    names_to='Item',
+    values_to="Mean"
+  )
+
+ggplot(combined_g4_mn, aes(x=Item, y=Mean, color=country, shape=country)) +
+  geom_point(size=3) +
+  geom_text_repel(aes(label=paste0(country,": ",round(100*Mean, 1), "%")), size=5) +
+  expand_limits(y=c(0,1)) +
+  scale_y_continuous(
+    labels=scales::percent
+  ) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    title="Country Performance on Select 4th Grade Items",
+    caption="Summary Statistics Weighted using Inverse Propensity Weights."
+  ) +
+  theme(
+    axis.text = element_text(size=12),
+    title=element_text(size=14)
+  )
+  
+
+```
+
+
+### Policy Indicators
 
 Below is a table showing the means by country on the GEPD Policy Indicators.
 
@@ -384,6 +502,8 @@ policy_indicators <- c(
 country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
 
 ```
+
+### Politics Indicators
 
 Below is a table showing the means by country on the GEPD Bureaucracy or Politics Indicators.
 
@@ -424,9 +544,15 @@ PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School
 #load gdp info
 PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
 
+PER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+
+
 PER_school_office_link_df <- PER_school_anon_df %>%
   left_join(PER_school_gdp) %>%
-  left_join(PER_school_office_linkages)
+  left_join(PER_school_office_linkages) %>%
+  left_join(PER_school_size)
 
 ########
 ## Jordan
@@ -446,10 +572,18 @@ JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School
 JOR_school_gdp <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.dta", sep="/")) %>%
   select(hashed_school_code, GDP)
 
+#load school size info
+JOR_school_size <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")),
+         students_enrolled=as.character(students_enrolled)) %>%
+  filter(!is.na(students_enrolled))
+
 
 JOR_school_office_link_df <- JOR_school_anon_df %>%
   left_join(JOR_school_gdp) %>%
-  left_join(JOR_school_office_linkages)
+  left_join(JOR_school_office_linkages) %>%
+  left_join(JOR_school_size)
 
 ########
 ## Rwanda
@@ -468,11 +602,16 @@ RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School
 #load gdp info
 RWA_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
 
+#load school size info
+RWA_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
 
 
 RWA_school_office_link_df <- RWA_school_anon_df %>%
   left_join(RWA_school_gdp) %>%
-  left_join(RWA_school_office_linkages)
+  left_join(RWA_school_office_linkages) %>%
+  left_join(RWA_school_size)
 ########
 
 ########
@@ -492,11 +631,16 @@ ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School
 #load gdp info
 ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
 
+#load school size info
+ETH_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
 
 
 ETH_school_office_link_df <- ETH_school_anon_df %>%
   left_join(ETH_school_gdp) %>%
-  left_join(ETH_school_office_linkages)
+  left_join(ETH_school_office_linkages) %>%
+  left_join(ETH_school_size)
 ########
 
 ########
@@ -535,7 +679,22 @@ combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_off
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
          rural2=if_else(urban_rural=="Rural",1,0),
-         rural=if_else(is.na(rural),rural2,rural )) 
+         rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+
+
+
 ```
 
 
@@ -564,11 +723,11 @@ https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=en
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
 )
 
 
@@ -894,19 +1053,19 @@ https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=en
 
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~ 0 +  bureau_index  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~   bureau_index  + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~   bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'School Inputs' =  feols(inputs ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~   bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~   bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Operations Management' =  feols(operational_management ~ 0 +  bureau_index  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~   bureau_index  + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~ 0 +  bureau_index  + log(GDP) + rural  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~   bureau_index  + log(GDP) + rural + dist_log + students_enrolled  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
 
 )
 
@@ -919,25 +1078,25 @@ modelsummary(models,
 
 ```
 
-The next table breakds out the effects into the underlying components of the bureaucracy index.
+The next table breaks out the effects into the underlying components of the bureaucracy index.
 
 ```{r breg2, echo=FALSE}
 
 models <- list(
   
-'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
 
 )
 
