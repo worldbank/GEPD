@@ -59,7 +59,13 @@ out_dir <- paste(dir, 'Output', sep="/")
     confidential_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
     anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
 
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+    #directories
+    confidential_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+
   }
+
 
 
 #list countries
