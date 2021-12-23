@@ -44,6 +44,7 @@ library(gtsummary)
 library(geosphere)
 library(fixest)
 library(modelsummary)
+library(factoextra)
 options(modelsummary_factory_word = 'flextable')
 
 
@@ -1026,7 +1027,9 @@ PER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(countr
 PER_school_office_link_df <- PER_school_anon_df %>%
   left_join(PER_school_gdp) %>%
   left_join(PER_school_office_linkages) %>%
-  left_join(PER_school_size)
+  left_join(PER_school_size) %>%
+  mutate(country="Peru")
+########
 
 ########
 ## Jordan
@@ -1057,7 +1060,9 @@ JOR_school_size <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',past
 JOR_school_office_link_df <- JOR_school_anon_df %>%
   left_join(JOR_school_gdp) %>%
   left_join(JOR_school_office_linkages) %>%
-  left_join(JOR_school_size)
+  left_join(JOR_school_size) %>%
+  mutate(country="Jordan")
+########
 
 ########
 ## Rwanda
@@ -1085,7 +1090,9 @@ RWA_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(countr
 RWA_school_office_link_df <- RWA_school_anon_df %>%
   left_join(RWA_school_gdp) %>%
   left_join(RWA_school_office_linkages) %>%
-  left_join(RWA_school_size)
+  left_join(RWA_school_size) %>%
+  mutate(country="Rwanda")
+########
 ########
 
 ########
@@ -1114,7 +1121,8 @@ ETH_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(countr
 ETH_school_office_link_df <- ETH_school_anon_df %>%
   left_join(ETH_school_gdp) %>%
   left_join(ETH_school_office_linkages) %>%
-  left_join(ETH_school_size)
+  left_join(ETH_school_size) %>%
+  mutate(country="Ethiopia")
 ########
 
 ########
@@ -1138,7 +1146,8 @@ MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country
 
 MDG_school_office_link_df <- MDG_school_anon_df %>%
   left_join(MDG_school_gdp) %>%
-  select(-district)
+  select(-district) %>%
+  mutate(country="Madagascar")
 # %>%
 #   left_join(MDG_school_office_linkages)
 
@@ -1171,12 +1180,73 @@ combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_off
 
 ```
 
+## Factor Analysis
 
-## Share of learning variation explained by the Dashboard’s Practice indicators
+In the next section provides an examination of how correlated the practice indicators are with one another.  For instance, do schools that perform well along one of the GEPD indicators (for example, school management) tend to perform well along the other indicators?  To examine this, the correlation between the GEPD practice indicators is examined.  Also, factor analysis is used to calculate the share of variation between the indicators that can be explained by a single factor, which can provide a sense of how well aligned the various GEPD practice indicators are with each other.
 
-## Relationship between School Practices and 4th Grade Learning Outcomes
 
-Next the relationships between 4th grade learning outcomes and practices in the school are shown. The practices considered are teacher presence, teacher content knowledge, teacher pedagogical skills, availability of basic inputs, basic infrastructure, student readiness (1st grade assessment scores), operational management scores, instructional leadership, principal school knowledge, and principal management skills.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
+To begin the a correlation plot is produced for each of the GEPD practice indicators.  The correlations are based on school data pooled from Peru, Jordan, Rwanda, Ethiopia, and Madagascar.  
+
+
+
+
+```{r corelations}
+
+pract_ind <- c("student_knowledge"="4th Grade Student Knowledge",
+               "presence_rate"  = "Teacher Presence",
+               "content_knowledge" = "Teacher Content Knowledge",
+               "teach_score" = "Teacher Pedagogy",
+               "inputs" = "Basic Inputs",
+               "infrastructure" = "Basic Infrastructure",
+               "ecd_student_knowledge" = "1st Grade Student Knowledge",
+               "operational_management" = "Operational Management",
+               "instructional_leadership" = "Instructional Leadership",
+               "principal_knowledge_score" = "Principal Knowledge",
+               "principal_management" = "Principal Management"
+               )
+
+
+cor_df <- combined_school_office_df %>%
+  select(country, rural, names(pract_ind)) %>%
+  group_by(country,rural) %>%
+  mutate(across(names(pract_ind),~if_else(is.na(.),mean(.,na.rm=T),.))) %>%#impute with mean by country and urban/rural
+  ungroup() %>%
+  select(names(pract_ind))
+
+res <- cor(cor_df, use="pairwise.complete") 
+
+res[upper.tri(res)] <- NA # erase the upper triangle
+diag(res) <- NA 
+
+res <- res %>%
+  as_tibble() %>%
+  mutate(across(everything(), round,3))
+
+colnames(res) <- pract_ind
+
+res$var <- pract_ind
+
+
+res %>% 
+  select(var, everything()) %>%
+  flextable() %>%
+  bg(j = 2:ncol(res), 
+                bg = function(x){
+                  out <- rep("transparent", length(x))
+                  out[x < 0] <- "#e76f51"
+                  out[x >= 0 & x < 0.2] <- "#f4a261"
+                  out[x >= 0.2 & x < 0.4] <- "#e9c46a"
+                  out[x >= 0.4 & x < 0.6] <- "#2a9d8f"
+                  out[x >= 0.6 ] <- "#264653"
+                  out
+                })
+
+
+```
+
+The strongest correlation is between the availability of basic school inputs and the operational management.  Operational management is measured in the school management module of the School Survey, which is directed to the principal, head teacher, or most senior teacher includes 2 vignettes describing hypothetical scenarios related to (i) infrastructure repair/maintenance, and (ii) school material availability. Other core functions – like teacher hiring, supervision, and training – are being captured through other indicators. Each vignette has 4-6 questions asking how the function would be handle or if handled at all. These school management qualities correlate strongly with the availability of school inputs.  
+
+This correlation holds up after accounting for country fixed effects, the urban/rural status of the school, school size, and the GDP within 1 square kilometer of the school using OLS regression.^[
 Data downloaded from:
 https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
 https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
@@ -1192,7 +1262,100 @@ https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=en
  is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
  suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
  Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
- extrapolation UNEP/GRID-Geneva.].  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
+ extrapolation UNEP/GRID-Geneva.].  The regression estimates suggest that a 1 point increase in a schools operational management score (scale 1-5) is associated with a 0.2 point increase on the availability of basic inputs score (scale 0-5).  This relationship appears strongest for the availability of textbooks with a 1 point increase in the operational management score associated with a 12 percentage point increase in the availability of textbooks.  There is a statistically significant relationship with the availability of internet connected technology (ICT) as well.
+ 
+ 
+
+```{r}
+models <- list(
+  
+'Availability of Basic Inputs' = feols(inputs ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Functional Blackboard' = feols(blackboard_functional ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Writing Utencils' = feols(pens_etc ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Textbooks' = feols(textbooks ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Desks' = feols(share_desk ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of ICT' = feols(access_ict ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("presence_rate"  = "Teacher Presence",
+                             "content_knowledge" = "Teacher Content Knowledge",
+                             "teach_score" = "Teacher Pedagogy",
+                             "inputs" = "Basic Inputs",
+                             "infrastructure" = "Basic Infrastructure",
+                             "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "operational_management" = "Operational Management",
+                             "instructional_leadership" = "Instructional Leadership",
+                             "principal_knowledge_score" = "Principal Knowledge",
+                             "principal_management" = "Principal Management")
+             )
+```
+
+Their is also a statistically significant relationship between operational management and the availability of infrastructure.  A 1 point increase in the school's operational management score is associated with a 0.33 point increase in the availability of infrastructure.  This relationship is statistically significant for the availability of drinking water, functional toilets, electricity in the classroom and the availability of internet connectivity at the school as well. 
+```{r}
+models <- list(
+  
+'Availability of Basic Infrastructure' = feols(infrastructure ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Drinking Water' = feols(drinking_water ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Functional Toilet' = feols(functioning_toilet ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of internet' = feols(internet ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Availability of Electricity' = feols(class_electricity ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+
+'Access for the Disabled' = feols(disability_accessibility ~   operational_management   + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("presence_rate"  = "Teacher Presence",
+                             "content_knowledge" = "Teacher Content Knowledge",
+                             "teach_score" = "Teacher Pedagogy",
+                             "inputs" = "Basic Inputs",
+                             "infrastructure" = "Basic Infrastructure",
+                             "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "operational_management" = "Operational Management",
+                             "instructional_leadership" = "Instructional Leadership",
+                             "principal_knowledge_score" = "Principal Knowledge",
+                             "principal_management" = "Principal Management")
+             )
+```
+
+
+Next, principal components analysis is used to examine how much a single factor can explain variation between the indicators.  This can tell us the extent that schools that perform well in one dimension tend to perform well in all dimensions.  In the case that the first principal component explains a very large share of the variation between indicators, this will be true.  If the variation explained by the first principal component is low, then schools that tend to do well in one indicator may not be tending to do well in all areas.
+
+The scree plot below suggests that the 1st principal component explains a little over 25% of the variation between practice indicators.  This suggests that the large majority of variation in the practice indicators cannot be explained by a single factor and that there are many cases where schools performing well in one dimension may perform less well in others.
+
+```{r}
+pca_df <- na.omit(cor_df)
+
+res.pca <- prcomp(pca_df, scale = TRUE, center=TRUE)
+
+fviz_eig(res.pca) +
+  expand_limits(y=c(0,100))
+
+```
+
+
+## Share of learning variation explained by the Dashboard’s Practice indicators
+
+## Relationship between School Practices and 4th Grade Learning Outcomes
+
+Next the relationships between 4th grade learning outcomes and practices in the school are shown. The practices considered are teacher presence, teacher content knowledge, teacher pedagogical skills, availability of basic inputs, basic infrastructure, student readiness (1st grade assessment scores), operational management scores, instructional leadership, principal school knowledge, and principal management skills.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
 
 ```{r}
 models <- list(
@@ -1213,13 +1376,14 @@ modelsummary(models,
                              "teach_score" = "Teacher Pedagogy",
                              "inputs" = "Basic Inputs",
                              "infrastructure" = "Basic Infrastructure",
-                             "ecd_student_knowledge" = "1st Grade Student Knoweldge",
+                             "ecd_student_knowledge" = "1st Grade Student Knowledge",
                              "operational_management" = "Operational Management",
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
                              "principal_management" = "Principal Management")
              )
 ```
+
 
 
 ## Relationship between School Practice Outcomes and Bureaucracy Indicators
