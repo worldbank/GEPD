@@ -437,6 +437,10 @@ combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH
          `Student Proficient Literacy`=if_else(literacy_student_proficient==100,"Yes", "No"))
 
 
+weights_df <- combined_g4_df %>%
+  group_by(iso3c, hashed_school_code) %>%
+  summarise(ipw=mean(ipw, na.rm=T))
+
 ```
 
 In figure XX, the distribution of raw scores are shown for each country.  The raw scores are scaled to be between 0 and 100, where a student receiving 0 points got none of the questions correct, and a student scoring 100 got all of the questions correct. Overall scores combine literacy and math are shown.  Each point on the plot represents one student's set of responses.  Within each country there is a large dispersion of scores with at least some students scoring nearly 0 points out of 100 and at least some students scoring proficient.
@@ -537,6 +541,7 @@ Figure XX below breaks down the 4th Grade Learning Assessment scores further hig
 
 
 
+
 ```{r}
 
 indicators <- c("m8saq3_id", "m8saq5_story", "m8sbq3a_arithmetic", "m8sbq3f_arithmetic")
@@ -574,10 +579,164 @@ ggplot(combined_g4_mn, aes(x=Item, y=Mean, color=country, shape=country)) +
   ) +
   theme(
     axis.text = element_text(size=12),
-    title=element_text(size=14)
+    title=element_text(size=14),
+    legend.position = 'none'
   )
   
 
+```
+
+Student Readiness, as measured by the GEPD 1st grade assessment, is another area where countries could improve. 
+
+The first grade assessment tool was derived mostly from the MELQO assessment and covers the domains of numeracy, literacy, socio-emotional skills and executive functioning.
+
+The sub-domains for the literacy section are:
+
+*	Expressive Vocabulary
+* Letter Identification
+*	Word Recognition
+*	Sentence Reading
+*	Listening Comprehension Story 
+*	Name Writing
+*	Print Awareness
+
+
+The sub-domains for the math section are:
+
+*	Verbal Counting
+*	Producing a Set
+*	Number Identification
+*	Number Comparison
+*	Simple Addition
+
+
+The sub-domains for the socio-emotional section are:
+
+*	Perspective Taking/Empathy
+*	Conflict Resolution
+
+The sub-domains for the executive functioning section are:
+
+*	Working Memory/Backward Digit Spans
+*	Follow Instructions/Head, Toes, Knees, Shoulders Task
+
+The threshold for proficiency on our 1st grade assessment is to score at least 80% of the items correctly. This approach was validated by calculating the percent correct in the top 25% highest scoring schools in Peru on our 4th grade dashboard assessment and found that students in these schools answered around this percentage of items correct.
+
+In Peru, only a little over 60% of students met this proficiency level, and in Madagascar, the number was only around 5%.  
+
+
+```{r g1dat}
+
+########
+# Peru
+#######
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+
+PER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) 
+
+########
+# Jordan
+#######
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+
+JOR_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
+  mutate(iso3c=country)
+
+########
+# Rwanda
+#######
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+
+RWA_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  filter(!is.na(ecd_student_knowledge))
+
+########
+# Ethiopia
+#######
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+
+ETH_g1_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2020.csv", sep="/")) %>%
+  mutate(iso3c=country)
+
+ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2021.csv", sep="/")) %>%
+  mutate(iso3c=country)
+
+########
+# Madagascar
+#######
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+
+MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(-district)
+########
+#combined
+########
+
+combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
+  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER"))) %>%
+  left_join(weights_df)
+
+
+```
+
+
+```{r}
+
+indicators <- c("ecd_student_knowledge", "ecd_literacy_student_knowledge", "ecd_math_student_knowledge", "ecd_exec_student_knowledge", "ecd_soc_student_knowledge")
+
+indicator_desc <- c("Overall Score", "Literacy", "Numeracy", "Executive Functioning", "Socio-Emotional")
+
+
+combined_g1_mn <- combined_g1_df %>% 
+  group_by(iso3c) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+
+colnames(combined_g1_mn) <- c('country', indicator_desc)
+
+combined_g1_mn <- combined_g1_mn %>%
+  pivot_longer(
+    cols = c(2:6),
+    names_to='Domain',
+    values_to="Mean"
+  ) %>%
+  mutate(Mean=Mean/100) %>%
+  mutate(Domain=factor(Domain, labels=indicator_desc))
+
+ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
+  geom_point(size=3) +
+  geom_text_repel(aes(label=paste0(country,": ",round(100*Mean, 1), "%")), size=5) +
+  geom_hline(aes(yintercept=.80), alpha=0.7) +
+  expand_limits(y=c(0,1)) +
+  scale_x_discrete(limits=rev) +
+  scale_y_continuous(
+    labels=scales::percent
+  ) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    title="Country Performance on 1st Grade Assessment",
+    caption="Summary Statistics Weighted using Inverse Propensity Weights."
+  ) +
+  theme(
+    axis.text = element_text(size=12),
+    title=element_text(size=14),
+    legend.position = 'none'
+  )
 ```
 
 
@@ -865,7 +1024,7 @@ The plots below show that the (geodesic) distance between a school and the distr
 In the first plot, the relationship between distance of the office and average 4th grade student knowledge, according to the 4th grade GEPD assessment, are shown.
 
 
-```{r distscat, echo=FALSE}
+```{r distscat, echo=FALSE, cache=TRUE}
 
 #scatterplot of distance between school and office
 school_office_dist_df <- combined_school_office_df %>%
@@ -975,7 +1134,7 @@ p1 + p3 +
 In the second plot, the relationship between the distance to the office and school input availability is shown.  This indicator measures the availability of basic inputs in the average school. These inputs, based on the literature and general expectations, are (i) functioning blackboard and chalk, (ii) pens, pencils, and exercise books in 4th-grade classrooms, (iii) textbooks, (iv) basic classroom furniture, and (v) access to ICT.
 
 
-```{r inputscat}
+```{r inputscat, cache=TRUE}
 lab <- eq_plot_txt('inputs', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs)) +
@@ -1059,7 +1218,7 @@ p1 + p3 +
 In the third plot, the relationship between the distance to the office and school infrastructure availability is shown.  This indicator measures the availability of basic inputs in the average school. The infrastructure aspects included, based on the literature and general expectations, are availability of (i) drinking water, (ii) functioning toilets, (iii) electricity, (iv) internet connectivity, and (v) accessibility for people with disabilities.
 
 
-```{r infrascat}
+```{r infrascat, cache=TRUE}
 lab <- eq_plot_txt('infrastructure', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=infrastructure)) +

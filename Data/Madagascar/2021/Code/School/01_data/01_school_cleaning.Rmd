@@ -529,32 +529,32 @@ first_grade<- first_grade %>%
            ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
     ) 
   #save ecd data at student level anonymized
-  first_grade_anon <- first_grade %>%
+  ecd_dta <- first_grade %>%
     select(s_ecole_code, s_date_heure_fin, ecd_student_age, ecd_student_male, 
            ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
            ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
            math_items, lit_items, soc_items, exec_items)
   
   
-  save(first_grade_anon, 
+  save(ecd_dta, 
        file = file.path(confidential_folder, "dashboard_ecd_data.RData"))
   
   #calculate % correct for literacy, math, and total
-  final_indicator_data_LCAP <- first_grade_anon %>%
+  final_indicator_data_LCAP <- ecd_dta %>%
     #left_join(school_dta[,c('s_ecole_code',  's_enqueteur_code', 's_date_heure_fin')]) %>%
     group_by(s_ecole_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
   #Breakdowns of Male/Female
-  final_indicator_data_LCAP_M <- first_grade_anon %>%
+  final_indicator_data_LCAP_M <- ecd_dta %>%
     #left_join(school_dta[,c('s_ecole_code', 's_enqueteur_code', 's_date_heure_fin')]) %>%
     filter(ecd_student_male==1) %>%
     group_by(s_ecole_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
-  final_indicator_data_LCAP_F <- first_grade_anon %>%
+  final_indicator_data_LCAP_F <- ecd_dta %>%
     #left_join(school_dta[,c('s_ecole_code', 's_enqueteur_code', 's_date_heure_fin')]) %>%
     filter(ecd_student_male==0) %>%
     group_by(s_ecole_code) %>%
@@ -562,7 +562,7 @@ first_grade<- first_grade %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
   
-skim(first_grade_anon, where(is.numeric))
+skim(ecd_dta, where(is.numeric))
 
 ```
 
@@ -2843,7 +2843,7 @@ school_dta_short_imp <- school_dta_short
 
 #saves the following in R and stata format
 
-data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_dta_preamble', 'final_school_data', 'teacher_questionnaire_dta','teacher_absence_final', 'first_grade', 'teacher_assessment_dta', 'teacher_roster_dta', 
+data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_dta_preamble', 'final_school_data', 'teacher_questionnaire_dta','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster_dta', 
                "indicators", 'school_gdp', 'assess_4th_grade_anon')
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 
