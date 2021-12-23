@@ -267,9 +267,7 @@ Table 1: GEPD Data Collection Overview
 | Madagascar | June 2021 | 200 | In Madagascar, the sample for the GEPD school survey was drawn to be representative of primary schools at the national and regional levels, using EMIS data of 2019. The sampling frame consisted of 33,120 public and private primary schools – 25,869 public and 7,251 private schools - across the 1,567 communes covered by EMIS data in Madagascar’s 22 regions. 200 schools were selected for the GEPD survey, where the strata are regions and urban/rural status of schools. |
 
 
-## GDP Data
 
- GDP per square kilometer data is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.
 
 # Findings
 
@@ -622,8 +620,6 @@ The sub-domains for the executive functioning section are:
 
 The threshold for proficiency on our 1st grade assessment is to score at least 80% of the items correctly. This approach was validated by calculating the percent correct in the top 25% highest scoring schools in Peru on our 4th grade dashboard assessment and found that students in these schools answered around this percentage of items correct.
 
-In Peru, only a little over 60% of students met this proficiency level, and in Madagascar, the number was only around 5%.  
-
 
 ```{r g1dat}
 
@@ -687,10 +683,61 @@ MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,yea
 
 combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
   mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER"))) %>%
-  left_join(weights_df)
+  left_join(weights_df) %>%
+  mutate(`Student Proficient`=if_else(ecd_student_knowledge>=80,"Yes","No"),
+         Rural=case_when(
+           rural==1 ~ "Rural",
+           rural==0 ~ "Urban",
+           urban_rural=="Rural" ~ "Rural", 
+           urban_rural=="Urban" ~ "Urban",
+           TRUE ~ "Rural"))
 
 
 ```
+
+In Peru, only a little over 60% of students met this proficiency level, and in Madagascar, the number was only around 5%.  In most countries there are large differences between students in urban and rural schools (shown in Figure XX below).  For instance in Peru, the average raw score on the 1st grade assessment was around 80% for urban schools, while it was around 64% for rural schools.  In Madagascar that gap was 59% to 47%.  Only in Jordan was there little observable difference in student readiness between children in urban and rural schools.
+
+
+
+```{r}
+
+indicators <- c("ecd_student_knowledge", "ecd_math_student_knowledge", "ecd_literacy_student_knowledge")
+
+combined_g1_mn <- combined_g1_df %>% 
+  group_by(iso3c, Rural) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+
+
+
+p1 <- ggplot(combined_g1_df, aes(x=Rural, y=ecd_student_knowledge, color=`Student Proficient`)) +
+  facet_wrap(~iso3c) +
+  geom_quasirandom() +
+  geom_segment(data=combined_g1_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=combined_g1_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  geom_text(data=combined_g1_mn, aes(label=paste0(round(ecd_student_knowledge, 1), "%")), vjust=-4, color='black', size=3) +
+  coord_flip() +
+  scale_color_manual(
+    values=c("#ef476f", "#06d6a0")
+  ) +
+  theme_bw() +
+  xlab("") +
+  ylab("GEPD 1st Grade Assessment Score") +
+  labs(
+    title="Percentage of Items Correct on GEPD 1st Grade Assessment",
+    caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
+  ) +
+  theme(
+    axis.text = element_text(size=12),
+    title=element_text(size=14),
+    legend.position = 'bottom'
+  )
+
+p1
+```
+
+When looking at the scores on the underlying domains in figure XX below, children were typically scoring highest on the numeracy section.  Children in Peru, Jordan, and Ethiopia answered close to 90% of the math items correctly.  On the literacy component, the average for all countries was below the 80% threshold set for proficiency.  The averages for the executive functioning and socio-emotional components were also below the 80% threshold.
 
 
 ```{r}
@@ -715,7 +762,7 @@ combined_g1_mn <- combined_g1_mn %>%
     values_to="Mean"
   ) %>%
   mutate(Mean=Mean/100) %>%
-  mutate(Domain=factor(Domain, labels=indicator_desc))
+  mutate(Domain=factor(Domain, levels=indicator_desc))
 
 ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
   geom_point(size=3) +
@@ -737,6 +784,164 @@ ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
     title=element_text(size=14),
     legend.position = 'none'
   )
+```
+
+
+```{r pedgcont}
+
+#read in teacher pedagogy scores and link to content knowledge
+
+####### 
+# Peru
+#######
+country <- "PER"
+year <- "2019"
+
+PER_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+
+PER_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+
+PER_teachers_df <- PER_pedg_df %>%
+  left_join(PER_cont_df) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+####### 
+# Jordan
+#######
+country <- "JOR"
+year <- "2019"
+
+JOR_teach_code_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
+  filter(!is.na(m4saq1_number)) %>%
+  select(hashed_school_code, m4saq1_number, territory, governorate, ipw) 
+
+JOR_pedg_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.dta", sep="/")) %>%
+  left_join(JOR_teach_code_df) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+
+
+
+JOR_cont_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.dta", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+
+JOR_teachers_df <- JOR_pedg_df %>%
+  left_join(JOR_cont_df) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+####### 
+# Rwanda
+#######
+country <- "RWA"
+year <- "2020"
+
+RWA_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+
+RWA_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+
+RWA_teachers_df <- RWA_pedg_df %>%
+  left_join(RWA_cont_df) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+
+####### 
+# Ethiopia
+#######
+country <- "ETH"
+year <- "2020_2021"
+
+ETH_teach_code_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  filter(!is.na(m4saq1_number)) %>%
+  select(hashed_school_code, m4saq1_number, ipw) 
+
+ETH_pedg_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon_2020.csv", sep="/")) %>%
+  filter(!is.na(hashed_school_code) ) %>%
+  left_join(ETH_teach_code_df) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+
+ETH_cont_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon_2020.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+
+ETH_teachers_df_2020 <- ETH_pedg_df_2020 %>%
+  left_join(ETH_cont_df_2020) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+
+ETH_pedg_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon_2021.csv", sep="/")) %>%
+    filter(!is.na(hashed_school_code) ) %>%
+  left_join(ETH_teach_code_df) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+
+ETH_cont_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon_2021.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+
+ETH_teachers_df_2021 <- ETH_pedg_df_2021 %>%
+  left_join(ETH_cont_df_2021) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+######
+# Combined
+######
+
+combined_teachers_df <- bind_rows(PER_teachers_df, JOR_teachers_df, RWA_teachers_df, ETH_teachers_df_2020, ETH_teachers_df_2021) %>%
+  mutate(iso3c=factor(iso3c, levels=c("ETH","RWA", "JOR", "PER")))
+
+
+```
+
+
+Teacher pedagogical skill and content knowledge are two other areas where countries consistently struggle.  Teacher pedagogical skill is measured through the Teach assessment (ADD CITATION FOR TEACH Paper), and teacher content knowledge is measured through a teacher content examination, where teachers are asked to grade a hypothetical students work in language in mathematics.  
+
+To be rated as proficient on the teacher pedagogical assessment, teachers must score at least 3 out 5 possible points on the Teach scale.  Few teachers managed to meet this threshold.  No country had more than 40% of teachers score proficient on the assessment.  In Ethiopia, only 19% of teachers managed to do so.  
+
+To be rated proficient on the teacher content knowledge exam, teachers needed to get at least 80% of the items correct on the examination.  Again, relatively few teachers managed to do this.  In Peru, the highest scoring country, less than 40% of teachers managed to do so.  In Ethiopia, only 6% of teachers managed to do so.
+
+Figure XX below shows that the teachers scoring well (or poorly) on the teacher pedagogical examination are not always the same as the teachers scoring well (or poorly) on the teacher content knowledge exam.  In the figure, each point on the scatterplot represents a single teachers content knowledge and pedagogy score.  The teacher's country is color coded in the figure.  There is only a weak relationship between the two measures, with an R squrared of only 0.08, meaning that policies targeted at teachers struggling in terms of content knowledge may have to target different teachers than a policy targeting teachers struggling in pedagogy. 
+
+```{r pedgcontplt, cache=TRUE}
+
+lab1 <- eq_plot_txt('content_knowledge', 'teach_score', combined_teachers_df)
+
+  
+
+
+ggplot(combined_teachers_df, aes(x=teach_score, y=content_knowledge, color=iso3c)) +
+  geom_point() +
+  geom_smooth(method='lm', color='blue') +
+  geom_richtext(
+   aes(x = 2, y = 20,label = lab1, hjust=0.2), color='black'
+  ) +
+  theme_bw() +
+  xlab('Teacher Content Knowledge') +
+  ylab("Teacher Pedagogical Skill") +
+  expand_limits(x=c(1,5),y=c(0,100)) +
+  labs(
+    title='Scatterplot between Teacher Pedagogical Skill and Teacher Content Knowledge'
+  ) +
+  theme(
+    legend.position = 'bottom',
+    axis.text=element_text(size=12),
+    title=element_text(size=14)
+  )
+
 ```
 
 
