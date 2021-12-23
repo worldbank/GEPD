@@ -68,6 +68,14 @@ out_dir <- paste(dir, 'Output', sep="/")
 
 
 
+# change_here <- function(new_path){
+#   new_root <- here:::.root_env
+#   
+#   new_root$f <- function(...){file.path(new_path, ...)}
+#   
+#   assignInNamespace(".root_env", new_root, ns = "here")
+# }
+
 #list countries
 countries <- c("PER", "JOR", "RWA", "MDG", "ETH")
 
@@ -117,8 +125,9 @@ JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".cs
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021') %>%
-  rename(value=value_pooled)
+         date='2020-2021') 
+# %>%
+#   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
@@ -952,6 +961,221 @@ modelsummary(models,
 
 
 [Discussion of the linkages between indicators.  E.g. How the teacher pedagogy relates to student outcomes.  Interesting findings on De-Facto versus De-Jure.  Findings on implementation differences across geographies within a country.  Findings on Bureaucracy and school outcomes.  Can maybe highlight link with poor bureaucracy with poor inputs/infrastructure.]
+
+
+```{r}
+
+# policy_colours <- combined_wide_color %>% filter(str_detect(`Indicator Name`, "De Jure"))
+# 
+# policy_score <- combined_wide_df%>% filter(str_detect(`Indicator Name`, "De Jure"))
+
+# read in the microdata for Policy surveys
+
+########
+## Peru
+########
+
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+PER_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Expert_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "PER") 
+
+PER_policy_df <- PER_policy_df %>% 
+  setNames(gsub("school", "sch", names(.)))
+
+
+
+
+########
+## Jordan
+########
+
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT", paste(country, "-2019"),paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+JOR_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Expert_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "JOR") 
+
+
+
+########
+## Rwanda
+########
+
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+RWA_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Expert_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "RWA") 
+
+
+########
+
+########
+## Ethiopia
+########
+
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+ETH_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Policy_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "ETH")
+
+
+########
+
+########
+## Madagascar
+########
+
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+MDG_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Policy_Survey/expert_dta_final.dta", sep="/")) %>% mutate(country = "MDG")
+
+
+#######
+# Get the main indicators
+#######
+#get list of de facto indicators
+main_indicator_labels<-c( 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         'Teaching - Intrinsic Motivation', 
+                          'Inputs & Infrastructure - Monitoring',
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
+
+    )  
+    
+    indicators_list<-c(
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                        'intrinsic_motivation', 
+                        'sch_monitoring', 
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
+                       'principal_evaluation'
+
+    )
+
+
+  labels_df_policy<-data.frame(indicators=as.character(indicators_list),
+                          indicator_labels=as.character(main_indicator_labels)) 
+    
+
+
+###########
+# Combined
+##########
+    
+    #get de facto data
+      
+    de_facto_function <- function(df, Country_acronyme){
+      
+    ipw<-df %>% pull(ipw)
+  
+    df_defacto <- df %>%
+      select(hashed_school_code, indicators_list, ipw) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=ipw, na.rm=TRUE) %>%
+      mutate(group="De Facto",
+             country = !!Country_acronyme) %>%
+      select(group=group, everything())
+      
+      assign(paste0("data_de_facto_", quo_name(enquo(Country_acronyme))), df_defacto, envir = .GlobalEnv)
+      
+      
+    data_policy_2 <- df_defacto %>%
+      mutate_at(.vars=indicators_list, ~as.numeric(sample_n(as_tibble(c(1:5)),1)[1,1])) %>%
+      mutate(group="De Jure") %>%
+      select(group=group, everything())
+    
+    
+      assign(paste0("data_de_jure_", quo_name(enquo(Country_acronyme))), data_policy_2, envir = .GlobalEnv)
+
+      
+    }  
+      
+    
+    for (i in countries) {
+      
+      df_name <- paste(i,"school_anon_df", sep = "_")
+      de_facto_function(get(df_name), i)
+      
+    }
+      
+  ##Combined
+  names <- lapply(ls(pattern = "^data_de_"), function(x) get(x))
+  data_policy_combined <- do.call(rbind, names)
+ 
+  
+  data_policy_combined <- data_policy_combined %>% 
+    pivot_longer(cols = c(2:12), names_to= "indicators", values_to = "value") %>% 
+    left_join(labels_df_policy)
+  
+
+
+```
+
+```{r}
+  
+  
+combined_assessment <- combined_wide_df %>% 
+  filter(Series=="SE.PRM.LERN") %>% 
+  pivot_longer(cols = c(2:6), names_to = "country", values_to= "value") %>% 
+  mutate(country = case_when(
+    
+    country == "Madagascar" ~ "MDG",
+    country == "Peru" ~ "PER",
+    country == "Ethiopia" ~ "ETH",
+    country == "Rwanda" ~ "RWA",
+    country == "Jordan" ~ "JOR"
+
+    
+  ))
+## Regression ----
+  
+  
+  library(stargazer)
+  library(sandwich)
+
+  covariates <- names(socio[22:26])
+  
+  
+
+  
+  my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
+  multi_reg_school<-lm(my_formula, socio)   
+  
+  # Adjust standard errors
+  cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
+  robust_multi_se    <- sqrt(diag(cov1_multi))
+  
+
+  multi_table<- summary(multi_reg_school)
+  
+```
 
 # Conclusions
 
