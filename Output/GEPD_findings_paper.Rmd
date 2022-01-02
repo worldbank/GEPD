@@ -48,7 +48,19 @@ options(modelsummary_factory_word = 'flextable')
 
 
 #directories
-dir <- here()
+
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+      
+    dir <- here()
+
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+
+    dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
+
+  }
+
+
 indicators_dir <- paste(dir, 'Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
@@ -108,7 +120,7 @@ eq_plot_txt <- function(y,x,data) {
 ```{r load}
 
 #read in indicator metadata
-indicators <- read_csv(here::here('Indicators','indicators.csv'))
+indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 
 # read in indicator data
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
@@ -965,10 +977,6 @@ modelsummary(models,
 
 ```{r}
 
-# policy_colours <- combined_wide_color %>% filter(str_detect(`Indicator Name`, "De Jure"))
-# 
-# policy_score <- combined_wide_df%>% filter(str_detect(`Indicator Name`, "De Jure"))
-
 # read in the microdata for Policy surveys
 
 ########
@@ -1139,7 +1147,7 @@ main_indicator_labels<-c(
 ```
 
 ```{r}
-  
+  ### Here our intentions are twofolds. First, we will regress the de jure indicators on 4th grade students assessment before doing the same for de facto indicators. It should enable us to compare how effective one set of indicators is at explaining the between countries variations. Second, we will regress on the difference between de facto and de jure.
   
 combined_assessment <- combined_wide_df %>% 
   filter(Series=="SE.PRM.LERN") %>% 
@@ -1153,20 +1161,53 @@ combined_assessment <- combined_wide_df %>%
     country == "Jordan" ~ "JOR"
 
     
-  ))
+  )) %>% 
+  rename(
+    
+    indicators_labels= `Indicator Name`,
+    indicator = Series
+    
+  ) %>%   pivot_wider(id_cols = country,
+                    names_from = indicators_labels,
+                    values_from = value)
+
+
+## Wide format and regress covariate on respective 4th grade assessment
+var1 <- 'indicators'
+var2 <- 'group'
+
+
+data_policy_combined_wide <- data_policy_combined %>% 
+  
+  mutate(group = case_when(
+    
+    group == "De Facto" ~ "De_Facto",
+    group == "De Jure" ~ "De_Jure"
+
+    
+  )) %>% 
+
+   pivot_wider(
+    id_cols =  country,
+    names_from = c(var1, var2),
+    names_glue = sprintf('{%s}_{%s}', var2, var1),
+    values_from = value) %>% 
+  
+  left_join(combined_assessment) %>% 
+  rename(student_knowledge = `Proficiency on GEPD Assessment`)
+
+
 ## Regression ----
   
   
   library(stargazer)
   library(sandwich)
 
-  covariates <- names(socio[22:26])
+  covariates <- data_policy_combined_wide %>% select(starts_with("De_Facto")) %>% names()
   
   
-
-  
-  my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
-  multi_reg_school<-lm(my_formula, socio)   
+  my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + ")," + factor(country)", sep=""))
+  multi_reg_school<-lm(my_formula, data_policy_combined_wide)
   
   # Adjust standard errors
   cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
@@ -1174,6 +1215,7 @@ combined_assessment <- combined_wide_df %>%
   
 
   multi_table<- summary(multi_reg_school)
+  multi_table
   
 ```
 
