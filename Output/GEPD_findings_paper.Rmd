@@ -45,7 +45,7 @@ library(geosphere)
 library(fixest)
 library(modelsummary)
 options(modelsummary_factory_word = 'flextable')
-
+library(factoextra)
 
 #directories
 
