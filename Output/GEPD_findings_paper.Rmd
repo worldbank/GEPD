@@ -1033,8 +1033,8 @@ PER_school_office_link_df <- PER_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         rural2=if_else(urban_rural=="Rural",1,0),
-         rural=if_else(is.na(rural),rural2,rural ),
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1083,9 +1083,10 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
   mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
          dist_km=dist/1000,
          dist_log=log(dist_km),
+         rural=if_else(rurall=1, TRUE,FALSE),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         rural2=if_else(urban_rural=="Rural",1,0),
-         rural=if_else(is.na(rural),rural2,rural ),
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1132,8 +1133,8 @@ RWA_school_office_link_df <- RWA_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         rural2=if_else(urban_rural=="Rural",1,0),
-         rural=if_else(is.na(rural),rural2,rural ),
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1181,8 +1182,7 @@ ETH_school_office_link_df <- ETH_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         rural2=if_else(urban_rural=="Rural",1,0),
-         rural=if_else(is.na(rural),rural2,rural ),
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1220,12 +1220,14 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
   left_join(MDG_school_gdp) %>%
   select(-district) %>%
   mutate(country="Madagascar") %>%
-  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
-         dist_km=dist/1000,
-         dist_log=log(dist_km),
-         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         rural2=if_else(urban_rural=="Rural",1,0),
-         rural=if_else(is.na(rural),rural2,rural ),
+  mutate(
+    presence_rate=100-absence_rate,
+    # dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+    #      dist_km=dist/1000,
+    #      dist_log=log(dist_km),
+    #      bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1248,6 +1250,9 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
 
 combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
 
+combined_school_office_df %>%
+  rename(pol_policy_implementation=politicized_policy_implementation) %>%
+  haven::write_dta( paste0(confidential_dir, "General/combined_school_office_df.dta"))
 
 
 ```
@@ -1262,9 +1267,10 @@ To begin the a correlation plot is produced for each of the GEPD practice indica
 
 
 
-```{r corelations}
 
-pract_ind <- c("student_knowledge"="4th Grade Student Knowledge",
+```{r c1}
+
+indicators_list <- c("student_knowledge"="4th Grade Student Knowledge",
                "presence_rate"  = "Teacher Presence",
                "content_knowledge" = "Teacher Content Knowledge",
                "teach_score" = "Teacher Pedagogy",
@@ -1277,42 +1283,50 @@ pract_ind <- c("student_knowledge"="4th Grade Student Knowledge",
                "principal_management" = "Principal Management"
                )
 
+#create a function for correlation plots
+cor_fun <- function(indicators) {
+ 
+  
+    cor_df <- combined_school_office_df %>%
+      select(country, rural, names(indicators)) %>%
+      group_by(country,rural) %>%
+      mutate(across(names(indicators),~if_else(is.na(.),mean(.,na.rm=T),.))) %>%#impute with mean by country and urban/rural
+      ungroup() %>%
+      select(names(indicators))
+    
+    res <- cor(cor_df, use="pairwise.complete") 
+    
+    res[upper.tri(res)] <- NA # erase the upper triangle
+    diag(res) <- NA 
+    
+    res <- res %>%
+      as_tibble() %>%
+      mutate(across(everything(), round,3))
+    
+    colnames(res) <- indicators
+    
+    res$var <- indicators
+    
+    
+    res %>% 
+      select(var, everything()) %>%
+      flextable() %>%
+      bg(j = 2:ncol(res), 
+                    bg = function(x){
+                      out <- rep("transparent", length(x))
+                      out[x < 0] <- "#e76f51"
+                      out[x >= 0 & x < 0.2] <- "#f4a261"
+                      out[x >= 0.2 & x < 0.4] <- "#e9c46a"
+                      out[x >= 0.4 & x < 0.6] <- "#2a9d8f"
+                      out[x >= 0.6 ] <- "#264653"
+                      out
+                    })
 
-cor_df <- combined_school_office_df %>%
-  select(country, rural, names(pract_ind)) %>%
-  group_by(country,rural) %>%
-  mutate(across(names(pract_ind),~if_else(is.na(.),mean(.,na.rm=T),.))) %>%#impute with mean by country and urban/rural
-  ungroup() %>%
-  select(names(pract_ind))
 
-res <- cor(cor_df, use="pairwise.complete") 
+   
+}
 
-res[upper.tri(res)] <- NA # erase the upper triangle
-diag(res) <- NA 
-
-res <- res %>%
-  as_tibble() %>%
-  mutate(across(everything(), round,3))
-
-colnames(res) <- pract_ind
-
-res$var <- pract_ind
-
-
-res %>% 
-  select(var, everything()) %>%
-  flextable() %>%
-  bg(j = 2:ncol(res), 
-                bg = function(x){
-                  out <- rep("transparent", length(x))
-                  out[x < 0] <- "#e76f51"
-                  out[x >= 0 & x < 0.2] <- "#f4a261"
-                  out[x >= 0.2 & x < 0.4] <- "#e9c46a"
-                  out[x >= 0.4 & x < 0.6] <- "#2a9d8f"
-                  out[x >= 0.6 ] <- "#264653"
-                  out
-                })
-
+cor_fun(indicators_list)
 
 ```
 
@@ -1431,14 +1445,16 @@ fviz_eig(res.pca) +
 
 Next the relationships between 4th grade learning outcomes and practices in the school are shown. The 4th grade assessment scores are the percentage of items correct on the assessment.  The practices considered are teacher presence (0-100%), teacher content knowledge (based on teacher assessment which are represented as percentage correct), teacher pedagogical skills (Teach scores 1-5), availability of basic inputs (0-5), basic infrastructure (0-5), student readiness (1st grade assessment scores which are represented as the percentage correct), operational management scores (1-5), instructional leadership (1-5), principal school knowledge (1-5), and principal management skills (1-5).  Relationships are estimated using OLS regression.  The urban/rural status of the school, the total number of students enrolled in the school, and the log GDP within 1km of the school are included in the regressions.  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
 
+The table shows 1st grade student knowledge, teacher content knowledge, basic inputs, and basic infrastructure as some of the best predictors of 4th grade student knowledge  The coefficient on teacher content knowledge implies that a 10 percentage point improvement in teacher content knowledge at a school is associated with a 1.25 percentage point increase in 4th grade student knowledge A 10 percentage point increase in the 1st grade assessment scores is associated with a 2.4 percentage point increase in 4th grade student knowledge.  These two impacts are similar for both the reading and math components of the 4th grade examination. The availability of one more basic input (out of 5 examined) is associated with a 1 percentage point increase in 4th grade knowledge, and the availability of one more piece of basic infrastructure is associated with a 1.9 percentage point increase in 4th grade knowledge.  
+
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  + i(country), data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  + i(country), data=combined_school_office_df, se='hetero')
 )
 
 
@@ -1458,15 +1474,21 @@ modelsummary(models,
              )
 ```
 
-The table below shows the relationships for each individual country to see how the relationships between the practice indicators may differ by  country context.
+The table below shows the relationships for each individual country to see how the relationships between the practice indicators may differ by  country context.  The most consistent indicator that is predictive is the student readiness indicator measuring 1st grade student knowledge.  Teacher content knowledge is a statistically significant predictor in Peru, Rwanda, and Madagascar.  Either basic inputs or basic infrastructure are statistically significant predictors in Peru, Jordan, Ethiopia, and Madagascar.  Operational management is a statistically significant predictor in Rwanda and Madagascar.  
 
 
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=PER_school_office_link_df, se='hetero'),
 
+'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=JOR_school_office_link_df, se='hetero'),
 
+'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=RWA_school_office_link_df, se='hetero'),
+
+'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=ETH_school_office_link_df, se='hetero'),
+
+'4th Grade Student Knowledge - Madagascar' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=MDG_school_office_link_df, se='hetero')
 )
 
 
@@ -1486,6 +1508,210 @@ modelsummary(models,
              )
 ```
 
+## Relationships between School Practice Indicators and Policy Indicators
+
+Below regression coefficients will be shown between a school practice indicator and its respective policy indicators.  For example, teacher content knowledge is regressed on the teacher attraction, selection and deployment, support, and evaluation indicators.  Once again, to help account for other factors that might bias these relationships, the urban/rural status of the school, total number of students, and log GDP in the vicinity of the school are included in the regressions.
+
+```{r regfun}
+
+#create function to create regression output
+reg_fun <- function(indicators) {
+  
+  #create formula
+  out <- names(indicators[1])
+  out_lab <- indicators[1]
+  
+  cov <- names(indicators[2:length(indicators)])
+  cov_lab <- indicators[2:length(indicators)]
+  
+  form <- as.formula(paste0(paste(out, paste(cov, collapse=" + "), sep=" ~ "),"  + log(GDP) + rural + students_enrolled + i(country)"))
+  
+  models <- list(
+  
+   " " = feols(form, data=combined_school_office_df, se='hetero')
+
+  )
+
+
+
+  modelsummary(models,
+               estimate= "{estimate}{stars}",
+               coef_rename = cov_lab,
+               title=paste(out_lab)
+               )
+  
+}
+
+```
+
+
+### Teacher Content Knowledge
+
+Teacher support has a positive relationship with teacher content knowledge at the 10% level.  A one unit increase in teacher support (on a 1-5 scale) is assocaited with a 1 percentage point improvement in teacher content knowledge.  
+
+```{r}
+
+indicators_list <- c(
+               "content_knowledge" = "Teacher Content Knowledge",
+               "teacher_attraction" = "Teacher Attraction",
+               "teacher_selection_deployment" = "Teacher Selection & Deployment",
+               "teacher_support" = "Teacher Support",
+               "teaching_evaluation" = "Teacher Evaluation"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Teacher Pedagogical Skills
+
+Teacher pedagogy has no statistically significant relationships to the underlying policy indicators.
+
+```{r}
+
+indicators_list <- c(
+               "teach_score" = "Teacher Pedagogy Skill",
+               "teacher_attraction" = "Teacher Attraction",
+               "teacher_selection_deployment" = "Teacher Selection & Deployment",
+               "teacher_support" = "Teacher Support",
+               "teaching_evaluation" = "Teacher Evaluation"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Teacher Presence
+
+Teacher monitoring and accountability and teacher intrinsic motivation are both statistically significantly related to teacher presence at the 5% significance level.  A one unit increase (1-5 scale) on teacher intrinsic motivation is associated with an almost 5 percentage point increase in teacher presence.  A one unit increase in monitoring and accountability is associated with a 2.4 percentage point increase in presence.
+
+```{r}
+
+indicators_list <- c(
+               "presence_rate" = "Teacher Presence",
+               "teacher_monitoring" = "Teacher Monitoring & Accountability",
+               "intrinsic_motivation" = "Teacher Intrinsic Motivation"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Basic Inputs
+
+Standards and monitoring are both statistically significant at the 10% level with the availability of basic inputs.  A one unit increase in standards is associated with a 0.04 increase in the availability of basic inputs (0-5 scale).  A one unit increase in monitoring is related to 0.83 increase in inputs.  
+
+```{r}
+
+indicators_list <- c(
+               "inputs" = "Basic Inputs",
+               "standards_monitoring" = "Standards",
+               "sch_monitoring" = "Monitoring"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Basic Infrastructure
+
+Monitoring is statistically significantly related to the availability of basic infrastructure.  A one unit increase in monitoring is associated with a .3 unit increase in the basic infrastructure availability index (0-5 scale).
+
+```{r}
+
+indicators_list <- c(
+               "infrastructure" = "Basic Infrastructure",
+               "standards_monitoring" = "Standards",
+               "sch_monitoring" = "Monitoring"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Operational Management
+
+Clarity of functions is not statistically significantly related to operational management.
+
+
+```{r}
+
+indicators_list <- c(
+               "operational_management" = "Operational Management",
+               "sch_management_clarity" = "Clarity of Functions"
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Instructional Leadership
+
+Clarity of functions is negatively related to instructional leadership.
+
+```{r}
+
+indicators_list <- c(
+               "instructional_leadership" = "Instructional Leadership",
+               "sch_management_clarity" = "Clarity of Functions"
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+
+### School Knowledge
+
+None of the school manamagement policy indicators are statistically related to school knowledge.
+
+```{r}
+
+indicators_list <- c(
+               "principal_knowledge_score" = "School Knowledge",
+               "sch_management_attraction" = "School Management Attraction",
+               "sch_selection_deployment" = "School Management Selection & Deployment",
+               "sch_support" = "School Management Support",
+               "principal_evaluation" = "School Management Evaluation"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+### Management Practices
+
+Selection and deployment, support, and evaluation are all statistically significantly related to management practices at least at the 5% significance level.  A one unit increase selection and deployment (1-5 scale), as well as support (1-5 scale), is associated with a 0.05 unit increase in management practices (1-5 scale).  A one unit increase in evaluation is associated with a 0.04 unit change.
+
+```{r}
+
+indicators_list <- c(
+               "principal_management" = "Management Practices",
+               "sch_management_attraction" = "School Management Attraction",
+               "sch_selection_deployment" = "School Management Selection & Deployment",
+               "sch_support" = "School Management Support",
+               "principal_evaluation" = "School Management Evaluation"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
 
 ## Relationship between School Practice Outcomes and Bureaucracy Indicators
 
