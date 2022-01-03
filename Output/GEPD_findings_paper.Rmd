@@ -1083,7 +1083,7 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
   mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
          dist_km=dist/1000,
          dist_log=log(dist_km),
-         rural=if_else(rurall=1, TRUE,FALSE),
+         rural=if_else(rural==1, TRUE,FALSE),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
          # rural2=if_else(urban_rural=="Rural",1,0),
          # rural=if_else(is.na(rural),rural2,rural ),
