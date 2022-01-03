@@ -1028,7 +1028,25 @@ PER_school_office_link_df <- PER_school_anon_df %>%
   left_join(PER_school_gdp) %>%
   left_join(PER_school_office_linkages) %>%
   left_join(PER_school_size) %>%
-  mutate(country="Peru")
+  mutate(country="Peru") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural2=if_else(urban_rural=="Rural",1,0),
+         rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
 ########
 
 ########
@@ -1061,7 +1079,25 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
   left_join(JOR_school_gdp) %>%
   left_join(JOR_school_office_linkages) %>%
   left_join(JOR_school_size) %>%
-  mutate(country="Jordan")
+  mutate(country="Jordan") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural2=if_else(urban_rural=="Rural",1,0),
+         rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
 ########
 
 ########
@@ -1091,7 +1127,25 @@ RWA_school_office_link_df <- RWA_school_anon_df %>%
   left_join(RWA_school_gdp) %>%
   left_join(RWA_school_office_linkages) %>%
   left_join(RWA_school_size) %>%
-  mutate(country="Rwanda")
+  mutate(country="Rwanda") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural2=if_else(urban_rural=="Rural",1,0),
+         rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
 ########
 ########
 
@@ -1122,7 +1176,25 @@ ETH_school_office_link_df <- ETH_school_anon_df %>%
   left_join(ETH_school_gdp) %>%
   left_join(ETH_school_office_linkages) %>%
   left_join(ETH_school_size) %>%
-  mutate(country="Ethiopia")
+  mutate(country="Ethiopia")  %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural2=if_else(urban_rural=="Rural",1,0),
+         rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
 ########
 
 ########
@@ -1147,17 +1219,8 @@ MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country
 MDG_school_office_link_df <- MDG_school_anon_df %>%
   left_join(MDG_school_gdp) %>%
   select(-district) %>%
-  mutate(country="Madagascar")
-# %>%
-#   left_join(MDG_school_office_linkages)
-
-
-###########
-# Combined
-##########
-
-combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) %>%
-    mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+  mutate(country="Madagascar") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
@@ -1175,6 +1238,15 @@ combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_off
          students_enrolled=factor(students_enrolled, 
                                   levels=c(1:8),
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+# %>%
+#   left_join(MDG_school_office_linkages)
+
+
+###########
+# Combined
+##########
+
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
 
 
 
@@ -1301,6 +1373,8 @@ modelsummary(models,
 ```
 
 Their is also a statistically significant relationship between operational management and the availability of infrastructure.  A 1 point increase in the school's operational management score is associated with a 0.33 point increase in the availability of infrastructure.  This relationship is statistically significant for the availability of drinking water, functional toilets, electricity in the classroom and the availability of internet connectivity at the school as well. 
+
+
 ```{r}
 models <- list(
   
@@ -1351,20 +1425,20 @@ fviz_eig(res.pca) +
 ```
 
 
-## Share of learning variation explained by the Dashboard’s Practice indicators
+
 
 ## Relationship between School Practices and 4th Grade Learning Outcomes
 
-Next the relationships between 4th grade learning outcomes and practices in the school are shown. The practices considered are teacher presence, teacher content knowledge, teacher pedagogical skills, availability of basic inputs, basic infrastructure, student readiness (1st grade assessment scores), operational management scores, instructional leadership, principal school knowledge, and principal management skills.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
+Next the relationships between 4th grade learning outcomes and practices in the school are shown. The 4th grade assessment scores are the percentage of items correct on the assessment.  The practices considered are teacher presence (0-100%), teacher content knowledge (based on teacher assessment which are represented as percentage correct), teacher pedagogical skills (Teach scores 1-5), availability of basic inputs (0-5), basic infrastructure (0-5), student readiness (1st grade assessment scores which are represented as the percentage correct), operational management scores (1-5), instructional leadership (1-5), principal school knowledge (1-5), and principal management skills (1-5).  Relationships are estimated using OLS regression.  The urban/rural status of the school, the total number of students enrolled in the school, and the log GDP within 1km of the school are included in the regressions.  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
 
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled + i(country), data=combined_school_office_df, se='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  + i(country), data=combined_school_office_df, se='hetero')
 )
 
 
@@ -1384,6 +1458,33 @@ modelsummary(models,
              )
 ```
 
+The table below shows the relationships for each individual country to see how the relationships between the practice indicators may differ by  country context.
+
+
+```{r}
+models <- list(
+  
+'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=combined_school_office_df, se='hetero'),
+
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("presence_rate"  = "Teacher Presence",
+                             "content_knowledge" = "Teacher Content Knowledge",
+                             "teach_score" = "Teacher Pedagogy",
+                             "inputs" = "Basic Inputs",
+                             "infrastructure" = "Basic Infrastructure",
+                             "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "operational_management" = "Operational Management",
+                             "instructional_leadership" = "Instructional Leadership",
+                             "principal_knowledge_score" = "Principal Knowledge",
+                             "principal_management" = "Principal Management")
+             )
+```
 
 
 ## Relationship between School Practice Outcomes and Bureaucracy Indicators
