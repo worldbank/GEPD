@@ -44,12 +44,23 @@ library(gtsummary)
 library(geosphere)
 library(fixest)
 library(modelsummary)
-library(factoextra)
 options(modelsummary_factory_word = 'flextable')
 
 
 #directories
-dir <- here()
+
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+      
+    dir <- here()
+
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+
+    dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
+
+  }
+
+
 indicators_dir <- paste(dir, 'Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
@@ -68,6 +79,14 @@ out_dir <- paste(dir, 'Output', sep="/")
   }
 
 
+
+# change_here <- function(new_path){
+#   new_root <- here:::.root_env
+#   
+#   new_root$f <- function(...){file.path(new_path, ...)}
+#   
+#   assignInNamespace(".root_env", new_root, ns = "here")
+# }
 
 #list countries
 countries <- c("PER", "JOR", "RWA", "MDG", "ETH")
@@ -101,7 +120,7 @@ eq_plot_txt <- function(y,x,data) {
 ```{r load}
 
 #read in indicator metadata
-indicators <- read_csv(here::here('Indicators','indicators.csv'))
+indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 
 # read in indicator data
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
@@ -118,8 +137,9 @@ JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".cs
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021') %>%
-  rename(value=value_pooled)
+         date='2020-2021') 
+# %>%
+#   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
@@ -268,12 +288,13 @@ Table 1: GEPD Data Collection Overview
 | Madagascar | June 2021 | 200 | In Madagascar, the sample for the GEPD school survey was drawn to be representative of primary schools at the national and regional levels, using EMIS data of 2019. The sampling frame consisted of 33,120 public and private primary schools – 25,869 public and 7,251 private schools - across the 1,567 communes covered by EMIS data in Madagascar’s 22 regions. 200 schools were selected for the GEPD survey, where the strata are regions and urban/rural status of schools. |
 
 
+## GDP Data
 
+ GDP per square kilometer data is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.
 
 # Findings
 
 ## Overview of Indicators
-
 
 Show low levels of learning across countries.  E.g. how manys students in 4th grade can identify basic words, 8+6, etc.  Low levels of teacher pedagogy.  Highlight some interesting Bureaucracy findings
 
@@ -331,7 +352,6 @@ FitFlextableToPage(ovr_table) %>%
 }
 ```
 
-### Practice Indicators
 
 Below is a table showing the means by country on the GEPD Practice Indicators.
 
@@ -356,342 +376,260 @@ country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
 
 ```
 
-In the GEPD 4th grade assessment, students in a randomly chosen class were given an assessment containing math and language items. More details on this examination is in the GEPD Technical Note.  A students score is the sum of the literacy sub-score and the math sub-score.  Proficiency is then based on whether the student correctly answered a set number of questions (20/24 items correct in literacy, 14/17 in math), which was determined by consulting a set of experts on whether a minimally proficient 4th grader should be able to answer the questions correctly.  
+Below is a table showing the means by country on the GEPD Policy Indicators.
 
-The table above highlights the low levels of learning seen in children in 4th grade in even middle income countries, such as Peru and Jordan.  In Peru, only around 33% of students reached the proficiency threshold on the 4th grade assessment.  In Jordan, the number is even lower, although schools in Jordan had recently switched to using Arabic numerals, and the children performed particularly badly in the math portion of the GEPD assessment. The low income countries (Rwanda, Ethiopia, and Madagascar) fare even worse with less than 5% of students being considered proficient. 
-```{r g4dat}
+```{r poltab}
+# Produce a table showing means by country for select practice indicators
+policy_indicators <- c(
+'SE.PRM.TATT',
+'SE.PRM.TSDP',
+'SE.PRM.TSUP',
+'SE.PRM.TEVL',
+'SE.PRM.TMNA',
+'SE.PRM.TINM',
+'SE.PRM.ISTD',
+'SE.PRM.IMON',
+'SE.PRM.LNTN',
+'SE.PRM.LHTH',
+'SE.PRM.LCBC',
+'SE.PRM.LFCP',
+'SE.PRM.LSKC',
+'SE.PRM.SCFN',
+'SE.PRM.SATT',
+'SE.PRM.SSLD',
+'SE.PRM.SSUP',
+'SE.PRM.SEVL'
+
+)
+
+country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
+
+```
+
+Below is a table showing the means by country on the GEPD Bureaucracy or Politics Indicators.
+
+```{r ptictab}
+# Produce a table showing means by country for select practice indicators
+politics_indicators <- c(
+'SE.PRM.BQBR',
+'SE.PRM.BIMP',
+'SE.PRM.BMAC',
+'SE.PRM.BNLG',
+'SE.PRM.BFIN'
+
+)
+
+country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
+
+```
+
+## Systems View of Indicators
+
+```{r}
+# read in the microdata
 
 ########
-# Peru
-#######
+## Peru
+########
+
 #read in anonymized school data
 country <- "PER"
 year <- "2019"
 
-PER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
-  mutate(iso3c=country) %>%
-   mutate(student_proficient=100*as.numeric(student_knowledge>=86.6), #26/30
-         student_proficient_70=100*as.numeric(student_knowledge>=70),
-         student_proficient_75=100*as.numeric(student_knowledge>=75),
-         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=92), #12/13 points
-         literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
-         literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
-         math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
-         math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
-         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
-         math_student_proficient_60=100*as.numeric(math_student_knowledge>=60))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+PER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+PER_school_office_link_df <- PER_school_anon_df %>%
+  left_join(PER_school_gdp) %>%
+  left_join(PER_school_office_linkages)%>% mutate(country = "PER")
 
 ########
-# Jordan
-#######
+## Jordan
+########
+
 #read in anonymized school data
 country <- "JOR"
 year <- "2019"
 
-JOR_g4_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.dta", sep="/")) %>%
-  mutate(iso3c=country)
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+JOR_school_anon_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/"))
+
+JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+JOR_school_gdp <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.dta", sep="/")) %>%
+  select(hashed_school_code, GDP)
+
+
+JOR_school_office_link_df <- JOR_school_anon_df %>%
+  left_join(JOR_school_gdp) %>%
+  left_join(JOR_school_office_linkages)%>% mutate(country = "JOR")
 
 ########
-# Rwanda
-#######
+## Rwanda
+########
+
 #read in anonymized school data
 country <- "RWA"
 year <- "2020"
 
-RWA_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
-  mutate(iso3c=country)
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+RWA_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+RWA_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+
+
+RWA_school_office_link_df <- RWA_school_anon_df %>%
+  left_join(RWA_school_gdp) %>%
+  left_join(RWA_school_office_linkages)%>% mutate(country = "RWA")
+########
 
 ########
-# Ethiopia
-#######
+## Ethiopia
+########
+
 #read in anonymized school data
 country <- "ETH"
 year <- "2020_2021"
 
-ETH_g4_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2020.csv", sep="/")) %>%
-  mutate(iso3c=country)
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
 
-ETH_g4_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2021.csv", sep="/")) %>%
-  mutate(iso3c=country)
+ETH_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+
+ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+#load gdp info
+ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+
+
+
+ETH_school_office_link_df <- ETH_school_anon_df %>%
+  left_join(ETH_school_gdp) %>%
+  left_join(ETH_school_office_linkages)%>% mutate(country = "ETH")
+########
 
 ########
-# Madagascar
-#######
+## Madagascar
+########
+
 #read in anonymized school data
 country <- "MDG"
 year <- "2021"
 
-MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
-  mutate(iso3c=country) %>%
-  select(-district)
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
 
-########
-#combined
-########
+MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 
-combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df) %>%
-  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")),
-         `Student Proficient`=if_else(student_proficient==100,"Yes", "No"),
-         `Student Proficient Math`=if_else(math_student_proficient==100,"Yes", "No"),
-         `Student Proficient Literacy`=if_else(literacy_student_proficient==100,"Yes", "No"))
+# MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 
-
-weights_df <- combined_g4_df %>%
-  group_by(iso3c, hashed_school_code) %>%
-  summarise(ipw=mean(ipw, na.rm=T))
-
-```
-
-In figure XX, the distribution of raw scores are shown for each country.  The raw scores are scaled to be between 0 and 100, where a student receiving 0 points got none of the questions correct, and a student scoring 100 got all of the questions correct. Overall scores combine literacy and math are shown.  Each point on the plot represents one student's set of responses.  Within each country there is a large dispersion of scores with at least some students scoring nearly 0 points out of 100 and at least some students scoring proficient.
-
-```{r}
-
-indicators <- c("student_knowledge", "math_student_knowledge", "literacy_student_knowledge")
-
-combined_g4_mn <- combined_g4_df %>% 
-  mutate(m8saq2_id=if_else(m8saq2_id==1,1,0)) %>%
-  group_by(iso3c) %>%
-  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
-  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
-  ungroup() 
+#load gdp info
+MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/")) 
 
 
 
-p1 <- ggplot(combined_g4_df, aes(x=iso3c, y=student_knowledge, color=`Student Proficient`)) +
-  geom_quasirandom() +
-  geom_segment(data=combined_g4_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
-  geom_segment(data=combined_g4_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
-  geom_text(data=combined_g4_mn, aes(label=paste0(round(student_knowledge, 1), "%")), vjust=-4, color='black', size=3) +
-  coord_flip() +
-  scale_color_manual(
-    values=c("#ef476f", "#06d6a0")
-  ) +
-  theme_bw() +
-  xlab("") +
-  ylab("GEPD 4th Grade Assessment Score") +
-  labs(
-    title="Percentage of Items Correct on GEPD 4th Grade Assessment",
-    caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
-  ) +
-  theme(
-    axis.text = element_text(size=12),
-    title=element_text(size=14),
-    legend.position = 'bottom'
-  )
-
-p1
+MDG_school_office_link_df <- MDG_school_anon_df %>%
+  left_join(MDG_school_gdp) %>%
+  select(-district)%>% mutate(country = "MDG")
+# %>%
+#   left_join(MDG_school_office_linkages)
 
 
+###########
+# Combined
+##########
 
-p2 <- ggplot(combined_g4_df, aes(x=iso3c, y=math_student_knowledge, color=`Student Proficient Math`)) +
-  geom_quasirandom() +
-  geom_segment(data=combined_g4_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
-  geom_segment(data=combined_g4_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
-  geom_text(data=combined_g4_mn, aes(label=paste0(round(math_student_knowledge, 1), "%")), vjust=-4, color='black', size=3) +
-  coord_flip() +
-  scale_color_manual(
-    values=c("#ef476f", "#06d6a0")
-  ) +
-  theme_bw() +
-  xlab("") +
-  ylab("GEPD 4th Grade Math Assessment Score") +
-  labs(
-    title="Percentage of Items Correct on GEPD 4th Grade Math Assessment",
-    caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
-  ) +
-  theme(
-    axis.text = element_text(size=12),
-    title=element_text(size=14),
-    legend.position = 'bottom'
-  )
-
-
-
-p3 <- ggplot(combined_g4_df, aes(x=iso3c, y=literacy_student_knowledge, color=`Student Proficient Literacy`)) +
-  geom_quasirandom() +
-  geom_segment(data=combined_g4_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
-  geom_segment(data=combined_g4_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
-  geom_text(data=combined_g4_mn, aes(label=paste0(round(literacy_student_knowledge, 1), "%")), vjust=-4, color='black', size=3) +
-  coord_flip() +
-  scale_color_manual(
-    values=c("#ef476f", "#06d6a0")
-  ) +
-  theme_bw() +
-  xlab("") +
-  ylab("GEPD 4th Grade Literacy Assessment Score") +
-  labs(
-    title="Percentage of Items Correct on GEPD 4th Grade Literacy Assessment",
-    caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
-  ) +
-  theme(
-    axis.text = element_text(size=12),
-    title=element_text(size=14),
-    legend.position = 'bottom'
-  )
-
-
-
-
-
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) %>%
+    mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural2=if_else(urban_rural=="Rural",1,0),
+         rural=if_else(is.na(rural),rural2,rural )) 
 ```
 
 
-Figure XX below breaks down the 4th Grade Learning Assessment scores further highlighting four items that were on the assessment: whether the student can identify 3 words from a list (e.g. respect, green, bananas), whether the student can answer a question about a short paragraph of text, whether the student can answer correctly 8+7, and whether the student can correctly answer 7x8.  In Madagascar, the percentage of children able to identify three short words was only 63.2%.  The percentage able to solve 7x8 in Madagascar was only 26.7%, while in Peru, the best performing country, the rate was only around 73%.  
+## Share of learning variation explained by the Dashboard’s Practice indicators
 
+## Relationship between School Practices and 4th Grade Learning Outcomes
 
-
+Next the relationships between 4th grade learning outcomes and practices in the school are shown. The practices considered are teacher presence, teacher content knowledge, teacher pedagogical skills, availability of basic inputs, basic infrastructure, student readiness (1st grade assessment scores), operational management scores, instructional leadership, principal school knowledge, and principal management skills.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
+Data downloaded from:
+https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
+https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
+ In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
+ 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
+ The method also distinguishes between rural and urban population, assuming the latter to have a higher 
+ GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
+ product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
+ Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
+ LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
+ extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
+ constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
+ is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
+ suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
+ Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
+ extrapolation UNEP/GRID-Geneva.].  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
 
 ```{r}
-
-indicators <- c("m8saq3_id", "m8saq5_story", "m8sbq3a_arithmetic", "m8sbq3f_arithmetic")
-indicator_desc <- c("Identify Three Words", "Answer Story Question", "8+7", "7x8")
-
-
-combined_g4_mn <- combined_g4_df %>% 
-  mutate(m8saq2_id=if_else(m8saq3_id==1,1,0)) %>%
-  group_by(iso3c) %>%
-  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
-  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
-  ungroup() 
-
-colnames(combined_g4_mn) <- c('country', indicator_desc)
-
-combined_g4_mn <- combined_g4_mn %>%
-  pivot_longer(
-    cols = c(2:5),
-    names_to='Item',
-    values_to="Mean"
-  )
-
-ggplot(combined_g4_mn, aes(x=Item, y=Mean, color=country, shape=country)) +
-  geom_point(size=3) +
-  geom_text_repel(aes(label=paste0(country,": ",round(100*Mean, 1), "%")), size=5) +
-  expand_limits(y=c(0,1)) +
-  scale_y_continuous(
-    labels=scales::percent
-  ) +
-  coord_flip() +
-  theme_bw() +
-  labs(
-    title="Country Performance on Select 4th Grade Items",
-    caption="Summary Statistics Weighted using Inverse Propensity Weights."
-  ) +
-  theme(
-    axis.text = element_text(size=12),
-    title=element_text(size=14),
-    legend.position = 'none'
-  )
+models <- list(
   
+'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+
+'4th Grade Math Score' = feols(math_student_knowledge ~ 0 + presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("presence_rate"  = "Teacher Presence",
+                             "content_knowledge" = "Teacher Content Knowledge",
+                             "teach_score" = "Teacher Pedagogy",
+                             "inputs" = "Basic Inputs",
+                             "infrastructure" = "Basic Infrastructure",
+                             "ecd_student_knowledge" = "1st Grade Student Knoweldge",
+                             "operational_management" = "Operational Management",
+                             "instructional_leadership" = "Instructional Leadership",
+                             "principal_knowledge_score" = "Principal Knowledge",
+                             "principal_management" = "Principal Management")
+             )
 ```
 
-Student Readiness, as measured by the GEPD 1st grade assessment, is another area where countries could improve. 
 
-The first grade assessment tool was derived mostly from the MELQO assessment and covers the domains of numeracy, literacy, socio-emotional skills and executive functioning.
+## Relationship between School Practice Outcomes and Bureaucracy Indicators
 
-The sub-domains for the literacy section are:
+The plots below show that the (geodesic) distance between a school and the district office managing the school.
 
-*	Expressive Vocabulary
-* Letter Identification
-*	Word Recognition
-*	Sentence Reading
-*	Listening Comprehension Story 
-*	Name Writing
-*	Print Awareness
+In the first plot, the relationship between distance of the office and average 4th grade student knowledge, according to the 4th grade GEPD assessment, are shown.
 
 
-The sub-domains for the math section are:
+```{r distscat, echo=FALSE}
 
-*	Verbal Counting
-*	Producing a Set
-*	Number Identification
-*	Number Comparison
-*	Simple Addition
-
-
-The sub-domains for the socio-emotional section are:
-
-*	Perspective Taking/Empathy
-*	Conflict Resolution
-
-The sub-domains for the executive functioning section are:
-
-*	Working Memory/Backward Digit Spans
-*	Follow Instructions/Head, Toes, Knees, Shoulders Task
-
-The threshold for proficiency on our 1st grade assessment is to score at least 80% of the items correctly. This approach was validated by calculating the percent correct in the top 25% highest scoring schools in Peru on our 4th grade dashboard assessment and found that students in these schools answered around this percentage of items correct.
+#scatterplot of distance between school and office
+school_office_dist_df <- combined_school_office_df %>%
+  select(student_knowledge, inputs, infrastructure, principal_management, quality_bureaucracy, bureau_index, dist, dist_km, dist_log, ADM0_NAME) %>%
+  mutate(bi_on_target=if_else(bureau_index>=4, "Yes", "No")) %>%
+  group_by(ADM0_NAME) %>% #demean outcomes by country
+  mutate(student_knowledge_dm=student_knowledge-mean(student_knowledge, na.rm=T),
+         dist_log_dm=dist_log-mean(dist_log, na.rm=T),
+         inputs_dm=inputs-mean(inputs, na.rm=T),
+         infrastructure_dm=infrastructure-mean(infrastructure, na.rm=T))
 
 
-```{r g1dat}
-
-########
-# Peru
-#######
-#read in anonymized school data
-country <- "PER"
-year <- "2019"
-
-PER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country) 
-
-########
-# Jordan
-#######
-#read in anonymized school data
-country <- "JOR"
-year <- "2019"
-
-JOR_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
-  mutate(iso3c=country)
-
-########
-# Rwanda
-#######
-#read in anonymized school data
-country <- "RWA"
-year <- "2020"
-
-RWA_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country) %>%
-  filter(!is.na(ecd_student_knowledge))
-
-########
-# Ethiopia
-#######
-#read in anonymized school data
-country <- "ETH"
-year <- "2020_2021"
-
-ETH_g1_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2020.csv", sep="/")) %>%
-  mutate(iso3c=country)
-
-ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2021.csv", sep="/")) %>%
-  mutate(iso3c=country)
-
-########
-# Madagascar
-#######
-#read in anonymized school data
-country <- "MDG"
-year <- "2021"
-
-MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country) %>%
-  select(-district)
-########
-#combined
-########
-
-combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
-  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER"))) %>%
-  left_join(weights_df) %>%
-  mutate(`Student Proficient`=if_else(ecd_student_knowledge>=80,"Yes","No"),
-         Rural=case_when(
-           rural==1 ~ "Rural",
-           rural==0 ~ "Urban",
-           urban_rural=="Rural" ~ "Rural", 
-           urban_rural=="Urban" ~ "Urban",
-           TRUE ~ "Rural"))
 
 
 ```
@@ -1754,6 +1692,7 @@ school_office_dist_df <- combined_school_office_df %>%
          infrastructure_dm=infrastructure-mean(infrastructure, na.rm=T))
 
 
+
 lab <- eq_plot_txt('student_knowledge', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=student_knowledge)) +
@@ -1851,7 +1790,7 @@ p1 + p3 +
 In the second plot, the relationship between the distance to the office and school input availability is shown.  This indicator measures the availability of basic inputs in the average school. These inputs, based on the literature and general expectations, are (i) functioning blackboard and chalk, (ii) pens, pencils, and exercise books in 4th-grade classrooms, (iii) textbooks, (iv) basic classroom furniture, and (v) access to ICT.
 
 
-```{r inputscat, cache=TRUE}
+```{r inputscat}
 lab <- eq_plot_txt('inputs', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs)) +
@@ -1935,7 +1874,7 @@ p1 + p3 +
 In the third plot, the relationship between the distance to the office and school infrastructure availability is shown.  This indicator measures the availability of basic inputs in the average school. The infrastructure aspects included, based on the literature and general expectations, are availability of (i) drinking water, (ii) functioning toilets, (iii) electricity, (iv) internet connectivity, and (v) accessibility for people with disabilities.
 
 
-```{r infrascat, cache=TRUE}
+```{r infrascat}
 lab <- eq_plot_txt('infrastructure', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=infrastructure)) +
@@ -2039,19 +1978,19 @@ https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=en
 
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~ 0 + bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~   bureau_index  + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~ 0 +  bureau_index  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~   bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'School Inputs' =  feols(inputs ~   bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~   bureau_index + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~ 0 +  bureau_index + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Operations Management' =  feols(operational_management ~   bureau_index  + log(GDP) + rural + dist_log + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~ 0 +  bureau_index  + log(GDP) + rural + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~   bureau_index  + log(GDP) + rural + dist_log + students_enrolled  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~ 0 +  bureau_index  + log(GDP) + rural  + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
 
 )
 
@@ -2064,25 +2003,25 @@ modelsummary(models,
 
 ```
 
-The next table breaks out the effects into the underlying components of the bureaucracy index.
+The next table breakds out the effects into the underlying components of the bureaucracy index.
 
 ```{r breg2, echo=FALSE}
 
 models <- list(
   
-'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled + i(ADM0_NAME), data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
 
 )
 
@@ -2097,6 +2036,458 @@ modelsummary(models,
 
 
 [Discussion of the linkages between indicators.  E.g. How the teacher pedagogy relates to student outcomes.  Interesting findings on De-Facto versus De-Jure.  Findings on implementation differences across geographies within a country.  Findings on Bureaucracy and school outcomes.  Can maybe highlight link with poor bureaucracy with poor inputs/infrastructure.]
+
+```{r}
+
+  ## Relating the policy indicators to practices : TEACHING
+
+models <- list(
+  
+'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Teacher Presence' =  feols(presence_rate ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Teacher Pedagogy' =  feols(teach_score ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Content Knowledge' =  feols(content_knowledge ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+
+```
+```{r}
+  ## Relating the policy indicators to practices : SCHOOL MANAGEMENT
+
+models <- list(
+  
+'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+  
+'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+
+
+```
+
+```{r}
+  ## Relating the policy indicators to practices : INFRASTRUCTURE
+
+models <- list(
+  
+'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+  
+'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+
+```
+
+
+```{r}
+###breaking up the indicators into the underlying questions 
+
+   #create subset with just main indicators
+
+
+
+  ## calling in the global matrix
+
+  matrix <- read_xlsx(paste(dir,'Indicators/GEPD_master.xlsx', sep = "/"), sheet = 2) %>% 
+  fill(c(Indicator, `Variable name`, `Sub-indicators\r\nMain indicator (in red)`), .direction=c("down")) %>% 
+  rename(subindicator=`Sub-indicators\r\nMain indicator (in red)`)
+
+breaking_up_fun <- function(variables, reference_data){
+    
+  names.use <- names(combined_school_office_df)[(names(combined_school_office_df) %in% variables)]
+ 
+  teaching_country_combined <- combined_school_office_df %>% 
+  
+    select(country, names.use) %>% 
+      
+    group_by(country) %>% 
+    
+    summarise_at(names.use, ~ mean(., na.rm = T)) %>% 
+      
+    pivot_longer(cols = names.use ,names_to = "subindicator", values_to = "value") %>% 
+      
+    left_join(reference_data) %>% 
+    
+    distinct(country, subindicator, value, .keep_all=T) %>% 
+    
+    ## Insert percentage whenever question beget a yes/no answers
+    
+    mutate(subindicator = if_else(str_detect(`Question options`, "Yes"), paste(subindicator, "percent", sep = "_"), subindicator )) %>% 
+    
+    mutate(value = if_else(str_detect(subindicator, "percent"), value *100, value )) %>% 
+
+    
+    ## Add colours and comments
+    
+    mutate(
+      
+      value_metadata=case_when(
+        
+        value <85 & str_detect(subindicator, "_percent") ~ "Needs Improvement",
+        value >=85 & value<90 & str_detect(subindicator, "_percent") ~ "Caution",
+        value >=90 & str_detect(subindicator, "_percent")~ "On Target",
+        TRUE ~ "N/A"
+      )) %>% 
+    
+    mutate(
+           value=round(value,1),
+           
+           value_color=case_when(
+             value_metadata=="Needs Improvement" ~ "#FF0000",
+             value_metadata=="Caution" ~ "#FCD606",
+             value_metadata=="On Target" ~ "#85C546",
+             TRUE ~ "#808080"
+           ),
+           
+           country = case_when(
+            country == "ETH" ~ "Ethiopia",
+            country == "JOR" ~ "Jordan",
+            country == "MDG" ~ "Madagascar",
+            country == "RWA" ~ "Rwanda",
+            country == "PER" ~ "Peru"
+
+    ))
+  
+    
+  } 
+    
+    
+
+
+  ## TEACHING
+
+    series_teaching<- c(
+      'SE.PRM.TATT',
+      'SE.PRM.TSDP',
+      'SE.PRM.TSUP',
+      'SE.PRM.TEVL',
+      'SE.PRM.TMNA',
+      'SE.PRM.TINM')
+ 
+  variable_teaching<-c(
+    "teacher_attraction",
+    "teacher_selection_deployment",
+    "teacher_support",
+    "teaching_evaluation",
+    "teacher_monitoring",
+    "intrinsic_motivation")
+
+  ## Create referential dataframe
+  teaching_var<-data.frame(Series=as.character(series_teaching),
+                      variables=as.character(variable_teaching)) %>% 
+    left_join(matrix, by = c("variables" = "Variable name"))
+  
+  sub_ind_teaching <- teaching_var %>% select(subindicator) %>% distinct() %>%  pull()
+  
+  teaching_country_combined <- breaking_up_fun(sub_ind_teaching, teaching_var) %>% 
+    filter(!is.na(`Full question for a variable`))
+  
+  
+country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
+
+
+
+
+
+  ## SCHOOL MANAGEMENT
+
+
+
+  ## INFRASTRUCTUREs
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+# read in the data for Policy surveys
+
+  # policy_levers <- indicator_names_df %>% 
+  # filter(str_detect(`Indicator Name`, "Policy Lever")) %>% 
+  # left_join(combined_df)
+  # 
+
+
+########
+## Peru
+########
+
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+PER_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Expert_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "PER") 
+
+PER_policy_df <- PER_policy_df %>% 
+  setNames(gsub("school", "sch", names(.)))
+
+
+
+
+########
+## Jordan
+########
+
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT", paste(country, "-2019"),paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+JOR_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Expert_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "JOR") 
+
+
+
+########
+## Rwanda
+########
+
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+RWA_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Expert_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "RWA") 
+
+
+########
+
+########
+## Ethiopia
+########
+
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+ETH_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Policy_Survey/expert_dta_final.dta", sep="/"))%>% mutate(country = "ETH")
+
+
+########
+
+########
+## Madagascar
+########
+
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+
+MDG_policy_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Policy_Survey/expert_dta_final.dta", sep="/")) %>% mutate(country = "MDG")
+
+
+#######
+# Get the main indicators
+#######
+#get list of de facto indicators
+main_indicator_labels<-c( 
+                        'Teaching - Attraction',
+                         'Teaching - Selection & Deployment',
+                         'Teaching - Support', 
+                         'Teaching - Evaluation', 
+                         'Teaching - Monitoring & Accountability', 
+                         'Teaching - Intrinsic Motivation', 
+                          'Inputs & Infrastructure - Monitoring',
+                         'School Management - Attraction' ,                   
+                         'School Management - Selection & Deployment'  ,      
+                         'School Management - Support' ,                      
+                         'School Management - Evaluation'
+
+    )  
+    
+    indicators_list<-c(
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                        'intrinsic_motivation', 
+                        'sch_monitoring', 
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support', 
+                       'principal_evaluation'
+
+    )
+
+
+  labels_df_policy<-data.frame(indicators=as.character(indicators_list),
+                          indicator_labels=as.character(main_indicator_labels)) 
+    
+
+
+###########
+# Combined
+##########
+    
+    #get de facto data
+      
+    de_facto_function <- function(df, Country_acronyme){
+      
+    ipw<-df %>% pull(ipw)
+  
+    df_defacto <- df %>%
+      select(hashed_school_code, indicators_list, ipw) %>%
+      summarise_at(.vars = indicators_list, wtd.mean, w=ipw, na.rm=TRUE) %>%
+      mutate(group="De Facto",
+             country = !!Country_acronyme) %>%
+      select(group=group, everything())
+      
+      assign(paste0("data_de_facto_", quo_name(enquo(Country_acronyme))), df_defacto, envir = .GlobalEnv)
+      
+      
+    data_policy_2 <- df_defacto %>%
+      mutate_at(.vars=indicators_list, ~as.numeric(sample_n(as_tibble(c(1:5)),1)[1,1])) %>%
+      mutate(group="De Jure") %>%
+      select(group=group, everything())
+    
+    
+      assign(paste0("data_de_jure_", quo_name(enquo(Country_acronyme))), data_policy_2, envir = .GlobalEnv)
+
+      
+    }  
+      
+    
+    for (i in countries) {
+      
+      df_name <- paste(i,"school_anon_df", sep = "_")
+      de_facto_function(get(df_name), i)
+      
+    }
+      
+  ##Combined
+  names <- lapply(ls(pattern = "^data_de_"), function(x) get(x))
+  data_policy_combined <- do.call(rbind, names)
+ 
+  
+  data_policy_combined <- data_policy_combined %>% 
+    pivot_longer(cols = c(2:12), names_to= "indicators", values_to = "value") %>% 
+    left_join(labels_df_policy)
+  
+
+
+```
+
+```{r}
+  ### Here our intentions are twofolds. First, we will regress the de jure indicators on 4th grade students assessment before doing the same for de facto indicators. It should enable us to compare how effective one set of indicators is at explaining the between countries variations. Second, we will regress on the difference between de facto and de jure.
+  
+combined_assessment <- combined_wide_df %>% 
+  filter(Series=="SE.PRM.LERN") %>% 
+  pivot_longer(cols = c(2:6), names_to = "country", values_to= "value") %>% 
+  mutate(country = case_when(
+    
+    country == "Madagascar" ~ "MDG",
+    country == "Peru" ~ "PER",
+    country == "Ethiopia" ~ "ETH",
+    country == "Rwanda" ~ "RWA",
+    country == "Jordan" ~ "JOR"
+
+    
+  )) %>% 
+  rename(
+    
+    indicators_labels= `Indicator Name`,
+    indicator = Series
+    
+  ) %>%   pivot_wider(id_cols = country,
+                    names_from = indicators_labels,
+                    values_from = value)
+
+
+## Wide format and regress covariate on respective 4th grade assessment
+var1 <- 'indicators'
+var2 <- 'group'
+
+
+data_policy_combined_wide <- data_policy_combined %>% 
+  
+  mutate(group = case_when(
+    
+    group == "De Facto" ~ "De_Facto",
+    group == "De Jure" ~ "De_Jure"
+
+    
+  )) %>% 
+
+   pivot_wider(
+    id_cols =  country,
+    names_from = c(var1, var2),
+    names_glue = sprintf('{%s}_{%s}', var2, var1),
+    values_from = value) %>% 
+  
+  left_join(combined_assessment) %>% 
+  rename(student_knowledge = `Proficiency on GEPD Assessment`)
+
+
+## Regression ----
+  
+  
+  library(stargazer)
+  library(sandwich)
+
+  covariates <- data_policy_combined_wide %>% select(starts_with("De_Facto")) %>% names()
+  
+  
+  my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + ")," + factor(country)", sep=""))
+  multi_reg_school<-lm(my_formula, data_policy_combined_wide)
+  
+  # Adjust standard errors
+  cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
+  robust_multi_se    <- sqrt(diag(cov1_multi))
+  
+
+  multi_table<- summary(multi_reg_school)
+  multi_table
+  
+```
 
 # Conclusions
 

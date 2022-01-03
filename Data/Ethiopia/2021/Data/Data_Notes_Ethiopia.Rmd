@@ -567,7 +567,7 @@ ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)
   means_2021 <- c(mean(sample_full$GDP_POST), mean(comparison_full$GDP_POST), as.numeric(NA), as.numeric(NA),mean(sample_full$rural_POST), mean(comparison_full$rural_POST))
 
 t_df <- t_sample %>%
-  bind_rows(t_full) %>%
+   bind_rows(t_full) %>%
   bind_rows(t_sample_dist) %>%
   bind_rows(t_full_dist) %>%
   bind_rows(t_sample_rural) %>%
