@@ -1429,6 +1429,27 @@ Next, principal components analysis is used to examine how much a single factor 
 The scree plot below suggests that the 1st principal component explains a little over 25% of the variation between practice indicators.  This suggests that the large majority of variation in the practice indicators cannot be explained by a single factor and that there are many cases where schools performing well in one dimension may perform less well in others.
 
 ```{r}
+indicators_list <- c("student_knowledge"="4th Grade Student Knowledge",
+               "presence_rate"  = "Teacher Presence",
+               "content_knowledge" = "Teacher Content Knowledge",
+               "teach_score" = "Teacher Pedagogy",
+               "inputs" = "Basic Inputs",
+               "infrastructure" = "Basic Infrastructure",
+               "ecd_student_knowledge" = "1st Grade Student Knowledge",
+               "operational_management" = "Operational Management",
+               "instructional_leadership" = "Instructional Leadership",
+               "principal_knowledge_score" = "Principal Knowledge",
+               "principal_management" = "Principal Management"
+               )
+
+    cor_df <- combined_school_office_df %>%
+      select(country, rural, names(indicators_list)) %>%
+      group_by(country,rural) %>%
+      mutate(across(names(indicators_list),~if_else(is.na(.),mean(.,na.rm=T),.))) %>%#impute with mean by country and urban/rural
+      ungroup() %>%
+      select(names(indicators_list))
+
+
 pca_df <- na.omit(cor_df)
 
 res.pca <- prcomp(pca_df, scale = TRUE, center=TRUE)
