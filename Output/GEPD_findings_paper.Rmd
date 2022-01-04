@@ -2039,7 +2039,7 @@ modelsummary(models,
 
 ```{r}
 
-  ## Relating the policy indicators to practices : TEACHING
+  ## Relating the policy indicators to practices : TEACHING (DE FACTO)
 
 models <- list(
   
@@ -2061,7 +2061,7 @@ modelsummary(models,
 
 ```
 ```{r}
-  ## Relating the policy indicators to practices : SCHOOL MANAGEMENT
+  ## Relating the policy indicators to practices : SCHOOL MANAGEMENT (DE FACTO)
 
 models <- list(
   
@@ -2085,7 +2085,7 @@ modelsummary(models,
 ```
 
 ```{r}
-  ## Relating the policy indicators to practices : INFRASTRUCTURE
+  ## Relating the policy indicators to practices : INFRASTRUCTURE (DE FACTO)
 
 models <- list(
   
@@ -2240,13 +2240,7 @@ country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
 
 
 ```{r}
-
 # read in the data for Policy surveys
-
-  # policy_levers <- indicator_names_df %>% 
-  # filter(str_detect(`Indicator Name`, "Policy Lever")) %>% 
-  # left_join(combined_df)
-  # 
 
 
 ########
@@ -2411,7 +2405,43 @@ main_indicator_labels<-c(
   data_policy_combined <- data_policy_combined %>% 
     pivot_longer(cols = c(2:12), names_to= "indicators", values_to = "value") %>% 
     left_join(labels_df_policy)
+```
+
+
+```{r}
+
+  ## Relating the policy indicators to practices : TEACHING (DE FACTO)
+
+
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>% rename(country= iso3c) %>%  group_by(country) %>% mutate(
+  student_knowledge = mean(as.numeric(student_knowledge), na.rm=T),
+  presence_rate = mean(as.numeric(presence_rate), na.rm=T),
+  teach_score = mean(as.numeric(teach_score), na.rm=T),
+  content_knowledge = mean(as.numeric(content_knowledge), na.rm=T),
+
+  ) %>% 
+    distinct())
+
+
+models <- list(
   
+'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero'),
+
+'Teacher Presence' =  feols(presence_rate ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero'),
+
+'Teacher Pedagogy' =  feols(teach_score ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero'),
+
+'Content Knowledge' =  feols(content_knowledge ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero')
+
+)
+
+names(defacto)
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+
+
 
 
 ```
