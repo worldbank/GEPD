@@ -2038,210 +2038,7 @@ modelsummary(models,
 [Discussion of the linkages between indicators.  E.g. How the teacher pedagogy relates to student outcomes.  Interesting findings on De-Facto versus De-Jure.  Findings on implementation differences across geographies within a country.  Findings on Bureaucracy and school outcomes.  Can maybe highlight link with poor bureaucracy with poor inputs/infrastructure.]
 
 ```{r}
-
-  ## Relating the policy indicators to practices : TEACHING (DE FACTO)
-
-models <- list(
-  
-'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'Teacher Presence' =  feols(presence_rate ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'Teacher Pedagogy' =  feols(teach_score ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'Content Knowledge' =  feols(content_knowledge ~ teacher_attraction  + teacher_satisfied_job + teacher_selection_deployment + teacher_support + teacher_bonus + teacher_monitoring   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
-
-)
-
-
-
-modelsummary(models,
-             estimate= "{estimate}{stars}"
-             )
-
-```
-```{r}
-  ## Relating the policy indicators to practices : SCHOOL MANAGEMENT (DE FACTO)
-
-models <- list(
-  
-'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-  
-'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
-
-)
-
-
-
-modelsummary(models,
-             estimate= "{estimate}{stars}"
-             )
-
-
-```
-
-```{r}
-  ## Relating the policy indicators to practices : INFRASTRUCTURE (DE FACTO)
-
-models <- list(
-  
-'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-  
-'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
-
-'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
-
-)
-
-
-
-modelsummary(models,
-             estimate= "{estimate}{stars}"
-             )
-
-```
-
-
-```{r}
-###breaking up the indicators into the underlying questions 
-
-   #create subset with just main indicators
-
-
-
-  ## calling in the global matrix
-
-  matrix <- read_xlsx(paste(dir,'Indicators/GEPD_master.xlsx', sep = "/"), sheet = 2) %>% 
-  fill(c(Indicator, `Variable name`, `Sub-indicators\r\nMain indicator (in red)`), .direction=c("down")) %>% 
-  rename(subindicator=`Sub-indicators\r\nMain indicator (in red)`)
-
-breaking_up_fun <- function(variables, reference_data){
-    
-  names.use <- names(combined_school_office_df)[(names(combined_school_office_df) %in% variables)]
- 
-  teaching_country_combined <- combined_school_office_df %>% 
-  
-    select(country, names.use) %>% 
-      
-    group_by(country) %>% 
-    
-    summarise_at(names.use, ~ mean(., na.rm = T)) %>% 
-      
-    pivot_longer(cols = names.use ,names_to = "subindicator", values_to = "value") %>% 
-      
-    left_join(reference_data) %>% 
-    
-    distinct(country, subindicator, value, .keep_all=T) %>% 
-    
-    ## Insert percentage whenever question beget a yes/no answers
-    
-    mutate(subindicator = if_else(str_detect(`Question options`, "Yes"), paste(subindicator, "percent", sep = "_"), subindicator )) %>% 
-    
-    mutate(value = if_else(str_detect(subindicator, "percent"), value *100, value )) %>% 
-
-    
-    ## Add colours and comments
-    
-    mutate(
-      
-      value_metadata=case_when(
-        
-        value <85 & str_detect(subindicator, "_percent") ~ "Needs Improvement",
-        value >=85 & value<90 & str_detect(subindicator, "_percent") ~ "Caution",
-        value >=90 & str_detect(subindicator, "_percent")~ "On Target",
-        TRUE ~ "N/A"
-      )) %>% 
-    
-    mutate(
-           value=round(value,1),
-           
-           value_color=case_when(
-             value_metadata=="Needs Improvement" ~ "#FF0000",
-             value_metadata=="Caution" ~ "#FCD606",
-             value_metadata=="On Target" ~ "#85C546",
-             TRUE ~ "#808080"
-           ),
-           
-           country = case_when(
-            country == "ETH" ~ "Ethiopia",
-            country == "JOR" ~ "Jordan",
-            country == "MDG" ~ "Madagascar",
-            country == "RWA" ~ "Rwanda",
-            country == "PER" ~ "Peru"
-
-    ))
-  
-    
-  } 
-    
-    
-
-
-  ## TEACHING
-
-    series_teaching<- c(
-      'SE.PRM.TATT',
-      'SE.PRM.TSDP',
-      'SE.PRM.TSUP',
-      'SE.PRM.TEVL',
-      'SE.PRM.TMNA',
-      'SE.PRM.TINM')
- 
-  variable_teaching<-c(
-    "teacher_attraction",
-    "teacher_selection_deployment",
-    "teacher_support",
-    "teaching_evaluation",
-    "teacher_monitoring",
-    "intrinsic_motivation")
-
-  ## Create referential dataframe
-  teaching_var<-data.frame(Series=as.character(series_teaching),
-                      variables=as.character(variable_teaching)) %>% 
-    left_join(matrix, by = c("variables" = "Variable name"))
-  
-  sub_ind_teaching <- teaching_var %>% select(subindicator) %>% distinct() %>%  pull()
-  
-  teaching_country_combined <- breaking_up_fun(sub_ind_teaching, teaching_var) %>% 
-    filter(!is.na(`Full question for a variable`))
-  
-  
-country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
-
-
-
-
-
-  ## SCHOOL MANAGEMENT
-
-
-
-  ## INFRASTRUCTUREs
-
-
-
-
-```
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-# read in the data for Policy surveys
-
+##### Combining de facto and de jure data for each country ----------
 
 ########
 ## Peru
@@ -2410,17 +2207,10 @@ main_indicator_labels<-c(
 
 ```{r}
 
-  ## Relating the policy indicators to practices : TEACHING (DE FACTO)
+## Relating the policy indicators to practices : TEACHING (DE FACTO)-----
 
 
-defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>% rename(country= iso3c) %>%  group_by(country) %>% mutate(
-  student_knowledge = mean(as.numeric(student_knowledge), na.rm=T),
-  presence_rate = mean(as.numeric(presence_rate), na.rm=T),
-  teach_score = mean(as.numeric(teach_score), na.rm=T),
-  content_knowledge = mean(as.numeric(content_knowledge), na.rm=T),
-
-  ) %>% 
-    distinct())
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
 
 
 models <- list(
@@ -2445,79 +2235,135 @@ modelsummary(models,
 
 
 ```
+```{r}
+  ## Relating the policy indicators to practices : TEACHING (DE JURE)-----
+
+
+deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
+
+
+models <- list(
+  
+'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero'),
+
+'Teacher Presence' =  feols(presence_rate ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero'),
+
+'Teacher Pedagogy' =  feols(teach_score ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero'),
+
+'Content Knowledge' =  feols(content_knowledge ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero')
+
+)
+
+names(defacto)
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+
+
+
+```
+```{r}
+  ## Relating the policy indicators to practices : INFRASTRUCTURE (DE FACTO)-----
+
+
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, inputs, student_knowledge, principal_knowledge_score) %>%  rename(country= iso3c) %>% mutate(inputs = as.numeric(inputs), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score)))
+
+models <- list(
+  
+'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+  
+'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+```
+
 
 ```{r}
-  ### Here our intentions are twofolds. First, we will regress the de jure indicators on 4th grade students assessment before doing the same for de facto indicators. It should enable us to compare how effective one set of indicators is at explaining the between countries variations. Second, we will regress on the difference between de facto and de jure.
+  ## Relating the policy indicators to practices : INFRASTRUCTURE (DE JURE)-----
+
+deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, inputs, student_knowledge, principal_knowledge_score) %>%  rename(country= iso3c) %>% mutate(inputs = as.numeric(inputs), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score)))
+
+models <- list(
   
-combined_assessment <- combined_wide_df %>% 
-  filter(Series=="SE.PRM.LERN") %>% 
-  pivot_longer(cols = c(2:6), names_to = "country", values_to= "value") %>% 
-  mutate(country = case_when(
-    
-    country == "Madagascar" ~ "MDG",
-    country == "Peru" ~ "PER",
-    country == "Ethiopia" ~ "ETH",
-    country == "Rwanda" ~ "RWA",
-    country == "Jordan" ~ "JOR"
-
-    
-  )) %>% 
-  rename(
-    
-    indicators_labels= `Indicator Name`,
-    indicator = Series
-    
-  ) %>%   pivot_wider(id_cols = country,
-                    names_from = indicators_labels,
-                    values_from = value)
-
-
-## Wide format and regress covariate on respective 4th grade assessment
-var1 <- 'indicators'
-var2 <- 'group'
-
-
-data_policy_combined_wide <- data_policy_combined %>% 
+'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
   
-  mutate(group = case_when(
-    
-    group == "De Facto" ~ "De_Facto",
-    group == "De Jure" ~ "De_Jure"
+'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-    
-  )) %>% 
+'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
 
-   pivot_wider(
-    id_cols =  country,
-    names_from = c(var1, var2),
-    names_glue = sprintf('{%s}_{%s}', var2, var1),
-    values_from = value) %>% 
-  
-  left_join(combined_assessment) %>% 
-  rename(student_knowledge = `Proficiency on GEPD Assessment`)
+'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
 
 
-## Regression ----
-  
-  
-  library(stargazer)
-  library(sandwich)
 
-  covariates <- data_policy_combined_wide %>% select(starts_with("De_Facto")) %>% names()
-  
-  
-  my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + ")," + factor(country)", sep=""))
-  multi_reg_school<-lm(my_formula, data_policy_combined_wide)
-  
-  # Adjust standard errors
-  cov1_multi         <- vcovHC(multi_reg_school, type = "HC1")
-  robust_multi_se    <- sqrt(diag(cov1_multi))
-  
-
-  multi_table<- summary(multi_reg_school)
-  multi_table
-  
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
 ```
+
+```{r}
+  ## Relating the policy indicators to practices : SCHOOL MANAGEMENT (DE FACTO)-----
+
+
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, operational_management, student_knowledge, principal_knowledge_score, instructional_leadership) %>%  rename(country= iso3c) %>% mutate(operational_management = as.numeric(operational_management), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score), instructional_leadership = as.numeric(instructional_leadership)))
+
+
+models <- list(
+  
+'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+  
+'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+```
+
+```{r}
+  ## Relating the policy indicators to practices : SCHOOL MANAGEMENT (DE JURE)-----
+
+
+deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, operational_management, student_knowledge, principal_knowledge_score, instructional_leadership) %>%  rename(country= iso3c) %>% mutate(operational_management = as.numeric(operational_management), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score), instructional_leadership = as.numeric(instructional_leadership)))
+
+models <- list(
+  
+'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+  
+'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+
+'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}"
+             )
+```
+
 
 # Conclusions
 
