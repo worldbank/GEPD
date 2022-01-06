@@ -2363,6 +2363,819 @@ modelsummary(models,
              estimate= "{estimate}{stars}"
              )
 ```
+```{r}
+### Calling data 
+ 
+ ########
+ # Peru
+ #######
+ #read in anonymized school data
+ country <- "PER"
+ year <- "2019"
+ PER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+   mutate(iso3c=country) %>%
+   mutate(student_proficient=100*as.numeric(student_knowledge>=86.6), #26/30
+          student_proficient_70=100*as.numeric(student_knowledge>=70),
+          student_proficient_75=100*as.numeric(student_knowledge>=75),
+          literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=92), #12/13 points
+          literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
+          literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
+          math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
+          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
+          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
+          math_student_proficient_60=100*as.numeric(math_student_knowledge>=60))
+ ########
+ # Jordan
+ #######
+ #read in anonymized school data
+ country <- "JOR"
+ year <- "2019"
+ JOR_g4_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.dta", sep="/")) %>%
+   mutate(iso3c=country)
+ ########
+ # Rwanda
+ #######
+ #read in anonymized school data
+ country <- "RWA"
+ year <- "2020"
+ RWA_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+   mutate(iso3c=country)
+ ########
+ # Ethiopia
+ #######
+ #read in anonymized school data
+ country <- "ETH"
+ year <- "2020_2021"
+ ETH_g4_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2020.csv", sep="/")) %>%
+   mutate(iso3c=country)
+ ETH_g4_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2021.csv", sep="/")) %>%
+   mutate(iso3c=country)
+ ########
+ # Madagascar
+ #######
+ #read in anonymized school data
+ country <- "MDG"
+ year <- "2021"
+ MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+   mutate(iso3c=country) %>%
+   select(-district)
+ ########
+ #combined
+ ########
+ combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df) %>%
+   mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")),
+          `Student Proficient`=if_else(student_proficient==100,"Yes", "No"),
+          `Student Proficient Math`=if_else(math_student_proficient==100,"Yes", "No"),
+          `Student Proficient Literacy`=if_else(literacy_student_proficient==100,"Yes", "No"))
+ weights_df <- combined_g4_df %>%
+   group_by(iso3c, hashed_school_code) %>%
+   summarise(ipw=mean(ipw, na.rm=T))
+ 
+```
+
+
+
+```{r}
+
+ 
+ ### Grade 4 assessment breaking up  -------------------
+ library(skimr)
+ 
+ breaking_up_all_g4 <- combined_g4_df %>%
+   skim() %>% 
+   filter(str_detect(skim_variable, "m8saq2_id|m8saq3_id|m8saq4_id|m8saq5_story|m8saq6_story|m8sbq3c_arithmetic|m8sbq3b_arithmetic|m8sbq3g_arithmetic|m8sbq5_word_problem")) %>% 
+   
+   mutate(iso3c = "ALL") %>% 
+   
+   mutate(
+     
+     across(where(is.numeric),
+            
+            ~ round(., digits = 2)),
+     
+     skim_variable = case_when(
+       
+       skim_variable == "m8saq2_id" ~ "Letters identification",
+       skim_variable == "m8saq3_id" ~ "Words identification",
+       skim_variable == "m8saq4_id" ~ "Pictures identification",
+       skim_variable == "m8saq5_story" ~ "Understanding story 1",
+       skim_variable == "m8saq6_story" ~ "Understanding story 2",
+       
+       skim_variable == "m8sbq3b_arithmetic" ~ "Can add double digits ",
+       skim_variable == "m8sbq3c_arithmetic" ~ "Can subtract double digits",
+       skim_variable == "m8sbq3g_arithmetic" ~ "Can multiply double digits",
+       skim_variable == "m8sbq5_word_problem" ~ "Can solve simple math story problem"
+       
+       
+     )
+   ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable)
+ 
+ 
+ 
+ 
+ breaking_up_g4 <- combined_g4_df %>%
+   group_by(iso3c) %>% 
+    skim() %>% 
+   filter(str_detect(skim_variable, "m8saq2_id|m8saq3_id|m8saq4_id|m8saq5_story|m8saq6_story|m8sbq3c_arithmetic|m8sbq3b_arithmetic|m8sbq3g_arithmetic|m8sbq5_word_problem")) %>% 
+   
+   
+   group_by(skim_variable) %>% 
+ 
+ 
+   summarise(min_var = min(numeric.mean), min_country = iso3c[which.min(numeric.mean)], 
+             max_var = max(numeric.mean), max_country = iso3c[which.max(numeric.mean)]) %>% 
+   
+   mutate(
+     
+     across(where(is.numeric),
+            
+            ~ round(., digits = 2)),
+     
+     across(ends_with("country"),
+            
+            ~ case_when(str_detect(., "MDG") ~ "Madagascar",
+                        str_detect(., "ETH") ~ "Ethiopia",
+                        str_detect(., "PER") ~ "Peru",
+                        str_detect(., "RWA") ~ "Rwanda",
+                        str_detect(., "JOR") ~ "Jordan")),
+            
+      skim_variable = case_when(
+        
+        skim_variable == "m8saq2_id" ~ "Letters identification",
+        skim_variable == "m8saq3_id" ~ "Words identification",
+        skim_variable == "m8saq4_id" ~ "Pictures identification",
+        skim_variable == "m8saq5_story" ~ "Understanding story 1",
+        skim_variable == "m8saq6_story" ~ "Understanding story 2",
+        
+        skim_variable == "m8sbq3b_arithmetic" ~ "Can add double digits ",
+        skim_variable == "m8sbq3c_arithmetic" ~ "Can subtract double digits",
+        skim_variable == "m8sbq3g_arithmetic" ~ "Can multiply double digits",
+        skim_variable == "m8sbq5_word_problem" ~ "Can solve simple math story problem"
+        
+      )
+   ) %>% 
+   
+arrange(skim_variable) %>% bind_cols(breaking_up_all_g4 %>% select(-skim_variable)) %>% 
+   
+   mutate(
+     
+     All = paste0(mean_var*100, "%"),
+     Min = paste0(min_var*100, "%", " (", min_country, ")"),
+     Max = paste0(max_var*100, "%", " (", max_country, ")"),
+     
+   ) %>% rename(`Sub-tasks` = skim_variable) %>% 
+   select(`Sub-tasks`, All, Min, Max) %>% 
+   
+   mutate(Tasks= case_when(
+     
+     
+     str_detect(`Sub-tasks`, "digits|math") ~ "Math",
+     !str_detect(`Sub-tasks`, "digits|maths") ~ "Literacy"
+     
+     
+   )) %>% 
+ as_grouped_data(., groups = c("Tasks")) %>% 
+   flextable() %>% 
+   bold(j = c("Tasks"), bold = TRUE) %>% 
+   italic(j = c("Tasks"), italic = TRUE) %>% 
+   add_footer(Tasks= paste0('Notes: The table presents the percentage of students in Grade 4 that were able to perform on various language and math tasks.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses.' )) %>% 
+   merge_at( j = 1:5, part = "footer") %>%
+   add_header_lines("Comparison across countries of sub-indicators for 4th Grade students") %>% 
+   
+   
+   autofit()
+ 
+ 
+ breaking_up_g4
+ 
+```
+
+```{r}
+
+ ### 1st grade  -------------------
+ 
+ 
+ ########
+ # Peru
+ #######
+ #read in anonymized school data
+ country <- "PER"
+ year <- "2019"
+ PER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+   mutate(iso3c=country) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Jordan
+ #######
+ #read in anonymized school data
+ country <- "JOR"
+ year <- "2019"
+ JOR_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
+   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Rwanda
+ #######
+ #read in anonymized school data
+ country <- "RWA"
+ year <- "2020"
+ RWA_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Ethiopia
+ #######
+ #read in anonymized school data
+ country <- "ETH"
+ year <- "2020_2021"
+ ETH_g1_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2020.csv", sep="/")) %>%
+   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2021.csv", sep="/")) %>%
+   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Madagascar
+ #######
+ #read in anonymized school data
+ country <- "MDG"
+ year <- "2021"
+ MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+   mutate(iso3c=country) %>%
+   select(-district) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ 
+ ########
+ #combined
+ ########
+ combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
+   mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
+
+```
+
+
+```{r}
+
+ 
+ 
+ breaking_up_all_g1 <- combined_g1_df %>%
+   
+   select(starts_with("hashed"), iso3c, ends_with("_comprehension"), ends_with("_words"), ends_with("_letters"), ends_with("_sentence"),ends_with("_produce_set"), ends_with("_number_ident"),
+          ends_with("_backward_digit"), ends_with("_number_compare"), ends_with("_simple_add"), ends_with("_head_shoulders"), ends_with("_perspective")) %>% 
+   
+   mutate_at(c(5:length(.)), ~ as.numeric(.)) %>% 
+   
+   mutate(
+     
+     ecd_comprehension = rowMeans(select(., ends_with("_comprehension"))),
+     ecd_words = rowMeans(select(., ends_with("_words"))),
+     ecd_letters = rowMeans(select(., ends_with("_letters"))),
+     ecd_sentence = rowMeans(select(., ends_with("_sentence"))),
+     
+     
+     ecd_produce_set = rowMeans(select(., ends_with("_produce_set")), na.rm = T),
+     ecd_number_ident = rowMeans(select(., ends_with("_number_ident")), na.rm = T),
+     ecd_backward_digit = rowMeans(select(., ends_with("_backward_digit")), na.rm = T),
+     ecd_number_compare = rowMeans(select(., ends_with("_number_compare")), na.rm = T),
+     ecd_simple_add = rowMeans(select(., ends_with("_simple_add")), na.rm = T),
+     ecd_head_shoulderss = rowMeans(select(., ends_with("_head_shoulders")), na.rm = T),
+     ecd_perspective = rowMeans(select(., ends_with("_perspective")), na.rm = T)
+     
+     
+     
+   ) %>% 
+   
+   skim() %>% 
+   filter(str_detect(skim_variable, "ecd_")) %>% 
+   
+   mutate(iso3c = "ALL") %>% 
+   
+   mutate(
+     
+     across(where(is.numeric),
+            
+            ~ round(., digits = 2)),
+     
+     skim_variable = case_when(
+       
+       skim_variable == "ecd_comprehension" ~ "Basic comprehension",
+       skim_variable == "ecd_words" ~ "Words identification",
+       skim_variable == "ecd_letters" ~ "Letters identification",
+       skim_variable == "ecd_sentence" ~ "Sentence understanding",
+       
+       skim_variable == "ecd_produce_set" ~ "Set production",
+       skim_variable == "ecd_number_ident" ~ "Number identification",
+       skim_variable == "ecd_number_compare" ~ "Number comparison",
+       skim_variable == "ecd_simple_add" ~ "Simple addition",
+       skim_variable == "ecd_backward_digit" ~ "Backward digit counting",
+       skim_variable == "ecd_head_shoulderss" ~ "Head-Shoulders coordination",
+       skim_variable == "ecd_perspective" ~ "Perspective taking"
+       
+       
+     )
+   ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable)
+ 
+ 
+ 
+ 
+ breaking_up_g1 <- combined_g1_df %>%
+   
+   
+   select(starts_with("hashed"), iso3c, ends_with("_comprehension"), ends_with("_words"), ends_with("_letters") , ends_with("_sentence"), ends_with("_produce_set"), ends_with("_number_ident"),
+          ends_with("_backward_digit"), ends_with("_number_compare"), ends_with("_simple_add"), ends_with("_head_shoulders"), ends_with("_perspective")) %>%    
+   mutate_at(c(5:length(.)), ~ as.numeric(.)) %>% 
+   
+   mutate(
+     
+     ecd_comprehension = rowMeans(select(., ends_with("_comprehension"))),
+     ecd_words = rowMeans(select(., ends_with("_words"))),
+     ecd_letters = rowMeans(select(., ends_with("_letters"))),
+     ecd_sentence = rowMeans(select(., ends_with("_sentence"))),
+     
+     
+     ecd_produce_set = rowMeans(select(., ends_with("_produce_set")), na.rm = T),
+     ecd_number_ident = rowMeans(select(., ends_with("_number_ident")), na.rm = T),
+     ecd_backward_digit = rowMeans(select(., ends_with("_backward_digit")), na.rm = T),
+     ecd_number_compare = rowMeans(select(., ends_with("_number_compare")), na.rm = T),
+     ecd_simple_add = rowMeans(select(., ends_with("_simple_add")), na.rm = T),
+     ecd_head_shoulderss = rowMeans(select(., ends_with("_head_shoulders")), na.rm = T),
+     ecd_perspective = rowMeans(select(., ends_with("_perspective")), na.rm = T)
+     
+     
+   ) %>% 
+   
+   
+   group_by(iso3c) %>% 
+   skim() %>% 
+   filter(str_detect(skim_variable, "ecd_")) %>% 
+   
+   
+   group_by(skim_variable) %>% 
+   
+   
+   summarise(min_var = min(numeric.mean), min_country = iso3c[which.min(numeric.mean)], 
+             max_var = max(numeric.mean), max_country = iso3c[which.max(numeric.mean)]) %>% 
+   
+   mutate(
+     
+     across(where(is.numeric),
+            
+            ~ round(., digits = 2)),
+     
+     across(ends_with("country"),
+            
+            ~ case_when(str_detect(., "MDG") ~ "Madagascar",
+                        str_detect(., "ETH") ~ "Ethiopia",
+                        str_detect(., "PER") ~ "Peru",
+                        str_detect(., "RWA") ~ "Rwanda",
+                        str_detect(., "JOR") ~ "Jordan")),
+     
+     skim_variable = case_when(
+       
+       skim_variable == "ecd_comprehension" ~ "Basic comprehension",
+       skim_variable == "ecd_words" ~ "Words identification",
+       skim_variable == "ecd_letters" ~ "Letters identification",
+       skim_variable == "ecd_sentence" ~ "Sentence understanding",
+       
+       skim_variable == "ecd_produce_set" ~ "Set production",
+       skim_variable == "ecd_number_ident" ~ "Number identification",
+       skim_variable == "ecd_number_compare" ~ "Number comparison",
+       skim_variable == "ecd_simple_add" ~ "Simple addition",
+       skim_variable == "ecd_backward_digit" ~ "Backward digit counting",
+       skim_variable == "ecd_head_shoulderss" ~ "Head-Shoulders coordination",
+       skim_variable == "ecd_perspective" ~ "Perspective taking"
+       
+       
+     )
+   ) %>% 
+   
+   arrange(skim_variable) %>% bind_cols(breaking_up_all_g1 %>% select(-skim_variable)) %>% 
+   
+   mutate(
+     
+     All = paste0(mean_var*100, "%"),
+     Min = paste0(min_var*100, "%", " (", min_country, ")"),
+     Max = paste0(max_var*100, "%", " (", max_country, ")"),
+     
+   ) %>% rename(`Sub-tasks` = skim_variable) %>% 
+   select(`Sub-tasks`, All, Min, Max) %>% 
+   
+   mutate(Tasks= case_when(
+     
+     
+     str_detect(`Sub-tasks`, "comprehension|Words|letters|sentence|Sentence|Letters") ~ "Literacy",
+     str_detect(`Sub-tasks`, "coordination|words|Perspective") ~ "Socio-emotional",
+     TRUE ~ "Math"
+     
+     
+   )) %>% 
+   arrange(Tasks, `Sub-tasks`) %>% 
+   as_grouped_data(., groups = c("Tasks")) %>% 
+   flextable() %>% 
+   bold(j = c("Tasks"), bold = TRUE) %>% 
+   italic(j = c("Tasks"), italic = TRUE) %>% 
+   add_footer(Tasks= paste0('Notes: The table presents the percentage of students in Grade 1 that were able to perform on various language, math and socio-emotional tasks.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses.' )) %>% 
+   merge_at( j = 1:5, part = "footer") %>%
+   add_header_lines("Comparison across countries of sub-indicators for 1st Grade students") %>% 
+   
+   autofit()
+ 
+ 
+ breaking_up_g1
+ 
+```
+
+
+
+```{r}
+
+ 
+ ######################################################
+ ### Teaching breaking up -------------------
+ 
+ 
+ ########
+ # Peru
+ #######
+ #read in anonymized school data
+ country <- "PER"
+ year <- "2019"
+ PER_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Jordan
+ #######
+ #read in anonymized school data
+ country <- "JOR"
+ year <- "2019"
+ JOR_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon.dta", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Rwanda
+ #######
+ #read in anonymized school data
+ country <- "RWA"
+ year <- "2020"
+ RWA_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon.csv", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Ethiopia
+ #######
+ #read in anonymized school data
+ country <- "ETH"
+ year <- "2020_2021"
+ ETH_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon_2020.csv", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ETH_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon_2021.csv", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Madagascar
+ #######
+ #read in anonymized school data
+ country <- "MDG"
+ year <- "2021"
+ MDG_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_dta_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>%
+    select(-district) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ 
+ ########
+ #combined
+ ########
+ combined_teacher_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df_2020, ETH_df_2021, MDG_df) %>%
+    mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
+ 
+ 
+```
+
+```{r}
+
+ 
+ breaking_up_all_teacher <- combined_teacher_df %>%
+    mutate_at(c(2:length(.)), ~ as.numeric(.)) %>% 
+    mutate(
+       m3bq10_tmna =if_else(m3bq10_tmna__7 ==1, 0, 1),
+       m3sbq9_tmna =if_else(m3sbq9_tmna__7 ==1, 0, 1)
+       
+    ) %>% 
+    skim() %>% 
+    filter(str_detect(skim_variable, "m3sdq14_ildr|m3sdq3_tsup|m3sdq9_tsup|m3sbq6_tmna|m3sbq9_tmna|m3bq10_tmna")) %>% 
+    filter(!str_detect(skim_variable, "__")) %>% 
+    
+    mutate(iso3c = "ALL") %>% 
+    
+    mutate(
+       
+       across(where(is.numeric),
+              
+              ~ round(., digits = 2)),
+       
+       skim_variable = case_when(
+          
+          skim_variable == "m3sdq14_ildr" ~ "Opportunities to share ways of improving",
+          skim_variable == "m3sdq3_tsup" ~ "Induction or mentorship program",
+          skim_variable == "m3sdq9_tsup" ~ "In service training",
+          skim_variable == "m3sbq6_tmna" ~ "Formally evaluated",
+          skim_variable == "m3sbq9_tmna" ~ "Negative consequence if bad evaluation",
+          skim_variable == "m3bq10_tmna" ~ "Positive consequence if good evaluation"
+          
+          
+       )
+    ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable)
+
+
+ 
+ 
+ breaking_up_teacher <- combined_teacher_df %>%
+    relocate(iso3c) %>% 
+    mutate_at(c(2:length(.)), ~ as.numeric(.)) %>% 
+    mutate(
+       m3bq10_tmna =if_else(m3bq10_tmna__7 ==1, 0, 1),
+       m3sbq9_tmna =if_else(m3sbq9_tmna__7 ==1, 0, 1)
+       
+    ) %>% 
+ 
+    group_by(iso3c) %>% 
+    skim() %>% 
+    filter(str_detect(skim_variable, "m3sdq14_ildr|m3sdq3_tsup|m3sdq9_tsup|m3sbq6_tmna|m3sbq9_tmna|m3bq10_tmna")) %>% 
+    filter(!str_detect(skim_variable, "__")) %>% 
+
+   
+ 
+#  
+# x <- breaking_up_teacher %>% 
+   
+   filter(!str_detect(iso3c, "MDG")) %>% 
+    
+    group_by(skim_variable) %>% 
+    
+    
+    summarise(min_var = min(numeric.mean), min_country = iso3c[which.min(numeric.mean)], 
+              max_var = max(numeric.mean), max_country = iso3c[which.max(numeric.mean)]) %>% 
+    
+    mutate(
+       
+       across(where(is.numeric),
+              
+              ~ round(., digits = 2)),
+       
+       across(ends_with("country"),
+              
+              ~ case_when(str_detect(., "MDG") ~ "Madagascar",
+                          str_detect(., "ETH") ~ "Ethiopia",
+                          str_detect(., "PER") ~ "Peru",
+                          str_detect(., "RWA") ~ "Rwanda",
+                          str_detect(., "JOR") ~ "Jordan")),
+       
+       skim_variable = case_when(
+          
+          skim_variable == "m3sdq14_ildr" ~ "Opportunities to share ways of improving",
+          skim_variable == "m3sdq3_tsup" ~ "Induction or mentorship program",
+          skim_variable == "m3sdq9_tsup" ~ "In service training",
+          skim_variable == "m3sbq6_tmna" ~ "Formally evaluated",
+          skim_variable == "m3sbq9_tmna" ~ "Negative consequence if bad evaluation",
+          skim_variable == "m3bq10_tmna" ~ "Positive consequence if good evaluation"
+          
+       )
+    ) %>% 
+    
+    arrange(skim_variable) %>% bind_cols(breaking_up_all_teacher %>% select(-skim_variable)) %>% 
+    
+    mutate(
+       
+       All = paste0(mean_var*100, "%"),
+       Min = paste0(min_var*100, "%", " (", min_country, ")"),
+       Max = paste0(max_var*100, "%", " (", max_country, ")"),
+       
+    ) %>% 
+    
+    rename(`Sub-tasks` = skim_variable) %>% 
+    select(`Sub-tasks`, All, Min, Max) %>% 
+    
+    mutate(Tasks= case_when(
+       
+       
+       str_detect(`Sub-tasks`, "training|mentorship|Opportunity") ~ "Teacher Support",
+       !str_detect(`Sub-tasks`, "training|mentorship|Opportunity") ~ "Teacher Evaluation"
+       
+       
+    )) %>% 
+   relocate(Tasks, `Sub-tasks`) %>% 
+    arrange(Tasks, `Sub-tasks`) %>% 
+    as_grouped_data(., groups = c("Tasks")) %>% 
+    flextable() %>% 
+    bold(j = c("Tasks"), bold = TRUE) %>% 
+    italic(j = c("Tasks"), italic = TRUE) %>% 
+    add_footer(Tasks= paste0('Notes: The table presents the percentage of teachers that responded positively to this question.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses. Madagascar is not included in the data presented above as data were not consistently available for these indicators.' )) %>% 
+    merge_at( j = 1:5, part = "footer") %>%
+    add_header_lines("Comparison across countries of sub-indicators for primary school teachers") %>% 
+    
+    
+    autofit()
+ 
+ 
+ 
+ 
+    breaking_up_teacher
+
+ 
+ 
+```
+
+
+```{r}
+
+ ######################################################
+ ### School Management breaking up -------------------
+ 
+ 
+ ########
+ # Peru
+ #######
+ #read in anonymized school data
+ country <- "PER"
+ year <- "2019"
+ PER_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Jordan
+ #######
+ #read in anonymized school data
+ country <- "JOR"
+ year <- "2019"
+ JOR_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Rwanda
+ #######
+ #read in anonymized school data
+ country <- "RWA"
+ year <- "2020"
+ RWA_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ # Ethiopia
+ #######
+ #read in anonymized school data
+ country <- "ETH"
+ year <- "2020_2021"
+ ETH_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ 
+ ########
+ # Madagascar
+ #######
+ #read in anonymized school data
+ country <- "MDG"
+ year <- "2021"
+ MDG_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>%
+    select(-district) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
+ ########
+ 
+ ########
+ #combined
+ ########
+ combined_school_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df, MDG_df) %>%
+    mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
+ 
+ 
+```
+
+```{r}
+
+ 
+ breaking_up_all_principal <- combined_school_df %>%
+    
+    select(starts_with("hashed"), iso3c, principal_training, principal_formally_evaluated, principal_positive_consequences, 
+           principal_negative_consequences, sch_goals_exist, classroom_observed, discussed_observation, lesson_plan_w_feedback,
+           add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw) %>% 
+    
+    mutate_at(c(4:length(.)), ~ as.numeric(.)) %>% 
+    
+    skim() %>% 
+
+    mutate(iso3c = "ALL") %>% 
+    
+    mutate(
+       
+       across(where(is.numeric),
+              
+              ~ round(., digits = 2)),
+       
+       skim_variable = case_when(
+          
+          skim_variable == "principal_training" ~ "Formally trained to be principal",
+          skim_variable == "principal_formally_evaluated" ~ "Formally evaluated over the last year",
+          skim_variable == "principal_positive_consequences" ~ "Reporting positive consequence for positive evaluation",
+          skim_variable == "principal_negative_consequences" ~ "Reporting negative consequence for negative evaluation",
+          
+          skim_variable == "sch_goals_exist" ~ "Existence of school goals",
+          skim_variable == "classroom_observed" ~ "Classroom observed over the last year",
+          skim_variable == "discussed_observation" ~ "Observation were discussed",
+          skim_variable == "lesson_plan_w_feedback" ~ "Lesson plan was discussed with someone beforehand",
+          
+          skim_variable == "add_triple_digit_pknw" ~ "Can add triple digits",
+          skim_variable == "multiply_double_digit_pknw" ~ "Can multiply double digits",
+          skim_variable == "complete_sentence_pknw" ~ "Can complete a simple sentence",
+          skim_variable == "experience_pknw" ~ "Has less than 3 year of experience in position"
+          
+          
+       )
+    ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable) %>% filter(!is.na(.))
+ 
+ 
+ 
+ 
+ breaking_up_principal <- combined_school_df %>%
+    
+    select(starts_with("hashed"), iso3c, principal_training, principal_formally_evaluated, principal_positive_consequences, 
+           principal_negative_consequences, sch_goals_exist, classroom_observed, discussed_observation, lesson_plan_w_feedback,
+           add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw) %>% 
+    relocate(starts_with("hashed"), iso3c) %>% 
+    
+    mutate_at(c(5:length(.)), ~ as.numeric(.)) %>% 
+    
+    group_by(iso3c) %>% 
+    skim() %>% 
+    
+    ## Delete only the data for Peru for the existence of schools goal since all obs are missing
+    filter(iso3c!="PER" | skim_variable!="sch_goals_exist") %>% 
+    
+    group_by(skim_variable) %>% 
+    
+    
+    summarise(min_var = min(numeric.mean), min_country = iso3c[which.min(numeric.mean)], 
+              max_var = max(numeric.mean), max_country = iso3c[which.max(numeric.mean)]) %>% 
+    
+    mutate(
+       
+       across(where(is.numeric),
+              
+              ~ round(., digits = 2)),
+       
+       across(ends_with("country"),
+              
+              ~ case_when(str_detect(., "MDG") ~ "Madagascar",
+                          str_detect(., "ETH") ~ "Ethiopia",
+                          str_detect(., "PER") ~ "Peru",
+                          str_detect(., "RWA") ~ "Rwanda",
+                          str_detect(., "JOR") ~ "Jordan")),
+       
+       skim_variable = case_when(
+          
+          
+          skim_variable == "principal_training" ~ "Formally trained to be principal",
+          skim_variable == "principal_formally_evaluated" ~ "Formally evaluated over the last year",
+          skim_variable == "principal_positive_consequences" ~ "Reporting positive consequence for positive evaluation",
+          skim_variable == "principal_negative_consequences" ~ "Reporting negative consequence for negative evaluation",
+          
+          skim_variable == "sch_goals_exist" ~ "Existence of school goals *",
+          skim_variable == "classroom_observed" ~ "Classroom observed over the last year",
+          skim_variable == "discussed_observation" ~ "Observation were discussed",
+          skim_variable == "lesson_plan_w_feedback" ~ "Lesson plan was discussed with someone beforehand",
+          
+          skim_variable == "add_triple_digit_pknw" ~ "Can add triple digits",
+          skim_variable == "multiply_double_digit_pknw" ~ "Can multiply double digits",
+          skim_variable == "complete_sentence_pknw" ~ "Can complete a simple sentence",
+          skim_variable == "experience_pknw" ~ "Has less than 3 year of experience in position"
+          
+          
+       )
+    ) %>% 
+    
+    arrange(skim_variable) %>% bind_cols(breaking_up_all_principal %>% select(-skim_variable)) %>% 
+    
+    mutate(
+       
+       All = paste0(mean_var*100, "%"),
+       Min = paste0(min_var*100, "%", " (", min_country, ")"),
+       Max = paste0(max_var*100, "%", " (", max_country, ")"),
+       
+    ) %>% rename(`Sub-tasks` = skim_variable) %>% 
+    select(`Sub-tasks`, All, Min, Max) %>% 
+    
+    mutate(Tasks= case_when(
+       
+       
+       str_detect(`Sub-tasks`, "Can|experience") ~ "Principal Knowledge",
+       str_detect(`Sub-tasks`, "trained") ~ "School Management Support",
+       str_detect(`Sub-tasks`, "observed|discussed") ~ "School Instructional Leadership",
+       str_detect(`Sub-tasks`, "goals") ~ "School Principal Management Skills",
+       str_detect(`Sub-tasks`, "evaluated|consequence") ~ "School Management Evaluation"
+       
+    )) %>% 
+    arrange(Tasks, `Sub-tasks`) %>% 
+    as_grouped_data(., groups = c("Tasks")) %>% 
+    flextable() %>% 
+    bold(j = c("Tasks"), bold = TRUE) %>% 
+    italic(j = c("Tasks"), italic = TRUE) %>% 
+    add_footer(Tasks= paste0('Notes: The table presents the responses provided by the principal of each visited schools.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses.
+                             * For this indicator, data from Peru are not included as there were not collected.' )) %>% 
+    merge_at( j = 1:5, part = "footer") %>%
+    add_header_lines("Comparison across countries of sub-indicators for Schools Principals") %>% 
+    
+    autofit()
+ 
+ 
+ breaking_up_principal
+ 
+```
 
 
 # Conclusions
