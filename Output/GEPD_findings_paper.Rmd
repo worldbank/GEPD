@@ -295,7 +295,6 @@ Table 1: GEPD Data Collection Overview
 | Madagascar | June 2021 | 200 | In Madagascar, the sample for the GEPD school survey was drawn to be representative of primary schools at the national and regional levels, using EMIS data of 2019. The sampling frame consisted of 33,120 public and private primary schools – 25,869 public and 7,251 private schools - across the 1,567 communes covered by EMIS data in Madagascar’s 22 regions. 200 schools were selected for the GEPD survey, where the strata are regions and urban/rural status of schools. |
 
 
-## GDP Data
 
  GDP per square kilometer data is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.
 
@@ -464,7 +463,21 @@ mn_high_dejure_nm <- means_dfdj$country[which(means_dfdj$dejure==mn_high_dejure)
 
 For each of the GEPD policy indicators, two scores are reported: one for *de jure* policy existence and one for *de facto* policy implementation.  *De jure* and *de facto* policies are both scored on a 1-5 scale with 1 indicating a total lack of the policy or implementation and 5 representing the best possible policy environment or implementation.  More details on the definitions for *de jure* and *de facto* policies can be found in the GEPD reference guide.
 
-The figure below shows the *de facto* versus *de jure* policy scores for the policy indicators for each of the GEPD countries.  Points colored in purple represent the *de facto* and points colored in blue represent the *de jure*.  One finding that stands out is that in general the *de jure* policy environment tends to be strong in most countries.  The average *de jure* score across policy indicators ranges from a low of `r round(mn_low_dejure)` in `r mn_low_dejure_nm` to a high of `r round(mn_high_dejure)` in `r mn_high_dejure_nm`.  The average *de facto* score ranges from a low of `r round(mn_low_defacto)` in `r mn_low_defacto_nm` to a high of `r round(mn_high_defacto)` in `r mn_high_defacto_nm`.
+The figure below shows the *de facto* versus *de jure* policy scores for the policy indicators for each of the GEPD countries.  Points colored in purple represent the *de facto* and points colored in blue represent the *de jure*.  One finding that stands out is that in general the *de jure* policy environment tends to be strong in most countries.  The average *de jure* score across policy indicators ranges from a low of `r round(mn_low_dejure,1)` in `r mn_low_dejure_nm` to a high of `r round(mn_high_dejure,1)` in `r mn_high_dejure_nm`.  The average *de facto* score ranges from a low of `r round(mn_low_defacto,1)` in `r mn_low_defacto_nm` to a high of `r round(mn_high_defacto,1)` in `r mn_high_defacto_nm`.
+
+```{r}
+
+means_dfdj %>%
+  mutate(defacto=round(defacto,1),
+         dejure=round(dejure,1)) %>%
+  rename(`De Facto`=defacto,
+         `De Jure`=dejure) %>%
+  flextable() %>%
+    add_header_lines('Average De Facto and De Jure scores across GEPD policy indicators.')
+
+```
+
+
 
 ```{r defactodejure, fig.width=12, fig.height=11}
 
@@ -849,8 +862,9 @@ modelsummary(models,
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
                              "principal_management" = "Principal Management"),
-             coef_omit="log(GDP)|rural|students_enrolled",
+             coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
+             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE
              )
 ```
@@ -889,8 +903,9 @@ modelsummary(models,
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
                              "principal_management" = "Principal Management"),
-             coef_omit="log(GDP)|rural|students_enrolled",
+             coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
+             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 ```
@@ -1344,8 +1359,9 @@ modelsummary(models,
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
                              "principal_management" = "Principal Management"),
-             coef_omit="log(GDP)|rural|students_enrolled",
+             coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
+             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE
              )
 ```
@@ -1386,8 +1402,9 @@ modelsummary(models,
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
                              "principal_management" = "Principal Management"),
-             coef_omit="log(GDP)|rural|students_enrolled",
+             coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
+             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 ```
@@ -1492,7 +1509,7 @@ combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH
            TRUE ~ "Rural"))
 ```
 
-In Peru, only a little over 60% of students met this proficiency level, and in Madagascar, the number was only around 5%.  In most countries there are large differences between students in urban and rural schools (shown in Figure XX below).  For instance in Peru, the average raw score on the 1st grade assessment was around 80% for urban schools, while it was around 64% for rural schools.  In Madagascar that gap was 59% to 47%.  Only in Jordan was there little observable difference in student readiness between children in urban and rural schools.
+In Peru, more than half of students met this proficiency level, and in Madagascar, the number was only around 5%.  In most countries there are large differences between students in urban and rural schools (shown in Figure XX below).  For instance in Peru, the average raw score on the 1st grade assessment was around 80% for urban schools, while it was around 64% for rural schools.  In Madagascar that gap was 59% to 47%.  Only in Jordan was there little observable difference in student readiness between children in urban and rural schools.
 
 
 
@@ -1832,8 +1849,9 @@ reg_fun <- function(indicators) {
   modelsummary(models,
                estimate= "{estimate}{stars}",
                coef_rename = cov_lab,
-               coef_omit="log(GDP)|rural|students_enrolled",
+               coef_omit="GDP|rural|students_enrolled",
                gof_map = gm,
+               notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
                escape = FALSE,
                title=paste(out_lab)
                )
@@ -2031,6 +2049,30 @@ ggplot(combined_teachers_df, aes(x=teach_score, y=content_knowledge, color=iso3c
  
 ```
 
+
+
+Below regression coefficients will be shown between a school practice indicator and its respective policy indicators. For example, teacher content knowledge is regressed on the teacher attraction, selection and deployment, support, and evaluation indicators. Once again, to help account for other factors that might bias these relationships, the urban/rural status of the school, total number of students, and log GDP in the vicinity of the school are included in the regressions.
+
+Teacher support has a positive relationship with teacher content knowledge at the 10% level.  A one unit increase in teacher support (on a 1-5 scale) is assocaited with a 1 percentage point improvement in teacher content knowledge.  
+
+```{r}
+
+indicators_list <- c(
+               "content_knowledge" = "Teacher Content Knowledge",
+               "teacher_attraction" = "Teacher Attraction",
+               "teacher_selection_deployment" = "Teacher Selection & Deployment",
+               "teacher_support" = "Teacher Support",
+               "teaching_evaluation" = "Teacher Evaluation"
+
+               )
+
+
+reg_fun(indicators_list)
+
+```
+
+Concrete examples of teacher policies related to teacher support and teacher evaluation are shown in the table below.  
+
 ```{r echo=FALSE}
 
  
@@ -2163,27 +2205,6 @@ ggplot(combined_teachers_df, aes(x=teach_score, y=content_knowledge, color=iso3c
 
  
  
-```
-
-
-Below regression coefficients will be shown between a school practice indicator and its respective policy indicators. For example, teacher content knowledge is regressed on the teacher attraction, selection and deployment, support, and evaluation indicators. Once again, to help account for other factors that might bias these relationships, the urban/rural status of the school, total number of students, and log GDP in the vicinity of the school are included in the regressions.
-
-Teacher support has a positive relationship with teacher content knowledge at the 10% level.  A one unit increase in teacher support (on a 1-5 scale) is assocaited with a 1 percentage point improvement in teacher content knowledge.  
-
-```{r}
-
-indicators_list <- c(
-               "content_knowledge" = "Teacher Content Knowledge",
-               "teacher_attraction" = "Teacher Attraction",
-               "teacher_selection_deployment" = "Teacher Selection & Deployment",
-               "teacher_support" = "Teacher Support",
-               "teaching_evaluation" = "Teacher Evaluation"
-
-               )
-
-
-reg_fun(indicators_list)
-
 ```
 
 Teacher pedagogy has no statistically significant relationships to the underlying policy indicators.
@@ -2582,8 +2603,9 @@ models <- list(
 modelsummary(models,
              estimate= "{estimate}{stars}",
              coef_rename = c("bureau_index" = "Bureuacracy Index"),
-             coef_omit="log(GDP)|rural|students_enrolled",
+             coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
+             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 
@@ -2615,8 +2637,9 @@ models <- list(
 
 modelsummary(models,
              estimate= "{estimate}{stars}",
-             coef_omit="log(GDP)|rural|students_enrolled",
+             coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
+             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 
