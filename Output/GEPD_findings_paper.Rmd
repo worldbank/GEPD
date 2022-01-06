@@ -2158,7 +2158,7 @@ main_indicator_labels<-c(
 ## Relating the policy indicators to practices : TEACHING (DE FACTO)-----
 
 
-defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
 
 
 models <- list(
@@ -2190,7 +2190,7 @@ modelsummary(models,
   ## Relating the policy indicators to practices : TEACHING (DE JURE)-----
 
 
-deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
+deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
 
 
 models <- list(
@@ -2220,7 +2220,7 @@ modelsummary(models,
   ## Relating the policy indicators to practices : INFRASTRUCTURE (DE FACTO)-----
 
 
-defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, inputs, student_knowledge, principal_knowledge_score) %>%  rename(country= iso3c) %>% mutate(inputs = as.numeric(inputs), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score)))
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, inputs, student_knowledge, principal_knowledge_score) %>%  rename(country= iso3c) %>% mutate(inputs = as.numeric(inputs), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score)))
 
 models <- list(
   
@@ -2247,7 +2247,7 @@ modelsummary(models,
 ```{r}
   ## Relating the policy indicators to practices : INFRASTRUCTURE (DE JURE)-----
 
-deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, inputs, student_knowledge, principal_knowledge_score) %>%  rename(country= iso3c) %>% mutate(inputs = as.numeric(inputs), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score)))
+deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, inputs, student_knowledge, principal_knowledge_score) %>%  rename(country= iso3c) %>% mutate(inputs = as.numeric(inputs), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score)))
 
 models <- list(
   
@@ -2274,7 +2274,7 @@ modelsummary(models,
   ## Relating the policy indicators to practices : SCHOOL MANAGEMENT (DE FACTO)-----
 
 
-defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, operational_management, student_knowledge, principal_knowledge_score, instructional_leadership) %>%  rename(country= iso3c) %>% mutate(operational_management = as.numeric(operational_management), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score), instructional_leadership = as.numeric(instructional_leadership)))
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, operational_management, student_knowledge, principal_knowledge_score, instructional_leadership) %>%  rename(country= iso3c) %>% mutate(operational_management = as.numeric(operational_management), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score), instructional_leadership = as.numeric(instructional_leadership)))
 
 
 models <- list(
@@ -2302,7 +2302,7 @@ modelsummary(models,
   ## Relating the policy indicators to practices : SCHOOL MANAGEMENT (DE JURE)-----
 
 
-deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_df %>% select(iso3c, operational_management, student_knowledge, principal_knowledge_score, instructional_leadership) %>%  rename(country= iso3c) %>% mutate(operational_management = as.numeric(operational_management), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score), instructional_leadership = as.numeric(instructional_leadership)))
+deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, operational_management, student_knowledge, principal_knowledge_score, instructional_leadership) %>%  rename(country= iso3c) %>% mutate(operational_management = as.numeric(operational_management), student_knowledge = as.numeric(student_knowledge), principal_knowledge_score = as.numeric(principal_knowledge_score), instructional_leadership = as.numeric(instructional_leadership)))
 
 models <- list(
   
