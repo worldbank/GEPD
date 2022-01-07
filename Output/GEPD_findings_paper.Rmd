@@ -359,9 +359,24 @@ FitFlextableToPage(ovr_table) %>%
 ```
 
 
-Below is a table showing the means by country on the GEPD Practice Indicators.
+Below is a table showing the means by country on the GEPD Practice Indicators.  We use the following system for categorizing our main indicators into three levels: On Target, Caution, and Needs Improvement.
+
+For our indicators ranging from 0-100, we use the following system:
+
+1. On Target - Values at least 90%  
+2. Caution - Values between 80-90  
+3. Needs Improvement - Values under 80%  
+
+For our indicators ranging 1-5, we use the following system:
+
+1. On Target - Values at least 4  
+2. Caution - Values between 3 and 4  
+3. Needs Improvement - Values 3 and under  
+
+In the tables below, indicators shared in green are "On Target", indicators shared in yellow are "Caution", and indicators shaed in red are "Needs Improvement".
 
 [Add rich discussion here]
+
 
 ```{r ovltab}
 # Produce a table showing means by country for select practice indicators
@@ -479,7 +494,7 @@ means_dfdj %>%
 
 
 
-```{r defactodejure, fig.width=12, fig.height=11}
+```{r defactodejure, fig.width=10, fig.height=10}
 
 
 
