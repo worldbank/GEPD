@@ -1246,7 +1246,7 @@ modelsummary(models,
                              "principal_management" = "Principal Management"),
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE
              )
 ```
@@ -1288,7 +1288,7 @@ modelsummary(models,
                              "principal_management" = "Principal Management"),
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 ```
@@ -1805,7 +1805,7 @@ modelsummary(models,
                              "principal_management" = "Principal Management"),
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE
              )
 ```
@@ -1849,7 +1849,7 @@ modelsummary(models,
                              "principal_management" = "Principal Management"),
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 ```
@@ -2296,7 +2296,7 @@ reg_fun <- function(indicators) {
                coef_rename = cov_lab,
                coef_omit="GDP|rural|students_enrolled",
                gof_map = gm,
-               notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+               notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
                escape = FALSE,
                title=paste(out_lab)
                )
@@ -3047,7 +3047,7 @@ modelsummary(models,
              coef_rename = c("bureau_index" = "Bureuacracy Index"),
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 
@@ -3081,7 +3081,7 @@ modelsummary(models,
              estimate= "{estimate}{stars}",
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
              escape = FALSE             
              )
 
