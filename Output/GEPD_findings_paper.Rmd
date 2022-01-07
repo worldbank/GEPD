@@ -45,6 +45,11 @@ library(geosphere)
 library(fixest)
 library(modelsummary)
 options(modelsummary_factory_word = 'flextable')
+custom_theme <- function(x, ...) {
+    x %>% set_table_properties(layout = "autofit")
+}
+options("modelsummary_theme_flextable" = custom_theme)
+
 library(factoextra)
 library(skimr)
 #directories
@@ -302,7 +307,6 @@ Table 1: GEPD Data Collection Overview
 
 ## Overview of Indicators
 
-Show low levels of learning across countries.  E.g. how manys students in 4th grade can identify basic words, 8+6, etc.  Low levels of teacher pedagogy.  Highlight some interesting Bureaucracy findings
 
 ```{r countrytabfn}
 #create function for creating country comparison tables
@@ -364,8 +368,8 @@ Below is a table showing the means by country on the GEPD Practice Indicators.  
 For our indicators ranging from 0-100, we use the following system:
 
 1. On Target - Values at least 90%  
-2. Caution - Values between 80-90  
-3. Needs Improvement - Values under 80%  
+2. Caution - Values between 85-90  
+3. Needs Improvement - Values under 85%  
 
 For our indicators ranging 1-5, we use the following system:
 
@@ -373,9 +377,12 @@ For our indicators ranging 1-5, we use the following system:
 2. Caution - Values between 3 and 4  
 3. Needs Improvement - Values 3 and under  
 
-In the tables below, indicators shared in green are "On Target", indicators shared in yellow are "Caution", and indicators shaed in red are "Needs Improvement".
+In the tables below, indicators shared in green are "On Target", indicators shared in yellow are "Caution", and indicators shaded in red are "Needs Improvement".
 
-[Add rich discussion here]
+The tables reveals major issues across countries in terms of 4th grade student proficiency on the GEPD assessment, teacher content knowledge, teacher pedagogical skills, and student readiness as measured using the 1st grade assessment.  In every country, conditions at the average school need improvement, according to the GEPD standards.  Additionally, teacher presence at the school and basic infrastructure are the need improvement area in Ethiopia and Madagascar.  Basic inputs need improvement in Madagascar, as do operational management and instructional leadership.  
+
+Areas where schools tend to be relatively stronger, receiving a score of "On Target", are in the areas of principal management skills, except in Madagascar, and in operational management in Peru, Jordan, and Ethiopia.  Teacher presence, basic inputs, and student attendance are also on target in Peru and Jordan.
+
 
 
 ```{r ovltab}
@@ -398,11 +405,207 @@ country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
 ```
 
 
+```{r}
+
+tab_df_ovrl <- combined_wide_df %>%
+  filter(Series %in% practice_indicators) %>%
+  arrange(factor(Series, levels=practice_indicators))
+
+#urban rural split
+practice_indicators_R <- c(
+  'SE.PRM.LERN.1.R',
+  'SE.PRM.EFFT.2.R',
+  'SE.PRM.CONT.1.R',
+  'SE.PRM.PEDG.1.R',
+  'SE.PRM.INPT.1.R',
+  'SE.PRM.INFR.1.R',
+  'SE.PRM.LCAP.1.R',
+  'SE.PRM.ATTD.1.R',
+  'SE.PRM.OPMN.1.R',
+  'SE.PRM.ILDR.1.R',
+  'SE.PRM.PKNW.1.R',
+  'SE.PRM.PMAN.1.R'
+)
+
+title <- 'GEPD Practice Indicators Urban/Rural'
+  
+tab_df_R <- combined_wide_df %>%
+  filter(Series %in% practice_indicators_R) %>%
+  arrange(factor(Series, levels=practice_indicators_R))
+
+#set colors
+tab_color_df_R <- combined_wide_color %>%
+  filter(Series %in% practice_indicators_R) %>%
+  arrange(factor(Series, levels=practice_indicators_R))
+
+Peru_col_R <- tab_color_df_R$Peru
+Jordan_col_R <- tab_color_df_R$Jordan
+Rwanda_col_R <- tab_color_df_R$Rwanda
+Ethiopia_col_R <- tab_color_df_R$Ethiopia
+Madagascar_col_R <- tab_color_df_R$Madagascar
+
+
+#build table
+tab_df_R <- tab_df_R  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar) %>%
+  rename(Peru_R=Peru, 
+         Jordan_R=Jordan, 
+         Rwanda_R=Rwanda,
+         Ethiopia_R=Ethiopia, 
+         Madagascar_R=Madagascar)
+
+tab_df_R$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+tab_df_R$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+
+# urban 
+practice_indicators_U <- c(
+  'SE.PRM.LERN.1.U',
+  'SE.PRM.EFFT.2.U',
+  'SE.PRM.CONT.1.U',
+  'SE.PRM.PEDG.1.U',
+  'SE.PRM.INPT.1.U',
+  'SE.PRM.INFR.1.U',
+  'SE.PRM.LCAP.1.U',
+  'SE.PRM.ATTD.1.U',
+  'SE.PRM.OPMN.1.U',
+  'SE.PRM.ILDR.1.U',
+  'SE.PRM.PKNW.1.U',
+  'SE.PRM.PMAN.1.U'
+)
+
+
+tab_df_U <- combined_wide_df %>%
+  filter(Series %in% practice_indicators_U) %>%
+  arrange(factor(Series, levels=practice_indicators_U))
+
+#set colors
+tab_color_df_U <- combined_wide_color %>%
+  filter(Series %in% practice_indicators_U) %>%
+  arrange(factor(Series, levels=practice_indicators_U))
+
+Peru_col_U <- tab_color_df_U$Peru
+Jordan_col_U <- tab_color_df_U$Jordan
+Rwanda_col_U <- tab_color_df_U$Rwanda
+Ethiopia_col_U <- tab_color_df_U$Ethiopia
+Madagascar_col_U <- tab_color_df_U$Madagascar
+
+
+#build table
+tab_df_U <- tab_df_U  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar) %>%
+  rename(Peru_U=Peru, 
+         Jordan_U=Jordan, 
+         Rwanda_U=Rwanda,
+         Ethiopia_U=Ethiopia, 
+         Madagascar_U=Madagascar)
+
+tab_df_U$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+tab_df_U$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+
+
+#combined
+tab_df_comb <- tab_df_R %>%
+  left_join(tab_df_U) %>%
+  select(`Indicator Name`, Peru_R, Peru_U, Jordan_R, Jordan_U, Rwanda_R, Rwanda_U, Ethiopia_R, Ethiopia_U, Madagascar_R, Madagascar_U)
+
+ovr_table <- flextable(tab_df_comb) %>%
+  bg(j = c('Peru_R'),
+     bg = Peru_col_R) %>%
+  bg(j = c('Jordan_R'),
+     bg = Jordan_col_R) %>%
+  bg(j = c('Ethiopia_R'),
+     bg = Ethiopia_col_R) %>%
+  bg(j = c('Rwanda_R'),
+     bg = Rwanda_col_R) %>%
+  bg(j = c('Madagascar_R'),
+     bg = Madagascar_col_R) %>%
+  bg(j = c('Peru_U'),
+     bg = Peru_col_U) %>%
+  bg(j = c('Jordan_U'),
+     bg = Jordan_col_U) %>%
+  bg(j = c('Ethiopia_U'),
+     bg = Ethiopia_col_U) %>%
+  bg(j = c('Rwanda_U'),
+     bg = Rwanda_col_U) %>%
+  bg(j = c('Madagascar_U'),
+     bg = Madagascar_col_U)   %>%
+  set_header_labels(
+         Peru_U='Urban', 
+         Jordan_U='Urban', 
+         Rwanda_U='Urban',
+         Ethiopia_U='Urban', 
+         Madagascar_U='Urban',
+         Peru_R='Rural', 
+         Jordan_R='Rural', 
+         Rwanda_R='Rural',
+         Ethiopia_R='Rural', 
+         Madagascar_R='Rural' 
+  ) %>%
+  add_header(
+         Peru_U='Peru', 
+         Jordan_U='Jordan', 
+         Rwanda_U='Rwanda',
+         Ethiopia_U='Ethiopia', 
+         Madagascar_U='Madagascar',
+         Peru_R='Peru', 
+         Jordan_R='Jordan', 
+         Rwanda_R='Rwanda',
+         Ethiopia_R='Ethiopia', 
+         Madagascar_R='Madagascar'         
+  ) %>%
+  merge_h( part = "header") %>%
+  add_header_lines(title) %>%
+  add_footer( Group = paste0('Source: UIS, GLAD, GEPD, World Bank. 
+(1) Proficiency on GEPD assessment means % students with knowledge 80%.\n  (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS).\n (3) All indicators are on a scale of 0-5 unless measured in %. \n (4) Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' )) %>%
+  merge_at( j = 1:4, part = "footer") %>%
+  theme_vanilla() %>%
+  vline(j=1) %>%
+  vline(j=3) %>%
+  vline(j=5) %>%
+  vline(j=7)%>%
+  vline(j=9) 
+
+
+
+
+```
+
+```{r urdif}
+
+ur_diff_df <- data.frame(
+  Peru=tab_df_R$Peru_R-tab_df_U$Peru_U,
+  Jordan=tab_df_R$Jordan_R-tab_df_U$Jordan_U,
+  Rwanda=tab_df_R$Rwanda_R-tab_df_U$Rwanda_U,
+  Ethiopia=tab_df_R$Ethiopia_R-tab_df_U$Ethiopia_U,
+  Madagascar=tab_df_R$Madagascar_R-tab_df_U$Madagascar_U
+)
+
+ur_diff_df$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+ur_diff_df$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+ur_diff_df <- ur_diff_df %>%
+  select(`Indicator Name`, everything()) %>%
+  mutate(Average=rowMeans(ur_diff_df[1:5], na.rm=T))
+
+```
+
+
+There are also major differences within countries, particularly between urban and rural schools. The table below shows the scores disaggregated by urban and rural in each country.  On average across countries, the gap between the urban and rural schools in the proficiency on the GEPD assessment is `r -round(ur_diff_df$Average[1],1)` points.  For student readiness it is `r -round(ur_diff_df$Average[7],1)` points.  For teacher content knowledge it is `r -round(ur_diff_df$Average[3],1)` points.  For teacher pedagogical skills it is `r -round(ur_diff_df$Average[4],1)` points.  In all the indicators, except for teacher presence, urban areas have higher scores than rural areas in the aggregate.  For teacher presence, the rates in rural areas are higher in Peru and Ethiopia, but are higher in urban areas for the other countries.
+
+```{r}
+FitFlextableToPage(ovr_table) %>%
+  set_table_properties(layout = "autofit")
+```
+
 ### Policy Indicators
 
-Below is a table showing the means by country on the GEPD Policy Indicators.
+Below is a table showing the means by country on the GEPD Policy Indicators. For each of the GEPD policy indicators, two scores are reported: one for *de jure* policy existence and one for *de facto* policy implementation.  *De jure* and *de facto* policies are both scored on a 1-5 scale with 1 indicating a total lack of the policy or implementation and 5 representing the best possible policy environment or implementation.  More details on the definitions for *de jure* and *de facto* policies can be found in the GEPD reference guide.
 
-[Add rich discussion here]
+The scores in the table below are the *de facto* scores across countries.  These indicators are largely formed by interviewing teachers and principals in a random sample of schools within each countries about their experience and understanding of policies.  The exception is for the *de facto* indicators for learners, which are based on other data sources such as the UNICEF MICS survey or other household surveys fielded in the country.  
+
+Weak areas for countries tend to be in policies related to teacher support, teacher monitoring and accountability, center based care for learners, and support for school management.  Countries tended to perform best in terms of school management clarity of functions, attraction, and selection and deployment.  Several indicators were rated in the yellow, "Caution", area including teacher attraction, selection and deployment, and intrinsic motivation, also inputs and infrastructure monitoring, and school management support.
 
 ```{r poltab}
 # Produce a table showing means by country for select practice indicators
@@ -430,7 +633,8 @@ country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
 ```
 
 
-#### De Facto versus De Jure
+
+For each of the GEPD policy indicators, two scores are reported: one for *de jure* policy existence and one for *de facto* policy implementation.  *De jure* and *de facto* policies are both scored on a 1-5 scale with 1 indicating a total lack of the policy or implementation and 5 representing the best possible policy environment or implementation.  More details on the definitions for *de jure* and *de facto* policies can be found in the GEPD reference guide.
 
 ```{r defadejudf}
 #gather defacto and de jure indicators
@@ -476,7 +680,7 @@ mn_high_dejure_nm <- means_dfdj$country[which(means_dfdj$dejure==mn_high_dejure)
 ```
 
 
-For each of the GEPD policy indicators, two scores are reported: one for *de jure* policy existence and one for *de facto* policy implementation.  *De jure* and *de facto* policies are both scored on a 1-5 scale with 1 indicating a total lack of the policy or implementation and 5 representing the best possible policy environment or implementation.  More details on the definitions for *de jure* and *de facto* policies can be found in the GEPD reference guide.
+
 
 The figure below shows the *de facto* versus *de jure* policy scores for the policy indicators for each of the GEPD countries.  Points colored in purple represent the *de facto* and points colored in blue represent the *de jure*.  One finding that stands out is that in general the *de jure* policy environment tends to be strong in most countries.  The average *de jure* score across policy indicators ranges from a low of `r round(mn_low_dejure,1)` in `r mn_low_dejure_nm` to a high of `r round(mn_high_dejure,1)` in `r mn_high_dejure_nm`.  The average *de facto* score ranges from a low of `r round(mn_low_defacto,1)` in `r mn_low_defacto_nm` to a high of `r round(mn_high_defacto,1)` in `r mn_high_defacto_nm`.
 
@@ -524,9 +728,7 @@ ggplot(defact_dejure_df, aes(y=`Indicator Name`, x=defacto)) +
 
 ### Politics Indicators
 
-Below is a table showing the means by country on the GEPD Bureaucracy or Politics Indicators.
-
-[Add rich discussion here]
+Below is a table showing the means by country on the GEPD Bureaucracy or Politics Indicators.  These indicators are largely produced using the GEPD Survey of Public Officials, where a sample of 200 public officials in the central government, regional offices, and district offices are asked their experiences in managing the education system.  Impartial decision making is an area where all countries tended to rate in the "Caution" area.  Public officials reported better performance in mandates and accountability and to some extent the characteristics of the bureaucracy, which measures public officials knowledge of the schools they are supervising, the work environment, merit, and motivation of public employees.
 
 ```{r ptictab}
 # Produce a table showing means by country for select practice indicators
@@ -539,6 +741,167 @@ politics_indicators <- c(
 )
 country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
 ```
+
+
+```{r bur_dat}
+
+bur_indicators <- c(
+   #"responsible_finance_planning"   ,      
+         #"responsible_hiring_teachers"       ,   
+         #"responsible_monitoring_performance"   ,
+         #"responsible_none"                   , 
+         #"education"                           ,
+         "gender"                               ,
+         #"director_hr"    ,
+         "national_learning_goals",              
+         "targeting"               ,            
+         "monitoring"               ,       
+         "incentives"                ,     
+         "community_engagement"       ,      
+         "mandates_accountability"     ,      
+         "coherence"     ,
+         "transparency"   ,               
+         "accountability"  ,              
+         "quality_bureaucracy",           
+         "knowledge_skills"    ,           
+         "work_environment"     ,               
+         "merit"                 ,          
+         "motivation_attitudes"   ,          
+         "impartial_decision_making",        
+         "politicized_personnel_management", 
+         "politicized_policy_making"        ,   
+         "politicized_policy_implementation" ,   
+         "employee_unions_as_facilitators"    , 
+         "avg_class_size_guess"                ,
+         "avg_absence_guess"                   ,
+         "motivation_relative_start"           
+         #"proportion_reported_underperformance",
+         #"proportion_broke_rules"            ,
+         #"proportion_contracts_political"     , 
+         #"proportion_producement_political" 
+)
+
+
+########
+# Peru
+#######
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+PER_bur_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.dta", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c,govt_tier, bur_indicators) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+
+########
+# Jordan
+#######
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+JOR_bur_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", paste0(country,"-19"),paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.dta", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c,govt_tier, bur_indicators) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+########
+# Rwanda
+#######
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+RWA_bur_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.dta", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c,govt_tier, bur_indicators) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+########
+# Ethiopia
+#######
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+ETH_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c, govt_tier, bur_indicators) %>%
+  mutate(govt_tier=factor(govt_tier,  levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+
+########
+# Madagascar
+#######
+#read in anonymized school data
+# country <- "MDG"
+# year <- "2021"
+# MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+#   mutate(iso3c=country) %>%
+#   select(-district)
+########
+#combined
+########
+combined_bur_df <- bind_rows(PER_bur_df, JOR_bur_df, RWA_bur_df, ETH_bur_df) %>%
+  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
+
+
+```
+
+
+The figure below breaks up these scores further by looking at the tier of government (Central, Regional, or District level).  On average across countries there is not a large difference between tiers for the politics indicators.  For instance, for Characteristics of the Bureaucracy, the average across Peru, Jordan, Rwanda, and Ethiopia is 4.0 at the ministry level, 3.8 at the regional level, and 4.1 at the district level.  However, this hides sometimes large variation at the country level between tiers.  In Jordan, the Characteristics of the Bureaucracy at the ministry level and district level is around 3.6, but only 3.1 at the regional level, suggesting significantly weaker performance at the regional level.  For Impartial Decision making, district offices (3.6) tend to perform slightly better than at the ministry and regional level (3.2, 3.3), but in Rwanda the scores are 3.4 for ministry level, 4.0 for the regional level, and 4.3 at the district level, suggesting impartial decision making improves at more localized levels of government.  In Jordan, impartial decision making is best at the ministry level, so the country context is important for drawing conclusions about the performance of the bureuacracy at different levels.
+
+```{r buranalysis, fig.width=8, fig.height=6}
+
+mn_bur <- combined_bur_df %>%
+  group_by(iso3c, govt_tier) %>%
+  summarise(across(c('quality_bureaucracy', 'mandates_accountability', 'impartial_decision_making', 'national_learning_goals'), mean, na.rm=TRUE)) %>%
+  filter(!is.na(govt_tier)) %>%
+  pivot_longer(
+    cols=c('quality_bureaucracy', 'mandates_accountability', 'impartial_decision_making', 'national_learning_goals'),
+    names_to='indicator',
+    values_to='value'
+  ) %>%
+  mutate(Indicator=case_when(
+    indicator=="quality_bureaucracy" ~ 'Characteristics of Bureaucracy',
+    indicator=="mandates_accountability" ~ 'Mandates and Accountability',
+    indicator=="impartial_decision_making" ~ "Impartial Decision Making",
+    indicator=="national_learning_goals" ~ 'National Learning Goals'
+  ),
+  Country=iso3c,
+  govt_tier=str_wrap(govt_tier,20))
+
+mn_bur_ovrl <- combined_bur_df %>%
+  group_by(iso3c, govt_tier) %>%
+  summarise(across(c('quality_bureaucracy', 'mandates_accountability', 'impartial_decision_making', 'national_learning_goals'), mean, na.rm=TRUE)) %>%  
+  group_by(govt_tier) %>%
+  summarise(across(c('quality_bureaucracy', 'mandates_accountability', 'impartial_decision_making', 'national_learning_goals'), mean, na.rm=TRUE)) %>%
+  filter(!is.na(govt_tier)) %>%
+  pivot_longer(
+    cols=c('quality_bureaucracy', 'mandates_accountability', 'impartial_decision_making', 'national_learning_goals'),
+    names_to='indicator',
+    values_to='value'
+  ) %>%
+  mutate(Indicator=case_when(
+    indicator=="quality_bureaucracy" ~ 'Characteristics of Bureaucracy',
+    indicator=="mandates_accountability" ~ 'Mandates and Accountability',
+    indicator=="impartial_decision_making" ~ "Impartial Decision Making",
+    indicator=="national_learning_goals" ~ 'National Learning Goals'
+  ),
+  Country='Average',
+  govt_tier=str_wrap(govt_tier,20))
+
+ggplot(mn_bur, aes(x=govt_tier, y=value, color=Country)) +
+  facet_wrap(~Indicator) +
+  geom_text(aes(label=Country)) +
+  geom_segment(data=mn_bur_ovrl, aes(xend=(..x..-.15), y=value, yend=value), color='black') +
+  geom_segment(data=mn_bur_ovrl, aes(xend=(..x..+.15), y=value, yend=value), color='black') +
+  theme_bw() +
+  scale_x_discrete(limits=c(str_wrap("Ministry of Education (or equivalent)",20),str_wrap("Regional office (or equivalent)",20), str_wrap("District office (or equivalent)",20))) +
+  xlab("Government Tier") +
+  expand_limits(y=c(1,5)) +
+  theme(legend.position="none") +
+  labs(
+    title='GEPD Politics Scores by Government Tier',
+    notes='Solid black line is the unweighted average across countries'
+  )
+
+```
+
 
 ## Systems View of Indicators
 ```{r}
@@ -753,7 +1116,7 @@ combined_school_office_df %>%
 
 ### Interrelations between Indicators
 
-In the next section provides an examination of how correlated the practice indicators are with one another.  For instance, do schools that perform well along one of the GEPD indicators (for example, school management) tend to perform well along the other indicators?  To examine this, the correlation between the GEPD practice indicators is examined.  Also, factor analysis is used to calculate the share of variation between the indicators that can be explained by a single factor, which can provide a sense of how well aligned the various GEPD practice indicators are with each other.
+In the next section provides an examination of how correlated the practice indicators are with one another.  For instance, do schools that perform well along one of the GEPD indicators (for example, school management) tend to perform well along the other indicators?  To examine this, the correlation between the GEPD practice indicators is examined.  Also, principal components  analysis is used to calculate the share of variation between the indicators that can be explained by a single factor, which can provide a sense of how well aligned the various GEPD practice indicators are with each other.
 
 
 To begin the a correlation plot is produced for each of the GEPD practice indicators.  The correlations are based on school data pooled from Peru, Jordan, Rwanda, Ethiopia, and Madagascar.  
@@ -771,6 +1134,7 @@ indicators_list <- c("student_knowledge"="4th Grade Student Knowledge",
                "inputs" = "Basic Inputs",
                "infrastructure" = "Basic Infrastructure",
                "ecd_student_knowledge" = "1st Grade Student Knowledge",
+               "student_attendance" = "Student Attendance",
                "operational_management" = "Operational Management",
                "instructional_leadership" = "Instructional Leadership",
                "principal_knowledge_score" = "Principal Knowledge",
@@ -802,7 +1166,7 @@ cor_fun <- function(indicators) {
     res$var <- indicators
     
     
-    res %>% 
+    ovr_table <- res %>% 
       select(var, everything()) %>%
       flextable() %>%
       bg(j = 2:ncol(res), 
@@ -815,7 +1179,9 @@ cor_fun <- function(indicators) {
                       out[x >= 0.6 ] <- "#264653"
                       out
                     })
-
+    
+  FitFlextableToPage(ovr_table) %>%
+  set_table_properties(layout = "autofit")
 
    
 }
@@ -873,6 +1239,7 @@ modelsummary(models,
                              "inputs" = "Basic Inputs",
                              "infrastructure" = "Basic Infrastructure",
                              "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "student_attendance" = "Student Attendance",
                              "operational_management" = "Operational Management",
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
@@ -914,6 +1281,7 @@ modelsummary(models,
                              "inputs" = "Basic Inputs",
                              "infrastructure" = "Basic Infrastructure",
                              "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "student_attendance" = "Student Attendance",
                              "operational_management" = "Operational Management",
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
@@ -938,6 +1306,7 @@ indicators_list <- c("student_knowledge"="4th Grade Student Knowledge",
                "inputs" = "Basic Inputs",
                "infrastructure" = "Basic Infrastructure",
                "ecd_student_knowledge" = "1st Grade Student Knowledge",
+               "student_attendance" = "Student Attendance",
                "operational_management" = "Operational Management",
                "instructional_leadership" = "Instructional Leadership",
                "principal_knowledge_score" = "Principal Knowledge",
@@ -957,11 +1326,73 @@ pca_df <- na.omit(cor_df)
 res.pca <- prcomp(pca_df, scale = TRUE, center=TRUE)
 
 fviz_eig(res.pca) +
-  expand_limits(y=c(0,100))
+  expand_limits(y=c(0,100)) +
+  ggtitle("Scree plot using data from All Countries")
 
 ```
 
 
+```{r}
+
+indicators_list <- c("student_knowledge"="4th Grade Student Knowledge",
+               "presence_rate"  = "Teacher Presence",
+               "content_knowledge" = "Teacher Content Knowledge",
+               "teach_score" = "Teacher Pedagogy",
+               "inputs" = "Basic Inputs",
+               "infrastructure" = "Basic Infrastructure",
+               "ecd_student_knowledge" = "1st Grade Student Knowledge",
+               "student_attendance" = "Student Attendance",
+               "operational_management" = "Operational Management",
+               "instructional_leadership" = "Instructional Leadership",
+               "principal_knowledge_score" = "Principal Knowledge",
+               "principal_management" = "Principal Management"
+               )
+
+indicators_list2 <- c("student_knowledge"="4th Grade Student Knowledge",
+               "presence_rate"  = "Teacher Presence",
+               "content_knowledge" = "Teacher Content Knowledge",
+#               "teach_score" = "Teacher Pedagogy",
+               "inputs" = "Basic Inputs",
+               "infrastructure" = "Basic Infrastructure",
+               "ecd_student_knowledge" = "1st Grade Student Knowledge",
+               "operational_management" = "Operational Management",
+               "instructional_leadership" = "Instructional Leadership",
+               "principal_knowledge_score" = "Principal Knowledge",
+               "principal_management" = "Principal Management"
+               )
+
+scree_fun <- function(cntry, indicators) {
+  
+     cor_df <- combined_school_office_df %>%
+      filter(country==cntry) %>%
+      select(country, rural, names(indicators)) %>%
+      group_by(country,rural) %>%
+      mutate(across(names(indicators),~if_else(is.na(.),mean(.,na.rm=T),.))) %>%#impute with mean by country and urban/rural
+      ungroup() %>%
+      select(names(indicators))
+
+
+pca_df <- na.omit(cor_df)
+
+res.pca <- prcomp(pca_df, scale = TRUE, center=TRUE)
+
+fviz_eig(res.pca) +
+  expand_limits(y=c(0,100)) +
+  ggtitle(paste0("Scree plot using data from ",cntry))
+
+  
+}
+
+p1 <- scree_fun("Peru", indicators_list) 
+p2 <- scree_fun("Jordan", indicators_list) 
+p3 <- scree_fun("Rwanda", indicators_list) 
+p4 <- scree_fun("Ethiopia", indicators_list) 
+p5 <- scree_fun("Madagascar", indicators_list2) 
+
+(p1 + p2 + p3)/(p4 + p5)
+
+
+```
 
 
 ### Learning
@@ -1335,11 +1766,8 @@ arrange(skim_variable) %>% bind_cols(breaking_up_all_g4 %>% select(-skim_variabl
    italic(j = c("Tasks"), italic = TRUE) %>% 
    add_footer(Tasks= paste0('Notes: The table presents the percentage of students in Grade 4 that were able to perform on various language and math tasks.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses.' )) %>% 
    merge_at( j = 1:5, part = "footer") %>%
-   add_header_lines("Comparison across countries of sub-indicators for 4th Grade students") %>% 
-   
-   
-   autofit()
- 
+   add_header_lines("Comparison across countries of sub-indicators for 4th Grade students") %>%
+  set_table_properties(layout = "autofit")
  
  breaking_up_g4
  
@@ -1348,16 +1776,16 @@ arrange(skim_variable) %>% bind_cols(breaking_up_all_g4 %>% select(-skim_variabl
 
 Next the relationships between 4th grade learning outcomes and practices in the school are shown. The 4th grade assessment scores are the percentage of items correct on the assessment.  The practices considered are teacher presence (0-100%), teacher content knowledge (based on teacher assessment which are represented as percentage correct), teacher pedagogical skills (Teach scores 1-5), availability of basic inputs (0-5), basic infrastructure (0-5), student readiness (1st grade assessment scores which are represented as the percentage correct), operational management scores (1-5), instructional leadership (1-5), principal school knowledge (1-5), and principal management skills (1-5).  Relationships are estimated using OLS regression.  The urban/rural status of the school, the total number of students enrolled in the school, and the log GDP within 1km of the school are included in the regressions.  Additionally, a dummy variable for each country is included in the regression to adjust for between country differences in variables.
 
-The table shows 1st grade student knowledge, teacher content knowledge, basic inputs, and basic infrastructure as some of the best predictors of 4th grade student knowledge  The coefficient on teacher content knowledge implies that a 10 percentage point improvement in teacher content knowledge at a school is associated with a 1.25 percentage point increase in 4th grade student knowledge A 10 percentage point increase in the 1st grade assessment scores is associated with a 2.4 percentage point increase in 4th grade student knowledge.  These two impacts are similar for both the reading and math components of the 4th grade examination. The availability of one more basic input (out of 5 examined) is associated with a 1 percentage point increase in 4th grade knowledge, and the availability of one more piece of basic infrastructure is associated with a 1.9 percentage point increase in 4th grade knowledge.  
+The table shows 1st grade student knowledge, teacher content knowledge, basic inputs, and basic infrastructure as some of the best predictors of 4th grade student knowledge  The coefficient on teacher content knowledge implies that a 10 percentage point improvement in teacher content knowledge at a school is associated with a 1.26 percentage point increase in 4th grade student knowledge A 10 percentage point increase in the 1st grade assessment scores is associated with a 2.4 percentage point increase in 4th grade student knowledge.  These two impacts are similar for both the reading and math components of the 4th grade examination. The availability of one more basic input (out of 5 examined) is associated with a 1.1 percentage point increase in 4th grade knowledge, and the availability of one more piece of basic infrastructure is associated with around a 2 percentage point increase in 4th grade knowledge.  
 
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
 )
 
 
@@ -1370,6 +1798,7 @@ modelsummary(models,
                              "inputs" = "Basic Inputs",
                              "infrastructure" = "Basic Infrastructure",
                              "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "student_attendance"="Student Attendance",
                              "operational_management" = "Operational Management",
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
@@ -1387,13 +1816,13 @@ The table below shows the relationships for each individual country to see how t
 ```{r, fig.height=8, fig.width=8}
 models <- list(
   
-'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=PER_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=PER_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=JOR_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=JOR_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=RWA_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=RWA_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=ETH_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=ETH_school_office_link_df, se='hetero'),
 
 '4th Grade Student Knowledge - Madagascar' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=MDG_school_office_link_df, se='hetero')
 )
@@ -1413,6 +1842,7 @@ modelsummary(models,
                              "inputs" = "Basic Inputs",
                              "infrastructure" = "Basic Infrastructure",
                              "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "student_attendance"="Student Attendance",
                              "operational_management" = "Operational Management",
                              "instructional_leadership" = "Instructional Leadership",
                              "principal_knowledge_score" = "Principal Knowledge",
@@ -2209,9 +2639,7 @@ Concrete examples of teacher policies related to teacher support and teacher eva
     add_footer(Tasks= paste0('Notes: The table presents the percentage of teachers that responded positively to this question.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses. Madagascar is not included in the data presented above as data were not consistently available for these indicators.' )) %>% 
     merge_at( j = 1:5, part = "footer") %>%
     add_header_lines("Comparison across countries of sub-indicators for primary school teachers") %>% 
-    
-    
-    autofit()
+    set_table_properties(layout = "autofit")
  
  
  
@@ -2492,8 +2920,7 @@ The table below breaks down the principal knowledge and school instructional lea
                              * For this indicator, data from Peru are not included as there were not collected.' )) %>% 
     merge_at( j = 1:5, part = "footer") %>%
     add_header_lines("Comparison across countries of sub-indicators for Schools Principals") %>% 
-    
-    autofit()
+    set_table_properties(layout = "autofit")
  
  
  breaking_up_principal
@@ -2574,7 +3001,7 @@ reg_fun(indicators_list)
 ### Bureaucracy
 
 
-Next the relationships between an overall index of the functioning of the bureaucracy in the school district and school level outcomes are shown.  The index is formed by taking the unweighted average of the quality of bureaucracy score, the mandates and accountability score, the national learning goals score, and the impartial decision making score.  Relationships are estimated using OLS regression.  The urban/rural status of the school and the log GDP within 1km of the school are included in the regressions.^[
+Next the relationships between an overall index of the functioning of the bureaucracy in the school district and school level outcomes are shown.  The index is formed by taking the unweighted average of the quality of bureaucracy score, the mandates and accountability score, the national learning goals score, and the impartial decision making score.  Relationships are estimated using OLS regression.  The urban/rural status of the school, the number of students enrolled in the school, and the log GDP within 1km of the school are included in the regressions.^[
 Data downloaded from:
 https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
 https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
@@ -2626,7 +3053,7 @@ modelsummary(models,
 
 ```
 
-The next table breakds out the effects into the underlying components of the bureaucracy index.
+The next table breaks out the effects into the underlying components of the bureaucracy index.
 
 ```{r breg2, echo=FALSE}
 

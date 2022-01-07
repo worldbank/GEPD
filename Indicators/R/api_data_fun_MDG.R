@@ -361,7 +361,7 @@ api_template <- api_template %>%
       SE.PRM.OPMN.1   = indicator_means(operational_management	, "school", "OPMN",  "All"),
       # SE.PRM.OPMN.1.F = indicator_means(operational_management	, "school", "OPMN",  "Female"),
       # SE.PRM.OPMN.1.M = indicator_means(operational_management	, "school", "OPMN",  "Male"),
-      # SE.PRM.OPMN.1.R = indicator_means(operational_management	, "school", "OPMN",  "Rural"),
+      SE.PRM.OPMN.1.R = indicator_means(operational_management	, "school", "OPMN",  "Rural"),
       SE.PRM.OPMN.1.U = indicator_means(operational_management	, "school", "OPMN",  "Urban"),
       #(De Facto) Average score for infrastructure repair/maintenance	
       SE.PRM.OPMN.2   = 1+2*indicator_means(vignette_1, "school", "OPMN",  "All"),  
