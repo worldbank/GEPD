@@ -2150,6 +2150,16 @@ main_indicator_labels<-c(
   data_policy_combined <- data_policy_combined %>% 
     pivot_longer(cols = c(2:12), names_to= "indicators", values_to = "value") %>% 
     left_join(labels_df_policy)
+  
+  combined_school_office_df <- combined_school_office_df %>% rename(iso3c=country) %>% mutate(iso3c = case_when(
+    iso3c == "Peru" ~ "PER",
+    iso3c == "Jordan" ~ "JOR",
+    iso3c == "Rwanda" ~ "RWA",
+    iso3c == "Madagascar" ~ "MDG",
+    iso3c == "Ethiopia" ~ "ETH",
+
+  ))
+  
 ```
 
 
@@ -2158,7 +2168,7 @@ main_indicator_labels<-c(
 ## Relating the policy indicators to practices : TEACHING (DE FACTO)-----
 
 
-defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>%  rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
+defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot_wider( id_cols = c("country"),names_from = indicators, values_from = value) %>% left_join(combined_school_office_df %>% select(iso3c, student_knowledge, presence_rate, teach_score, content_knowledge) %>% rename(country= iso3c) %>% mutate(student_knowledge = as.numeric(student_knowledge), presence_rate = as.numeric(presence_rate), teach_score = as.numeric(teach_score), content_knowledge = as.numeric(content_knowledge)))
 
 
 models <- list(
