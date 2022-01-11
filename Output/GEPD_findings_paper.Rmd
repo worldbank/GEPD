@@ -58,11 +58,11 @@ library(skimr)
   if (str_to_lower(Sys.info()["user"]) == "wb469649") {
       
     dir <- here()
-
+    shared_loc <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
   } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
 
     dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
-
+    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
   }
 
 
@@ -222,6 +222,12 @@ combined_wide_color <- combined_df %>%
     values_from=value_color
   ) %>%
   left_join(indicator_names_df)
+
+combined_wide_df %>%
+  rename(Indicator_Name=`Indicator Name`) %>%
+  haven::write_dta(  paste0(confidential_dir, "General/combined_indicators.dta")) %>%
+  haven::write_dta( paste0(shared_loc, "/Data/combined_indicators.dta"))
+
 
 ```
 
@@ -840,6 +846,10 @@ combined_bur_df <- bind_rows(PER_bur_df, JOR_bur_df, RWA_bur_df, ETH_bur_df) %>%
   mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
 
 
+combined_bur_df %>%
+  rename(pol_policy_implementation=politicized_policy_implementation) %>%
+  haven::write_dta(  paste0(confidential_dir, "General/combined_public_officials.dta")) %>%
+  haven::write_dta(  paste0(shared_loc, "/Data/combined_public_officials.dta"))
 ```
 
 
@@ -1108,7 +1118,10 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
 combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
 combined_school_office_df %>%
   rename(pol_policy_implementation=politicized_policy_implementation) %>%
-  haven::write_dta( paste0(confidential_dir, "General/combined_school_office_df.dta"))
+  haven::write_dta( paste0(confidential_dir, "General/combined_school_office_df.dta")) %>%
+  haven::write_dta(  paste0(shared_loc, "Data/combined_school_office_df.dta"))
+  
+
 ```
 
 
@@ -1467,6 +1480,13 @@ combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH
 weights_df <- combined_g4_df %>%
   group_by(iso3c, hashed_school_code) %>%
   summarise(ipw=mean(ipw, na.rm=T))
+
+
+combined_g4_df %>%
+  select(-contains('nogiraffe'), -`Student Proficient`, -`Student Proficient Math`, -`Student Proficient Literacy`) %>%
+  haven::write_dta(  paste0(confidential_dir, "General/combined_g4.dta")) %>%
+  haven::write_dta(  paste0(shared_loc, "Data/combined_g4.dta"))
+
 ```
 
 In figure XX, the distribution of raw scores are shown for each country.  The raw scores are scaled to be between 0 and 100, where a student receiving 0 points got none of the questions correct, and a student scoring 100 got all of the questions correct. Overall scores combine literacy and math are shown.  Each point on the plot represents one student's set of responses.  Within each country there is a large dispersion of scores with at least some students scoring nearly 0 points out of 100 and at least some students scoring proficient.
@@ -1589,7 +1609,7 @@ ggplot(combined_g4_mn, aes(x=Item, y=Mean, color=country, shape=country)) +
 ```
 
 
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 ### Calling data 
  
  ########
@@ -1952,6 +1972,12 @@ combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH
            urban_rural=="Rural" ~ "Rural", 
            urban_rural=="Urban" ~ "Urban",
            TRUE ~ "Rural"))
+
+combined_g1_df %>%
+  select(-`Student Proficient`) %>%
+  haven::write_dta(  paste0(confidential_dir, "General/combined_g1.dta")) %>%
+  haven::write_dta(  paste0(shared_loc, "Data/combined_g1.dta"))
+
 ```
 
 In Peru, more than half of students met this proficiency level, and in Madagascar, the number was only around 5%.  In most countries there are large differences between students in urban and rural schools (shown in Figure XX below).  For instance in Peru, the average raw score on the 1st grade assessment was around 80% for urban schools, while it was around 64% for rural schools.  In Madagascar that gap was 59% to 47%.  Only in Jordan was there little observable difference in student readiness between children in urban and rural schools.
@@ -2033,7 +2059,7 @@ ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
 ```
 
 
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 
  ### 1st grade  -------------------
  
@@ -2393,11 +2419,18 @@ ETH_teachers_df_2021 <- ETH_pedg_df_2021 %>%
   left_join(ETH_cont_df_2021) %>%
   mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
   select(-starts_with('s_'))
+
+
 ######
 # Combined
 ######
 combined_teachers_df <- bind_rows(PER_teachers_df, JOR_teachers_df, RWA_teachers_df, ETH_teachers_df_2020, ETH_teachers_df_2021) %>%
   mutate(iso3c=factor(iso3c, levels=c("ETH","RWA", "JOR", "PER")))
+
+
+haven::write_dta(combined_teachers_df,  paste0(confidential_dir, "General/combined_teacher_cont_pedg.dta"))
+haven::write_dta(combined_teachers_df,  paste0(shared_loc, "Data/combined_teacher_cont_pedg.dta"))  
+
 ```
 
 
@@ -2491,7 +2524,9 @@ ggplot(combined_teachers_df, aes(x=teach_score, y=content_knowledge, color=iso3c
  combined_teacher_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df_2020, ETH_df_2021, MDG_df) %>%
     mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
  
- 
+
+haven::write_dta(combined_teacher_df,  paste0(confidential_dir, "General/combined_teachers.dta"))
+haven::write_dta(combined_teacher_df,  paste0(shared_loc, "Data/combined_teachers.dta"))  
 ```
 
 
@@ -2783,6 +2818,10 @@ The table below breaks down the underlying school management policies.  Next the
  combined_school_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df, MDG_df) %>%
     mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
  
+ 
+ haven::write_dta(combined_school_df,  paste0(confidential_dir, "General/combined_school.dta"))
+haven::write_dta(combined_school_df,  paste0(shared_loc, "Data/combined_school.dta"))
+
  
 ```
 
