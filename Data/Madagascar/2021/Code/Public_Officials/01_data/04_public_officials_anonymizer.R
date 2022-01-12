@@ -49,12 +49,13 @@ data_list<-ind_dta_list
 public_officials_dta_short <- public_officials_dta_short %>%
   mutate(id_code=row_number())
 
+public_officials_dta_short$hashed_interview <-as.character(lapply(public_officials_dta_short$id_code, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 public_officials_dta_short$hashed_position <-as.character(lapply(public_officials_dta_short$position, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 public_officials_dta_short$hashed_office <-as.character(lapply(public_officials_dta_short$office_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 
 #save a hashed version of the dataset, to produce a link file
 key<-public_officials_dta_short %>%
-  select(id_code, interview__id, position, office_preload, hashed_position,  hashed_office) 
+  select(interview__id, id_code, position, office_preload,hashed_interview, hashed_position,  hashed_office) 
 
 write_excel_csv(key, file.path(confidential_folder, "public_official_linkfile_hashed.csv"))
 
@@ -73,7 +74,7 @@ for (i in data_list ) {
     if ("position" %in% colnames(temp)) {
       temp <- temp %>%
         left_join(key) %>%
-        select(id_code, hashed_position, hashed_office,  everything())
+        select(id_code,hashed_interview, hashed_position, hashed_office,  everything())
     }
     
     
@@ -183,7 +184,7 @@ for (i in data_list ) {
     #do noise addition (10% of std dev) using sdcMicro and addNoise for income
     if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
       
-      #public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
+      public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
       temp <- temp %>%
         select(-DEM1q14n)
       
@@ -196,8 +197,7 @@ for (i in data_list ) {
     
     print(i)
     
-    print(i)
-    write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+    write.csv(temp, file = file.path(paste0(save_folder,"/data"), paste0(i,"_anon.csv")))
     
     
     

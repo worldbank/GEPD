@@ -28,18 +28,19 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'MOZ'
-country_name <-'Mozambique'
-year <- '2019'
+country <-'MDG'
+country_name <- "Madagascar"
+year <- '2021'
+
 #########################
 # File paths #
 #########################
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
 
-if (Sys.getenv("USERNAME") == "wb469649"){
+if (Sys.getenv("USERNAME") == "WB469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/Public_Officials", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
@@ -71,7 +72,12 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #move working directory to github main folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
+#main file name:
+po_file<-"public_officials.dta"
+
+
 #launch file to access data from API
+need_api=0
 source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data

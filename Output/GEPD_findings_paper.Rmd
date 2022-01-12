@@ -834,15 +834,16 @@ ETH_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,ye
 # Madagascar
 #######
 #read in anonymized school data
-# country <- "MDG"
-# year <- "2021"
-# MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
-#   mutate(iso3c=country) %>%
-#   select(-district)
+country <- "MDG"
+year <- "2021"
+MDG_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c,govt_tier, bur_indicators) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
 ########
 #combined
 ########
-combined_bur_df <- bind_rows(PER_bur_df, JOR_bur_df, RWA_bur_df, ETH_bur_df) %>%
+combined_bur_df <- bind_rows(PER_bur_df, JOR_bur_df, RWA_bur_df, ETH_bur_df, MDG_bur_df) %>%
   mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
 
 

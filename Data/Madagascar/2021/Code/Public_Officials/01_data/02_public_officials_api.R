@@ -12,6 +12,8 @@ library(here)
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
+
+if (need_api==1) {
 #user credentials
 #Check whether password.R file is in Github repo
 pw_file<-here::here("password.R")
@@ -25,7 +27,7 @@ if (file.exists(pw_file)) {
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://gepdmoz.mysurvey.solutions')$res
+server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://edu.mysurvey.solutions')$res
 
 #questionnaire version
 #e.g. quest_version<-8
@@ -54,13 +56,13 @@ str(content(q))
 
 
 #pull data from version of our Education Policy Dashboard Questionnaire
-POST(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$",quest_version,"/start", sep=""),
+POST(paste(server_add,"/api/v1/export/stata/dd5d031dba1e4333b4ff5dfc7bff4e2d$",quest_version,"/start", sep=""),
          authenticate(user, password))
 
 #sleep for 10 seconds to wait for stata file to compile
 Sys.sleep(10)
 
-dataDownload <- GET(paste(server_add,"/api/v1/export/stata/25534a374fa8434bb7d6f5133cdebab2$", quest_version,"/",sep=""),
+dataDownload <- GET(paste(server_add,"/api/v1/export/stata/dd5d031dba1e4333b4ff5dfc7bff4e2d$", quest_version,"/",sep=""),
                     authenticate(user, password))
 
 redirectURL <- dataDownload$url 
@@ -89,14 +91,10 @@ makeVlist <- function(dta) {
 
 
 
-
+}
 
 #read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, "public_officials.dta")) 
-public_officials_metadata<-makeVlist(public_officials_dta)
 
-public_officials_dta <- public_officials_dta %>%
-  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) 
+public_officials_dta<-read_dta(file.path(download_folder, po_file)) 
 
 
-write_dta(public_officials_dta, file.path(download_folder, "public_officials.dta"), version = 14)
