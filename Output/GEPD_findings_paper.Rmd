@@ -1084,21 +1084,21 @@ country <- "MDG"
 year <- "2021"
 confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
 MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
-# MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info
 MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
 MDG_school_office_link_df <- MDG_school_anon_df %>%
   left_join(MDG_school_gdp) %>%
+  left_join(MDG_school_office_linkages) %>%  
   select(-district) %>%
   mutate(country="Madagascar") %>%
   mutate(
     presence_rate=100-absence_rate,
-    # dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
-    #      dist_km=dist/1000,
-    #      dist_log=log(dist_km),
-    #      bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         # rural2=if_else(urban_rural=="Rural",1,0),
-         # rural=if_else(is.na(rural),rural2,rural ),
+    dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1111,8 +1111,9 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
          students_enrolled=factor(students_enrolled, 
                                   levels=c(1:8),
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
-# %>%
-#   left_join(MDG_school_office_linkages)
+
+
+
 ###########
 # Combined
 ##########
@@ -3077,6 +3078,41 @@ models <- list(
 'Operations Management' =  feols(operational_management ~  bureau_index  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
 
 'Principal Management Skills' =  feols(principal_management ~  bureau_index  + log(GDP) + rural + students_enrolled   | country, data=combined_school_office_df, se='hetero')
+
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("bureau_index" = "Bureuacracy Index"),
+             coef_omit="GDP|rural|students_enrolled",
+             gof_map = gm,
+             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             escape = FALSE             
+             )
+
+```
+
+The next table allows the effect of the bureaucracy index to vary by country.  When this is done the relationship between bureaucracy and 4th grade student knowledge differs between Madagascar and Peru.  The negative relationship between bureaucracy and teacher presence is only statistically significant in Madagascar.  
+
+```{r breg3}
+
+models <- list(
+  
+'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index:country + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+
+'Teacher Presence' =  feols(presence_rate ~   bureau_index:country  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+
+'Teacher Pedagogy' =  feols(teach_score ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+
+'School Inputs' =  feols(inputs ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+
+'School Infrastructure' =  feols(infrastructure ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+
+'Operations Management' =  feols(operational_management ~  bureau_index:country  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+
+'Principal Management Skills' =  feols(principal_management ~  bureau_index:country  + log(GDP) + rural + students_enrolled   | country, data=combined_school_office_df, se='hetero')
 
 )
 
