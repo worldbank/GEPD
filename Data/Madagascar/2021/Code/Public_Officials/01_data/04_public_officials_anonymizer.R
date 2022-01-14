@@ -84,6 +84,7 @@ for (i in data_list ) {
       select(-starts_with('position'), -starts_with('office'), one_of('location')) %>% # drop position names and address
       select(-one_of('survey_time', 'lat','lon')) %>% #drop geo-codes
       select(-contains('office')) %>%
+      select(-contains('location')) %>%
       select(-contains('ENUMq8')) %>% #drop enumerator notes
       select(-contains('m1s0q9')) %>%
       select(-contains('inter_officials')) %>%

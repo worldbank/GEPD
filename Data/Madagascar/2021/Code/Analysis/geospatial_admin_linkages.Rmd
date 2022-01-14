@@ -121,16 +121,47 @@ wb.poly.2 %>% select(ADM2_CODE) %>% plot(., main = 'district geometry')
 
 ```{r linkages}
 
-m.po <- public_officials_dta_clean
+m.po <- public_officials_dta_clean %>%
+  group_by(location) %>%
+  fill(lat, .direction='downup') %>% #clean some misisng lat lon due to tablet issues
+  fill(lon, .direction='downup') %>%
+  ungroup() %>% #now need to do some manual fixes.  Geo locations found using google.
+  mutate(lat=case_when(
+    location=="Sofia: Mampikony" ~ -16.183333,
+    location=="Anosy: Betroka" ~ -23.268333,
+    location=="Atsimo Atsinanana" ~ -22.819,
+    location=="Atsimo Atsinanana: Farafangana" ~ -22.816667,
+    location=="Atsimo Atsinanana: Midongy Sud" ~ -23.583333,
+    location=="Bongolava: Fenoarivobe" ~ -18.449722,
+    location=="Vakinankaratra: Mandoto" ~ -19.566667,
+    location=="Vatovavy Fitovinany" ~ -22.145 ,
+    location=="Vatovavy Fitovinany: Nosy Varika" ~ -20.583333,
+    TRUE ~ lat
+  )) %>%
+  mutate(lon=case_when(
+    location=="Sofia: Mampikony" ~ 47.7,
+    location=="Anosy: Betroka" ~ 46.104444,
+    location=="Atsimo Atsinanana" ~ 47.83,
+    location=="Atsimo Atsinanana: Farafangana" ~ 47.816667,
+    location=="Atsimo Atsinanana: Midongy Sud" ~ 47.016667,
+    location=="Bongolava: Fenoarivobe" ~ 46.561667,
+    location=="Vakinankaratra: Mandoto" ~ 46.283333,
+    location=="Vatovavy Fitovinany" ~ 48.01,
+    location=="Vatovavy Fitovinany: Nosy Varika" ~ 48.533333,
+    TRUE ~ lon
+  ))
+  
+
+
 m.school <- school_dta_short
 
 #get coordinates
-po_coord_df <- public_officials_dta_clean %>%
+po_coord_df <- m.po %>%
   select(interview__id, lat, lon) %>%
   rename(office_lat=lat,
          office_lon=lon)
 
-school_coord_df <- school_dta_short %>%
+school_coord_df <- m.school %>%
   select(school_code, lat, lon) %>%
   rename(school_lat=lat,
          school_lon=lon) 
@@ -250,7 +281,7 @@ linked_school_data_csv <- linked_school_data %>%
             
             )) 
 
-write_excel_csv(linked_school_data_csv, file.path(confidential_folder, "/School/linked_po_school_data_ETH.csv"))
+write_excel_csv(linked_school_data_csv, file.path(confidential_folder, "/School/linked_po_school_data_MDG.csv"))
 
 ```
 
