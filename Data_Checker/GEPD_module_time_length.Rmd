@@ -1,0 +1,229 @@
+---
+title: "GEPD School Module Time Estimates"
+author: "Brian Stacy"
+date: "1/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE, fig.width=9, fig.height=7}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(Hmisc)
+library(lubridate)
+library(ggbeeswarm)
+```
+
+```{r paths}
+#set directory paths
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is available
+
+country_name<-"Ethiopia"
+year <- "2021"
+
+usr <- str_to_lower(Sys.getenv("USERNAME"))
+
+paradata_time_reader <- function(country_name, year) {
+  
+  project_folder  <- paste0("C:/Users/",usr,"/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/")
+  
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/School", sep="/"))
+  
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
+  
+  #label variables
+  var.labels=c(
+              interview__id = "Unique 32-character long identifier of the interview",
+              order = "Sequential event number within each interview",
+              event = "Type of event happened",
+              responsible = "Login name of the person who initiated the event",
+              role = "System role of the person who initiated the event",
+              timestamp = "Date and time when the event happened",
+              offset = "Timezone offset relative to UTC",
+              parameters = "Event-specific parameters"
+              )
+  # Label data
+  label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
+
+  #apply fix for Ethiopia which saw a changed name for timestamp
+  if (country_name=="Ethiopia" & year=="2021") {
+    
+    para_df <- para_df %>%
+      rename(timestamp=timestamp_utc)
+    
+  }
+  
+  ######################################
+  # Clean Paradata files
+  ######################################
+  #clean up timestamp
+  para_df <- para_df %>% 
+    rename(interview__id=ï..interview__id) %>%
+    mutate(timestamp= ymd_hms(timestamp))
+  
+  #Generate length of time for each question, by calculating gap in time between when question was entered and previous question
+  para_df <- para_df %>% 
+    arrange(interview__id, order) %>% 
+    mutate(timelength=lag(timestamp) %--% timestamp) %>% 
+    mutate(timelength_sec=int_length(timelength)) %>%
+    mutate(date=date(timestamp),
+           hour=hour(timestamp),
+           am_pm=am(timestamp))
+  
+  #Only keep paradata on actual questions for indicators. These are tagged with m******
+  para_df <- para_df %>% 
+    filter(str_detect(parameters, "m1s|m2s|m3s|m4s|m5s|m6s|m7s|m8s")) %>%
+    filter(responsible!="")
+  
+  
+  #Split up question name to identify tags for each indicator
+  para_df <- para_df %>% 
+    separate(parameters, c("question", NA, "response", NA, "other"), remove=FALSE, sep = "[|]")
+  
+  #Add tags for module, section, and indicator
+  para_df <- para_df %>% 
+    mutate(module = str_to_upper(substr(question, start=1, stop=2))) %>%
+    mutate(module=case_when(
+      module=="M1" ~ "Module 2 - School Information",
+      module=="M2" ~ "Module 1 - Teacher Roster",
+      module=="M3" ~ "Module 4 - Teacher Questionnaire",
+      module=="M4" ~ "Module 7 - Classroom Inputs",
+      module=="M5" ~ "Module 5 - Teacher Assessment",
+      module=="M6" ~ "Module 6 - 1st Grade Assessment",
+      module=="M7" ~ "Module 3 - School Management",
+      module=="M8" ~ "Module 8 - 4th Grade Assessment",
+    )) %>%
+    mutate(section = str_to_upper(substr(question, start=1, stop=4))) %>%
+    separate(question, c(NA, "indicator"), sep="_", remove=FALSE) %>%
+    mutate(indicator = str_to_upper(indicator))
+  
+  module_df <- para_df %>%
+    group_by(interview__id, module) %>%
+    summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec)) %>%
+    mutate(timelength_min=timelength_sec/60) %>%
+    filter(timelength_min>0 & timelength_min<=150) #screen out modules that last 0 seconds. That means another interviewer did the interviews in this school.
+  
+  
+}
+
+
+```
+# Peru
+
+```{r peru}
+module_time_df <- paradata_time_reader("Peru", "2019")
+
+module_time_avg <- module_time_df %>%
+  group_by(module) %>%
+  summarise(timelength_min=mean(timelength_min))
+
+
+ggplot(module_time_df, aes(x=str_wrap(module,15), y=timelength_min)) +
+  geom_quasirandom(color="#457b9d", alpha=0.5) +  
+  geom_segment(data=module_time_avg, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=module_time_avg, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  ylab('Time length (minutes)') +
+  xlab("Module") +
+  expand_limits(y=c(0,150)) +
+  theme_bw() +
+  labs(caption="Solid black line represents average length of time.  Blue dots represent time length for specific interview.")
+
+```
+
+# Jordan
+
+```{r}
+# Jordan
+
+module_time_df <- paradata_time_reader("Jordan", "2019")
+
+module_time_avg <- module_time_df %>%
+  group_by(module) %>%
+  summarise(timelength_min=mean(timelength_min))
+
+
+ggplot(module_time_df, aes(x=str_wrap(module,15), y=timelength_min)) +
+  geom_quasirandom(color="#457b9d", alpha=0.5) +  
+  geom_segment(data=module_time_avg, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=module_time_avg, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  ylab('Time length (minutes)') +
+  xlab("Module") +
+  expand_limits(y=c(0,150)) +
+  theme_bw() +
+  labs(caption="Solid black line represents average length of time.  Blue dots represent time length for specific interview.")
+
+```
+
+
+
+
+# Rwanda
+
+```{r rwanda}
+module_time_df <- paradata_time_reader("Rwanda", "2019")
+
+module_time_avg <- module_time_df %>%
+  group_by(module) %>%
+  summarise(timelength_min=mean(timelength_min))
+
+
+ggplot(module_time_df, aes(x=str_wrap(module,15), y=timelength_min)) +
+  geom_quasirandom(color="#457b9d", alpha=0.5) +  
+  geom_segment(data=module_time_avg, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=module_time_avg, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  ylab('Time length (minutes)') +
+  xlab("Module") +
+  expand_limits(y=c(0,150)) +
+  theme_bw() +
+  labs(caption="Solid black line represents average length of time.  Blue dots represent time length for specific interview.")
+
+```
+
+# Ethiopia (2020)
+
+```{r eth20}
+module_time_df <- paradata_time_reader("Ethiopia", "2020")
+
+module_time_avg <- module_time_df %>%
+  group_by(module) %>%
+  summarise(timelength_min=mean(timelength_min))
+
+
+ggplot(module_time_df, aes(x=str_wrap(module,15), y=timelength_min)) +
+  geom_quasirandom(color="#457b9d", alpha=0.5) +  
+  geom_segment(data=module_time_avg, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=module_time_avg, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  ylab('Time length (minutes)') +
+  xlab("Module") +
+  expand_limits(y=c(0,150)) +
+  theme_bw() +
+  labs(caption="Solid black line represents average length of time.  Blue dots represent time length for specific interview.")
+
+```
+
+
+
+# Ethiopia (2021)
+
+```{r eth21}
+module_time_df <- paradata_time_reader("Ethiopia", "2021")
+
+module_time_avg <- module_time_df %>%
+  group_by(module) %>%
+  summarise(timelength_min=mean(timelength_min))
+
+
+ggplot(module_time_df, aes(x=str_wrap(module,15), y=timelength_min)) +
+  geom_quasirandom(color="#457b9d", alpha=0.5) +  
+  geom_segment(data=module_time_avg, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=module_time_avg, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  ylab('Time length (minutes)') +
+  xlab("Module") +
+  expand_limits(y=c(0,150)) +
+  theme_bw() +
+  labs(caption="Solid black line represents average length of time.  Blue dots represent time length for specific interview.")
+
+```
