@@ -311,7 +311,42 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
 labels_df_2<-data.frame(indicators=as.character(indicators_list),
                       indicator_labels=as.character(main_indicator_labels2))
 
-teach_gender <- teacher_roster_anon %>% select(1:6, 9)
+
+load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_survey_data.Rdata", sep="")
+
+## Get the teacher gender
+teach_gender <- teacher_roster %>% select(1:7, starts_with("school")) %>% 
+  rename(m4saq1_number = TEACHERS__id,
+         m4saq1 = m2saq2) %>% select(-w1, -w2)
+
+
+teacher_teach <- school_dta %>% select(school_code, m4saq1_number) %>% filter(!is.na(m4saq1_number)) 
+
+teach_gender_bis <- teach_gender %>% select(school_code, interview__key, m2saq3, m4saq1_number) %>% rename(interview_key=interview__key) %>% right_join(teacher_teach, by = c("school_code", "m4saq1_number"))
+
+teach_ipw <- school_dta_raw_anon %>%  select(interview__key, ipw) %>% rename(interview_key = interview__key)
+
+teach_gender_bis <- teach_gender_bis %>% left_join(teach_ipw, by=c("interview_key"))
+
+
+
+final_TEACH_gender <- teach_gender_bis %>% left_join(final_indicator_data_PEDG) %>% distinct() %>% filter(!is.na(Segment))%>%  mutate(above_min = if_else(teach_score >= 3, 1, 0))%>% rename(sch_ipw= ipw)
+
+
+final_TEACH_gender_w <- final_TEACH_gender %>% group_by(m2saq3) %>% summarise(pedagogical = wtd.mean(above_min, w=sch_ipw, na.rm=TRUE))
+    
+    final_TEACH_gender_non_w <- final_TEACH_gender %>% group_by(m2saq3) %>% summarise(pedagogical = wtd.mean(above_min, na.rm = T))
+    
+    
+
+
+
+
+
+
+
+
+
 
 # School Survey
     metadata<-metadta
