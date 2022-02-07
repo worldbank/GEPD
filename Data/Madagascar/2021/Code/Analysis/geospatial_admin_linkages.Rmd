@@ -136,6 +136,9 @@ m.po <- public_officials_dta_clean %>%
     location=="Vakinankaratra: Mandoto" ~ -19.566667,
     location=="Vatovavy Fitovinany" ~ -22.145 ,
     location=="Vatovavy Fitovinany: Nosy Varika" ~ -20.583333,
+    location=="Atsimo Andrefana: Ankazoabo" ~ -21.503611,
+    location=="Sofia: Mandritsara" ~ -15.833333,
+    location=="Vatovavy Fitovinany: Ifanadiana" ~ -21.3,
     TRUE ~ lat
   )) %>%
   mutate(lon=case_when(
@@ -148,6 +151,9 @@ m.po <- public_officials_dta_clean %>%
     location=="Vakinankaratra: Mandoto" ~ 46.283333,
     location=="Vatovavy Fitovinany" ~ 48.01,
     location=="Vatovavy Fitovinany: Nosy Varika" ~ 48.533333,
+    location=="Atsimo Andrefana: Ankazoabo" ~ 45.209444,
+    location=="Sofia: Mandritsara" ~ 48.816667,
+    location=="Vatovavy Fitovinany: Ifanadiana" ~ 47.633333,
     TRUE ~ lon
   ))
   

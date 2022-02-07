@@ -73,7 +73,7 @@ if (Sys.getenv("USERNAME") == "WB469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #main file name:
-po_file<-"public_officials.dta"
+po_file<-"public_officials_final.dta"
 
 
 #launch file to access data from API
