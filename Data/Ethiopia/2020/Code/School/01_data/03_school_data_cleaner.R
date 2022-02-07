@@ -27,12 +27,12 @@ makeVlist <- function(dta) {
 
 
 #AC - Modification to the folder paths to be able to run the code localy
-if(Sys.info()["user"] == "AdrianoCiretto"){
-  
-  setwd(dir = "/Users/AdrianoCiretto/Documents/Github/GEPD")
-  download_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Raw/School"
-  confidential_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Clean/School"
-}
+# if(Sys.info()["user"] == "AdrianoCiretto"){
+#   
+#   setwd(dir = "/Users/AdrianoCiretto/Documents/Github/GEPD")
+#   download_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Raw/School"
+#   confidential_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Clean/School"
+# }
 
 ############################
 #read in teacher roster file

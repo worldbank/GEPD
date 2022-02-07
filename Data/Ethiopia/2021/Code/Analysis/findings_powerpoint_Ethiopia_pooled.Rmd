@@ -312,7 +312,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
                       indicator_labels=as.character(main_indicator_labels2))
 
 
-load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_survey_data.Rdata", sep="")
+load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_survey_data.Rdata")
 
 ## Get the teacher gender
 teach_gender <- teacher_roster %>% select(1:7, starts_with("school")) %>% 
