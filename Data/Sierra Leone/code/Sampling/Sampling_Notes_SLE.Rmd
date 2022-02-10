@@ -526,3 +526,20 @@ leaflet(data=sample_combined) %>%
                                   "EMIS: ", sample_combined$idemis_code)) %>%
   addLegend(position="bottomright", pal=pal, values=~sample_combined$School, title="Schools Visited")
 ```
+
+
+
+```{r}
+SL_dis<- sample_combined %>% 
+  rename(District = iddistrict, Region = idregion) %>% 
+  group_by(Region, District) %>% 
+  summarise(`Number of schools` = n_distinct(idemis_code)) #%>% 
+  flextable() %>%
+  add_header_lines('Distribution of schools on territory')
+
+# SL_dis <- tempfile(fileext = ".html")
+save_as_html(SL_dis, path = "C:/Users/wb577189/OneDrive - WBG/Desktop/distribution_sample_SL.html")
+
+
+```
+
