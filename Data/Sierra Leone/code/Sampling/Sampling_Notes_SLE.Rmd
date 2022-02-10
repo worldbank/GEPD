@@ -341,20 +341,30 @@ The 40 schools were chosen in a manner consistent with the original set of EGRA/
 
 ```{r setframe, echo=TRUE}
 
-pupil_count_max_threshold_g1 = 30
+pupil_count_max_threshold_g2 = 30
 pupil_count_min_threshold_g1 = 3
 pupil_count_min_threshold_g4 = 3
+pupil_count_min_threshold_g6 = 3
 
+df_gepd_normal_df <- df_selected %>%
+  filter(sch_type=="B. Primary") %>%
+  filter(class1_combined>=pupil_count_min_threshold_g1 & class4_combined>=pupil_count_min_threshold_g4) 
+  
+df_gepd_g6_df <- df_selected %>%
+  filter(sch_type=="B. Primary") %>%
+  filter(class1_combined>=pupil_count_min_threshold_g1 & class4_combined>=pupil_count_min_threshold_g4 & class6_combined>=pupil_count_min_threshold_g6) 
+  
+    
 
 df_egra_frame <- df_selected %>%
   filter(sch_type=="B. Primary") %>%
-  filter(class2_combined>=pupil_count_min_threshold_g1 & class5_combined>=pupil_count_min_threshold_g4) %>%
-  filter(class2_combined>=pupil_count_max_threshold_g1)
+  filter(class1_combined>=pupil_count_min_threshold_g1 & class4_combined>=pupil_count_min_threshold_g4) %>%
+  filter(class2_combined>=pupil_count_max_threshold_g2)
 
 df_updated <- df_selected %>%
   filter(sch_type=="B. Primary") %>%
-  filter(class2_combined>=pupil_count_min_threshold_g1 & class5_combined>=pupil_count_min_threshold_g4) %>%
-  filter(class2_combined<pupil_count_max_threshold_g1)
+  filter(class1_combined>=pupil_count_min_threshold_g1 & class4_combined>=pupil_count_min_threshold_g4) %>%
+  filter(class2_combined<pupil_count_max_threshold_g2)
 
 df_updated %>% #   
   ungroup() %>%
