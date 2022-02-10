@@ -51,7 +51,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #Read in indicators.md file
 ###########################
 #Read in list of indicators
-indicators <- read_csv(here::here('Indicators','indicators.csv'))
+indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -73,7 +73,7 @@ indicator_choices <- indicator_choices %>%
 
 
 indicator_choices <- indicator_choices %>%
-  select(-c('...1"', '...6"')) %>%
+  select(-c('...1', '...6')) %>%
   rename("Source Note"="How is the indicator scored?" ) 
 
 
@@ -88,9 +88,10 @@ indicator_names <- indicators$indicator_tag
 #Read in Sergio's excel with subquestions to include
 subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
 
-df<-indicators %>%
-  left_join(subquestions) %>%
-  select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
+df<-indicators %>%  rename(Indicator.Name= Subtitle) 
+
+  # left_join(subquestions) %>%
+  # select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
 
 
 
@@ -189,8 +190,17 @@ api_template <- api_template %>%
 # Example:
 
 #specify path to data
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/"
-data_dir_conf<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized"
+if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+  
+  data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/"
+  data_dir_conf<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized"
+  
+  
+} else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+  
+  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/"
+  data_dir_conf <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized"
+}
 
 
 
