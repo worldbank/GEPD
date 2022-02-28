@@ -543,7 +543,7 @@ leaflet(data=sample_combined) %>%
 SL_dis<- sample_combined %>% 
   rename(District = iddistrict, Region = idregion) %>% 
   group_by(Region, District) %>% 
-  summarise(`Number of schools` = n_distinct(idemis_code)) #%>% 
+  summarise(`Number of schools` = n_distinct(idemis_code)) %>% 
   flextable() %>%
   add_header_lines('Distribution of schools on territory')
 
