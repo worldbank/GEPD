@@ -212,13 +212,13 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
                "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA", "SE.PRM.TENR", "SE.PRM.TENR.FE", "SE.PRM.TENR.MA")
 #read in data from wbopendata
 #get WDI metadata infor
-cache_list<-wbstats::wbcache()
-wbopendat<-wbstats::wb(country="RWA", 
-            indicator=ind_list,
-            startdate=2000,
-            enddate=2020,
-            return_wide = T,
-            removeNA=FALSE)
+# cache_list<-wbstats::wbcache()
+# wbopendat<-wbstats::wb(country="RWA", 
+#             indicator=ind_list,
+#             startdate=2000,
+#             enddate=2020,
+#             return_wide = T,
+#             removeNA=FALSE)
 
 wbopendat<-WDI(country="RW", indicator=ind_list, start=2000, end=2020, extra=T) %>%
   filter(!is.na(SE.PRM.TENR) &!is.na(country)) %>%
@@ -263,13 +263,64 @@ finance_df_final <- finance_df_shaped %>%
 
 source('R/api_data_fun_RWA.R', echo=TRUE)
 
-RWA_data_2019 <- api_final
+
+
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
+
+#function to create score data for a specified country and year
+api_metadata_fn <- function(cntry, yr) {
+  api_metadata_fn_p <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  
+  api_metadata_fn_c <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_p %>%
+    bind_rows(api_metadata_fn_c) %>%
+    arrange(Series) %>%
+    mutate(year=yr,
+           cty_or_agg="cty",
+           countrycode=cntry,
+           value=round(value,1),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+}
+
+
+
+RWA_data_2020 <- api_metadata_fn('RWA', 2020)
 
 
 #export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_RWA.csv')
+write_excel_csv(RWA_data_2020, 'GEPD_Indicators_API_RWA.csv')
 
-write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_RWA.csv',sep=""))
+write_excel_csv(RWA_data_2020, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_RWA.csv',sep=""))
 
 
 

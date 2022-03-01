@@ -136,26 +136,34 @@ indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 # read in indicator data
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
   mutate(country="Peru",
-         date='2019')
+         date='2019') %>%
+  select(-year)
 
 RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
   mutate(country="Rwanda",
-         date='2020')
+         date='2020') %>%
+  select(-year)
+
 
 JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
   mutate(country="Jordan",
-         date='2019')
+         date='2019') %>%
+  select(-year)
+
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021',
-         value=value_pooled) 
+         date='2020-2021')  %>%
+  select(-year)
+
 # %>%
 #   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
-         date='2021')
+         date='2021') %>%
+  select(-year)
+
 
 # Indicator names
 indicator_names_df <- PER_data %>%
@@ -163,38 +171,9 @@ indicator_names_df <- PER_data %>%
 
 combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
 
-#add color coding
-#Tags
-practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG"
 
-#function to create score data for a specified country and year
-
-  combined_df_fn_p <- combined_df_raw %>%
-    filter(grepl(practice_tags, Series) | grepl("Percent", `Indicator Name`)) %>%
-    select(country, date, Series, value) %>%
-    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
-    mutate(
-      value_metadata=case_when(
-        value <85 ~ "Needs Improvement",
-        value >=85 & value<90 ~ "Caution",
-        value >=90 ~ "On Target",
-        TRUE ~ "N/A"
-      ))
   
-  combined_df_fn_c <- combined_df_raw %>%
-    filter(!(grepl(practice_tags, Series) | grepl("Percent", `Indicator Name`))) %>%
-    select(country, date, Series,  value) %>%
-    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
-    mutate(
-      value_metadata=case_when(
-        value <3 ~ "Needs Improvement",
-        value >=3 & value<4 ~ "Caution",
-        value >=4 ~ "On Target",
-        TRUE ~ "N/A"
-      ))
-  
-  combined_df <- combined_df_fn_p %>%
-    bind_rows(combined_df_fn_c) %>%
+  combined_df <- combined_df_raw %>%
     arrange(Series) %>%
     mutate(
            value=round(value,1),
@@ -342,9 +321,8 @@ tab_df <- tab_df  %>%
 
 ovr_table <- flextable(tab_df) %>%
   add_header_lines(title) %>%
-  add_footer( Group = paste0('Source: UIS, GLAD, GEPD, World Bank. 
-(1) Proficiency on GEPD assessment means % students with knowledge 80%.\n  (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS).\n (3) All indicators are on a scale of 0-5 unless measured in %. \n (4) Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' )) %>%
-  merge_at( j = 1:4, part = "footer") %>%
+  add_footer_lines('Source: UIS, GLAD, GEPD, World Bank. 
+ Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' ) %>%
   theme_vanilla()
 
 #colors
@@ -366,6 +344,63 @@ FitFlextableToPage(ovr_table) %>%
 
   
 }
+```
+
+
+```{r outtab}
+# Produce a table showing means by country for select practice indicators
+outcome_indicators <- c(
+  'SE.GEPD.PRIM',
+  'SE.GEPD.PRIM.BMP',
+  'SE.PRM.TENR'
+
+)
+country_tab_fn(outcome_indicators, 'GEPD Outcome Indicators') %>%
+  add_footer_lines('Rwanda does not have an internationally comparable learning assessment to report on Learning Poverty.')
+```
+
+
+```{r}
+#pull data on other outcomes, GNI per capita, Population, HCI, poverty, stunting
+
+dev_out_df <- WDI::WDI(
+    country=c('ET','RW','PE','JO','MG'),
+    indicator=c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  ),
+    start=2010,
+    end=2020,
+    latest=1,
+    extra = TRUE
+  ) %>%
+  fill(c("SP.POP.TOTL", "SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  )) %>%
+  group_by(iso3c) %>%
+  arrange(year) %>%
+  filter(row_number()==n()) %>%
+  ungroup() %>%
+  select(country, c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  )) 
+
+
+names <- setNames(stack(lapply(dev_out_df, label))[2:1], c("Varcode", "Variables"))
+
+dev_out_df <- dev_out_df %>%
+  mutate(across(c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  ), scales::comma))
+
+dev_out_tab <- t(dev_out_df) %>%
+  as_tibble()
+
+colnames(dev_out_tab) <- dev_out_tab[1,]
+
+dev_out_tab <- dev_out_tab[-1,]
+rownames(dev_out_tab) <- names$Variables[-1]
+
+dev_out_tab %>%
+  rownames_to_column(var = 'Outcome') %>%
+  select("Outcome", "Peru", "Jordan", "Rwanda", "Ethiopia", "Madagascar") %>%
+  flextable() %>%
+  colformat_int(j=2:6,big.mark = ",") %>%
+  add_header_lines('Development Context for GEPD Countries.') %>%
+  add_footer_lines("Source: World Bank World Development Indicators") %>%
+  autofit()
+
 ```
 
 
@@ -578,6 +613,142 @@ ovr_table <- flextable(tab_df_comb) %>%
 
 ```
 
+
+```{r alttab, eval=FALSE, include=FALSE}
+
+
+
+value_plotter_100  <- function(variables) {
+  
+  data <- data.frame(x=1,y=variables) 
+  colr <- ifelse(variables <85, "#FF0000", ifelse((variables >=85 & variables<90), "#FCD606", ifelse(variables >=90, "#85C546","#808080")))
+  
+
+  
+  ggplot(data, aes(x=x,y=y)) +
+    geom_col(fill=colr) +
+    geom_text(aes(label=y,y=50), size=4) +
+    theme_void() +
+    expand_limits(y=c(0,100))
+  }
+
+value_plotter_5  <- function(variables) {
+  
+  data <- data.frame(x=1,y=variables) 
+  colr <- ifelse(variables <3, "#FF0000", ifelse((variables >=3 & variables<4), "#FCD606", ifelse(variables >=4, "#85C546","#808080")))
+  
+
+  
+  ggplot(data, aes(x=x,y=y)) +
+    geom_col(fill=colr) +
+    geom_text(aes(label=y, y=3), size=4) +
+    theme_void() +
+    expand_limits(y=c(0,5))
+}
+
+
+list_100 <-  c(
+    "Proficiency on GEPD Assessment",
+    "Teacher Presence",
+    "Teacher Pedagogical Skills",
+    "Teacher Content Knowledge",
+    "Student Readiness (percentage correct)",
+    "Student Attendance")
+
+gg_df <- tab_df_comb %>%
+  group_by(`Indicator Name`) %>%
+  mutate(Peru_R_gg_100=map(Peru_R,value_plotter_100),
+         Peru_U_gg_100=map(Peru_U,value_plotter_100),
+         Jordan_R_gg_100=map(Jordan_R,value_plotter_100),
+         Jordan_U_gg_100=map(Jordan_U,value_plotter_100),
+         Rwanda_R_gg_100=map(Rwanda_R,value_plotter_100),
+         Rwanda_U_gg_100=map(Rwanda_U,value_plotter_100),
+         Ethiopia_R_gg_100=map(Ethiopia_R,value_plotter_100),
+         Ethiopia_U_gg_100=map(Ethiopia_U,value_plotter_100),
+         Madagascar_R_gg_100=map(Madagascar_R,value_plotter_100),
+         Madagascar_U_gg_100=map(Madagascar_U,value_plotter_100),
+         
+         Peru_R_gg_5=map(Peru_R,value_plotter_5),
+         Peru_U_gg_5=map(Peru_U,value_plotter_5),
+         Jordan_R_gg_5=map(Jordan_R,value_plotter_5),
+         Jordan_U_gg_5=map(Jordan_U,value_plotter_5),
+         Rwanda_R_gg_5=map(Rwanda_R,value_plotter_5),
+         Rwanda_U_gg_5=map(Rwanda_U,value_plotter_5),
+         Ethiopia_R_gg_5=map(Ethiopia_R,value_plotter_5),
+         Ethiopia_U_gg_5=map(Ethiopia_U,value_plotter_5),
+         Madagascar_R_gg_5=map(Madagascar_R,value_plotter_5),
+         Madagascar_U_gg_5=map(Madagascar_U,value_plotter_5)) %>%
+  ungroup() %>%
+  mutate(
+    Peru_R=if_else(`Indicator Name` %in% list_100, Peru_R_gg_100, Peru_R_gg_5),
+    Peru_U=if_else(`Indicator Name` %in% list_100, Peru_U_gg_100, Peru_U_gg_5),
+    Jordan_R=if_else(`Indicator Name` %in% list_100, Jordan_R_gg_100, Jordan_R_gg_5),
+    Jordan_U=if_else(`Indicator Name` %in% list_100, Jordan_U_gg_100, Jordan_U_gg_5),
+    Rwanda_R=if_else(`Indicator Name` %in% list_100, Rwanda_R_gg_100, Rwanda_R_gg_5),
+    Rwanda_U=if_else(`Indicator Name` %in% list_100, Rwanda_U_gg_100, Rwanda_U_gg_5),
+    Ethiopia_R=if_else(`Indicator Name` %in% list_100, Ethiopia_R_gg_100, Ethiopia_R_gg_5),
+    Ethiopia_U=if_else(`Indicator Name` %in% list_100, Ethiopia_U_gg_100, Ethiopia_U_gg_5),
+    Madagascar_R=if_else(`Indicator Name` %in% list_100, Madagascar_R_gg_100, Madagascar_R_gg_5),
+    Madagascar_U=if_else(`Indicator Name` %in% list_100, Madagascar_U_gg_100, Madagascar_U_gg_5)
+  ) %>%
+  select(-contains("_gg_"))
+  # mutate(Peru_R=map(Peru_R, .f=if_else(`Indicator Name` %in% c(
+  #   "Proficiency on GEPD Assessment",
+  #   "Teacher Presence",
+  #   "Teacher Pedagogical Skills",
+  #   "Teacher Content Knowledge",
+  #   "Student Readiness (percentage correct)",
+  #   "Student Attendance"), value_plotter_100, value_plotter_5)))
+
+# gg_df[] <- lapply(gg_df, function(x) value_plotter_100(x))
+
+flextable(gg_df) %>%
+  compose(j=c("Peru_R", "Peru_U", "Jordan_R", "Jordan_U", "Rwanda_R", "Rwanda_U", "Ethiopia_R", "Ethiopia_U", "Madagascar_R", "Madagascar_U"),
+          value = as_paragraph(gg_chunk(value = ., height = .3, width = .5)),
+              use_dot = TRUE) %>%
+  set_header_labels(
+         Peru_U='Urban', 
+         Jordan_U='Urban', 
+         Rwanda_U='Urban',
+         Ethiopia_U='Urban', 
+         Madagascar_U='Urban',
+         Peru_R='Rural', 
+         Jordan_R='Rural', 
+         Rwanda_R='Rural',
+         Ethiopia_R='Rural', 
+         Madagascar_R='Rural' 
+  ) %>%
+  add_header(
+         Peru_U='Peru', 
+         Jordan_U='Jordan', 
+         Rwanda_U='Rwanda',
+         Ethiopia_U='Ethiopia', 
+         Madagascar_U='Madagascar',
+         Peru_R='Peru', 
+         Jordan_R='Jordan', 
+         Rwanda_R='Rwanda',
+         Ethiopia_R='Ethiopia', 
+         Madagascar_R='Madagascar'         
+  ) %>%
+  merge_h( part = "header") %>%
+  add_header_lines(title) %>%
+  add_footer( Group = paste0('Source: UIS, GLAD, GEPD, World Bank. 
+(1) Proficiency on GEPD assessment means % students with knowledge 80%.\n  (2) Proficiency by end of primary uses threshold as per Minimum Proficiency Levels set by GAML(UIS).\n (3) All indicators are on a scale of 0-5 unless measured in %. \n (4) Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' )) %>%
+  merge_at( j = 1:4, part = "footer") %>%
+  theme_vanilla() %>%
+  vline(j=1) %>%
+  vline(j=3) %>%
+  vline(j=5) %>%
+  vline(j=7)%>%
+  vline(j=9) 
+
+
+
+```
+
+
+
+
 ```{r urdif}
 
 ur_diff_df <- data.frame(
@@ -600,10 +771,103 @@ ur_diff_df <- ur_diff_df %>%
 
 There are also major differences within countries, particularly between urban and rural schools. The table below shows the scores disaggregated by urban and rural in each country.  On average across countries, the gap between the urban and rural schools in the proficiency on the GEPD assessment is `r -round(ur_diff_df$Average[1],1)` points.  For student readiness it is `r -round(ur_diff_df$Average[7],1)` points.  For teacher content knowledge it is `r -round(ur_diff_df$Average[3],1)` points.  For teacher pedagogical skills it is `r -round(ur_diff_df$Average[4],1)` points.  In all the indicators, except for teacher presence, urban areas have higher scores than rural areas in the aggregate.  For teacher presence, the rates in rural areas are higher in Peru and Ethiopia, but are higher in urban areas for the other countries.
 
+
+
 ```{r}
 FitFlextableToPage(ovr_table) %>%
   set_table_properties(layout = "autofit")
 ```
+
+Figure. Breakdown of of GEPD Practice Indicators by Urban/Rural Status
+```{r spider1}
+
+#list of indicaors with scale 0-100
+list_100 <-  c(
+    "Proficiency on GEPD Assessment",
+    "Teacher Presence",
+    "Teacher Pedagogical Skills",
+    "Teacher Content Knowledge",
+    "Student Readiness (percentage correct)",
+    "Student Attendance")
+
+list_1_5 <- c(
+  "Basic Inputs",
+  "Basic Infrastructure" 
+)
+
+spider_df <- tab_df_comb %>%
+  pivot_longer(
+    cols=2:11,
+    names_to=c("Country", "Type"),
+    names_pattern="(.*)_(.)",
+    values_to="value"
+  ) %>%
+  mutate(Type=if_else(Type=="R", "Rural", "Urban")) %>%
+  mutate(
+    value=case_when(
+      `Indicator Name` %in% list_100 ~ value/100, #scale indicators with scale 0-100
+      `Indicator Name` %in% list_1_5 ~ value/5, #scale indicators with scale 0-5
+      TRUE ~ (value-1)/4 #scale indicators with scale 1-5
+    )) %>%
+  ungroup()
+  # pivot_wider(
+  #   names_from='Type',
+  #   values_from='value'
+  # ) %>% #now scale all indicators to 0 to 1
+  # mutate(
+  #   Rural=case_when(
+  #     `Indicator Name` %in% list_100 ~ Rural/100, #scale indicators with scale 0-100
+  #     `Indicator Name` %in% list_1_5 ~ Rural/5, #scale indicators with scale 0-5
+  #     TRUE ~ (Rural-1)/4 #scale indicators with scale 1-5
+  #   ),
+  #   Urban=case_when(
+  #     `Indicator Name` %in% list_100 ~ Urban/100, #scale indicators with scale 0-100
+  #     `Indicator Name` %in% list_1_5 ~ Urban/5, #scale indicators with scale 0-5
+  #     TRUE ~ (Urban-1)/4 #scale indicators with scale 1-5
+  #   )
+  # )
+
+
+p1 <- spider_df %>%
+  mutate(`Indicator Name`=str_wrap(`Indicator Name`, width=20)) 
+
+p1 <- p1 %>%
+  mutate(`Indicator Name`=factor(`Indicator Name`, levels=c(
+            str_wrap("Principal Management Skills" , width=20),
+            str_wrap( "Principal School Knowledge"   , width=20),
+            str_wrap( "Instructional Leadership"     , width=20),  
+            str_wrap("Operational Management"       , width=20),
+            str_wrap("Student Attendance"           , width=20), 
+            str_wrap("Student Readiness (percentage correct)", width=20), 
+            str_wrap("Basic Infrastructure"         , width=20), 
+            str_wrap("Basic Inputs"                 , width=20), 
+            str_wrap("Teacher Pedagogical Skills"   , width=20),  
+            str_wrap("Teacher Content Knowledge"      , width=20), 
+            str_wrap("Teacher Presence"                , width=20),  
+            str_wrap("Proficiency on GEPD Assessment"  , width=20)     
+
+          )
+                                 )) %>%
+  ggplot(aes(x=`Indicator Name`, y=value, color=Type, group=`Indicator Name`)) +
+  facet_wrap(~Country, ncol=5) +
+  geom_point(size=3) +
+  geom_line(color='black') +
+  theme_bw() +
+  theme(legend.position = 'top',
+        axis.text.x=element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        panel.grid.major.y = element_blank()
+           # explicitly set the horizontal lines (or they will disappear too)
+        #panel.grid.major.x = element_line( size=.1, color="grey" ) 
+        ) +
+  coord_flip() 
+
+p1
+```
+
 
 ### Policy Indicators
 
@@ -1098,19 +1362,8 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
-         students_enrolled=case_when(
-           students_enrolled=="Under 25" ~1, 
-           students_enrolled=="25-50" ~2 , 
-           students_enrolled=="50-75" ~3, 
-           students_enrolled=="75-100" ~4, 
-           students_enrolled=="100-150" ~5, 
-           students_enrolled=="150-300" ~6, 
-           students_enrolled=="300-500" ~7, 
-           students_enrolled=="Over 500" ~8),
-         students_enrolled=factor(students_enrolled, 
-                                  levels=c(1:8),
-                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE)
+  )
 
 
 
@@ -1167,18 +1420,29 @@ cor_fun <- function(indicators) {
       ungroup() %>%
       select(names(indicators))
     
-    res <- cor(cor_df, use="pairwise.complete") 
+    res <- rcorr(as.matrix(cor_df)) 
+    
+    pval <- res$P
+    res <- res$r
+    
+    ## trunctuate the correlation matrix to two decimal
+    res <- format(round(cbind(rep(-1.11, ncol(as.matrix(cor_df))), res), 3))[,-1]
+    
+    mystars <- ifelse(pval < .001, "***", ifelse(pval < .01, "** ", ifelse(pval < .05, "*  ", ifelse(pval < .1, "+   ", "    "))))
+    res <- matrix(paste(res, mystars, sep=""), ncol=ncol(as.matrix(cor_df)))
     
     res[upper.tri(res)] <- NA # erase the upper triangle
-    diag(res) <- NA 
+    diag(res) <- NA     
+        
     
     res <- res %>%
-      as_tibble() %>%
-      mutate(across(everything(), round,3))
+      as_tibble() 
     
     colnames(res) <- indicators
     
     res$var <- indicators
+    
+    
     
     
     ovr_table <- res %>% 
@@ -1187,15 +1451,19 @@ cor_fun <- function(indicators) {
       bg(j = 2:ncol(res), 
                     bg = function(x){
                       out <- rep("transparent", length(x))
-                      out[x < 0] <- "#e76f51"
-                      out[x >= 0 & x < 0.2] <- "#f4a261"
-                      out[x >= 0.2 & x < 0.4] <- "#e9c46a"
-                      out[x >= 0.4 & x < 0.6] <- "#2a9d8f"
-                      out[x >= 0.6 ] <- "#264653"
+                      out[as.numeric(str_sub(x,1,4)) < 0] <- "#e76f51"
+                      out[as.numeric(str_sub(x,1,4)) >= 0 & as.numeric(str_sub(x,1,4)) < 0.2] <- "#f4a261"
+                      out[as.numeric(str_sub(x,1,4)) >= 0.2 & as.numeric(str_sub(x,1,4)) < 0.4] <- "#e9c46a"
+                      out[as.numeric(str_sub(x,1,4)) >= 0.4 & as.numeric(str_sub(x,1,4)) < 0.6] <- "#2a9d8f"
+                      out[as.numeric(str_sub(x,1,4)) >= 0.6 ] <- "#264653"
                       out
                     })
     
   FitFlextableToPage(ovr_table) %>%
+  add_footer_lines("*** significant at 0.1% level. 
+                   ** significant at 1% level. 
+                   * significant at 5% level.  
+                   + significant at 10% level.  ") %>%
   set_table_properties(layout = "autofit")
 
    
@@ -1565,6 +1833,46 @@ p3 <- ggplot(combined_g4_df, aes(x=iso3c, y=literacy_student_knowledge, color=`S
     title=element_text(size=14),
     legend.position = 'bottom'
   )
+```
+
+```{r g4_gender}
+
+indicators <- c("student_knowledge", "math_student_knowledge", "literacy_student_knowledge")
+combined_g4_gend_mn <- combined_g4_df %>% 
+  mutate(gender=if_else(student_male==1, "Male", "Female")) %>%
+  filter(!is.na(gender)) %>%
+  group_by(iso3c, gender) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+
+p1 <- combined_g4_df %>%
+  mutate(gender=if_else(student_male==1, "Male", "Female")) %>%
+  filter(!is.na(gender)) %>%
+  ggplot( aes(x=gender, y=student_knowledge, color=`Student Proficient`)) +
+    facet_wrap(~iso3c) +
+    geom_quasirandom() +
+    geom_segment(data=combined_g4_gend_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+    geom_segment(data=combined_g4_gend_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+    geom_text(data=combined_g4_gend_mn, aes(label=paste0(round(student_knowledge, 1), "%")), hjust=-.15, color='black', size=3) +
+    coord_flip() +
+    scale_color_manual(
+      values=c("#ef476f", "#06d6a0")
+    ) +
+    theme_bw() +
+    xlab("") +
+    ylab("GEPD 4th Grade Assessment Score") +
+    labs(
+      title="Percentage of Items Correct on GEPD 4th Grade Assessment by Gender",
+      caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
+    ) +
+    theme(
+      axis.text = element_text(size=12),
+      title=element_text(size=14),
+      legend.position = 'bottom'
+    )
+p1
+
 ```
 
 
@@ -2018,6 +2326,39 @@ p1 <- ggplot(combined_g1_df, aes(x=Rural, y=ecd_student_knowledge, color=`Studen
 p1
 ```
 
+
+```{r}
+indicators <- c("ecd_student_knowledge", "ecd_math_student_knowledge", "ecd_literacy_student_knowledge")
+combined_g1_mn <- combined_g1_df %>% 
+  group_by(iso3c, Rural) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+p1 <- ggplot(combined_g1_df, aes(x=Rural, y=ecd_student_knowledge, color=`Student Proficient`)) +
+  facet_wrap(~iso3c) +
+  geom_quasirandom() +
+  geom_segment(data=combined_g1_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=combined_g1_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  geom_text(data=combined_g1_mn, aes(label=paste0(round(ecd_student_knowledge, 1), "%")), vjust=-4, color='black', size=3) +
+  coord_flip() +
+  scale_color_manual(
+    values=c("#ef476f", "#06d6a0")
+  ) +
+  theme_bw() +
+  xlab("") +
+  ylab("GEPD 1st Grade Assessment Score") +
+  labs(
+    title="Percentage of Items Correct on GEPD 1st Grade Assessment",
+    caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
+  ) +
+  theme(
+    axis.text = element_text(size=12),
+    title=element_text(size=14),
+    legend.position = 'bottom'
+  )
+p1
+```
+
 When looking at the scores on the underlying domains in figure XX below, children were typically scoring highest on the numeracy section.  Children in Peru, Jordan, and Ethiopia answered close to 90% of the math items correctly.  On the literacy component, the average for all countries was below the 80% threshold set for proficiency.  The averages for the executive functioning and socio-emotional components were also below the 80% threshold.
 
 
@@ -2127,26 +2468,28 @@ The table below highlights student performance on specific items in the 1st grad
  
  breaking_up_all_g1 <- combined_g1_df %>%
    
-   select(starts_with("hashed"), iso3c, ends_with("_comprehension"), ends_with("_words"), ends_with("_letters"), ends_with("_sentence"),ends_with("_produce_set"), ends_with("_number_ident"),
-          ends_with("_backward_digit"), ends_with("_number_compare"), ends_with("_simple_add"), ends_with("_head_shoulders"), ends_with("_perspective")) %>% 
+   select(starts_with("hashed"), iso3c, ends_with("vocabn"), ends_with("_comprehension"), ends_with("_words"), ends_with("_letters"), ends_with("_sentence"), ends_with("_nm_writing"), ends_with("_produce_set"), ends_with("_number_ident"),
+          ends_with("_backward_digit"), ends_with("_number_compare"), ends_with("counting"), ends_with("_simple_add"), ends_with("_head_shoulders"), ends_with("_perspective"), ends_with("conflict_resol")) %>% 
    
    mutate_at(c(5:length(.)), ~ as.numeric(.)) %>% 
    
    mutate(
-     
+     ecd_vocabn = rowMeans(select(., ends_with("vocabn"))),
      ecd_comprehension = rowMeans(select(., ends_with("_comprehension"))),
      ecd_words = rowMeans(select(., ends_with("_words"))),
      ecd_letters = rowMeans(select(., ends_with("_letters"))),
      ecd_sentence = rowMeans(select(., ends_with("_sentence"))),
+     ecd_name_writing= rowMeans(select(., ends_with("_nm_writing"))),
      
-     
+     ecd_counting = rowMeans(select(., ends_with("counting")), na.rm = T),
      ecd_produce_set = rowMeans(select(., ends_with("_produce_set")), na.rm = T),
      ecd_number_ident = rowMeans(select(., ends_with("_number_ident")), na.rm = T),
-     ecd_backward_digit = rowMeans(select(., ends_with("_backward_digit")), na.rm = T),
      ecd_number_compare = rowMeans(select(., ends_with("_number_compare")), na.rm = T),
      ecd_simple_add = rowMeans(select(., ends_with("_simple_add")), na.rm = T),
      ecd_head_shoulderss = rowMeans(select(., ends_with("_head_shoulders")), na.rm = T),
-     ecd_perspective = rowMeans(select(., ends_with("_perspective")), na.rm = T)
+     ecd_backward_digit = rowMeans(select(., ends_with("_backward_digit")), na.rm = T),
+     ecd_perspective = rowMeans(select(., ends_with("_perspective")), na.rm = T),
+     ecd_conflict_resol = rowMeans(select(., ends_with("conflict_resol")), na.rm = T)
      
      
      
@@ -2164,20 +2507,24 @@ The table below highlights student performance on specific items in the 1st grad
             ~ round(., digits = 2)),
      
      skim_variable = case_when(
-       
+       skim_variable == "ecd_vocabn" ~ "Basic vocabulary",
        skim_variable == "ecd_comprehension" ~ "Basic comprehension",
        skim_variable == "ecd_words" ~ "Words identification",
        skim_variable == "ecd_letters" ~ "Letters identification",
        skim_variable == "ecd_sentence" ~ "Sentence understanding",
+       skim_variable == "ecd_name_writing" ~ "Name writing",
        
+       skim_variable == "ecd_counting" ~ "Basic counting",
        skim_variable == "ecd_produce_set" ~ "Set production",
        skim_variable == "ecd_number_ident" ~ "Number identification",
        skim_variable == "ecd_number_compare" ~ "Number comparison",
        skim_variable == "ecd_simple_add" ~ "Simple addition",
+       
        skim_variable == "ecd_backward_digit" ~ "Backward digit counting",
        skim_variable == "ecd_head_shoulderss" ~ "Head-Shoulders coordination",
-       skim_variable == "ecd_perspective" ~ "Perspective taking"
        
+       skim_variable == "ecd_perspective" ~ "Perspective taking",
+       skim_variable == "ecd_conflict_resol" ~ "Conflict resolution"
        
      )
    ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable)
@@ -2188,26 +2535,29 @@ The table below highlights student performance on specific items in the 1st grad
  breaking_up_g1 <- combined_g1_df %>%
    
    
-   select(starts_with("hashed"), iso3c, ends_with("_comprehension"), ends_with("_words"), ends_with("_letters") , ends_with("_sentence"), ends_with("_produce_set"), ends_with("_number_ident"),
-          ends_with("_backward_digit"), ends_with("_number_compare"), ends_with("_simple_add"), ends_with("_head_shoulders"), ends_with("_perspective")) %>%    
+   select(starts_with("hashed"), iso3c, ends_with("vocabn"), ends_with("_comprehension"), ends_with("_words"), ends_with("_letters"), ends_with("_sentence"), ends_with("_nm_writing"), ends_with("_produce_set"), ends_with("_number_ident"),
+          ends_with("_backward_digit"), ends_with("_number_compare"), ends_with("counting"), ends_with("_simple_add"), ends_with("_head_shoulders"), ends_with("_perspective"), ends_with("conflict_resol")) %>% 
+     
    mutate_at(c(5:length(.)), ~ as.numeric(.)) %>% 
    
    mutate(
      
+     ecd_vocabn = rowMeans(select(., ends_with("vocabn"))),
      ecd_comprehension = rowMeans(select(., ends_with("_comprehension"))),
      ecd_words = rowMeans(select(., ends_with("_words"))),
      ecd_letters = rowMeans(select(., ends_with("_letters"))),
      ecd_sentence = rowMeans(select(., ends_with("_sentence"))),
+     ecd_name_writing= rowMeans(select(., ends_with("_nm_writing")), na.rm = T),
      
-     
+     ecd_counting = rowMeans(select(., ends_with("counting")), na.rm = T),
      ecd_produce_set = rowMeans(select(., ends_with("_produce_set")), na.rm = T),
      ecd_number_ident = rowMeans(select(., ends_with("_number_ident")), na.rm = T),
-     ecd_backward_digit = rowMeans(select(., ends_with("_backward_digit")), na.rm = T),
      ecd_number_compare = rowMeans(select(., ends_with("_number_compare")), na.rm = T),
      ecd_simple_add = rowMeans(select(., ends_with("_simple_add")), na.rm = T),
      ecd_head_shoulderss = rowMeans(select(., ends_with("_head_shoulders")), na.rm = T),
-     ecd_perspective = rowMeans(select(., ends_with("_perspective")), na.rm = T)
-     
+     ecd_backward_digit = rowMeans(select(., ends_with("_backward_digit")), na.rm = T),
+     ecd_perspective = rowMeans(select(., ends_with("_perspective")), na.rm = T),
+     ecd_conflict_resol = rowMeans(select(., ends_with("conflict_resol")), na.rm = T)
      
    ) %>% 
    
@@ -2239,19 +2589,24 @@ The table below highlights student performance on specific items in the 1st grad
      
      skim_variable = case_when(
        
+       skim_variable == "ecd_vocabn" ~ "Basic vocabulary",
        skim_variable == "ecd_comprehension" ~ "Basic comprehension",
        skim_variable == "ecd_words" ~ "Words identification",
        skim_variable == "ecd_letters" ~ "Letters identification",
        skim_variable == "ecd_sentence" ~ "Sentence understanding",
+       skim_variable == "ecd_name_writing" ~ "Name writing",
        
+       skim_variable == "ecd_counting" ~ "Basic counting",
        skim_variable == "ecd_produce_set" ~ "Set production",
        skim_variable == "ecd_number_ident" ~ "Number identification",
        skim_variable == "ecd_number_compare" ~ "Number comparison",
        skim_variable == "ecd_simple_add" ~ "Simple addition",
+       
        skim_variable == "ecd_backward_digit" ~ "Backward digit counting",
        skim_variable == "ecd_head_shoulderss" ~ "Head-Shoulders coordination",
-       skim_variable == "ecd_perspective" ~ "Perspective taking"
        
+       skim_variable == "ecd_perspective" ~ "Perspective taking",
+       skim_variable == "ecd_conflict_resol" ~ "Conflict resolution"
        
      )
    ) %>% 
@@ -2270,12 +2625,12 @@ The table below highlights student performance on specific items in the 1st grad
    mutate(Tasks= case_when(
      
      
-     str_detect(`Sub-tasks`, "comprehension|Words|letters|sentence|Sentence|Letters") ~ "Literacy",
-     str_detect(`Sub-tasks`, "coordination|words|Perspective") ~ "Socio-emotional",
-     TRUE ~ "Math"
-     
-     
-   )) %>% 
+     str_detect(`Sub-tasks`, "vocabulary|comprehension|Words|Letters|Name") ~ "Literacy",
+     str_detect(`Sub-tasks`, "Perspective|Conflict") ~ "Socio-emotional",
+     str_detect(`Sub-tasks`, "coordination|Backward") ~ "Executive Functioning",
+     TRUE ~ "Math"),
+     Tasks=factor(Tasks, levels=c("Literacy", "Math", "Executive Functioning", "Socio-emotional"))
+   ) %>% 
    arrange(Tasks, `Sub-tasks`) %>% 
    as_grouped_data(., groups = c("Tasks")) %>% 
    flextable() %>% 
@@ -2528,7 +2883,7 @@ ggplot(combined_teachers_df, aes(x=teach_score, y=content_knowledge, color=iso3c
  
 
 haven::write_dta(combined_teacher_df,  paste0(confidential_dir, "General/combined_teachers.dta"))
-haven::write_dta(combined_teacher_df,  paste0(shared_loc, "Data/combined_teachers.dta"))  
+#haven::write_dta(combined_teacher_df,  paste0(shared_loc, "Data/combined_teachers.dta"))  
 ```
 
 
@@ -3179,7 +3534,7 @@ The plots below show that the (geodesic) distance between a school and the distr
 In the first plot, the relationship between distance of the office and average 4th grade student knowledge, according to the 4th grade GEPD assessment, are shown.
 
 
-```{r distscat, echo=FALSE, cache=TRUE, fig.width=10}
+```{r distscat, echo=FALSE, fig.width=10, cache=TRUE}
 
 #scatterplot of distance between school and office
 school_office_dist_df <- combined_school_office_df %>%
@@ -3290,7 +3645,7 @@ p1 + p3 +
 In the second plot, the relationship between the distance to the office and school input availability is shown.  This indicator measures the availability of basic inputs in the average school. These inputs, based on the literature and general expectations, are (i) functioning blackboard and chalk, (ii) pens, pencils, and exercise books in 4th-grade classrooms, (iii) textbooks, (iv) basic classroom furniture, and (v) access to ICT.
 
 
-```{r inputscat, fig.width=10}
+```{r inputscat, eval=FALSE, fig.width=10, include=FALSE}
 lab <- eq_plot_txt('inputs', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=inputs)) +
@@ -3374,7 +3729,7 @@ p1 + p3 +
 In the third plot, the relationship between the distance to the office and school infrastructure availability is shown.  This indicator measures the availability of basic inputs in the average school. The infrastructure aspects included, based on the literature and general expectations, are availability of (i) drinking water, (ii) functioning toilets, (iii) electricity, (iv) internet connectivity, and (v) accessibility for people with disabilities.
 
 
-```{r infrascat, fig.width=10}
+```{r infrascat, eval=FALSE, fig.width=10, include=FALSE}
 lab <- eq_plot_txt('infrastructure', 'dist_log', school_office_dist_df)
 
 p1 <- ggplot(data=school_office_dist_df, aes(x=dist_km, y=infrastructure)) +

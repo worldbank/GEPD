@@ -134,8 +134,8 @@ api_template <- api_template %>%
       SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
-      SE.PRM.TENR	 =-999,
-      SE.PRM.TENR.1	 =-999
+      SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
+      SE.PRM.TENR.1	 =wbopendat$SE.PRM.TENR
     )
   
   

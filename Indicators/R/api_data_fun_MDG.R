@@ -105,15 +105,16 @@ bin_var_NA0 <- function(var, val) {
 #function to create indicator data for a specified country and year
 
   #transpose the indicator values dataframe to make it easier to add values
+#transpose the indicator values dataframe to make it easier to add values
 api_template <- api_template %>%
-    mutate(value = as.numeric(NA))
-  
-  indicator_values_transpose <- as.data.frame(t(as.matrix(api_template))) 
-  
-  colnames(indicator_values_transpose) <- api_template$Series 
-  
-  indicator_values_transpose <- indicator_values_transpose %>%
-    filter(rownames(indicator_values_transpose)=="value")
+  mutate(value = as.numeric(NA))
+
+indicator_values_transpose <- as.data.frame(t(as.matrix(api_template))) 
+
+colnames(indicator_values_transpose) <- api_template$Series 
+
+indicator_values_transpose <- indicator_values_transpose %>%
+  filter(rownames(indicator_values_transpose)=="value")
  
    # In the remainder of this code, we will go through each indicator and align the indicators with the data
   

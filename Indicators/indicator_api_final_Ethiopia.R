@@ -187,13 +187,13 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
 #read in data from wbopendata
 #get WDI metadata infor
 #cache_list<-wbstats::wbcache()
-wbopendat<-wbstats::wb_data(country="ETH", 
-            indicator=ind_list,
-            start_date=2000,
-            end_date=2021,
-            return_wide = T,
-            mrv=10,
-            gapfill=TRUE)
+# wbopendat<-wbstats::wb_data(country="ETH", 
+#             indicator=ind_list,
+#             start_date=2000,
+#             end_date=2021,
+#             return_wide = T,
+#             mrv=10,
+#             gapfill=TRUE)
 
 wbopendat<-WDI(country="ET", indicator=ind_list, start=2000, end=2021, extra=T) %>%
   fill(starts_with("SE.")) %>%
@@ -300,8 +300,62 @@ api_final_2021 <- read_csv('GEPD_Indicators_API_ETH_2021.csv') %>%
 
 api_final_pooled <- api_final_2020 %>%
   left_join(api_final_2021) %>%
-  mutate(value_pooled=value_2020*wgt_share_2020 + value_2021*wgt_share_2021)
+  mutate(value_pooled=value_2020*wgt_share_2020 + value_2021*wgt_share_2021,
+         value=value_pooled)
 
-write_excel_csv(api_final_pooled, 'GEPD_Indicators_API_ETH_pooled.csv')
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
+
+#function to create score data for a specified country and year
+api_metadata_fn <- function(cntry, yr) {
+  api_metadata_fn_p <- api_final_pooled %>%
+    #rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  
+  api_metadata_fn_c <- api_final_pooled %>%
+    #rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_p %>%
+    bind_rows(api_metadata_fn_c) %>%
+    arrange(Series) %>%
+    mutate(year=yr,
+           cty_or_agg="cty",
+           countrycode=cntry,
+           value=round(value,1),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+}
+
+
+
+ETH_data_2020_2021 <- api_metadata_fn('ETH', '2020-2021')
+
+
+
+write_excel_csv(ETH_data_2020_2021, 'GEPD_Indicators_API_ETH_pooled.csv')
 
 

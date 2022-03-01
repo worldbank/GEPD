@@ -170,9 +170,9 @@ data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/PER/PE
 #pull data for learning poverty from wbopendata
 #list of indicators
 ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.OOS",  "SE.LPV.PRIM.OOS.FE", "SE.LPV.PRIM.OOS.MA",
-               "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA")
+               "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA", "SE.PRM.TENR", "SE.PRM.TENR.FE", "SE.PRM.TENR.MA")
 #read in data from wbopendata
-wbopendat<-WDI(country="PE", indicator=ind_list, start=2013, end=2013, extra=T) %>%
+wbopendat<-WDI(country="PE", indicator=ind_list, start=2000, end=2020, extra=T) %>%
   filter(!is.na(SE.LPV.PRIM) & !is.na(country)) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
@@ -213,22 +213,13 @@ finance_df_final <- finance_df_shaped %>%
   select(-rowname)
 
 
-#add extra metadata
-api_template <- api_template %>%
-  mutate(Source="Global Education Policy Dashboard",
-         'Source Organization'="World Bank") %>%
-  left_join(indicator_choices) %>%
-  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
-  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
-  rename('Source Note'=Source.Note,
-         'Indicator Name'=Indicator.Name) %>%
-  select(-c(indicator_tag, Value))
+
 
 source('R/api_data_fun.R')
 
 
 #Tags
-practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG"
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
 
 #function to create score data for a specified country and year
 api_metadata_fn <- function(cntry, yr) {
@@ -240,11 +231,15 @@ api_metadata_fn <- function(cntry, yr) {
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
         value <85 ~ "Needs Improvement",
         value >=85 & value<90 ~ "Caution",
         value >=90 ~ "On Target",
         TRUE ~ "N/A"
       ))
+  
   
   api_metadata_fn_c <- api_final %>%
     rename(Indicator.Name='Indicator Name') %>%

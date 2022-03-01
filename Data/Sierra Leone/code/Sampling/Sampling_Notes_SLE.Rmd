@@ -19,17 +19,11 @@ library(knitr)
 library(tidyverse)
 library(readxl)
 library(haven)
-library(plotly)
-library(naniar)
-library(crosstalk)
 library(leaflet)
+library(naniar)
 library(Hmisc)
-library(kableExtra)
-library(DT)
-library(stargazer)
 library(skimr)
 library(ggthemes)
-library(gtsummary)
 library(flextable)
 #library(fuzzyjoin)
 #Load the data
@@ -72,7 +66,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 ## Introduction
 
-This file outlines the sampling strategy for Niger.
+This file outlines the sampling strategy for Sierra Leone.
 
 ## General Notes on Sampling
 The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
@@ -415,8 +409,8 @@ strata_size <- df_updated %>%
   group_by(idregion,iddistrict) %>%
   summarise(
     n_schools=n(),
-    n_students=sum(class5_combined),
-    share_students=n_students/sum(df_updated$class5_combined),
+    n_students=sum(class4_combined),
+    share_students=n_students/sum(df_updated$class4_combined),
     exp_num_schools=40*share_students,
     ini_num_schools=round(exp_num_schools,0)
   ) %>%
@@ -470,7 +464,7 @@ districts <- strata_size %>%
 school_sample_df <- df_updated %>%
   left_join(strata_size) %>%
   group_by(idregion,iddistrict) %>%
-  sample_n(size=num_schools, weight=class5_combined)
+  sample_n(size=num_schools, weight=class4_combined)
 
 sample_combined <- school_sample_df %>%
   mutate(School="Supplemental School") %>%
@@ -519,7 +513,6 @@ school_sample_df %>%
 ```
 
 ```{r country_map2, echo=FALSE}
-library(leaflet)
 
    pal <- colorFactor(
      palette = c("red", "green"),
