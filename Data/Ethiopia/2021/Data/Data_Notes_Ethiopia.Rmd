@@ -794,6 +794,23 @@ main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowled
   
       
     ## Run t test
+  
+#   library(tidyverse)
+#   library(rstatix)
+#   library(ggpubr)
+#   
+#   main_comparison_long <- main_comparison %>% 
+#     pivot_longer(cols = c(3:139), names_to= "variables") %>% 
+#     group_by(variables) %>%
+#     t_test(value ~ Group) %>%
+#     adjust_pvalue(method = "BH") %>%
+#     add_significance()
+  
+  
+  
+  
+  
+  
       result<- t(sapply(main_comparison[-1], function(x) 
      unlist(t.test(x~main_comparison$Group)[c("estimate","p.value","statistic","conf.int")])))
         
