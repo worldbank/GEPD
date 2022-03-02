@@ -220,6 +220,7 @@ wbopendat<-wbstats::wb_data(country="MDG",
             gapfill=TRUE)
 
 wbopendat<-WDI(country="MG", indicator=ind_list, start=2000, end=2021, extra=T) %>%
+  filter(year!=2018) %>% #drop odd year
   fill(starts_with("SE.")) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
@@ -264,10 +265,62 @@ source('R/api_data_fun_MDG.R', echo=TRUE)
 
 
 
-#export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_MDG.csv')
 
-write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_MDG.csv',sep=""))
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
+
+#function to create score data for a specified country and year
+api_metadata_fn <- function(cntry, yr) {
+  api_metadata_fn_p <- api_final %>%
+    #rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  
+  api_metadata_fn_c <- api_final %>%
+    #rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_p %>%
+    bind_rows(api_metadata_fn_c) %>%
+    arrange(Series) %>%
+    mutate(year=yr,
+           cty_or_agg="cty",
+           countrycode=cntry,
+           value=round(value,1),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+}
+
+
+MDG_data_2021 <- api_metadata_fn('MDG', 2021)
+
+
+#export Indicators_metatdata section
+write_excel_csv(MDG_data_2021, 'GEPD_Indicators_API_MDG.csv')
+
+write_excel_csv(MDG_data_2021, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_MDG.csv',sep=""))
 
 
 

@@ -176,13 +176,13 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
                "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA", "SE.PRM.TENR", "SE.PRM.TENR.FE", "SE.PRM.TENR.MA")
 #read in data from wbopendata
 #get WDI metadata infor
-cache_list<-wbstats::wbcache()
-wbopendat<-wbstats::wb(country="JOR", 
-            indicator=ind_list,
-            startdate=2015,
-            enddate=2015,
-            return_wide = T,
-            removeNA=FALSE)
+# cache_list<-wbstats::wbcache()
+# wbopendat<-wbstats::wb(country="JOR", 
+#             indicator=ind_list,
+#             startdate=2015,
+#             enddate=2015,
+#             return_wide = T,
+#             removeNA=FALSE)
 
 wbopendat<-WDI(country="JO", indicator=ind_list, start=2000, end=2021, extra=T) %>%
   fill(starts_with("SE.")) %>%
@@ -227,7 +227,7 @@ finance_df_final <- finance_df_shaped %>%
 source('R/api_data_fun_JOR.R')
 
 #Tags
-practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG"
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
 
 #function to create score data for a specified country and year
 api_metadata_fn <- function(cntry, yr) {
@@ -239,11 +239,15 @@ api_metadata_fn <- function(cntry, yr) {
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
         value <85 ~ "Needs Improvement",
         value >=85 & value<90 ~ "Caution",
         value >=90 ~ "On Target",
         TRUE ~ "N/A"
       ))
+  
   
   api_metadata_fn_c <- api_final %>%
     rename(Indicator.Name='Indicator Name') %>%
@@ -268,6 +272,7 @@ api_metadata_fn <- function(cntry, yr) {
            value=round(value,1),
            Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
 }
+
 
 JOR_data_2019 <- api_metadata_fn('JOR', 2019)
 
