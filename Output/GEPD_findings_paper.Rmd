@@ -360,6 +360,8 @@ country_tab_fn(outcome_indicators, 'GEPD Outcome Indicators') %>%
 ```
 
 
+
+
 ```{r}
 #pull data on other outcomes, GNI per capita, Population, HCI, poverty, stunting
 
@@ -402,6 +404,9 @@ dev_out_tab %>%
   autofit()
 
 ```
+
+
+
 
 
 Below is a table showing the means by country on the GEPD Practice Indicators.  We use the following system for categorizing our main indicators into three levels: On Target, Caution, and Needs Improvement.
@@ -867,6 +872,67 @@ p1 <- p1 %>%
 
 p1
 ```
+
+
+
+**Comparison to Service Delivery Indicators Data**
+
+The Service Delivery Indicators (SDI) project produces nationally representative indicators on education and health using surveys of health and education facilities.  The education SDI survey overlaps in many ways with the GEPD school survey. Both surveys check for teacher presence, and give teachers a content knowledge assessment that are nearly identical (except the GEPD assessment has a few slightly more difficult questions).  Finally, both measures contain several indicators on the availability of basic inputs and infrastructure that overlap.
+
+```{r sdi}
+#data pulled from databank on March 1, 2022
+
+sdi_df <- read_csv(paste0(shared_loc, "/Data/SDI_data.csv")) %>%
+  select(c("Country Name", "Year", "Absence from school (%) [SDI.E1.PCT]", "Teachers who pass at the 80% threshold (%) [SDI.E4.80.PCT]", "Classroom has a blackboard (%) [SDI.E5.BBD.PCT]",
+           "Electricity (%) [SDI.H7.NRG.PCT]", "Students with writing instruments (%) [SDI.E5.PCLRAT]" )) %>%
+  rename(
+    `Absence from school (%)`=`Absence from school (%) [SDI.E1.PCT]`,
+    `Teachers who pass at the 80% threshold (%)`=`Teachers who pass at the 80% threshold (%) [SDI.E4.80.PCT]`,
+    `Classroom has a blackboard (%)`=`Classroom has a blackboard (%) [SDI.E5.BBD.PCT]`,
+    `Electricity (%)`=`Electricity (%) [SDI.H7.NRG.PCT]`,
+    `Students with writing instruments (%)`=`Students with writing instruments (%) [SDI.E5.PCLRAT]`
+      ) %>%
+  filter(!(`Absence from school (%)`==0 & `Teachers who pass at the 80% threshold (%)`==0 & `Classroom has a blackboard (%)`==0 & `Electricity (%)`==0 & `Students with writing instruments (%)`==0)) %>%
+  mutate( #get rid of missing observations
+    across(c(3:7), ~if_else(.==0,as.numeric(NA),.)),
+    `Students with writing instruments (%)`=100*`Students with writing instruments (%)`, #fix formatting
+    Survey="SDI",
+    Year=as.character(Year)
+    )
+
+comp_ind <- c('SE.PRM.EFFT', 'SE.PRM.CONT.1', 'SE.PRM.INPT.2', 'SE.PRM.INFR.4', 'SE.PRM.INPT.3')
+gepd_sdi_comp_df <- combined_df_raw %>%
+  filter(Series %in% comp_ind) %>%
+  select(country, date, Series, value) %>%
+  pivot_wider(
+    names_from=Series,
+    values_from=value
+  ) %>%
+  mutate(SE.PRM.EFFT=100-SE.PRM.EFFT) %>%
+  rename(
+    `Country Name`=country,
+    `Year`=date,
+     `Absence from school (%)`=SE.PRM.EFFT, 
+     `Teachers who pass at the 80% threshold (%)`=SE.PRM.CONT.1, 
+     `Classroom has a blackboard (%)`=SE.PRM.INPT.2, 
+     `Electricity (%)`=SE.PRM.INFR.4, 
+     `Students with writing instruments (%)`=SE.PRM.INPT.3
+    
+  ) %>%
+  mutate(Survey="GEPD") %>%
+  bind_rows(sdi_df) %>%
+  mutate(across(c(3:7),~round(.,3)),
+         across(c(3:7), scales::percent,scale=1))
+  
+gepd_sdi_comp_df %>% 
+  as_grouped_data(groups=c("Survey")) %>%
+  flextable() 
+  
+  
+
+```
+
+
 
 
 ### Policy Indicators
