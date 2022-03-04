@@ -536,11 +536,11 @@ indicator_values_transpose <- indicator_values_transpose %>%
     #(De Facto) Average quality of applicants accepted into initial education programs
     SE.PRM.TSDP.3  = expert_df$criteria_become,
     #(De Jure) Requirements to become a primary school teacher                        
-    SE.PRM.TSDP.4  = indicator_means(teacher_selection		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.4  = 1+2*indicator_means(teacher_selection		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to become a primary school teacher                       
     SE.PRM.TSDP.5 =expert_df$criteria_transfer,
     #(De Jure) Requirements to fulfill a transfer request                             
-    SE.PRM.TSDP.6  = indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.6  = 1+2*indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to fulfill a transfer request                            
     SE.PRM.TSDP.7  = -999,
     #(De Jure) Selectivity of teacher hiring process                                  

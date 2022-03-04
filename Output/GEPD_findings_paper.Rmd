@@ -360,31 +360,33 @@ country_tab_fn(outcome_indicators, 'GEPD Outcome Indicators') %>%
 ```
 
 
-
+The countries in which data has been collected for the Global Education Policy Dashboard consist of low ad middle income countries with a range of development outcomes.  The countries range in population size from a population of around 10 million in Jordan to a population of more than 110 million in Ethiopia.  The demographic breakdowns of the countries vary as well.  The share of the population under 14 ranges from around 25% in Peru to close to 40% in Ethiopia, Madagascar, and Rwanda.  GNI per capita ranges from around \$1,400 in purchasing power parity adjusted terms in Madagascar to around \$11,000 in Peru.  The rates of extreme poverty range from nearly 79% in Madagscar to around 0.1% in Jordan.  The rate of stunting exceeds 30% of children under 5 in Ethiopia, Madagscar, and Rwanda.  Finally, when looking at the learning adjusted years of school, combining quantity and quality of schooling from the [Human Capital Index](https://www.worldbank.org/en/publication/human-capital), this ranges an average of 3.93 learning adjusted years of schooling in Rwanda to 8.63 years in Peru.
 
 ```{r}
 #pull data on other outcomes, GNI per capita, Population, HCI, poverty, stunting
 
 dev_out_df <- WDI::WDI(
     country=c('ET','RW','PE','JO','MG'),
-    indicator=c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  ),
+    indicator=c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.LAYS", "SH.STA.STNT.ZS"  ),
     start=2010,
     end=2020,
-    latest=1,
+    #latest=1,
     extra = TRUE
   ) %>%
-  fill(c("SP.POP.TOTL", "SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  )) %>%
+  fill(c("SP.POP.TOTL", "SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.LAYS", "SH.STA.STNT.ZS"  )) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n()) %>%
   ungroup() %>%
-  select(country, c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  )) 
+  select(country, c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.LAYS", "SH.STA.STNT.ZS"  )) 
 
 
 names <- setNames(stack(lapply(dev_out_df, label))[2:1], c("Varcode", "Variables"))
 
 dev_out_df <- dev_out_df %>%
-  mutate(across(c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.OVRL", "SH.STA.STNT.ZS"  ), scales::comma))
+#  mutate(share_pop_14=SP.POP.0014.TO/SP.POP.TOTL) %>%
+  mutate(across(c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.LAYS", "SH.STA.STNT.ZS"  ), scales::comma)) 
+
 
 dev_out_tab <- t(dev_out_df) %>%
   as_tibble()
@@ -400,7 +402,7 @@ dev_out_tab %>%
   flextable() %>%
   colformat_int(j=2:6,big.mark = ",") %>%
   add_header_lines('Development Context for GEPD Countries.') %>%
-  add_footer_lines("Source: World Bank World Development Indicators") %>%
+  add_footer_lines("Source: World Bank. World Development Indicators") %>%
   autofit()
 
 ```
@@ -2333,7 +2335,8 @@ ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(countr
 country <- "MDG"
 year <- "2021"
 MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country) %>%
+  mutate(iso3c=country,
+         m6s1q3=d_m5e3_03) %>%
   select(-district)
 ########
 #combined
@@ -2347,7 +2350,8 @@ combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH
            rural==0 ~ "Urban",
            urban_rural=="Rural" ~ "Rural", 
            urban_rural=="Urban" ~ "Urban",
-           TRUE ~ "Rural"))
+           TRUE ~ "Rural"),
+         Gender=if_else(m6s1q3==1,"Male", "Female"))
 
 combined_g1_df %>%
   select(-`Student Proficient`) %>%
@@ -2396,16 +2400,20 @@ p1
 ```{r}
 indicators <- c("ecd_student_knowledge", "ecd_math_student_knowledge", "ecd_literacy_student_knowledge")
 combined_g1_mn <- combined_g1_df %>% 
-  group_by(iso3c, Rural) %>%
+  filter(!is.na(Gender)) %>%
+  group_by(iso3c, Gender) %>%
   mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
   summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
   ungroup() 
-p1 <- ggplot(combined_g1_df, aes(x=Rural, y=ecd_student_knowledge, color=`Student Proficient`)) +
+
+p1 <- combined_g1_df %>%
+  filter(!is.na(Gender)) %>%
+  ggplot( aes(x=Gender, y=ecd_student_knowledge, color=`Student Proficient`)) +
   facet_wrap(~iso3c) +
   geom_quasirandom() +
   geom_segment(data=combined_g1_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
   geom_segment(data=combined_g1_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
-  geom_text(data=combined_g1_mn, aes(label=paste0(round(ecd_student_knowledge, 1), "%")), vjust=-4, color='black', size=3) +
+  geom_text(data=combined_g1_mn, aes(label=paste0(round(ecd_student_knowledge, 1), "%")), hjust=-.15, color='black', size=3) +
   coord_flip() +
   scale_color_manual(
     values=c("#ef476f", "#06d6a0")
