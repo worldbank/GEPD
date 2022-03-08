@@ -527,7 +527,7 @@ leaflet(data=sample_combined) %>%
                                   "Region: ", sample_combined$idregion, " <br>",
                                   "District: ", sample_combined$iddistrict, " <br>",
                                   "EMIS: ", sample_combined$idemis_code)) %>%
-  addLegend(position="bottomright", pal=pal, values=~sample_combined$School, title="Schools Visited")
+  addLegend(position="bottomright", pal=pal, values=~sample_combined$School, title="Schools to visit")
 ```
 
 
@@ -543,6 +543,10 @@ SL_dis<- sample_combined %>%
 # SL_dis <- tempfile(fileext = ".html")
 save_as_html(SL_dis, path = "C:/Users/wb577189/OneDrive - WBG/Desktop/distribution_sample_SL.html")
 
+
+sample_final <- sample_combined %>% select(idregion, iddistrict, idcouncil, idchiefdom, idsection, idtown, sch_type, idschool_name, idemis_code, starts_with("geo"), school_districthq_distance ,mixed_school, total_classrooms, total_teachers, total_pupils, shift_status, pri_lang_instruct)
+
+write.csv(sample_final, "C:/Users/wb577189/OneDrive - WBG/Desktop/gepd_sl_sample.csv", row.names = F, na="")
 
 ```
 
