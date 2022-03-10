@@ -1771,7 +1771,8 @@ PER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,yea
          math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
-         math_student_proficient_60=100*as.numeric(math_student_knowledge>=60))
+         math_student_proficient_60=100*as.numeric(math_student_knowledge>=60)) %>% 
+  distinct(hashed_school_code, student_number, .keep_all = TRUE)
 ########
 # Jordan
 #######
@@ -2813,7 +2814,7 @@ RWA_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,y
          teacher_id=m4saq1_number) 
 RWA_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
   mutate(iso3c=country,
-         teacher_id=m5sb_tnum) 
+         teacher_id=m5sb_tnum)  %>% distinct(hashed_school_code, teacher_assessment_answers__id, .keep_all = TRUE)
 RWA_teachers_df <- RWA_pedg_df %>%
   left_join(RWA_cont_df) %>%
   mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
