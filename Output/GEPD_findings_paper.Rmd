@@ -3733,7 +3733,7 @@ modelsummary(models,
 
 Alternative without student attendance and teacher pedagogy to include Madagascar.
 
-```{r anova}
+```{r anovaalt}
 #set controls
 controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
 practices <- 'presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
