@@ -1416,8 +1416,10 @@ country <- "MDG"
 year <- "2021"
 confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
 MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
-MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv")) %>%
+  select(hashed_school_code, national_learning_goals, targeting,monitoring, incentives, community_engagement, mandates_accountability, coherence, transparency, accountability, quality_bureaucracy, knowledge_skills, work_environment, merit, motivation_attitudes, motivation_relative_start, impartial_decision_making, politicized_policy_implementation, employee_unions_as_facilitators, school_lat, school_lon, office_lat, office_lon)
 #load gdp info
+
 MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
 MDG_school_office_link_df <- MDG_school_anon_df %>%
   left_join(MDG_school_gdp) %>%
@@ -2180,11 +2182,11 @@ The table shows 1st grade student knowledge, teacher content knowledge, basic in
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
 )
 
 
@@ -2204,7 +2206,41 @@ modelsummary(models,
                              "principal_management" = "Principal Management"),
              coef_omit="GDP|rural|students_enrolled",
              gof_map = gm,
-             notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             notes="Regressions also include country fixed effects, urban rural status, and total school enrollment as covariates.",
+             escape = FALSE
+             )
+```
+
+Because data for teacher pedagogical skills and student attendance is missing in Madagascar, data for Madagascar are omitted from the previous regressions.  As a sensitivity check, the pedagogical skill and student attendance measures are dropped and data from Madagascar included in the regression results below.
+
+```{r}
+models <- list(
+  
+'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+
+'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c("presence_rate"  = "Teacher Presence",
+                             "content_knowledge" = "Teacher Content Knowledge",
+                             "teach_score" = "Teacher Pedagogy",
+                             "inputs" = "Basic Inputs",
+                             "infrastructure" = "Basic Infrastructure",
+                             "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                             "student_attendance"="Student Attendance",
+                             "operational_management" = "Operational Management",
+                             "instructional_leadership" = "Instructional Leadership",
+                             "principal_knowledge_score" = "Principal Knowledge",
+                             "principal_management" = "Principal Management"),
+             coef_omit="GDP|rural|students_enrolled",
+             gof_map = gm,
+             notes="Regressions also include country fixed effects,  urban rural status, and total school enrollment as covariates.",
              escape = FALSE
              )
 ```
@@ -2215,15 +2251,15 @@ The table below shows the relationships for each individual country to see how t
 ```{r, fig.height=8, fig.width=8}
 models <- list(
   
-'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=PER_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=PER_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=JOR_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=JOR_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=RWA_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled, data=RWA_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=ETH_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=ETH_school_office_link_df, se='hetero'),
 
-'4th Grade Student Knowledge - Madagascar' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + log(GDP) + rural + students_enrolled, data=MDG_school_office_link_df, se='hetero')
+'4th Grade Student Knowledge - Madagascar' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=MDG_school_office_link_df, se='hetero')
 )
 
 # coefplot(models,
@@ -2335,9 +2371,8 @@ ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(countr
 #read in anonymized school data
 country <- "MDG"
 year <- "2021"
-MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         m6s1q3=d_m5e3_03) %>%
+MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
   select(-district)
 ########
 #combined
@@ -2754,10 +2789,14 @@ reg_fun <- function(indicators) {
                coef_rename = cov_lab,
                coef_omit="GDP|rural|students_enrolled",
                gof_map = gm,
-               notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+               notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.  
+                  *** significant at 0.1% level. 
+                   ** significant at 1% level. 
+                   * significant at 5% level.  
+                   + significant at 10% level.  ",
                escape = FALSE,
-               title=paste(out_lab)
-               )
+               title=paste0('Regression of ',out_lab,' practice outcome on related policies.  Data from all schools in all available countries.')
+               ) 
   
 }
 
@@ -3103,7 +3142,7 @@ Concrete examples of teacher policies related to teacher support and teacher eva
     flextable() %>% 
     bold(j = c("Tasks"), bold = TRUE) %>% 
     italic(j = c("Tasks"), italic = TRUE) %>% 
-    add_footer(Tasks= paste0('Notes: The table presents the percentage of teachers that responded positively to this question.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses. Madagascar is not included in the data presented above as data were not consistently available for these indicators.' )) %>% 
+    add_footer(Tasks= paste0('Notes: The table presents the percentage of teachers that responded positively to this question.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses. Madagascar is not included in the data presented above as data were not consistently available for these indicators.  The Madagascar survey was done in conjunction with a survey for the Service Deliverty Inidcators (SDI) project, and differences in methodology led to some indicators not being fully comparable.' )) %>% 
     merge_at( j = 1:5, part = "footer") %>%
     add_header_lines("Comparison across countries of sub-indicators for primary school teachers") %>% 
     set_table_properties(layout = "autofit")
@@ -3117,7 +3156,7 @@ Concrete examples of teacher policies related to teacher support and teacher eva
  
 ```
 
-Teacher pedagogy has no statistically significant relationships to the underlying policy indicators.
+Teacher pedagogy has no statistically significant relationships to the underlying policy indicators.  Data from Madagascar are not included in this regression analysis, as data on teacher pedagogical skills were note collected in this country. The Madagascar survey was done in conjunction with a survey for the Service Deliverty Inidcators (SDI) project, and differences in methodology led to some indicators not being collected.
 
 ```{r}
 
@@ -3593,6 +3632,182 @@ modelsummary(models,
 
 ```
 
+
+
+## Share of Variation Explained
+
+The goal in this analysis to decompose how much of the between school variability in the outcome variable, 4th grade student learning, is explained by the GEPD practice indicators, policy indicators, and bureaucracy indicators.  As most of the indicators vary only at the school level, this analysis examines between school variation, rather than variation within schools between students, as the majority of the indicators provide no variation within a school (e.g. principal management only occurs at the school level). Analyzing the between school variation will be done using Analysis of Variance (ANOVA) methods. 
+
+First, 4th grade student learning is expressed as a linear function of the GEPD practices, policy, and bureaucracy indicators, plus other controls such as the GDP in the vicinity of the school, the urban/rural status, the number of students enrolled, and country fixed effects.  All data is aggregated to the school level, so that the 4th grade achievement outcome is the school level average of 4th grade achievement for students.  Likewise, indicators such as teacher presence and content knowledge are aggregated to the school level.  
+
+The linear model of student achievement is
+
+$$ A_{ic} = Pract_{ic} + Policy_{ic} + Bureau_{ic} + Z_{ic} + \mu_c + \epsilon_{ic} $$
+
+where $A_{ic}$ is average 4th grade student achievement at the school $i$ in country $c$, $Pract_{ic}$ are the practice indicators (teacher presence, content knowledge, pedagogical skill, inputs, infrastructure, 1st grade student knowledge, 4th grade attendance, operational management, instructional leadership, principal school knowledge, and management skills), $Policy_{ic}$ are the de facto policy indicators (teacher attraction, selection & deployment, support, evaluation, monitoring & accountability, intrinsic motivation, input & infrastructure monitoring, standards, school management clarity of functions, attraction, selection & deployment, support, and evaluation), and $Bureau_{ic}$ are the district level averages of the politics and bureaucracy capacity indicators (characteristics of bureaucracy, impartial decision-making, mandates & accountability, and national learning goals).  $Z_{ic}$ are other controls including the urban/rural status of the school, GDP in the vicinity of the school based on satellite data, and the student enrollment at the school. $\mu_{c}$ is a country specific intercept (or heterogeneity term) and $\epsilon_{ic}$ is an idiosyncratic error term.  This model is estimated using OLS using data from all schools that can be matched to a district education office of public officials.  
+
+Next that linear model is decomposed into the share of variation explained by school practices, policies, bureaucracy, and other factors using ANOVA.  This is done by partitioning the total sum of squares $ \sum (A_i-\bar{A})^2 $ into the sum of squares explained by the model and the residual sum of squares.
+
+
+
+
+
+
+```{r anova}
+#set controls
+controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
+practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
+policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
+politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+
+#create formulas for regression
+baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
+baseline_pract_pol <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies))
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+baseline_pract_pol_bur_cntl <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics," + ", controls))
+
+#get a constant sample
+
+anova_df <- combined_school_office_df %>%
+  select(student_knowledge, GDP, rural, students_enrolled, country,
+         presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
+         teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
+         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+  na.omit
+
+
+models <- list(
+  
+
+'Practices' = feols(baseline_pract, data=anova_df, se='hetero'),
+
+'Practices + Policies' = feols(baseline_pract_pol, data=anova_df, se='hetero'),
+
+'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df, se='hetero'),
+
+'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df, se='hetero')
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c(
+                            "presence_rate"  = "Teacher Presence",
+                            "content_knowledge" = "Teacher Content Knowledge",
+                            "teach_score" = "Teacher Pedagogy",
+                            "inputs" = "Basic Inputs",
+                            "infrastructure" = "Basic Infrastructure",
+                            "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                            "student_attendance"="Student Attendance",
+                            "operational_management" = "Operational Management",
+                            "instructional_leadership" = "Instructional Leadership",
+                            "principal_knowledge_score" = "Principal Knowledge",
+                            "principal_management" = "Principal Management",
+                            "teacher_attraction" = "Teacher Attraction",
+                            "teacher_selection_deployment" = "Teacher Selection & Deployment",
+                            "teacher_support" = "Teacher Support",
+                            "teaching_evaluation" = "Teacher Evaluation",
+                            "teacher_monitoring" = "Teacher Monitoring & Accountability",
+                            "intrinsic_motivation" = "Teacher Intrinsic Motivation",
+                            "standards_monitoring" = "Standards",
+                            "sch_monitoring" = "Monitoring",
+                            "sch_management_clarity" = "Clarity of Functions",
+                            "sch_management_attraction" = "School Management Attraction",
+                            "sch_selection_deployment" = "School Management Selection & Deployment",
+                            "sch_support" = "School Management Support",
+                            "principal_evaluation" = "School Management Evaluation",
+                            "quality_bureaucracy" = "Characteristics of Bureaucracy",
+                            "national_learning_goals" = "National Learning Goals",
+                            "impartial_decision_making" = "Impartial Decision Making",
+                            "mandates_accountability"= "Mandates & Accountability"),
+             #coef_omit="GDP|rural|students_enrolled",
+             gof_map = gm,
+             #notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             escape = FALSE             
+             )
+
+```
+
+
+
+Alternative without student attendance and teacher pedagogy to include Madagascar.
+
+```{r anova}
+#set controls
+controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
+practices <- 'presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
+policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
+politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+
+#create formulas for regression
+baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
+baseline_pract_pol <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies))
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+baseline_pract_pol_bur_cntl <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics," + ", controls))
+
+#get a constant sample
+
+anova_df <- combined_school_office_df %>%
+  select(student_knowledge, GDP, rural, students_enrolled, country,
+         presence_rate,  content_knowledge,  inputs,  infrastructure,  ecd_student_knowledge,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
+         teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
+         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+  na.omit
+
+
+models <- list(
+  
+
+'Practices' = feols(baseline_pract, data=anova_df, se='hetero'),
+
+'Practices + Policies' = feols(baseline_pract_pol, data=anova_df, se='hetero'),
+
+'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df, se='hetero'),
+
+'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df, se='hetero')
+)
+
+
+
+modelsummary(models,
+             estimate= "{estimate}{stars}",
+             coef_rename = c(
+                            "presence_rate"  = "Teacher Presence",
+                            "content_knowledge" = "Teacher Content Knowledge",
+                            "teach_score" = "Teacher Pedagogy",
+                            "inputs" = "Basic Inputs",
+                            "infrastructure" = "Basic Infrastructure",
+                            "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                            "student_attendance"="Student Attendance",
+                            "operational_management" = "Operational Management",
+                            "instructional_leadership" = "Instructional Leadership",
+                            "principal_knowledge_score" = "Principal Knowledge",
+                            "principal_management" = "Principal Management",
+                            "teacher_attraction" = "Teacher Attraction",
+                            "teacher_selection_deployment" = "Teacher Selection & Deployment",
+                            "teacher_support" = "Teacher Support",
+                            "teaching_evaluation" = "Teacher Evaluation",
+                            "teacher_monitoring" = "Teacher Monitoring & Accountability",
+                            "intrinsic_motivation" = "Teacher Intrinsic Motivation",
+                            "standards_monitoring" = "Standards",
+                            "sch_monitoring" = "Monitoring",
+                            "sch_management_clarity" = "Clarity of Functions",
+                            "sch_management_attraction" = "School Management Attraction",
+                            "sch_selection_deployment" = "School Management Selection & Deployment",
+                            "sch_support" = "School Management Support",
+                            "principal_evaluation" = "School Management Evaluation",
+                            "quality_bureaucracy" = "Characteristics of Bureaucracy",
+                            "national_learning_goals" = "National Learning Goals",
+                            "impartial_decision_making" = "Impartial Decision Making",
+                            "mandates_accountability"= "Mandates & Accountability"),
+             #coef_omit="GDP|rural|students_enrolled",
+             gof_map = gm,
+             #notes="Regressions also include country fixed effects, the log GDP within 1km of school, urban rural status, and total school enrollment as covariates.",
+             escape = FALSE             
+             )
+
+```
 
 
 # Conclusions

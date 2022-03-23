@@ -246,24 +246,30 @@ list.files(path=download_folder)
 
 #Teacher absence file
 teacher_roster_dta <- read_dta(paste0(download_folder, '/08-M2AB1AB.dta')) %>%
-  left_join(school_dta_preamble) #%>%
- # filter(s_type_ecole==3) #just keep dashboard schools
+  left_join(school_dta_preamble) %>%
+ filter(s_type_ecole==3) #just keep dashboard schools
 
 #Teacher questionnaire file
 teacher_questionnaire_dta_raw <- read_dta(paste0(download_folder, '/10-M2BA1_E.dta')) %>%
   select(-c("s_region_code", "s_cisco_code", "s_commune_name", "s_commune_code", "s_ecole_name", "s_zap_name", "s_zap_code", "s_urbain", "s_date_visite", "s_enqueteur_code", "s_public", "s_etab_code")) %>%
-  left_join(school_dta_preamble) #%>%
-  #filter(s_type_ecole==3) #just keep dashboard schools
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
 
 #Teacher assessment file
 teacher_assessment_dta_raw <- read_dta(paste0(download_folder, '/24-M6CORR.dta')) %>% #read in the corrected version of the teacher assessment
   select(-c("s_ecole_nom","s_region_code","id1_nom", "s_cisco_code","s_cisco_nom", "s_commune_nom",   "s_commune_code",  "nom_fokontany",   "id4_nom", "numero_fiche" )) %>% #drop some information that may conflict with primary school file.  Just match on school code
-  left_join(school_dta_preamble) #%>%
-  #filter(s_type_ecole==3) #just keep dashboard schools
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+#get the ungrade version too
+teacher_assessment_dta_ungraded <- read_dta(paste0(download_folder, '/22-M6.dta')) %>% #read in the corrected version of the teacher assessment
+  select(-starts_with('s_m2')) %>% #drop some information that may conflict with primary school file.  Just match on school code
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
 
 teacher_pedagogy_dta <- read_dta(paste0(download_folder, '/17-M4BC.dta')) %>%
-  left_join(school_dta_preamble)# %>%
-  #filter(s_type_ecole==3) #just keep dashboard schools
+  left_join(school_dta_preamble) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
 
 ```
 # Practice Indicators
@@ -538,32 +544,32 @@ first_grade<- first_grade %>%
            ecd_soc_student_proficiency=100*as.numeric(ecd_soc_student_knowledge>=80)
     ) 
   #save ecd data at student level anonymized
-  first_grade_anon <- first_grade %>%
+  ecd_dta_anon <- first_grade %>%
     select(s_ecole_code, s_date_heure_fin, ecd_student_age, ecd_student_male, 
            ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
            ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
            math_items, lit_items, soc_items, exec_items)
   
   
-  save(first_grade_anon, 
+  save(ecd_dta_anon, 
        file = file.path(confidential_folder, "dashboard_ecd_data.RData"))
   
   #calculate % correct for literacy, math, and total
-  final_indicator_data_LCAP <- first_grade_anon %>%
+  final_indicator_data_LCAP <- ecd_dta_anon %>%
     #left_join(school_dta[,c('s_ecole_code',  's_enqueteur_code', 's_date_heure_fin')]) %>%
     group_by(s_ecole_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
   #Breakdowns of Male/Female
-  final_indicator_data_LCAP_M <- first_grade_anon %>%
+  final_indicator_data_LCAP_M <- ecd_dta_anon %>%
     #left_join(school_dta[,c('s_ecole_code', 's_enqueteur_code', 's_date_heure_fin')]) %>%
     filter(ecd_student_male==1) %>%
     group_by(s_ecole_code) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
-  final_indicator_data_LCAP_F <- first_grade_anon %>%
+  final_indicator_data_LCAP_F <- ecd_dta_anon %>%
     #left_join(school_dta[,c('s_ecole_code', 's_enqueteur_code', 's_date_heure_fin')]) %>%
     filter(ecd_student_male==0) %>%
     group_by(s_ecole_code) %>%
@@ -571,7 +577,7 @@ first_grade<- first_grade %>%
     select(-ends_with('length'), -ends_with('items'), -starts_with('interview'), -starts_with('enumerator'))
   
   
-skim(first_grade_anon, where(is.numeric))
+skim(ecd_dta_anon, where(is.numeric))
 
 ```
 
@@ -844,7 +850,7 @@ teacher_absence_dta<- teacher_absence_dta %>%
          teacher_permanent=bin_var(s_m2aa_05,1),
          teacher_contract=bin_var(s_m2aa_05,2),
          #teacher_temporary=bin_var(m2saq5,3),
-         teachervolunteer=bin_var(s_m2aa_05,5),
+         teacher_volunteer=bin_var(s_m2aa_05,5),
          #teacher_ngo=bin_var(m2saq5,5)==5,
          # teacher_other=case_when(
          #   m2saq5==97 ~ m2saq5_other,
@@ -893,14 +899,16 @@ preamble_info_absence <- c('teacher_number',
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(
     sch_absence_rate_1st=100*case_when(
+      s_m2ab1a_02==1 ~ as.numeric(NA) , #excuse teachers that didn't have a shift that day
       s_m2ab1a_01==5 ~ 1,
       s_m2ab1a_01!=5   ~ 0,
       is.na(s_m2ab1a_01) ~ as.numeric(NA)
     ),
     
     sch_absence_rate_2nd=100*case_when(
-      s_m2ab1b_01==5 ~ 1,
-      s_m2ab1b_01!=5   ~ 0,
+      s_m2ab1b_02==1   ~ as.numeric(NA), #excuse teachers that didn't have a shift that day
+      s_m2ab1b_01==5   ~ 1,
+      s_m2ab1a_01!=5   ~ 0,
       is.na(s_m2ab1b_01) ~ as.numeric(NA)
     ))
 
@@ -910,13 +918,15 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
     
     absence_rate_1st=100*case_when(
-      s_m2ab1a_01==5 | s_m2ab1a_01==3  ~ 1,
+      s_m2ab1a_02==1 ~ as.numeric(NA) , #excuse teachers that didn't have a shift that day
+      (s_m2ab1a_01==5 | s_m2ab1a_01==3)  ~ 1,
       s_m2ab1a_01==1 | s_m2ab1a_01==2 | s_m2ab1a_01==4   ~ 0,
       is.na(s_m2ab1a_01) ~ as.numeric(NA)
     ),
     
     absence_rate_2nd=100*case_when(
-      s_m2ab1b_01==5 | s_m2ab1b_01==3  ~ 1,
+       s_m2ab1b_02==1 ~ as.numeric(NA), #excuse teachers that didn't have a shift that day
+      (s_m2ab1b_01==5 | s_m2ab1b_01==3)   ~ 1,
       s_m2ab1b_01==1 | s_m2ab1b_01==2 | s_m2ab1b_01==4   ~ 0,
       is.na(s_m2ab1b_01) ~ as.numeric(NA)
     )) 
@@ -1066,13 +1076,257 @@ skim(teacher_absence_dta, one_of(ind_list))
       m5s2q13b_geometric=t213b
     )
   
+  
+
+teacher_assessment_dta_graded<- teacher_assessment_dta_ungraded %>%
+  filter(consent==1) %>% #keep those who consented
+  mutate(
+      #    TASK 1 EXERCICES 1 & 2: GRAMMAR
+	    m5s1q1a_grammer=case_when(
+      	 (m6sa1q2aa==2 & m6sa1q2ab==1) ~ 1,
+      	 (m6sa1q2ab==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q1b_grammer=case_when(
+      	 (m6sa1q2ba==2 & m6sa1q2bb==4) ~ 1,
+      	 (m6sa1q2bb==4) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q1c_grammer=case_when(
+      	 (m6sa1q2ca==1) ~ 1,
+      	 (m6sa1q2cb==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q1d_grammer=case_when(
+      	 (m6sa1q2da==1) ~ 1,
+      	 (m6sa1q2db==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q1e_grammer=case_when(
+      	 (m6sa1q2ea==2 & m6sa1q2eb==2) ~ 1,
+      	 (m6sa1q2eb==2) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q1f_grammer=case_when(
+      	 (m6sa1q2fa==2 & m6sa1q2fb==4) ~ 1,
+      	 (m6sa1q2fb==4) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q2a_cloze=case_when(
+      	 (m6sa1q3aa==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q2b_cloze=case_when(
+      	 (m6sa1q3ba!=2) ~ 0,
+      	 TRUE ~ 1
+    	 ),
+      m5s1q2c_cloze=case_when(
+      	 (m6sa1q3ca==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q2d_cloze=case_when(
+      	 (m6sa1q3da==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q2e_cloze=case_when(
+      	 (m6sa1q3ea!=2) ~ 0,
+      	 TRUE ~ 1
+    	 ),
+      m5s1q2f_cloze=case_when(
+      	 (m6sa1q3fa==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q2g_cloze=case_when(
+      	 (m6sa1q3ga!=2) ~ 0,
+      	 TRUE ~ 1
+    	 ),
+      m5s1q2h_cloze=case_when(
+      	 (m6sa1q3ha!=2) ~ 0,
+      	 TRUE ~ 1
+    	 ),
+      m5s1q2i_cloze=case_when(
+      	 (m6sa1q3ia!=2) ~ 0,
+      	 TRUE ~ 1
+    	 ),
+      m5s1q2j_cloze=case_when(
+      	 (m6sa1q3ja==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s1q2k_cloze=case_when(
+      	 (m6sa1q3ka==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      #math (First two questions differ from traditional dashboard survey)
+      m5s2q1c_number=case_when(
+      	 (m6sa2q1ca ==1) ~ 1,
+      	 (m6sa2q1cb ==685) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q1d_number=case_when(
+      	 (m6sa2q1da ==2 & m6sa2q1db ==8) ~ 1,
+      	 (m6sa2q1db ==8) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q1e_number=case_when(
+      	 (m6sa2q1ea ==2 & m6sa2q1eb ==481) ~ 1,
+      	 (m6sa2q1eb ==481) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q2_number=case_when(
+      	 ((m6sa2q2b==1 & m6sa2q2c==5) | (m6sa2q2b==5 & m6sa2q2c==1)) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q3_number=case_when(
+      	 (m6sa2q3a==1) ~ 1,
+      	 (m6sa2q3b==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q4a_number=case_when(
+      	 (m6sa2q4aa==1) ~ 1,
+      	 (m6sa2q4ab=="27" | m6sa2q4ab=="9/27") ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q4b_number=case_when(
+      	 (m6sa2q4bb=="/20" | m6sa2q4bb=="08/20" | m6sa2q4bb=="8/20" | m6sa2q4bb=="820" | m6sa2q4bb=="=8/20") ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q5_number=case_when(
+      	 (m6sa2q5a==2 & m6sa2q5b==1) ~ 1,
+      	 (m6sa2q5b==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q6_geometric=case_when(
+      	 (m6sa2q6a==1) ~ 1,
+      	 (m6sa2q6b==1) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q7_geometric=case_when(
+      	 (m6sa2q7a==2 & m6sa2q7b==2) ~ 1,
+      	 (m6sa2q7b==2) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q8_data=case_when(
+      	 (m6sa2q8a==1) ~ 1,
+      	 (m6sa2q8b=="7H20" | m6sa2q8b=="0720") ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q9a_data=case_when(
+      	 (m6sa2q9ab==47) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q9b_data=case_when(
+      	 (m6sa2q9bb==3) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q10a_data=case_when(
+      	 (m6sa2q10ab==110) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q10b_data=case_when(
+      	 (m6sa2q10bb==60) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q11a_number=case_when(
+      	 (m6sa2q11aa==1) ~ 1,
+      	 (m6sa2q11ab==12) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q11b_number=case_when(
+      	 (m6sa2q11ba==1) ~ 1,
+      	 (m6sa2q11bb=="0,32" |  m6sa2q11bb=="0.32" |  m6sa2q11bb=="00,32" |  m6sa2q11bb=="032") ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q11c_number=case_when(
+      	 (m6sa2q11cb=="12/14" |  m6sa2q11cb=="24 28" |  m6sa2q11cb=="24/28" |  m6sa2q11cb=="6/7") ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q12_number=case_when(
+      	 (m6sa2q12a==2 & m6sa2q12b==4) ~ 1,
+      	 (m6sa2q12b==4) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q13a_geometric=case_when(
+      	 (m6sa2q13aa==2 & m6sa2q13ab==30) ~ 1,
+      	 (m6sa2q13ab==30) ~ 1,
+      	 TRUE ~ 0
+    	 ),
+      m5s2q13b_geometric=case_when(
+      	 (m6sa2q13ba==2 & m6sa2q13bb==54) ~ 1,
+      	 (m6sa2q13bb==54) ~ 1,
+      	 TRUE ~ 0
+    	 )
+  )
+	  
+  
+  
+  ####Literacy####
+  #calculate # of literacy items
+  #note: grep is a tool for searching text with specified pattern.  In our case, we are looking for m5s1q, which is the prefix of literacy items
+  teacher_assessment_dta_graded$literacy_length<-length(grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q"))
+  
+  
+  lit_items<-colnames(teacher_assessment_dta_graded[,grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q")])
+  
+  #calculate teachers lit items correct
+  teacher_assessment_dta_graded <- teacher_assessment_dta_graded %>%
+    mutate(literacy_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q")], na.rm=TRUE),
+           correct_letter=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q3")], na.rm=TRUE),
+           cloze=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q2")], na.rm=TRUE),
+           grammar=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q1")], na.rm=TRUE),
+           read_passage=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s1q4")], na.rm=TRUE)) #there is no such item in the test in madagascar
+  
+  ####Math####
+  #calculate # of math items
+  teacher_assessment_dta_graded$math_length<-length(grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s2q"))
+  
+  math_items<-colnames(teacher_assessment_dta_graded[,grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s2q")])
+  
+  #calculate teachers math items correct
+  teacher_assessment_dta_graded <- teacher_assessment_dta_graded %>%
+    mutate(math_content_knowledge=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="m5s2q")], na.rm=TRUE),
+           arithmetic_number_relations=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="number")], na.rm=TRUE),
+           geometry=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="geometric")], na.rm=TRUE),
+           interpret_data=100*rowMeans(.[grep(x=colnames(teacher_assessment_dta_graded), pattern="data")], na.rm=TRUE))
+  
+  
  
      #plot the indicator  
  hist(teacher_assessment_dta$literacy_content_knowledge)    
- hist(teacher_assessment_dta$math_content_knowledge)    
+ hist(teacher_assessment_dta$math_content_knowledge) 
+ 
+ hist(teacher_assessment_dta_graded$literacy_content_knowledge)    
+ hist(teacher_assessment_dta_graded$math_content_knowledge)  
+ 
+ 
  
   #calculate % correct for literacy, math, and total
-  final_indicator_data_CONT <- teacher_assessment_dta %>%
+  final_indicator_data_CONT <- teacher_assessment_dta_graded %>%
+    select(-c("s_region_code"      ,
+              "s_cisco_code" ,
+              "s_commune_name",    
+              "s_commune_code" ,   
+              "s_fokontany_name",
+              "s_fokontany_code" ,    
+              "s_ecole_name"      ,   
+              "s_zap_name"         ,    
+              "s_zap_code"        ,
+               "s_urbain"         ,
+               "s_date_visite"     ,     
+               "s_enqueteur_name"   ,     
+               "s_enqueteur_code"    ,   
+               "s_type_ecole"         ,  
+               "s_public"              ,  
+               "s_etab_code"            , 
+               "s_date_heure_debut"      ,  
+               "s_date_heure_fin"         ,    
+               "comment"                   ,     
+               "consent"                    ,
+               "raison_non_test"         ,
+               "heure_debut_test"         , 
+               "lat",
+               "lon",
+               "school_code",
+               "heure_fin_test")) %>%
     group_by(s_ecole_code) %>%
     add_count(s_ecole_code,name='m5_teach_count') %>%
     mutate(content_knowledge=case_when(
@@ -1151,7 +1405,7 @@ skim(teacher_absence_dta, one_of(ind_list))
   
   cont_var <- c("content_knowledge", "content_proficiency", "literacy_content_knowledge", "literacy_content_proficiency", "math_content_knowledge", "math_content_proficiency")
   
-  skim(final_indicator_data_CONT, one_of(cont_var)) %>% select(skim_variable, numeric.mean, numeric.p50) %>% rename(variable = skim_variable, mean = numeric.mean, median = numeric.p50)%>% flextable() %>%  add_header_lines("Content knowledge for SDI and GEPD schools with GEPD methodology before weigth") 
+  skim(final_indicator_data_CONT, one_of(cont_var)) %>% select(skim_variable, numeric.mean, numeric.p50) %>% rename(variable = skim_variable, mean = numeric.mean, median = numeric.p50) 
 
 
 
@@ -2860,7 +3114,7 @@ school_dta_short_imp <- school_dta_short
 
 #saves the following in R and stata format
 
-data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_dta_preamble', 'final_school_data', 'teacher_questionnaire_dta','teacher_absence_final', 'first_grade', 'teacher_assessment_dta', 'teacher_roster_dta', 
+data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_dta_preamble', 'final_school_data', 'teacher_questionnaire_dta','teacher_absence_final', 'ecd_dta_anon', 'teacher_assessment_dta', 'teacher_roster_dta', 
                "indicators", 'school_gdp', 'assess_4th_grade_anon')
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 

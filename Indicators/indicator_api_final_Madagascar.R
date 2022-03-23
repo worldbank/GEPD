@@ -46,12 +46,12 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # PER_data_2019 <- api_data(data_dir1, data_dir2, data_dir3, 'PER', 2019)
 
 
-
 ############################
 #Read in indicators.md file
 ###########################
 #Read in list of indicators
-indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
+indicators <- read_csv(here::here('Indicators','indicators.csv'))
+
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -64,40 +64,21 @@ indicator_names <- sapply(indicator_names, tolower)
 names(indicators)<-make.names(names(indicators), unique=TRUE)
 
 
-#get metadata on indicators
-#Read in list of indicators
-indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
-indicator_choices <- indicator_choices %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-
-indicator_choices <- indicator_choices %>%
-  select(-c('...1', '...6')) %>%
-  rename("Source Note"="How is the indicator scored?" ) 
-
-
-names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
-
-
-#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- indicators$indicator_tag
 
 
 
 #Read in Sergio's excel with subquestions to include
 subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
 
-df<-indicators %>%  rename(Indicator.Name= Subtitle) 
-
-  # left_join(subquestions) %>%
-  # select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
+df<-indicators %>%
+  left_join(subquestions) %>%
+  select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
 
 
 
 df_overall <- df %>%
   select(Series, Indicator.Name, indicator_tag ) 
-  
+
 
 df_defacto_dejure <- df %>%
   filter(grepl("Policy Lever", Indicator.Name )) %>%
@@ -110,7 +91,7 @@ df_defacto_dejure <- df %>%
   mutate(Series=paste(Series, type_val, sep="."),
          Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
   select(Series, Indicator.Name)
-  
+
 # Prepare a data frame, on which we can add values
 
 ##########################
@@ -176,6 +157,7 @@ api_template <- api_template %>%
   rename('Source Note'=Source.Note,
          'Indicator Name'=Indicator.Name) %>%
   select(-c(indicator_tag, Value))
+
 
 
 
@@ -273,7 +255,7 @@ practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE
 api_metadata_fn <- function(cntry, yr) {
   api_metadata_fn_p <- api_final %>%
     #rename(Indicator.Name='Indicator Name') %>%
-    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", `Indicator.Name`)) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
     select(Series, `Indicator Name`, value) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
@@ -291,7 +273,7 @@ api_metadata_fn <- function(cntry, yr) {
   
   api_metadata_fn_c <- api_final %>%
     #rename(Indicator.Name='Indicator Name') %>%
-    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", `Indicator.Name`))) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
     select(Series, `Indicator Name`, value) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
