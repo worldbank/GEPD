@@ -895,6 +895,9 @@ preamble_info_absence <- c('teacher_number',
                            'teacher_fulltime', 'teacher_male', 'teacher_grd1', 'teacher_grd2', 'teacher_grd3', 'teacher_grd4', 'teacher_grd5', 
                             's_m2ab1a_01', 's_m2ab1b_01', "grade")
 
+
+
+
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(
@@ -908,7 +911,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
     sch_absence_rate_2nd=100*case_when(
       s_m2ab1b_02==1   ~ as.numeric(NA), #excuse teachers that didn't have a shift that day
       s_m2ab1b_01==5   ~ 1,
-      s_m2ab1a_01!=5   ~ 0,
+      s_m2ab1b_01!=5   ~ 0,
       is.na(s_m2ab1b_01) ~ as.numeric(NA)
     ))
 
@@ -3178,8 +3181,8 @@ data_set_updated <- school_dta_preamble %>%
                       ) %>%
   left_join(sampling_strata_df, by=c("CODE REGION"="id",
                                      "urban_rural"="urban_rural")) %>% # read in strata sampling info
-  mutate(ipw=ipw_school*(1/strata_prob), # incorporate stratum weights
-         ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)
+  mutate(ipw=ipw_school*(1/strata_prob) # incorporate stratum weights
+         
   )
 
 
@@ -3189,6 +3192,7 @@ df_weights_function <- function(dataset) {
   
   dataset %>%
     left_join(data_set_updated) %>%
+    mutate(ipw=if_else(is.na(ipw),median(ipw, na.rm=T), ipw)) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "province" | names(data_set_updated) == "district" |
                                                       names(data_set_updated) == "rural" | names(data_set_updated) == "public" | names(data_set_updated) == "students_enrolled"
                                                       | names(data_set_updated) == "ipw" | names(data_set_updated) == "ipw_school")])))
