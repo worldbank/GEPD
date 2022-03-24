@@ -1248,6 +1248,14 @@ ggplot(mn_bur, aes(x=govt_tier, y=value, color=Country)) +
 
 ## Systems View of Indicators
 ```{r}
+
+
+#specify some key indicators to be imputed with mean value when necessary
+practices <- c('presence_rate', 'content_knowledge', 'teach_score', 'inputs', 'infrastructure', 'ecd_student_knowledge', 'student_attendance', 'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management')
+policies <- c('teacher_attraction', 'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring', 'intrinsic_motivation', 'standards_monitoring', 'sch_monitoring', 'sch_management_clarity', 'sch_management_attraction', 'sch_selection_deployment', 'sch_support', 'principal_evaluation')
+politics <- c('quality_bureaucracy', 'national_learning_goals', 'impartial_decision_making', 'mandates_accountability')
+
+
 # read in the microdata
 ########
 ## Peru
@@ -1285,7 +1293,12 @@ PER_school_office_link_df <- PER_school_anon_df %>%
            students_enrolled=="Over 500" ~8),
          students_enrolled=factor(students_enrolled, 
                                   levels=c(1:8),
-                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
 ########
 ########
 ## Jordan
@@ -1328,7 +1341,12 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
            students_enrolled=="Over 500" ~8),
          students_enrolled=factor(students_enrolled, 
                                   levels=c(1:8),
-                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
 ########
 ########
 ## Rwanda
@@ -1367,7 +1385,12 @@ RWA_school_office_link_df <- RWA_school_anon_df %>%
            students_enrolled=="Over 500" ~8),
          students_enrolled=factor(students_enrolled, 
                                   levels=c(1:8),
-                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
 ########
 ########
 ########
@@ -1406,7 +1429,12 @@ ETH_school_office_link_df <- ETH_school_anon_df %>%
            students_enrolled=="Over 500" ~8),
          students_enrolled=factor(students_enrolled, 
                                   levels=c(1:8),
-                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) 
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
 ########
 ########
 ## Madagascar
@@ -1433,14 +1461,24 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
          rural=if_else(urban_rural=="Rural",TRUE,FALSE)
-  )
+  ) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(c('presence_rate', 'content_knowledge', 'inputs', 'infrastructure', 'ecd_student_knowledge',  'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management'), ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
 
 
 
 ###########
 # Combined
 ##########
+
+
+
 combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
+
+
 combined_school_office_df %>%
   rename(pol_policy_implementation=politicized_policy_implementation) %>%
   haven::write_dta( paste0(confidential_dir, "General/combined_school_office_df.dta")) %>%
@@ -1568,17 +1606,17 @@ https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=en
 ```{r}
 models <- list(
   
-'Availability of Basic Inputs' = feols(inputs ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Basic Inputs' = feols(inputs ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Functional Blackboard' = feols(blackboard_functional ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Functional Blackboard' = feols(blackboard_functional ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Writing Utencils' = feols(pens_etc ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Writing Utencils' = feols(pens_etc ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Textbooks' = feols(textbooks ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Textbooks' = feols(textbooks ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Desks' = feols(share_desk ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Desks' = feols(share_desk ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of ICT' = feols(access_ict ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero')
+'Availability of ICT' = feols(access_ict ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -1610,17 +1648,17 @@ Their is also a statistically significant relationship between operational manag
 ```{r}
 models <- list(
   
-'Availability of Basic Infrastructure' = feols(infrastructure ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Basic Infrastructure' = feols(infrastructure ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Drinking Water' = feols(drinking_water ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Drinking Water' = feols(drinking_water ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Functional Toilet' = feols(functioning_toilet ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Functional Toilet' = feols(functioning_toilet ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of internet' = feols(internet ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of internet' = feols(internet ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Availability of Electricity' = feols(class_electricity ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'Availability of Electricity' = feols(class_electricity ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Access for the Disabled' = feols(disability_accessibility ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero')
+'Access for the Disabled' = feols(disability_accessibility ~   operational_management   + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -2182,11 +2220,11 @@ The table shows 1st grade student knowledge, teacher content knowledge, basic in
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero')
 )
 
 
@@ -2216,11 +2254,11 @@ Because data for teacher pedagogical skills and student attendance is missing in
 ```{r}
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Reading Score' = feols(literacy_student_knowledge ~ presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
+'4th Grade Math Score' = feols(math_student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge  + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero')
 )
 
 
@@ -2251,15 +2289,15 @@ The table below shows the relationships for each individual country to see how t
 ```{r, fig.height=8, fig.width=8}
 models <- list(
   
-'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=PER_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Peru' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=PER_school_office_link_df,vcov='hetero'),
 
-'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=JOR_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Jordan' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=JOR_school_office_link_df,vcov='hetero'),
 
-'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled, data=RWA_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Rwanda' = feols(student_knowledge ~  presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management  + rural + students_enrolled, data=RWA_school_office_link_df,vcov='hetero'),
 
-'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=ETH_school_office_link_df, se='hetero'),
+'4th Grade Student Knowledge - Ethiopia' = feols(student_knowledge ~ presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=ETH_school_office_link_df,vcov='hetero'),
 
-'4th Grade Student Knowledge - Madagascar' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=MDG_school_office_link_df, se='hetero')
+'4th Grade Student Knowledge - Madagascar' = feols(student_knowledge ~  presence_rate + content_knowledge  + inputs + infrastructure + ecd_student_knowledge + operational_management + instructional_leadership + principal_knowledge_score + principal_management   + rural + students_enrolled, data=MDG_school_office_link_df,vcov='hetero')
 )
 
 # coefplot(models,
@@ -2778,7 +2816,7 @@ reg_fun <- function(indicators) {
   
   models <- list(
   
-   " " = feols(form, data=combined_school_office_df, se='hetero')
+   " " = feols(form, data=combined_school_office_df,vcov='hetero')
 
   )
 
@@ -3534,19 +3572,19 @@ https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=en
 
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~   bureau_index  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~   bureau_index  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~   bureau_index + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~   bureau_index + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'School Inputs' =  feols(inputs ~   bureau_index + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~   bureau_index + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~   bureau_index + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~   bureau_index + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Operations Management' =  feols(operational_management ~  bureau_index  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~  bureau_index  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~  bureau_index  + log(GDP) + rural + students_enrolled   | country, data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~  bureau_index  + log(GDP) + rural + students_enrolled   | country, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -3569,19 +3607,19 @@ The next table allows the effect of the bureaucracy index to vary by country.  W
 
 models <- list(
   
-'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index:country + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df, se='hetero'),
+'4th Grade Student Knowledge' = feols(student_knowledge ~  bureau_index:country + log(GDP) + rural + students_enrolled | country, data=combined_school_office_df,vcov='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~   bureau_index:country  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~   bureau_index:country  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'School Inputs' =  feols(inputs ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~   bureau_index:country + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Operations Management' =  feols(operational_management ~  bureau_index:country  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~  bureau_index:country  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~  bureau_index:country  + log(GDP) + rural + students_enrolled   | country, data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~  bureau_index:country  + log(GDP) + rural + students_enrolled   | country, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -3604,19 +3642,19 @@ The next table breaks out the effects into the underlying components of the bure
 
 models <- list(
   
-'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Student Knowledge' = feols(student_knowledge ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'School Inputs' =  feols(inputs ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'School Infrastructure' =  feols(infrastructure ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero'),
+'Operations Management' =  feols(operational_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero'),
 
-'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df, se='hetero')
+'Principal Management Skills' =  feols(principal_management ~ quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability  + log(GDP) + rural + students_enrolled  | country, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -3679,13 +3717,13 @@ anova_df <- combined_school_office_df %>%
 models <- list(
   
 
-'Practices' = feols(baseline_pract, data=anova_df, se='hetero'),
+'Practices' = feols(baseline_pract, data=anova_df,vcov='hetero'),
 
-'Practices + Policies' = feols(baseline_pract_pol, data=anova_df, se='hetero'),
+'Practices + Policies' = feols(baseline_pract_pol, data=anova_df,vcov='hetero'),
 
-'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df, se='hetero'),
+'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df,vcov='hetero'),
 
-'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df, se='hetero')
+'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df,vcov='hetero')
 )
 
 
@@ -3759,13 +3797,13 @@ anova_df <- combined_school_office_df %>%
 models <- list(
   
 
-'Practices' = feols(baseline_pract, data=anova_df, se='hetero'),
+'Practices' = feols(baseline_pract, data=anova_df,vcov='hetero'),
 
-'Practices + Policies' = feols(baseline_pract_pol, data=anova_df, se='hetero'),
+'Practices + Policies' = feols(baseline_pract_pol, data=anova_df,vcov='hetero'),
 
-'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df, se='hetero'),
+'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df,vcov='hetero'),
 
-'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df, se='hetero')
+'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df,vcov='hetero')
 )
 
 
@@ -4281,13 +4319,13 @@ defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot
 
 models <- list(
   
-'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero'),
+'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto,vcov='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto,vcov='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto,vcov='hetero'),
 
-'Content Knowledge' =  feols(content_knowledge ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto, se='hetero')
+'Content Knowledge' =  feols(content_knowledge ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=defacto,vcov='hetero')
 
 )
 
@@ -4313,13 +4351,13 @@ deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_w
 
 models <- list(
   
-'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero'),
+'Student Knowledge' = feols(student_knowledge ~ teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure,vcov='hetero'),
 
-'Teacher Presence' =  feols(presence_rate ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero'),
+'Teacher Presence' =  feols(presence_rate ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure,vcov='hetero'),
 
-'Teacher Pedagogy' =  feols(teach_score ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero'),
+'Teacher Pedagogy' =  feols(teach_score ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure,vcov='hetero'),
 
-'Content Knowledge' =  feols(content_knowledge ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure, se='hetero')
+'Content Knowledge' =  feols(content_knowledge ~  teacher_attraction  + teaching_evaluation + teacher_selection_deployment + teacher_support + intrinsic_motivation + teacher_monitoring , data=deJure,vcov='hetero')
 
 )
 
@@ -4344,13 +4382,13 @@ defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot
 
 models <- list(
   
-'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
   
-'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -4371,13 +4409,13 @@ deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_w
 
 models <- list(
   
-'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Basic Infrastructure' =  feols(infrastructure ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
   
-'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Basic Input' = feols(inputs ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Student Knowledge' =  feols(student_knowledge ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+'School Knowledge' =  feols(principal_knowledge_score ~ standards_monitoring  + monitoring_infrastructure + monitoring_inputs + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -4399,13 +4437,13 @@ defacto <- data_policy_combined %>% filter(str_detect(group, "Facto")) %>% pivot
 
 models <- list(
   
-'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
   
-'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero')
 
 )
 
@@ -4426,13 +4464,13 @@ deJure <- data_policy_combined %>% filter(str_detect(group, "Jure")) %>% pivot_w
 
 models <- list(
   
-'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Student Knowledge' =  feols(student_knowledge ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
   
-'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Operational Management' = feols(operational_management ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support  + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero'),
+'Instructional Leadership' =  feols(instructional_leadership ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support   + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero'),
 
-'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df, se='hetero')
+'School Knowledge' =  feols(principal_knowledge_score ~ sch_management_clarity  + sch_selection_deployment + sch_management_attraction + sch_monitoring + sch_support + log(GDP) + rural| ADM0_NAME, data=combined_school_office_df,vcov='hetero')
 
 )
 
