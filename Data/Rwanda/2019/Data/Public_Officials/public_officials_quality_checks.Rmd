@@ -1,6 +1,5 @@
 ---
 title: "Data Quality Checks - Survey of Public Officials"
-author: "Brian Stacy"
 output: html_document
 
 ---
@@ -153,13 +152,13 @@ The table below shows summary statistics of the interview length both overall an
 
 overall_time<-para_df %>%
   group_by(ï..interview__id, indicator) %>% 
-  summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60)
+  summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60) %>% ungroup()
 
 
 overall_time_avg<-para_df %>%
   group_by(ï..interview__id) %>%
   summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60) %>%
-  mutate(indicator='Overall')
+  mutate(indicator='Overall') %>% ungroup()
 
 
 
