@@ -32,7 +32,8 @@ library(sf)
 #sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
 
 #Specify the file name containing the sample information
-sample_frame_name <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Rwanda/2019/Data/Sampling/"
+#sample_frame_name <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Rwanda/2019/Data/Sampling/"
+sample_frame_name <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/My files/Dashboard (Team Folder)/Rwanda/2019/Data/Sampling/")
 
 date_frame<-c("2019-08-26")
 

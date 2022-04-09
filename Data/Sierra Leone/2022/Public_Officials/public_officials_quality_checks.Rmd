@@ -173,6 +173,7 @@ overall_time_avg<-para_df %>%
 overall_time_comb<-bind_rows(overall_time, overall_time_avg) %>%
   spread(indicator, timelength_min) %>%
   ungroup() %>%
+  mutate(ORG = "") %>% 
   select( Overall, DEM, NLG, ACM, QB, IDM, ORG ) %>%
   my_skim() %>%
            yank("numeric") %>%
@@ -185,10 +186,32 @@ overall_time_comb<-bind_rows(overall_time, overall_time_avg) %>%
 ```
 
 
-```{r overalltime_kable}
+```{r overalltime_kable, echo=FALSE}
 
 kable(overall_time_comb, caption="Summary Statistics of Time Length of Interviews by Indicator" ,  col.names = c("Indicator", "Mean",  "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases",  "Histogram"), digits = 2 ) %>%
   kable_styling()
+
+```
+
+
+```{flextable, echo=FALSE, warning=FALSE}
+
+table <- overall_time_comb %>% 
+  mutate_if(is.numeric, ~ round(., digits = 2)) %>% 
+  flextable::flextable() %>%   
+  add_header_lines('Distribution of schools on territory') %>% 
+  set_header_labels(variable = "Indicator",
+  mean = "Mean", sd = "Std Dev",
+  p0 = "Min",
+  p25="25th Percentile",
+  p50="Median",
+  p75="75th Percentile",
+  p100="Max",
+  complete="# Complete Cases",
+  hist="Histogram"
+)
+
+bold(table, bold = TRUE, part = "header")
 
 ```
 

@@ -98,9 +98,12 @@ library(here)
 
 #read in data
 
-para_df<-read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2021/Data/raw/Public_Officials/paradata_v3.tab", sep="\t") %>% 
- mutate(across(everything(), as.character)) %>% 
-bind_rows(read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2021/Data/raw/Public_Officials/paradata_v4.tab", sep="\t") %>% mutate(across(everything(), as.character)))
+# para_df<-read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2021/Data/raw/Public_Officials/paradata_v3.tab", sep="\t") %>% 
+#  mutate(across(everything(), as.character)) %>% 
+# bind_rows(read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2021/Data/raw/Public_Officials/paradata_v4.tab", sep="\t") %>% mutate(across(everything(), as.character)))
+
+para_df<-read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2021/Data/raw/Public_Officials/paradata.tab", sep="\t") 
+
 
 #label variables
 var.labels=c(
