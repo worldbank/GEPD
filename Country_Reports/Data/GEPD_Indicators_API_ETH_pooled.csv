@@ -1,471 +1,471 @@
-﻿Series,Indicator.Name,value
-SE.LPV.PRIM,Learning poverty: Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%),90.29706
-SE.LPV.PRIM.1,(De Facto) Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%),90.29706
-SE.LPV.PRIM.BMP,Proficiency by End of Primary,11.28
-SE.LPV.PRIM.BMP.1,"(De Facto) Percent of children proficient in literacy and numeracy by end of primary, as reported by UIS",11.28
-SE.PRM.ATTD,Student Attendance,76.5776817
-SE.PRM.ATTD.1,(De Facto) Percent of 4th grade students present during an unannounced visit,76.5776817
-SE.PRM.ATTD.1.F,(De Facto) Percent of 4th grade students present during an unannounced visit - Female,75.20904832
-SE.PRM.ATTD.1.M,(De Facto) Percent of 4th grade students present during an unannounced visit - Male,78.92518569
-SE.PRM.ATTD.1.R,(De Facto) Percent of 4th grade students present during an unannounced visit - Rural,70.92242481
-SE.PRM.ATTD.1.U,(De Facto) Percent of 4th grade students present during an unannounced visit - Urban,77.33437015
-SE.PRM.BFIN,Politics & Bureaucratic Capacity - Financing,4.3725
-SE.PRM.BFIN.1,"Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, efficiency, and equity.",4.3725
-SE.PRM.BFIN.2,(Financing) - Adequacy expressed by the per child spending,5
-SE.PRM.BFIN.3,(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest,3.48
-SE.PRM.BFIN.4,(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest,4.01
-SE.PRM.BFIN.5,(Financing) - Equity,-999
-SE.PRM.BIMP,Politics & Bureaucratic Capacity - Impartial Decision-Making,3.225587
-SE.PRM.BIMP.1,Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,3.225587
-SE.PRM.BIMP.2,(Impartial Decision-Making) average score for politicized personnel management,2.890374
-SE.PRM.BIMP.3,(Impartial Decision-Making) average score for politicized policy-making,3.389493
-SE.PRM.BIMP.4,(Impartial Decision-Making) average score for politicized policy implementation,2.631016
-SE.PRM.BIMP.5,(Impartial Decision-Making) average score for employee unions as facilitators,4.273743
-SE.PRM.BMAC,Politics & Bureaucratic Capacity - Mandates & Accountability,3.829301
-SE.PRM.BMAC.1,Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,3.829301
-SE.PRM.BMAC.2,(Mandates & Accountability) Average score for coherence,3.599638
-SE.PRM.BMAC.3,(Mandates & Accountability) Average score for transparency,3.956989
-SE.PRM.BMAC.4,(Mandates & Accountability) Average score for accountability of public officials,3.903226
-SE.PRM.BNLG,Politics & Bureaucratic Capacity - National Learning Goals,3.439087
-SE.PRM.BNLG.1,Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,3.439087
-SE.PRM.BNLG.2,(National Learning Goals) Average score for targeting,3.887097
-SE.PRM.BNLG.3,(National Learning Goals) Average score for monitoring,3.487522
-SE.PRM.BNLG.4,(National Learning Goals) Average score for incentives,2.848566
-SE.PRM.BNLG.5,(National Learning Goals) Average score for community engagement,3.523297
-SE.PRM.BQBR,Politics & Bureaucratic Capacity - Characteristics of Bureaucracy,3.753525
-SE.PRM.BQBR.1,Average score for Characteristics of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,3.753525
-SE.PRM.BQBR.2,(Characteristics of Bureaucracy) average score for knowledge and skills,4.756684
-SE.PRM.BQBR.3,(Characteristics of Bureaucracy) average score for work environment,3.690731
-SE.PRM.BQBR.4,(Characteristics of Bureaucracy) average score for merit,3.825312
-SE.PRM.BQBR.5,(Characteristics of Bureaucracy) average score for motivation and attitudes,3.498916
-SE.PRM.CONT,Teacher Content Knowledge,6.170912502
-SE.PRM.CONT.1,(De Facto) Percent of teachers proficient in the subjects they teach,6.170912502
-SE.PRM.CONT.1.F,(De Facto) Percent of teachers proficient in the subjects they teach - Female,4.670307824
-SE.PRM.CONT.1.M,(De Facto) Percent of teachers proficient in the subjects they teach - Male,7.095974885
-SE.PRM.CONT.1.R,(De Facto) Percent of teachers proficient in the subjects they teach - Rural,15.78755629
-SE.PRM.CONT.1.U,(De Facto) Percent of teachers proficient in the subjects they teach - Urban,4.349449404
-SE.PRM.CONT.2,(De Facto) Percent of teachers proficient in the subject of language,4.530941859
-SE.PRM.CONT.2.F,(De Facto) Percent of teachers proficient in the subject of language - Female,2.112462075
-SE.PRM.CONT.2.M,(De Facto) Percent of teachers proficient in the subject of language - Male,7.052436018
-SE.PRM.CONT.2.R,(De Facto) Percent of teachers proficient in the subject of language - Rural,12.94608052
-SE.PRM.CONT.2.U,(De Facto) Percent of teachers proficient in the subject of language - Urban,2.639443649
-SE.PRM.CONT.3,(De Facto) Percent of teachers proficient in the subject of mathematics,7.553311525
-SE.PRM.CONT.3.F,(De Facto) Percent of teachers proficient in the subject of mathematics - Female,11.1684562
-SE.PRM.CONT.3.M,(De Facto) Percent of teachers proficient in the subject of mathematics - Male,6.008126482
-SE.PRM.CONT.3.R,(De Facto) Percent of teachers proficient in the subject of mathematics - Rural,14.17296071
-SE.PRM.CONT.3.U,(De Facto) Percent of teachers proficient in the subject of mathematics - Urban,6.635947382
-SE.PRM.EFFT,Teacher Presence,65.54226033
-SE.PRM.EFFT.1,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit",60.16513661
-SE.PRM.EFFT.1.F,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Female",61.21041712
-SE.PRM.EFFT.1.M,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Male",60.39999209
-SE.PRM.EFFT.1.R,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Rural",64.8042083
-SE.PRM.EFFT.1.U,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Urban",58.68875116
-SE.PRM.EFFT.2,(De Facto) Percent of teachers present in their schools during an announced visit,65.54226033
-SE.PRM.EFFT.2.F,(De Facto) Percent of teachers present in their schools during an announced visit - Female,67.09217631
-SE.PRM.EFFT.2.M,(De Facto) Percent of teachers present in their schools during an announced visit - Male,65.17276817
-SE.PRM.EFFT.2.R,(De Facto) Percent of teachers present in their schools during an announced visit - Rural,73.49155081
-SE.PRM.EFFT.2.U,(De Facto) Percent of teachers present in their schools during an announced visit - Urban,63.61773127
-SE.PRM.ILDR,Instructional Leadership,3.902261214
-SE.PRM.ILDR.1,(De Facto) Average score for the presence and quality of instructional leadership,3.902261214
-SE.PRM.ILDR.1.F,(De Facto) Average score for the presence and quality of instructional leadership - Female,3.953273198
-SE.PRM.ILDR.1.M,(De Facto) Average score for the presence and quality of instructional leadership - Male,3.904345782
-SE.PRM.ILDR.1.R,(De Facto) Average score for the presence and quality of instructional leadership - Rural,3.301944895
-SE.PRM.ILDR.1.U,(De Facto) Average score for the presence and quality of instructional leadership - Urban,3.991242691
-SE.PRM.ILDR.2,(De Facto) Percent of teachers reporting having had their class observed,83.90832545
-SE.PRM.ILDR.2.F,(De Facto) Percent of teachers reporting having had their class observed - Female,88.13827895
-SE.PRM.ILDR.2.M,(De Facto) Percent of teachers reporting having had their class observed - Male,83.73620133
-SE.PRM.ILDR.2.R,(De Facto) Percent of teachers reporting having had their class observed - Rural,69.66561529
-SE.PRM.ILDR.2.U,(De Facto) Percent of teachers reporting having had their class observed - Urban,86.1589572
-SE.PRM.ILDR.3,(De Facto) Percent of teachers reporting that the classroom observation happened recently,82.13609318
-SE.PRM.ILDR.3.F,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Female,85.03598568
-SE.PRM.ILDR.3.M,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Male,82.07143284
-SE.PRM.ILDR.3.R,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Rural,69.28767562
-SE.PRM.ILDR.3.U,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Urban,84.1032083
-SE.PRM.ILDR.4,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation,64.80091988
-SE.PRM.ILDR.4.F,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Female,61.07490232
-SE.PRM.ILDR.4.M,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Male,64.97354053
-SE.PRM.ILDR.4.R,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Rural,44.0087608
-SE.PRM.ILDR.4.U,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Urban,67.86206935
-SE.PRM.ILDR.5,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes,21.51228248
-SE.PRM.ILDR.5.F,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Female,6.751696099
-SE.PRM.ILDR.5.M,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Male,22.08026029
-SE.PRM.ILDR.5.R,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Rural,21.14345347
-SE.PRM.ILDR.5.U,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Urban,21.88604468
-SE.PRM.ILDR.6,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion,77.50229227
-SE.PRM.ILDR.6.F,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Female,82.8036952
-SE.PRM.ILDR.6.M,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Male,77.36384277
-SE.PRM.ILDR.6.R,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Rural,58.76434814
-SE.PRM.ILDR.6.U,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Urban,80.39612688
-SE.PRM.ILDR.7,(De Facto) Percent of teachers reporting having lesson plans,28.84346727
-SE.PRM.ILDR.7.F,(De Facto) Percent of teachers reporting having lesson plans - Female,18.03738178
-SE.PRM.ILDR.7.M,(De Facto) Percent of teachers reporting having lesson plans - Male,29.39296605
-SE.PRM.ILDR.7.R,(De Facto) Percent of teachers reporting having lesson plans - Rural,43.72206758
-SE.PRM.ILDR.7.U,(De Facto) Percent of teachers reporting having lesson plans - Urban,26.55802488
-SE.PRM.ILDR.8,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)",75.61897114
-SE.PRM.ILDR.8.F,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Female",75.47640267
-SE.PRM.ILDR.8.M,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Male",75.97990123
-SE.PRM.ILDR.8.R,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Rural",65.90059609
-SE.PRM.ILDR.8.U,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Urban",77.03639431
-SE.PRM.IMON,Policy Lever (Inputs & Infrastructure) - Monitoring,3.322595902
-SE.PRM.IMON.1,(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students,0.913749889
-SE.PRM.IMON.10,(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored,-999
-SE.PRM.IMON.2,(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic inputs,0.442825294
-SE.PRM.IMON.3,(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs,1.17737137
-SE.PRM.IMON.4,(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available,0.853327045
-SE.PRM.IMON.5,(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic infrastructure,0.898232093
-SE.PRM.IMON.6,(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure,0.84048612
-SE.PRM.IMON.7,(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?,-999
-SE.PRM.IMON.8,(De Jure) Number of basic inputs clearly articulated as needing to be monitored,-999
-SE.PRM.IMON.9,(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?,-999
-SE.PRM.IMON.DF,(De Facto) Policy Lever (Inputs & Infrastructure) - Monitoring,3.322595902
-SE.PRM.IMON.DJ,(De Jure) Policy Lever (Inputs & Infrastructure) - Monitoring,-999
-SE.PRM.INFR,Basic Infrastructure,2.653581325
-SE.PRM.INFR.1,(De Facto) Average number of infrastructure aspects present in schools,2.653581325
-SE.PRM.INFR.1.R,(De Facto) Average number of infrastructure aspects present in schools - Rural,1.395159834
-SE.PRM.INFR.1.U,(De Facto) Average number of infrastructure aspects present in schools - Urban,2.846923373
-SE.PRM.INFR.2,(De Facto) Percent of schools with drinking water,69.60261506
-SE.PRM.INFR.2.R,(De Facto) Percent of schools with drinking water - Rural,36.92936216
-SE.PRM.INFR.2.U,(De Facto) Percent of schools with drinking water - Urban,74.81658317
-SE.PRM.INFR.3,(De Facto) Percent of schools with functioning toilets,41.33664642
-SE.PRM.INFR.3.R,(De Facto) Percent of schools with functioning toilets - Rural,17.5166586
-SE.PRM.INFR.3.U,(De Facto) Percent of schools with functioning toilets - Urban,45.08178666
-SE.PRM.INFR.4,(De Facto) Percent of schools with access to electricity,70.26252849
-SE.PRM.INFR.4.R,(De Facto) Percent of schools with access to electricity - Rural,21.163508
-SE.PRM.INFR.4.U,(De Facto) Percent of schools with access to electricity - Urban,78.00234378
-SE.PRM.INFR.5,(De Facto) Percent of schools with access to internet,15.8347772
-SE.PRM.INFR.5.R,(De Facto) Percent of schools with access to internet - Rural,6.04019026
-SE.PRM.INFR.5.U,(De Facto) Percent of schools with access to internet - Urban,16.38632438
-SE.PRM.INFR.6,(De Facto) Percent of schools accessible to children with special needs,67.65781418
-SE.PRM.INFR.6.R,(De Facto) Percent of schools accessible to children with special needs - Rural,57.90262998
-SE.PRM.INFR.6.U,(De Facto) Percent of schools accessible to children with special needs - Urban,69.42292675
-SE.PRM.INPT,Basic Inputs,3.154934788
-SE.PRM.INPT.1,(De Facto) Average number of classroom inputs in classrooms,3.154934788
-SE.PRM.INPT.1.R,(De Facto) Average number of classroom inputs in classrooms - Rural,2.513312415
-SE.PRM.INPT.1.U,(De Facto) Average number of classroom inputs in classrooms - Urban,3.248785424
-SE.PRM.INPT.2,(De Facto) Percent of classrooms with a functional blackboard and chalk,90.46369604
-SE.PRM.INPT.2.R,(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural,82.96356641
-SE.PRM.INPT.2.U,(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban,NA
-SE.PRM.INPT.3,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",59.0744876
-SE.PRM.INPT.3.R,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",43.97672264
-SE.PRM.INPT.3.U,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",60.44358659
-SE.PRM.INPT.4,(De Facto) Percent of classrooms with basic classroom furniture,96.67256678
-SE.PRM.INPT.4.R,(De Facto) Percent of classrooms with basic classroom furniture - Rural,85.56973361
-SE.PRM.INPT.4.U,(De Facto) Percent of classrooms with basic classroom furniture - Urban,98.97295391
-SE.PRM.INPT.5,(De Facto) Percent of schools with access to EdTech,56.32280372
-SE.PRM.INPT.5.R,(De Facto) Percent of schools with access to EdTech - Rural,13.89606191
-SE.PRM.INPT.5.U,(De Facto) Percent of schools with access to EdTech - Urban,62.73556663
-SE.PRM.ISTD,Policy Lever (Inputs & Infrastructure) - Standards,4.450442117
-SE.PRM.ISTD.1,(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?,1
-SE.PRM.ISTD.10,(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?,89.34802491
-SE.PRM.ISTD.11,(De Jure) Is there a policy in place to require that schools have functioning toilets?,1
-SE.PRM.ISTD.12,(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?,97.84566764
-SE.PRM.ISTD.13,(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?,1
-SE.PRM.ISTD.14,(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with special needs?,86.98946934
-SE.PRM.ISTD.2,(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?,96.5748612
-SE.PRM.ISTD.3,(De Jure) Is there a national connectivity program?,1
-SE.PRM.ISTD.4,(De Facto) Do you know if there is a national connectivity program?,-999
-SE.PRM.ISTD.5,"(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",0
-SE.PRM.ISTD.6,"(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",72.48519719
-SE.PRM.ISTD.7,(De Jure) Is there a policy in place to require that schools have access to electricity?,1
-SE.PRM.ISTD.8,(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?,92.36883682
-SE.PRM.ISTD.9,(De Jure) Is there a policy in place to require that schools have access to drinking water?,1
-SE.PRM.ISTD.DF,(De Facto) Policy Lever (Inputs & Infrastructure) - Standards,4.450442117
-SE.PRM.ISTD.DJ,(De Jure) Policy Lever (Inputs & Infrastructure) - Standards,4.5
-SE.PRM.LCAP,Student Readiness,34.88689519
-SE.PRM.LCAP.1,(De Facto) Average developmental score for 1st Graders,72.24112824
-SE.PRM.LCAP.1.F,(De Facto) Average developmental score for 1st Graders - Female,71.278599
-SE.PRM.LCAP.1.M,(De Facto) Average developmental score for 1st Graders - Male,75.59592644
-SE.PRM.LCAP.1.R,(De Facto) Average developmental score for 1st Graders - Rural,63.30895635
-SE.PRM.LCAP.1.U,(De Facto) Average developmental score for 1st Graders - Urban,73.71151082
-SE.PRM.LCAP.2,(De Facto) Average numeracy score for 1st Graders,91.97448917
-SE.PRM.LCAP.2.F,(De Facto) Average numeracy score for 1st Graders - Female,92.14373628
-SE.PRM.LCAP.2.M,(De Facto) Average numeracy score for 1st Graders - Male,93.59502743
-SE.PRM.LCAP.2.R,(De Facto) Average numeracy score for 1st Graders - Rural,84.3004007
-SE.PRM.LCAP.2.U,(De Facto) Average numeracy score for 1st Graders - Urban,93.20314985
-SE.PRM.LCAP.3,(De Facto) Average literacy score for 1st Graders,74.98457049
-SE.PRM.LCAP.3.F,(De Facto) Average literacy score for 1st Graders - Female,74.4735188
-SE.PRM.LCAP.3.M,(De Facto) Average literacy score for 1st Graders - Male,78.06401909
-SE.PRM.LCAP.3.R,(De Facto) Average literacy score for 1st Graders - Rural,66.88308745
-SE.PRM.LCAP.3.U,(De Facto) Average literacy score for 1st Graders - Urban,76.07429488
-SE.PRM.LCAP.4,(De Facto) Average executive funcion score for 1st Graders,70.88636989
-SE.PRM.LCAP.4.F,(De Facto) Average executive funcion score for 1st Graders - Female,67.47005229
-SE.PRM.LCAP.4.M,(De Facto) Average executive funcion score for 1st Graders - Male,74.41378387
-SE.PRM.LCAP.4.R,(De Facto) Average executive funcion score for 1st Graders - Rural,64.0855723
-SE.PRM.LCAP.4.U,(De Facto) Average executive funcion score for 1st Graders - Urban,72.32626442
-SE.PRM.LCAP.5,(De Facto) Average socioemotional score for 1st Graders,51.11908898
-SE.PRM.LCAP.5.F,(De Facto) Average socioemotional score for 1st Graders - Female,51.02709863
-SE.PRM.LCAP.5.M,(De Facto) Average socioemotional score for 1st Graders - Male,56.31087257
-SE.PRM.LCAP.5.R,(De Facto) Average socioemotional score for 1st Graders - Rural,37.96677494
-SE.PRM.LCAP.5.U,(De Facto) Average socioemotional score for 1st Graders - Urban,53.24232693
-SE.PRM.LCBC,Policy Lever (Learners) - Center-Based Care,NA
-SE.PRM.LCBC.1,(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary education (for children age 0-83 months)?,1
-SE.PRM.LCBC.2,(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme,NA
-SE.PRM.LCBC.3,(De Jure) Are there developmental standards established for early childhood care and education?,1
-SE.PRM.LCBC.4,"(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary teacher?",3
-SE.PRM.LCBC.5,"(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-service training in ECCE service delivery?",0
-SE.PRM.LCBC.DF,(De Facto) Policy Lever (Learners) - Center-Based Care,NA
-SE.PRM.LCBC.DJ,(De Jure) Policy Lever (Learners) - Center-Based Care,4
-SE.PRM.LERN,Proficiency on GEPD Assessment,3.180073306
-SE.PRM.LERN.1,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey,3.180073306
-SE.PRM.LERN.1.F,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Female,3.160514217
-SE.PRM.LERN.1.M,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Male,3.14724919
-SE.PRM.LERN.1.R,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Rural,3.080352738
-SE.PRM.LERN.1.U,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Urban,2.949043815
-SE.PRM.LERN.2,(De Facto) Percent of children proficient in literacy according to GEPD School Survey,5.389237132
-SE.PRM.LERN.2.F,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Female,5.455897684
-SE.PRM.LERN.2.M,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Male,5.562469133
-SE.PRM.LERN.2.R,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Rural,4.926794359
-SE.PRM.LERN.2.U,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Urban,5.16521929
-SE.PRM.LERN.3,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey,6.410130376
-SE.PRM.LERN.3.F,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Female,5.318192687
-SE.PRM.LERN.3.M,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Male,6.897078029
-SE.PRM.LERN.3.R,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Rural,8.693410063
-SE.PRM.LERN.3.U,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Urban,5.828149833
-SE.PRM.LFCP,Policy Lever (Learners) - Caregiver Capacity – Financial Capacity,2.204
-SE.PRM.LFCP.1,(De Jure) Are anti poverty interventions that focus on ECD publicly supported?,NA
-SE.PRM.LFCP.2,(De Jure) Are cash transfers conditional on ECD services/enrollment publicly supported?,-999
-SE.PRM.LFCP.3,(De Jure) Are cash transfers focused partially on ECD publicly supported?,-999
-SE.PRM.LFCP.4,(De Facto) Coverage of social protection programs,30.1
-SE.PRM.LFCP.DF,(De Facto) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity,2.204
-SE.PRM.LFCP.DJ,(De Jure) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity,NA
-SE.PRM.LHTH,Policy Lever (Learners) - Health,2.593333
-SE.PRM.LHTH.1,(De Jure) Are young children required to receive a complete course of childhood immunizations?,1
-SE.PRM.LHTH.2,(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immunization schedule,71
-SE.PRM.LHTH.3,(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free or by subsidizing them,1
-SE.PRM.LHTH.4,(De Facto) Percent of  children under 5 covered by health insurance,NA
-SE.PRM.LHTH.5,(De Jure) Are deworming pills funded and distributed by the government?,1
-SE.PRM.LHTH.6,(De Facto) Percent of children age 6-59 months who received deworming medication,71.28
-SE.PRM.LHTH.7,(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?,2
-SE.PRM.LHTH.8,(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility,47.5
-SE.PRM.LHTH.DF,(De Facto) Policy Lever (Learners) - Health,2.593333
-SE.PRM.LHTH.DJ,(De Jure) Policy Lever (Learners) - Health,5
-SE.PRM.LNTN,Policy Lever (Learners) - Nutrition Programs,3.181873581
-SE.PRM.LNTN.1,(De Jure) Does a national policy to encourage salt iodization exist?,1
-SE.PRM.LNTN.2,(De Facto) Percent of households with salt testing positive for any iodide among households,85.6
-SE.PRM.LNTN.3,"(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?",1
-SE.PRM.LNTN.4,(De Facto) Percent of children age 6–23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day,13.5
-SE.PRM.LNTN.5,(De Jure) Does a national policy exist to encourage breastfeeding?,1
-SE.PRM.LNTN.6,(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed,95.5
-SE.PRM.LNTN.7,(De Jure) Is there a publicly funded school feeding program?,0
-SE.PRM.LNTN.8,(De Facto) Percent of schools reporting having publicly funded school feeding program,23.58735451
-SE.PRM.LNTN.DF,(De Facto) Policy Lever (Learners) - Nutrition Programs,3.181873581
-SE.PRM.LNTN.DJ,(De Jure) Policy Lever (Learners) - Nutrition Programs,4
-SE.PRM.LSKC,Policy Lever (Learners) - Caregiver Capacity – Skills Capacity,NA
-SE.PRM.LSKC.1,(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?,0
-SE.PRM.LSKC.2,"(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early childhood stimulation? Home visits, Group sessions, Community health programs, Health center waiting rooms, School-based groups, Mass media/Information campaigns",1
-SE.PRM.LSKC.3,(De Facto) Percent of children under age 5 who have three or more children’s books,-999
-SE.PRM.LSKC.4,(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household,NA
-SE.PRM.LSKC.DF,(De Facto) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity,NA
-SE.PRM.LSKC.DJ,(De Jure) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity,2
-SE.PRM.OPMN,Operational Management,3.80727836
-SE.PRM.OPMN.1,(De Facto) Average score for the presence and quality of core operational management functions,3.80727836
-SE.PRM.OPMN.1.F,(De Facto) Average score for the presence and quality of core operational management functions - Female,3.806040104
-SE.PRM.OPMN.1.M,(De Facto) Average score for the presence and quality of core operational management functions - Male,3.805682355
-SE.PRM.OPMN.1.R,(De Facto) Average score for the presence and quality of core operational management functions - Rural,3.753834744
-SE.PRM.OPMN.1.U,(De Facto) Average score for the presence and quality of core operational management functions - Urban,3.804282151
-SE.PRM.OPMN.2,(De Facto) Average score for infrastructure repair/maintenance,3.751044228
-SE.PRM.OPMN.2.F,(De Facto) Average score for infrastructure repair/maintenance - Female,4.001608967
-SE.PRM.OPMN.2.M,(De Facto) Average score for infrastructure repair/maintenance - Male,3.737404963
-SE.PRM.OPMN.2.R,(De Facto) Average score for infrastructure repair/maintenance - Rural,3.649731088
-SE.PRM.OPMN.2.U,(De Facto) Average score for infrastructure repair/maintenance - Urban,3.750661487
-SE.PRM.OPMN.3,(De Facto) Average score for ensuring  availability of school inputs,3.863512852
-SE.PRM.OPMN.3.F,(De Facto) Average score for ensuring  availability of school inputs - Female,3.610470882
-SE.PRM.OPMN.3.M,(De Facto) Average score for ensuring  availability of school inputs - Male,3.873959746
-SE.PRM.OPMN.3.R,(De Facto) Average score for ensuring  availability of school inputs - Rural,3.857937761
-SE.PRM.OPMN.3.U,(De Facto) Average score for ensuring  availability of school inputs - Urban,3.857902815
-SE.PRM.PEDG,Teacher Pedagogical Skills,19.1137185
-SE.PRM.PEDG.1,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score),19.1137185
-SE.PRM.PEDG.1.F,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Female,NA
-SE.PRM.PEDG.1.M,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Male,NA
-SE.PRM.PEDG.1.R,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Rural,6.105417197
-SE.PRM.PEDG.1.U,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Urban,23.23384122
-SE.PRM.PEDG.2,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score),50.67248379
-SE.PRM.PEDG.2.F,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Female,NA
-SE.PRM.PEDG.2.M,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Male,NA
-SE.PRM.PEDG.2.R,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Rural,47.75858462
-SE.PRM.PEDG.2.U,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Urban,48.48841107
-SE.PRM.PEDG.3,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score),35.43440551
-SE.PRM.PEDG.3.F,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Female,NA
-SE.PRM.PEDG.3.M,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Male,NA
-SE.PRM.PEDG.3.R,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Rural,17.27526272
-SE.PRM.PEDG.3.U,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Urban,43.21353983
-SE.PRM.PEDG.4,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score),7.210922575
-SE.PRM.PEDG.4.F,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Female,NA
-SE.PRM.PEDG.4.M,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Male,NA
-SE.PRM.PEDG.4.R,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Rural,4.44410092
-SE.PRM.PEDG.4.U,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Urban,5.507562503
-SE.PRM.PKNW,Principal School Knowledge,3.252897981
-SE.PRM.PKNW.1,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school,3.252897981
-SE.PRM.PKNW.1.F,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Female,3.445708636
-SE.PRM.PKNW.1.M,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Male,3.245240867
-SE.PRM.PKNW.1.R,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Rural,3.406062477
-SE.PRM.PKNW.1.U,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Urban,3.211430302
-SE.PRM.PKNW.2,(De Facto) Percent of principals familiar with teachers' content knowledge,61.26653403
-SE.PRM.PKNW.2.F,(De Facto) Percent of principals familiar with teachers' content knowledge - Female,60.70519437
-SE.PRM.PKNW.2.M,(De Facto) Percent of principals familiar with teachers' content knowledge - Male,61.36455695
-SE.PRM.PKNW.2.R,(De Facto) Percent of principals familiar with teachers' content knowledge - Rural,69.31016355
-SE.PRM.PKNW.2.U,(De Facto) Percent of principals familiar with teachers' content knowledge - Urban,59.89324886
-SE.PRM.PKNW.3,(De Facto) Percent of principals familiar with teachers' experience,99.8787847
-SE.PRM.PKNW.3.F,(De Facto) Percent of principals familiar with teachers' experience - Female,100
-SE.PRM.PKNW.3.M,(De Facto) Percent of principals familiar with teachers' experience - Male,99.87258242
-SE.PRM.PKNW.3.R,(De Facto) Percent of principals familiar with teachers' experience - Rural,99.1078957
-SE.PRM.PKNW.3.U,(De Facto) Percent of principals familiar with teachers' experience - Urban,100
-SE.PRM.PKNW.4,(De Facto) Percent of principals familiar with availability of classroom inputs,70.56373678
-SE.PRM.PKNW.4.F,(De Facto) Percent of principals familiar with availability of classroom inputs - Female,82.39057367
-SE.PRM.PKNW.4.M,(De Facto) Percent of principals familiar with availability of classroom inputs - Male,70.03560257
-SE.PRM.PKNW.4.R,(De Facto) Percent of principals familiar with availability of classroom inputs - Rural,65.11289202
-SE.PRM.PKNW.4.U,(De Facto) Percent of principals familiar with availability of classroom inputs - Urban,71.02541406
-SE.PRM.PMAN,Principal Management Skills,4.207930181
-SE.PRM.PMAN.1,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term",4.207930181
-SE.PRM.PMAN.1.F,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Female",4.151182679
-SE.PRM.PMAN.1.M,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Male",4.207480008
-SE.PRM.PMAN.1.R,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Rural",3.78707988
-SE.PRM.PMAN.1.U,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Urban",4.282277905
-SE.PRM.PMAN.2,(De Facto) Average score for the extent to which principals master problem-solving in the short-term,4.446056831
-SE.PRM.PMAN.2.F,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Female,4.482038454
-SE.PRM.PMAN.2.M,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Male,4.441800526
-SE.PRM.PMAN.2.R,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Rural,4.009007819
-SE.PRM.PMAN.2.U,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Urban,4.515840065
-SE.PRM.PMAN.3,(De Facto) Average score for the extent to which principals master goal-setting in the long term,3.969803532
-SE.PRM.PMAN.3.F,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Female,3.820326544
-SE.PRM.PMAN.3.M,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Male,3.973159489
-SE.PRM.PMAN.3.R,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Rural,3.565151582
-SE.PRM.PMAN.3.U,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Urban,4.048716104
-SE.PRM.PROE,Proficiency by Grade 2/3,-999
-SE.PRM.PROE.1,"(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS",-999
-SE.PRM.SATT,Policy Lever (School Management) - Attraction,4.529661116
-SE.PRM.SATT.1,(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as professionalized and distinct figure within schools?,1
-SE.PRM.SATT.2,(De Facto) Average principal salary as percent of GDP per capita,3.08873821
-SE.PRM.SATT.3,(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community,4.184536621
-SE.PRM.SATT.DF,(De Facto) Policy Lever (School Management) - Attraction,4.529661116
-SE.PRM.SATT.DJ,(De Jure) Policy Lever (School Management) - Attraction,5
-SE.PRM.SCFN,Policy Lever (School Management) - Clarity of Functions,4.972972626
-SE.PRM.SCFN.1,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance and expansion of school infrastructure?,99.62609625
-SE.PRM.SCFN.10,(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?,1
-SE.PRM.SCFN.11,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hiring and assignment?,100
-SE.PRM.SCFN.12,(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?,1
-SE.PRM.SCFN.13,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal supervision and training?,99.86974258
-SE.PRM.SCFN.14,(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?,1
-SE.PRM.SCFN.2,(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastructure?,1
-SE.PRM.SCFN.3,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement of materials?,95.48432552
-SE.PRM.SCFN.4,(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?,1
-SE.PRM.SCFN.5,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring and assignment?,99.81395556
-SE.PRM.SCFN.6,(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?,1
-SE.PRM.SCFN.7,"(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervision, training, and coaching?",100
-SE.PRM.SCFN.8,"(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?",1
-SE.PRM.SCFN.9,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learning assessments?,99.90019742
-SE.PRM.SCFN.DF,(De Facto) Policy Lever (School Management) - Clarity of Functions,4.972972626
-SE.PRM.SCFN.DJ,(De Jure) Policy Lever (School Management) - Clarity of Functions,5
-SE.PRM.SEVL,Policy Lever (School Management) - Evaluation,4.654731368
-SE.PRM.SEVL.1,(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?,1
-SE.PRM.SEVL.2,(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?,3
-SE.PRM.SEVL.3,(De Facto) Percent of principals that report having been evaluated  during the last school year,93.61863401
-SE.PRM.SEVL.4,(De Facto) Percent of principals that report having been evaluated on multiple factors,96.55366853
-SE.PRM.SEVL.5,(De Facto) Percent of principals that report there would be consequences after two negative evaluations,54.55288835
-SE.PRM.SEVL.6,(De Facto) Percent of principals that report there would be consequences after two positive evaluations,51.95839422
-SE.PRM.SEVL.DF,(De Facto) Policy Lever (School Management) - Evaluation,4.654731368
-SE.PRM.SEVL.DJ,(De Jure) Policy Lever (School Management) - Evaluation,5
-SE.PRM.SSLD,Policy Lever (School Management) - Selection & Deployment,4.59623324
-SE.PRM.SSLD.1,(De Jure) Is there a systematic approach/rubric for the selection of principals?,1
-SE.PRM.SSLD.10,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is years of experience,26.68661527
-SE.PRM.SSLD.11,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is quality of teaching,11.79343898
-SE.PRM.SSLD.12,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is demonstrated management qualities,56.37138317
-SE.PRM.SSLD.13,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is having a good relationship with the owner of the school,0.248058263
-SE.PRM.SSLD.14,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is political affiliations,2.107995879
-SE.PRM.SSLD.15,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is ethnic group,0
-SE.PRM.SSLD.16,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is knowledge of the local community,1.798651103
-SE.PRM.SSLD.2,"(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?",4
-SE.PRM.SSLD.3,(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of experience,98.31630053
-SE.PRM.SSLD.4,(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of teaching,77.95169963
-SE.PRM.SSLD.5,(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated management qualities,95.73093626
-SE.PRM.SSLD.6,(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relationship with the owner of the school,25.90356476
-SE.PRM.SSLD.7,(De Facto) Percent of principals that report that the factors considered when selecting a principal include political affiliations,23.73431894
-SE.PRM.SSLD.8,(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group,-999
-SE.PRM.SSLD.9,(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of the local community,69.18076412
-SE.PRM.SSLD.DF,(De Facto) Policy Lever (School Management) - Selection & Deployment,4.59623324
-SE.PRM.SSLD.DJ,(De Jure) Policy Lever (School Management) - Selection & Deployment,4.4
-SE.PRM.SSUP,Policy Lever (School Management) - Support,3.02237656
-SE.PRM.SSUP.1,(De Jure) Are principals required to have training on how to manage a school?,1
-SE.PRM.SSUP.10,(De Facto) Percent of principals that report having used the skills they gained at the last training they attended,99.37570151
-SE.PRM.SSUP.11,(De Facto) Average number of trainings that principals report having been offered to them in the past year,2.015190668
-SE.PRM.SSUP.2,(De Jure) Are principals required to have management training for new principals?,1
-SE.PRM.SSUP.3,(De Jure) Are principals required to have in-service training?,1
-SE.PRM.SSUP.4,(De Jure) Are principals required to have mentoring/coaching by experienced principals?,0
-SE.PRM.SSUP.5,(De Jure) How many times per year do principals have trainings?,1
-SE.PRM.SSUP.6,(De Facto) Percent of principals that report ever having received formal training,68.90426984
-SE.PRM.SSUP.7,(De Facto) Percent of principals that report having received management training for new principals,50.17966186
-SE.PRM.SSUP.8,(De Facto) Percent of principals that report having received in-service training,65.75748591
-SE.PRM.SSUP.9,(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals,45.48998942
-SE.PRM.SSUP.DF,(De Facto) Policy Lever (School Management) - Support,3.02237656
-SE.PRM.SSUP.DJ,(De Jure) Policy Lever (School Management) - Support,4.333333
-SE.PRM.TATT,Policy Lever (Teaching) - Attraction,3.563082131
-SE.PRM.TATT.1,(De Jure) Average starting public-school teacher salary as percent of GDP per capita,128.3722
-SE.PRM.TATT.2,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community,83.36900031
-SE.PRM.TATT.3,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher,84.55948135
-SE.PRM.TATT.4,(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries,7.775960381
-SE.PRM.TATT.5,(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas,0.223985205
-SE.PRM.TATT.6,(De Facto) Percent of teachers that performance matters for promotions,49.02610911
-SE.PRM.TATT.7,(De Jure) Is there a well-established career path for teachers?,-999
-SE.PRM.TATT.8,(De Facto) Percent of teachers that report salary delays in the past 12 months,48.87266547
-SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,3.563082131
-SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,5
-SE.PRM.TENR,Net Adjusted Enrollment Rate,85.19824
-SE.PRM.TENR.1,(De Facto) Percent of primary school age children who are enrolled at primary education,85.19824
-SE.PRM.TEVL,Policy Lever (Teaching) - Evaluation,4.155130829
-SE.PRM.TEVL.1,"(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national, regional, local)",0
-SE.PRM.TEVL.2,(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools,0
-SE.PRM.TEVL.3,(De Facto) Percent of teachers that report being evaluated in the past 12 months,78.74252649
-SE.PRM.TEVL.4,(De Jure) The criteria to evaluate teachers is clear,0.8
-SE.PRM.TEVL.5,(De Facto) Number of criteria used to evaluate teachers,3.818180743
-SE.PRM.TEVL.6,(De Facto) Percent of teachers that report there would be consequences after two negative evaluations,97.88879597
-SE.PRM.TEVL.7,(De Facto) Percent of teachers that report there would be consequences after two positive evaluations,92.15401141
-SE.PRM.TEVL.8,(De Jure) There are clear consequences for teachers who receive two or more negative evaluations,1
-SE.PRM.TEVL.9,(De Jure) There are clear consequences for teachers who receive two or more positive evaluations,0
-SE.PRM.TEVL.DF,(De Facto) Policy Lever (Teaching) - Evaluation,4.155130829
-SE.PRM.TEVL.DJ,(De Jure) Policy Lever (Teaching) - Evaluation,2.4
-SE.PRM.TINM,Policy Lever (Teaching) - Intrinsic Motivation,3.500266451
-SE.PRM.TINM.1,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the assigned curriculum has been completed""",14.4030921
-SE.PRM.TINM.10,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can change even their basic intelligence level considerably""",86.06655569
-SE.PRM.TINM.11,(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers,0.694258274
-SE.PRM.TINM.12,(De Facto) New teachers are required to undergo a probationary period,0.417608
-SE.PRM.TINM.13,(De Jure) New teachers are required to undergo a probationary period,1
-SE.PRM.TINM.2,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if students are left with work to do""",3.243287645
-SE.PRM.TINM.3,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the teacher is doing something useful for the community""",10.04401889
-SE.PRM.TINM.4,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they attend school regularly""",65.67840759
-SE.PRM.TINM.5,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they come to school with materials""",66.20423303
-SE.PRM.TINM.6,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they are motivated to learn""",68.88148453
-SE.PRM.TINM.7,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students have a certain amount of intelligence and they really can’t do much to change it""",21.22675711
-SE.PRM.TINM.8,"(De Facto) Percent of teachers that agree or strongly agrees with ""To be honest, students can’t really change how intelligent they are""",34.49436687
-SE.PRM.TINM.9,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can always substantially change how intelligent they are""",81.55070424
-SE.PRM.TINM.DF,(De Facto) Policy Lever (Teaching) - Intrinsic Motivation,3.500266451
-SE.PRM.TINM.DJ,(De Jure) Policy Lever (Teaching) - Intrinsic Motivation,5
-SE.PRM.TMNA,Policy Lever (Teaching) - Monitoring & Accountability,3.034815469
-SE.PRM.TMNA.1,(De Jure) Information on teacher presence/absenteeism is being collected on a regular basis,0
-SE.PRM.TMNA.2,(De Jure) Teachers receive monetary compensation for being present,0
-SE.PRM.TMNA.3,(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present,2.430919678
-SE.PRM.TMNA.4,(De Facto) Percent of teachers that report having been absent because of administrative processes,27.67187511
-SE.PRM.TMNA.5,(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time,79.99088151
-SE.PRM.TMNA.DF,(De Facto) Policy Lever (Teaching) - Monitoring & Accountability,3.034815469
-SE.PRM.TMNA.DJ,(De Jure) Policy Lever (Teaching) - Monitoring & Accountability,1
-SE.PRM.TSDP,Policy Lever (Teaching) - Selection & Deployment,4.031134218
-SE.PRM.TSDP.1,(De Jure) Requirements to enter into initial education programs,3
-SE.PRM.TSDP.2,(De Facto) Average quality of applicants accepted into initial education programs,-999
-SE.PRM.TSDP.3,(De Jure) Requirements to become a primary school teacher,2
-SE.PRM.TSDP.4,(De Facto) Requirements to become a primary school teacher,1.723566163
-SE.PRM.TSDP.5,(De Jure) Requirements to fulfill a transfer request,3
-SE.PRM.TSDP.6,(De Facto) Requirements to fulfill a transfer request,1.307567415
-SE.PRM.TSDP.7,(De Jure) Selectivity of teacher hiring process,-999
-SE.PRM.TSDP.DF,(De Facto) Policy Lever (Teaching) - Selection & Deployment,4.031134218
-SE.PRM.TSDP.DJ,(De Jure) Policy Lever (Teaching) - Selection & Deployment,2.666667
-SE.PRM.TSUP,Policy Lever (Teaching) - Support,2.840669899
-SE.PRM.TSUP.1,(De Jure) Practicum required as part of pre-service training,1
-SE.PRM.TSUP.2,(De Facto) Percent reporting they completed a practicum as part of pre-service training,41.4482076
-SE.PRM.TSUP.3,(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program,59.74181436
-SE.PRM.TSUP.4,(De Jure) Participation in professional development has professional implications for teachers,1
-SE.PRM.TSUP.5,(De Facto) Percent of teachers reporting having attended in-service trainings in the past 12 months,29.34024593
-SE.PRM.TSUP.6,(De Facto) Average length of the trainings attended,7.776586006
-SE.PRM.TSUP.7,(De Facto) Average span of time (in weeks) of those trainings,1.819293284
-SE.PRM.TSUP.8,(De Facto) Average percent of time spent inside the classrooms during the trainings,45.65038596
-SE.PRM.TSUP.9,(De Facto) Percent of teachers that report having opportunities to come together with other teachers to discuss ways of improving teaching,72.8835112
-SE.PRM.TSUP.DF,(De Facto) Policy Lever (Teaching) - Support,2.840669899
-SE.PRM.TSUP.DJ,(De Jure) Policy Lever (Teaching) - Support,5
+﻿"Series","Indicator Name","value","value_metadata","year","cty_or_agg","countrycode"
+"SE.GEPD.PRIM","Learning poverty: Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%)",90.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.GEPD.PRIM.1","(De Facto) Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%)",90.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.GEPD.PRIM.BMP","Proficiency by End of Primary",11.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.GEPD.PRIM.BMP.1","(De Facto) Percent of children proficient in literacy and numeracy by end of primary, as reported by UIS",11.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ATTD","Student Attendance",76.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ATTD.1","(De Facto) Percent of 4th grade students present during an unannounced visit",76.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ATTD.1.F","(De Facto) Percent of 4th grade students present during an unannounced visit - Female",75.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ATTD.1.M","(De Facto) Percent of 4th grade students present during an unannounced visit - Male",78.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ATTD.1.R","(De Facto) Percent of 4th grade students present during an unannounced visit - Rural",70.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ATTD.1.U","(De Facto) Percent of 4th grade students present during an unannounced visit - Urban",77.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.BFIN","Politics & Bureaucratic Capacity - Financing",4.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.BFIN.1","Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, efficiency, and equity.",4.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.BFIN.2","(Financing) - Adequacy expressed by the per child spending",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.BFIN.3","(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest",3.5,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BFIN.4","(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.BFIN.5","(Financing) - Equity",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.BIMP","Politics & Bureaucratic Capacity - Impartial Decision-Making",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BIMP.1","Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BIMP.2","(Impartial Decision-Making) average score for politicized personnel management",2.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.BIMP.3","(Impartial Decision-Making) average score for politicized policy-making",3.4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BIMP.4","(Impartial Decision-Making) average score for politicized policy implementation",2.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.BIMP.5","(Impartial Decision-Making) average score for employee unions as facilitators",4.3,"On Target","2020-2021","cty","ETH"
+"SE.PRM.BMAC","Politics & Bureaucratic Capacity - Mandates & Accountability",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BMAC.1","Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BMAC.2","(Mandates & Accountability) Average score for coherence",3.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BMAC.3","(Mandates & Accountability) Average score for transparency",4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BMAC.4","(Mandates & Accountability) Average score for accountability of public officials",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BNLG","Politics & Bureaucratic Capacity - National Learning Goals",3.4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BNLG.1","Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BNLG.2","(National Learning Goals) Average score for targeting",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BNLG.3","(National Learning Goals) Average score for monitoring",3.5,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BNLG.4","(National Learning Goals) Average score for incentives",2.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.BNLG.5","(National Learning Goals) Average score for community engagement",3.5,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BQBR","Politics & Bureaucratic Capacity - Characteristics of Bureaucracy",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BQBR.1","Average score for Characteristics of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BQBR.2","(Characteristics of Bureaucracy) average score for knowledge and skills",4.8,"On Target","2020-2021","cty","ETH"
+"SE.PRM.BQBR.3","(Characteristics of Bureaucracy) average score for work environment",3.7,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BQBR.4","(Characteristics of Bureaucracy) average score for merit",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.BQBR.5","(Characteristics of Bureaucracy) average score for motivation and attitudes",3.5,"Caution","2020-2021","cty","ETH"
+"SE.PRM.CONT","Teacher Content Knowledge",6.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.1","(De Facto) Percent of teachers proficient in the subjects they teach",6.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.1.F","(De Facto) Percent of teachers proficient in the subjects they teach - Female",4.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.1.M","(De Facto) Percent of teachers proficient in the subjects they teach - Male",7.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.1.R","(De Facto) Percent of teachers proficient in the subjects they teach - Rural",15.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.1.U","(De Facto) Percent of teachers proficient in the subjects they teach - Urban",4.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.2","(De Facto) Percent of teachers proficient in the subject of language",4.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.2.F","(De Facto) Percent of teachers proficient in the subject of language - Female",2.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.2.M","(De Facto) Percent of teachers proficient in the subject of language - Male",7.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.2.R","(De Facto) Percent of teachers proficient in the subject of language - Rural",12.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.2.U","(De Facto) Percent of teachers proficient in the subject of language - Urban",2.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.3","(De Facto) Percent of teachers proficient in the subject of mathematics",7.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.3.F","(De Facto) Percent of teachers proficient in the subject of mathematics - Female",11.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.3.M","(De Facto) Percent of teachers proficient in the subject of mathematics - Male",6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.3.R","(De Facto) Percent of teachers proficient in the subject of mathematics - Rural",14.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.CONT.3.U","(De Facto) Percent of teachers proficient in the subject of mathematics - Urban",6.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT","Teacher Presence",65.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.1","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit",60.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.1.F","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Female",61.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.1.M","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Male",60.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.1.R","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Rural",64.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.1.U","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Urban",58.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.2","(De Facto) Percent of teachers present in their schools during an announced visit",65.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.2.F","(De Facto) Percent of teachers present in their schools during an announced visit - Female",67.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.2.M","(De Facto) Percent of teachers present in their schools during an announced visit - Male",65.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.2.R","(De Facto) Percent of teachers present in their schools during an announced visit - Rural",73.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.EFFT.2.U","(De Facto) Percent of teachers present in their schools during an announced visit - Urban",63.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR","Instructional Leadership",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.1","(De Facto) Average score for the presence and quality of instructional leadership",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.1.F","(De Facto) Average score for the presence and quality of instructional leadership - Female",4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.1.M","(De Facto) Average score for the presence and quality of instructional leadership - Male",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.1.R","(De Facto) Average score for the presence and quality of instructional leadership - Rural",3.3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.1.U","(De Facto) Average score for the presence and quality of instructional leadership - Urban",4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.2","(De Facto) Percent of teachers reporting having had their class observed",83.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.2.F","(De Facto) Percent of teachers reporting having had their class observed - Female",88.1,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.2.M","(De Facto) Percent of teachers reporting having had their class observed - Male",83.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.2.R","(De Facto) Percent of teachers reporting having had their class observed - Rural",69.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.2.U","(De Facto) Percent of teachers reporting having had their class observed - Urban",86.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.3","(De Facto) Percent of teachers reporting that the classroom observation happened recently",82.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.3.F","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Female",85,"Caution","2020-2021","cty","ETH"
+"SE.PRM.ILDR.3.M","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Male",82.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.3.R","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Rural",69.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.3.U","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Urban",84.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.4","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation",64.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.4.F","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Female",61.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.4.M","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Male",65,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.4.R","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Rural",44,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.4.U","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Urban",67.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.5","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes",21.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.5.F","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Female",6.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.5.M","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Male",22.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.5.R","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Rural",21.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.5.U","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Urban",21.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.6","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion",77.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.6.F","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Female",82.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.6.M","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Male",77.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.6.R","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Rural",58.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.6.U","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Urban",80.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.7","(De Facto) Percent of teachers reporting having lesson plans",28.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.7.F","(De Facto) Percent of teachers reporting having lesson plans - Female",18,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.7.M","(De Facto) Percent of teachers reporting having lesson plans - Male",29.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.7.R","(De Facto) Percent of teachers reporting having lesson plans - Rural",43.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.7.U","(De Facto) Percent of teachers reporting having lesson plans - Urban",26.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.8","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)",75.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.8.F","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Female",75.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.8.M","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Male",76,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.8.R","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Rural",65.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ILDR.8.U","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Urban",77,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON","Policy Lever (Inputs & Infrastructure) - Monitoring",3.3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.IMON.1","(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students",0.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON.10","(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.IMON.2","(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic inputs",0.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON.3","(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs",1.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON.4","(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available",0.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON.5","(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic infrastructure",0.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON.6","(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure",0.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.IMON.7","(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.IMON.8","(De Jure) Number of basic inputs clearly articulated as needing to be monitored",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.IMON.9","(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.IMON.DF","(De Facto) Policy Lever (Inputs & Infrastructure) - Monitoring",3.3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.IMON.DJ","(De Jure) Policy Lever (Inputs & Infrastructure) - Monitoring",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.INFR","Basic Infrastructure",2.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.1","(De Facto) Average number of infrastructure aspects present in schools",2.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.1.R","(De Facto) Average number of infrastructure aspects present in schools - Rural",1.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.1.U","(De Facto) Average number of infrastructure aspects present in schools - Urban",2.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.2","(De Facto) Percent of schools with drinking water",69.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.2.R","(De Facto) Percent of schools with drinking water - Rural",36.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.2.U","(De Facto) Percent of schools with drinking water - Urban",74.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.3","(De Facto) Percent of schools with functioning toilets",41.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.3.R","(De Facto) Percent of schools with functioning toilets - Rural",17.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.3.U","(De Facto) Percent of schools with functioning toilets - Urban",45.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.4","(De Facto) Percent of schools with access to electricity",70.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.4.R","(De Facto) Percent of schools with access to electricity - Rural",21.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.4.U","(De Facto) Percent of schools with access to electricity - Urban",78,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.5","(De Facto) Percent of schools with access to internet",15.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.5.R","(De Facto) Percent of schools with access to internet - Rural",6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.5.U","(De Facto) Percent of schools with access to internet - Urban",16.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.6","(De Facto) Percent of schools accessible to children with special needs",67.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.6.R","(De Facto) Percent of schools accessible to children with special needs - Rural",57.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INFR.6.U","(De Facto) Percent of schools accessible to children with special needs - Urban",69.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT","Basic Inputs",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.INPT.1","(De Facto) Average number of classroom inputs in classrooms",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.INPT.1.R","(De Facto) Average number of classroom inputs in classrooms - Rural",2.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.1.U","(De Facto) Average number of classroom inputs in classrooms - Urban",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.INPT.2","(De Facto) Percent of classrooms with a functional blackboard and chalk",90.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.INPT.2.R","(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural",83,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.2.U","(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.INPT.3","(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",59.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.3.R","(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",44,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.3.U","(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",60.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.4","(De Facto) Percent of classrooms with basic classroom furniture",96.7,"On Target","2020-2021","cty","ETH"
+"SE.PRM.INPT.4.R","(De Facto) Percent of classrooms with basic classroom furniture - Rural",85.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.INPT.4.U","(De Facto) Percent of classrooms with basic classroom furniture - Urban",99,"On Target","2020-2021","cty","ETH"
+"SE.PRM.INPT.5","(De Facto) Percent of schools with access to EdTech",56.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.5.R","(De Facto) Percent of schools with access to EdTech - Rural",13.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.INPT.5.U","(De Facto) Percent of schools with access to EdTech - Urban",62.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD","Policy Lever (Inputs & Infrastructure) - Standards",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.1","(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.10","(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?",89.3,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.11","(De Jure) Is there a policy in place to require that schools have functioning toilets?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.12","(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?",97.8,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.13","(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.14","(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with special needs?",87,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.2","(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?",96.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.3","(De Jure) Is there a national connectivity program?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.4","(De Facto) Do you know if there is a national connectivity program?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.ISTD.5","(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.6","(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",72.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.7","(De Jure) Is there a policy in place to require that schools have access to electricity?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.8","(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?",92.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.9","(De Jure) Is there a policy in place to require that schools have access to drinking water?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.ISTD.DF","(De Facto) Policy Lever (Inputs & Infrastructure) - Standards",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.ISTD.DJ","(De Jure) Policy Lever (Inputs & Infrastructure) - Standards",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LCAP","Student Readiness",34.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.1","(De Facto) Average developmental score for 1st Graders",72.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.1.F","(De Facto) Average developmental score for 1st Graders - Female",71.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.1.M","(De Facto) Average developmental score for 1st Graders - Male",75.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.1.R","(De Facto) Average developmental score for 1st Graders - Rural",63.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.1.U","(De Facto) Average developmental score for 1st Graders - Urban",73.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.2","(De Facto) Average numeracy score for 1st Graders",92,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LCAP.2.F","(De Facto) Average numeracy score for 1st Graders - Female",92.1,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LCAP.2.M","(De Facto) Average numeracy score for 1st Graders - Male",93.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LCAP.2.R","(De Facto) Average numeracy score for 1st Graders - Rural",84.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.2.U","(De Facto) Average numeracy score for 1st Graders - Urban",93.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LCAP.3","(De Facto) Average literacy score for 1st Graders",75,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.3.F","(De Facto) Average literacy score for 1st Graders - Female",74.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.3.M","(De Facto) Average literacy score for 1st Graders - Male",78.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.3.R","(De Facto) Average literacy score for 1st Graders - Rural",66.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.3.U","(De Facto) Average literacy score for 1st Graders - Urban",76.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.4","(De Facto) Average executive funcion score for 1st Graders",70.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.4.F","(De Facto) Average executive funcion score for 1st Graders - Female",67.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.4.M","(De Facto) Average executive funcion score for 1st Graders - Male",74.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.4.R","(De Facto) Average executive funcion score for 1st Graders - Rural",64.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.4.U","(De Facto) Average executive funcion score for 1st Graders - Urban",72.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.5","(De Facto) Average socioemotional score for 1st Graders",51.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.5.F","(De Facto) Average socioemotional score for 1st Graders - Female",51,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.5.M","(De Facto) Average socioemotional score for 1st Graders - Male",56.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.5.R","(De Facto) Average socioemotional score for 1st Graders - Rural",38,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCAP.5.U","(De Facto) Average socioemotional score for 1st Graders - Urban",53.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCBC","Policy Lever (Learners) - Center-Based Care",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LCBC.1","(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary education (for children age 0-83 months)?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCBC.2","(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LCBC.3","(De Jure) Are there developmental standards established for early childhood care and education?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCBC.4","(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary teacher?",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.LCBC.5","(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-service training in ECCE service delivery?",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LCBC.DF","(De Facto) Policy Lever (Learners) - Center-Based Care",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LCBC.DJ","(De Jure) Policy Lever (Learners) - Center-Based Care",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LERN","Proficiency on GEPD Assessment",3.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.1","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey",3.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.1.F","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Female",3.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.1.M","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Male",3.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.1.R","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Rural",3.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.1.U","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Urban",2.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.2","(De Facto) Percent of children proficient in literacy according to GEPD School Survey",5.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.2.F","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Female",5.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.2.M","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Male",5.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.2.R","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Rural",4.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.2.U","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Urban",5.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.3","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey",6.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.3.F","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Female",5.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.3.M","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Male",6.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.3.R","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Rural",8.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LERN.3.U","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Urban",5.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LFCP","Policy Lever (Learners) - Caregiver Capacity – Financial Capacity",2.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LFCP.1","(De Jure) Are anti poverty interventions that focus on ECD publicly supported?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LFCP.2","(De Jure) Are cash transfers conditional on ECD services/enrollment publicly supported?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LFCP.3","(De Jure) Are cash transfers focused partially on ECD publicly supported?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LFCP.4","(De Facto) Coverage of social protection programs",30.1,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LFCP.DF","(De Facto) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity",2.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LFCP.DJ","(De Jure) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LHTH","Policy Lever (Learners) - Health",2.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.1","(De Jure) Are young children required to receive a complete course of childhood immunizations?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.2","(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immunization schedule",71,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.3","(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free or by subsidizing them",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.4","(De Facto) Percent of  children under 5 covered by health insurance",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LHTH.5","(De Jure) Are deworming pills funded and distributed by the government?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.6","(De Facto) Percent of children age 6-59 months who received deworming medication",71.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.7","(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?",2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.8","(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility",47.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.DF","(De Facto) Policy Lever (Learners) - Health",2.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LHTH.DJ","(De Jure) Policy Lever (Learners) - Health",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LNTN","Policy Lever (Learners) - Nutrition Programs",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.LNTN.1","(De Jure) Does a national policy to encourage salt iodization exist?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LNTN.2","(De Facto) Percent of households with salt testing positive for any iodide among households",85.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.LNTN.3","(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LNTN.4","(De Facto) Percent of children age 6–23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day",13.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LNTN.5","(De Jure) Does a national policy exist to encourage breastfeeding?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LNTN.6","(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed",95.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LNTN.7","(De Jure) Is there a publicly funded school feeding program?",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LNTN.8","(De Facto) Percent of schools reporting having publicly funded school feeding program",23.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LNTN.DF","(De Facto) Policy Lever (Learners) - Nutrition Programs",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.LNTN.DJ","(De Jure) Policy Lever (Learners) - Nutrition Programs",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.LSKC","Policy Lever (Learners) - Caregiver Capacity – Skills Capacity",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LSKC.1","(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LSKC.2","(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early childhood stimulation? Home visits, Group sessions, Community health programs, Health center waiting rooms, School-based groups, Mass media/Information campaigns",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.LSKC.3","(De Facto) Percent of children under age 5 who have three or more children’s books",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LSKC.4","(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LSKC.DF","(De Facto) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.LSKC.DJ","(De Jure) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity",2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.OPMN","Operational Management",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.1","(De Facto) Average score for the presence and quality of core operational management functions",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.1.F","(De Facto) Average score for the presence and quality of core operational management functions - Female",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.1.M","(De Facto) Average score for the presence and quality of core operational management functions - Male",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.1.R","(De Facto) Average score for the presence and quality of core operational management functions - Rural",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.1.U","(De Facto) Average score for the presence and quality of core operational management functions - Urban",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.2","(De Facto) Average score for infrastructure repair/maintenance",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.2.F","(De Facto) Average score for infrastructure repair/maintenance - Female",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.OPMN.2.M","(De Facto) Average score for infrastructure repair/maintenance - Male",3.7,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.2.R","(De Facto) Average score for infrastructure repair/maintenance - Rural",3.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.2.U","(De Facto) Average score for infrastructure repair/maintenance - Urban",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.3","(De Facto) Average score for ensuring  availability of school inputs",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.3.F","(De Facto) Average score for ensuring  availability of school inputs - Female",3.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.3.M","(De Facto) Average score for ensuring  availability of school inputs - Male",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.3.R","(De Facto) Average score for ensuring  availability of school inputs - Rural",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.OPMN.3.U","(De Facto) Average score for ensuring  availability of school inputs - Urban",3.9,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PEDG","Teacher Pedagogical Skills",19.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.1","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score)",19.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.1.F","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Female",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.1.M","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Male",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.1.R","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Rural",6.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.1.U","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Urban",23.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.2","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score)",50.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.2.F","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Female",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.2.M","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Male",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.2.R","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Rural",47.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.2.U","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Urban",48.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.3","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score)",35.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.3.F","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Female",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.3.M","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Male",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.3.R","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Rural",17.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.3.U","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Urban",43.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.4","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score)",7.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.4.F","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Female",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.4.M","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Male",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PEDG.4.R","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Rural",4.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PEDG.4.U","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Urban",5.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW","Principal School Knowledge",3.3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PKNW.1","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school",3.3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PKNW.1.F","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Female",3.4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PKNW.1.M","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Male",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PKNW.1.R","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Rural",3.4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PKNW.1.U","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Urban",3.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PKNW.2","(De Facto) Percent of principals familiar with teachers' content knowledge",61.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.2.F","(De Facto) Percent of principals familiar with teachers' content knowledge - Female",60.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.2.M","(De Facto) Percent of principals familiar with teachers' content knowledge - Male",61.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.2.R","(De Facto) Percent of principals familiar with teachers' content knowledge - Rural",69.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.2.U","(De Facto) Percent of principals familiar with teachers' content knowledge - Urban",59.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.3","(De Facto) Percent of principals familiar with teachers' experience",99.9,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PKNW.3.F","(De Facto) Percent of principals familiar with teachers' experience - Female",100,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PKNW.3.M","(De Facto) Percent of principals familiar with teachers' experience - Male",99.9,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PKNW.3.R","(De Facto) Percent of principals familiar with teachers' experience - Rural",99.1,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PKNW.3.U","(De Facto) Percent of principals familiar with teachers' experience - Urban",100,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PKNW.4","(De Facto) Percent of principals familiar with availability of classroom inputs",70.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.4.F","(De Facto) Percent of principals familiar with availability of classroom inputs - Female",82.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.4.M","(De Facto) Percent of principals familiar with availability of classroom inputs - Male",70,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.4.R","(De Facto) Percent of principals familiar with availability of classroom inputs - Rural",65.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PKNW.4.U","(De Facto) Percent of principals familiar with availability of classroom inputs - Urban",71,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.PMAN","Principal Management Skills",4.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.1","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term",4.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.1.F","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Female",4.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.1.M","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Male",4.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.1.R","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Rural",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PMAN.1.U","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Urban",4.3,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.2","(De Facto) Average score for the extent to which principals master problem-solving in the short-term",4.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.2.F","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Female",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.2.M","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Male",4.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.2.R","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Rural",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.2.U","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Urban",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PMAN.3","(De Facto) Average score for the extent to which principals master goal-setting in the long term",4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PMAN.3.F","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Female",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PMAN.3.M","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Male",4,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PMAN.3.R","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Rural",3.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.PMAN.3.U","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Urban",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.PROE","Proficiency by Grade 2/3",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.PROE.1","(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.SATT","Policy Lever (School Management) - Attraction",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SATT.1","(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as professionalized and distinct figure within schools?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SATT.2","(De Facto) Average principal salary as percent of GDP per capita",3.1,"Caution","2020-2021","cty","ETH"
+"SE.PRM.SATT.3","(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community",4.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SATT.DF","(De Facto) Policy Lever (School Management) - Attraction",4.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SATT.DJ","(De Jure) Policy Lever (School Management) - Attraction",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN","Policy Lever (School Management) - Clarity of Functions",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.1","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance and expansion of school infrastructure?",99.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.10","(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.11","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hiring and assignment?",100,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.12","(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.13","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal supervision and training?",99.9,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.14","(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.2","(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastructure?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.3","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement of materials?",95.5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.4","(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.5","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring and assignment?",99.8,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.6","(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.7","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervision, training, and coaching?",100,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.8","(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SCFN.9","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learning assessments?",99.9,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.DF","(De Facto) Policy Lever (School Management) - Clarity of Functions",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SCFN.DJ","(De Jure) Policy Lever (School Management) - Clarity of Functions",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SEVL","Policy Lever (School Management) - Evaluation",4.7,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SEVL.1","(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SEVL.2","(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.SEVL.3","(De Facto) Percent of principals that report having been evaluated  during the last school year",93.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SEVL.4","(De Facto) Percent of principals that report having been evaluated on multiple factors",96.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SEVL.5","(De Facto) Percent of principals that report there would be consequences after two negative evaluations",54.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SEVL.6","(De Facto) Percent of principals that report there would be consequences after two positive evaluations",52,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SEVL.DF","(De Facto) Policy Lever (School Management) - Evaluation",4.7,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SEVL.DJ","(De Jure) Policy Lever (School Management) - Evaluation",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSLD","Policy Lever (School Management) - Selection & Deployment",4.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSLD.1","(De Jure) Is there a systematic approach/rubric for the selection of principals?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.10","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is years of experience",26.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.11","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is quality of teaching",11.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.12","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is demonstrated management qualities",56.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.13","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is having a good relationship with the owner of the school",0.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.14","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is political affiliations",2.1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.15","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is ethnic group",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.16","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is knowledge of the local community",1.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.2","(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSLD.3","(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of experience",98.3,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSLD.4","(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of teaching",78,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.5","(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated management qualities",95.7,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSLD.6","(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relationship with the owner of the school",25.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.7","(De Facto) Percent of principals that report that the factors considered when selecting a principal include political affiliations",23.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.8","(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.SSLD.9","(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of the local community",69.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSLD.DF","(De Facto) Policy Lever (School Management) - Selection & Deployment",4.6,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSLD.DJ","(De Jure) Policy Lever (School Management) - Selection & Deployment",4.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSUP","Policy Lever (School Management) - Support",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.SSUP.1","(De Jure) Are principals required to have training on how to manage a school?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.10","(De Facto) Percent of principals that report having used the skills they gained at the last training they attended",99.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.SSUP.11","(De Facto) Average number of trainings that principals report having been offered to them in the past year",2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.2","(De Jure) Are principals required to have management training for new principals?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.3","(De Jure) Are principals required to have in-service training?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.4","(De Jure) Are principals required to have mentoring/coaching by experienced principals?",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.5","(De Jure) How many times per year do principals have trainings?",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.6","(De Facto) Percent of principals that report ever having received formal training",68.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.7","(De Facto) Percent of principals that report having received management training for new principals",50.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.8","(De Facto) Percent of principals that report having received in-service training",65.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.9","(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals",45.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.SSUP.DF","(De Facto) Policy Lever (School Management) - Support",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.SSUP.DJ","(De Jure) Policy Lever (School Management) - Support",4.3,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TATT","Policy Lever (Teaching) - Attraction",3.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TATT.1","(De Jure) Average starting public-school teacher salary as percent of GDP per capita",128.4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TATT.2","(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community",83.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TATT.3","(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher",84.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TATT.4","(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries",7.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TATT.5","(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas",0.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TATT.6","(De Facto) Percent of teachers that performance matters for promotions",49,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TATT.7","(De Jure) Is there a well-established career path for teachers?",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.TATT.8","(De Facto) Percent of teachers that report salary delays in the past 12 months",48.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TATT.DF","(De Facto) Policy Lever (Teaching) - Attraction",3.6,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TATT.DJ","(De Jure) Policy Lever (Teaching) - Attraction",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TENR","Net Adjusted Enrollment Rate",85.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TENR.1","(De Facto) Percent of primary school age children who are enrolled at primary education",85.2,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TEVL","Policy Lever (Teaching) - Evaluation",4.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TEVL.1","(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national, regional, local)",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TEVL.2","(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TEVL.3","(De Facto) Percent of teachers that report being evaluated in the past 12 months",78.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TEVL.4","(De Jure) The criteria to evaluate teachers is clear",0.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TEVL.5","(De Facto) Number of criteria used to evaluate teachers",3.8,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TEVL.6","(De Facto) Percent of teachers that report there would be consequences after two negative evaluations",97.9,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TEVL.7","(De Facto) Percent of teachers that report there would be consequences after two positive evaluations",92.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TEVL.8","(De Jure) There are clear consequences for teachers who receive two or more negative evaluations",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TEVL.9","(De Jure) There are clear consequences for teachers who receive two or more positive evaluations",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TEVL.DF","(De Facto) Policy Lever (Teaching) - Evaluation",4.2,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TEVL.DJ","(De Jure) Policy Lever (Teaching) - Evaluation",2.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM","Policy Lever (Teaching) - Intrinsic Motivation",3.5,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TINM.1","(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the assigned curriculum has been completed""",14.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.10","(De Facto) Percent of teachers that agree or strongly agrees with ""Students can change even their basic intelligence level considerably""",86.1,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TINM.11","(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers",0.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.12","(De Facto) New teachers are required to undergo a probationary period",0.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.13","(De Jure) New teachers are required to undergo a probationary period",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.2","(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if students are left with work to do""",3.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.3","(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the teacher is doing something useful for the community""",10,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.4","(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they attend school regularly""",65.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.5","(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they come to school with materials""",66.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.6","(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they are motivated to learn""",68.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.7","(De Facto) Percent of teachers that agree or strongly agrees with ""Students have a certain amount of intelligence and they really can’t do much to change it""",21.2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.8","(De Facto) Percent of teachers that agree or strongly agrees with ""To be honest, students can’t really change how intelligent they are""",34.5,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.9","(De Facto) Percent of teachers that agree or strongly agrees with ""Students can always substantially change how intelligent they are""",81.6,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TINM.DF","(De Facto) Policy Lever (Teaching) - Intrinsic Motivation",3.5,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TINM.DJ","(De Jure) Policy Lever (Teaching) - Intrinsic Motivation",5,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TMNA","Policy Lever (Teaching) - Monitoring & Accountability",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TMNA.1","(De Jure) Information on teacher presence/absenteeism is being collected on a regular basis",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TMNA.2","(De Jure) Teachers receive monetary compensation for being present",0,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TMNA.3","(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present",2.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TMNA.4","(De Facto) Percent of teachers that report having been absent because of administrative processes",27.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TMNA.5","(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time",80,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TMNA.DF","(De Facto) Policy Lever (Teaching) - Monitoring & Accountability",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TMNA.DJ","(De Jure) Policy Lever (Teaching) - Monitoring & Accountability",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSDP","Policy Lever (Teaching) - Selection & Deployment",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TSDP.1","(De Jure) Requirements to enter into initial education programs",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TSDP.2","(De Facto) Average quality of applicants accepted into initial education programs",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.TSDP.3","(De Jure) Requirements to become a primary school teacher",2,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSDP.4","(De Facto) Requirements to become a primary school teacher",1.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSDP.5","(De Jure) Requirements to fulfill a transfer request",3,"Caution","2020-2021","cty","ETH"
+"SE.PRM.TSDP.6","(De Facto) Requirements to fulfill a transfer request",1.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSDP.7","(De Jure) Selectivity of teacher hiring process",NA,"N/A","2020-2021","cty","ETH"
+"SE.PRM.TSDP.DF","(De Facto) Policy Lever (Teaching) - Selection & Deployment",4,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TSDP.DJ","(De Jure) Policy Lever (Teaching) - Selection & Deployment",2.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP","Policy Lever (Teaching) - Support",2.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.1","(De Jure) Practicum required as part of pre-service training",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.2","(De Facto) Percent reporting they completed a practicum as part of pre-service training",41.4,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.3","(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program",59.7,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.4","(De Jure) Participation in professional development has professional implications for teachers",1,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.5","(De Facto) Percent of teachers reporting having attended in-service trainings in the past 12 months",29.3,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.6","(De Facto) Average length of the trainings attended",7.8,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TSUP.7","(De Facto) Average span of time (in weeks) of those trainings",1.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.8","(De Facto) Average percent of time spent inside the classrooms during the trainings",45.7,"On Target","2020-2021","cty","ETH"
+"SE.PRM.TSUP.9","(De Facto) Percent of teachers that report having opportunities to come together with other teachers to discuss ways of improving teaching",72.9,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.DF","(De Facto) Policy Lever (Teaching) - Support",2.8,"Needs Improvement","2020-2021","cty","ETH"
+"SE.PRM.TSUP.DJ","(De Jure) Policy Lever (Teaching) - Support",5,"On Target","2020-2021","cty","ETH"

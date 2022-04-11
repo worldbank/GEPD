@@ -25,10 +25,15 @@ library(here)
 ##########
 
 #get WDI metadata infor
-cache_list<-wbstats::wbcache()
-country_list <- wbstats::wbcountries()
+#cache_list<-wbstats::wbcache()
+country_list <- wbstats::wb_countries()
 country_list_hci <- country_list %>%
-  rename(country_name = country) %>%
+  rename(country_name = country,
+         regionID=region_iso3c,
+         adminID=admin_region_iso3c,
+         incomeID=income_level_iso3c,
+         admin=admin_region,
+         income=income_level) %>%
   select(iso3c, country_name, region, regionID, admin, adminID, income, incomeID)
 
 # make request to World Bank API and get a list of all EdStats indicators (including learning poverty)
@@ -47,14 +52,12 @@ reference_year<-as.numeric(year)
 
 # Now use wbstats package in R to pull from World Bank API
 
-learning_poverty_df <-wbstats::wb(country="all", #by specifying all, we can get a list of all aggregates (such as region or income level)
+learning_poverty_df <- wbstats::wb_data(country="all", #by specifying all, we can get a list of all aggregates (such as region or income level)
                                   indicator=learning_pov_indicators,
-                                  startdate=reference_year-10,
-                                  enddate=reference_year,
-                                  return_wide = T,
-                                  removeNA=TRUE,
-                                  cache = cache_list
-) %>%
+                                  start_date=reference_year-10,
+                                  end_date=reference_year,
+                                  return_wide = T
+                                  ) %>%
   filter(((reference_year-as.numeric(date))<=10) & (reference_year>=as.numeric(date))) %>%  #filter out years outside reference window of 10 years 
   mutate_if(is.character, str_trim) %>% 
   group_by(iso3c, country) %>%   #group by country to create one observation per country which is the latest value
@@ -152,4 +155,5 @@ hci_lp_final <- hci_lp_list %>%
          SE.LPV.PRIM = round(as.numeric(SE.LPV.PRIM), digits =0),
          HD.HCI.LAYS = round(as.numeric(HD.HCI.LAYS), digits =1),
          LPV_decimal = SE.LPV.PRIM/100
-  )
+  ) %>%
+  filter(iso3c!="XM")

@@ -1,471 +1,471 @@
-﻿Series,Indicator Name,Source,Source Organization,Source Note,value
-SE.LPV.PRIM,Learning poverty: Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%),Global Education Policy Dashboard,World Bank,NA,52.02334
-SE.LPV.PRIM.1,(De Facto) Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%),Global Education Policy Dashboard,World Bank,NA,52.02334
-SE.LPV.PRIM.BMP,Proficiency by End of Primary,Global Education Policy Dashboard,World Bank,NA,50.02175
-SE.LPV.PRIM.BMP.1,"(De Facto) Percent of children proficient in literacy and numeracy by end of primary, as reported by UIS",Global Education Policy Dashboard,World Bank,NA,50.02175
-SE.PRM.ATTD,Student Attendance,Global Education Policy Dashboard,World Bank,School Survey.  Percent of 4th grade students who are present during an unannounced visit.,97.14669
-SE.PRM.ATTD.1,(De Facto) Percent of 4th grade students present during an unannounced visit,Global Education Policy Dashboard,World Bank,NA,97.14669
-SE.PRM.ATTD.1.F,(De Facto) Percent of 4th grade students present during an unannounced visit - Female,Global Education Policy Dashboard,World Bank,NA,81.85092
-SE.PRM.ATTD.1.M,(De Facto) Percent of 4th grade students present during an unannounced visit - Male,Global Education Policy Dashboard,World Bank,NA,78.39066
-SE.PRM.ATTD.1.R,(De Facto) Percent of 4th grade students present during an unannounced visit - Rural,Global Education Policy Dashboard,World Bank,NA,98.62196
-SE.PRM.ATTD.1.U,(De Facto) Percent of 4th grade students present during an unannounced visit - Urban,Global Education Policy Dashboard,World Bank,NA,96.72
-SE.PRM.BFIN,Politics & Bureaucratic Capacity - Financing,Global Education Policy Dashboard,World Bank,"Policy Survey. A score ranging from 1 to 5 that considers the quality of financing using two lenses – adequacy and efficiency. This score is calculated using 3 sub,indicators: 1) per-child spending (adequacy), 2) public management financing performance (efficiency), and 3) outcomes per spending (efficiency). If an existing data source is available, a fourth sub-indicator on equity will be included.  The total score is a weighted sum of the adequacy and efficiency components.  -	50% weight for adequacy  -	50% weight for efficiency.   The efficiency score is an average of the public management financing performance (efficiency) and outcomes per spending (efficiency).",4.69
-SE.PRM.BFIN.1,"Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, efficiency, and equity.",Global Education Policy Dashboard,World Bank,NA,4.69
-SE.PRM.BFIN.2,(Financing) - Adequacy expressed by the per child spending,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.BFIN.3,(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest,Global Education Policy Dashboard,World Bank,NA,0.93
-SE.PRM.BFIN.4,(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest,Global Education Policy Dashboard,World Bank,NA,0.76
-SE.PRM.BFIN.5,(Financing) - Equity,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.BIMP,Politics & Bureaucratic Capacity - Impartial Decision-Making,Global Education Policy Dashboard,World Bank,"Survey of Public officials. This module assesses the extent to which bureaucrats implement policies in an impartial way, meaning that decisions are free from political clientelism or undue influence from any single interest group.   Average score (1 (worst) , 5 (best)) on items given to public officials.",3.14318
-SE.PRM.BIMP.1,Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,Global Education Policy Dashboard,World Bank,NA,3.14318
-SE.PRM.BIMP.2,(Impartial Decision-Making) average score for politicized personnel management,Global Education Policy Dashboard,World Bank,NA,3.086996
-SE.PRM.BIMP.3,(Impartial Decision-Making) average score for politicized policy-making,Global Education Policy Dashboard,World Bank,NA,3.809659
-SE.PRM.BIMP.4,(Impartial Decision-Making) average score for politicized policy implementation,Global Education Policy Dashboard,World Bank,NA,2.754579
-SE.PRM.BIMP.5,(Impartial Decision-Making) average score for employee unions as facilitators,Global Education Policy Dashboard,World Bank,NA,2.964912
-SE.PRM.BMAC,Politics & Bureaucratic Capacity - Mandates & Accountability,Global Education Policy Dashboard,World Bank,"Survey of Public officials.  The aim of this indicator is to measure the extent to which the mandates are clearly defined and allocated in the legislation, as well as whether such allocation is reflected in practice.  Average score (1 (worst) , 5 (best)) on items given to public officials.",4.191104
-SE.PRM.BMAC.1,Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,Global Education Policy Dashboard,World Bank,NA,4.191104
-SE.PRM.BMAC.2,(Mandates & Accountability) Average score for coherence,Global Education Policy Dashboard,World Bank,NA,3.997093
-SE.PRM.BMAC.3,(Mandates & Accountability) Average score for transparency,Global Education Policy Dashboard,World Bank,NA,4.189139
-SE.PRM.BMAC.4,(Mandates & Accountability) Average score for accountability of public officials,Global Education Policy Dashboard,World Bank,NA,4.356742
-SE.PRM.BNLG,Politics & Bureaucratic Capacity - National Learning Goals,Global Education Policy Dashboard,World Bank,"Survey of Public officials. The aim of this indicator is to capture the extent to which there is a goal and/or strategy that encapsulates a desire and a path to reach higher learning outcomes. This is what ultimately drives the work of the ministry and district offices that together, with the support of other stakeholders and civil society, work towards achieving that goal.   Average score (1 (worst) , 5 (best)) on items given to public officials.",3.572582
-SE.PRM.BNLG.1,Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,Global Education Policy Dashboard,World Bank,NA,3.572582
-SE.PRM.BNLG.2,(National Learning Goals) Average score for targeting,Global Education Policy Dashboard,World Bank,NA,4.005587
-SE.PRM.BNLG.3,(National Learning Goals) Average score for monitoring,Global Education Policy Dashboard,World Bank,NA,3.873371
-SE.PRM.BNLG.4,(National Learning Goals) Average score for incentives,Global Education Policy Dashboard,World Bank,NA,2.865922
-SE.PRM.BNLG.5,(National Learning Goals) Average score for community engagement,Global Education Policy Dashboard,World Bank,NA,3.525194
-SE.PRM.BQBR,Politics & Bureaucratic Capacity - Quality of Bureaucracy,Global Education Policy Dashboard,World Bank,"Survey of Public officials.  This indicator assesses the quality of the bureaucracy, which is the implementing machinery of the government for achieving national learning goals and ensuring that the policies created to promote learning are enforced. Average score (1 (worst) , 5 (best) ) on items given to public officials.     Some specific comments:   - On QB1q2 - What is the average class size in a typical 4th-grade class of the country? - I assigned 5 points if the guess was within 10% of the correct answer, 4 points if between 10-20% of the correct answer, 3 if between 20 and 30%, 2 if between 30 and 40%, and 1 if more than 40% away from correct answer.   - On QB1q1 - What percent of their time do you think teachers are absent without providing justification? - this question is scored similar as above.   - for QB4q2 -  Imagine that when you started your motivation was 100. What number would you say your motivation was now relative to that? - We score over 120% as a 5, 110-120% as a 4, 100-110% as a 3, 90-100 as a 2, and below 90 as a 1",3.57807
-SE.PRM.BQBR.1,Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness,Global Education Policy Dashboard,World Bank,NA,3.57807
-SE.PRM.BQBR.2,(Quality of Bureaucracy) average score for knowledge and skills,Global Education Policy Dashboard,World Bank,NA,4.665709
-SE.PRM.BQBR.3,(Quality of Bureaucracy) average score for work environment,Global Education Policy Dashboard,World Bank,NA,4.056497
-SE.PRM.BQBR.4,(Quality of Bureaucracy) average score for merit,Global Education Policy Dashboard,World Bank,NA,3.467228
-SE.PRM.BQBR.5,(Quality of Bureaucracy) average score for motivation and attitudes,Global Education Policy Dashboard,World Bank,NA,3.252152
-SE.PRM.CONT,Teacher Content Knowledge,Global Education Policy Dashboard,World Bank,School survey.  The fraction of teachers scoring at least 80% on the teacher content knowledge exam on mathematics and language.,33.76577
-SE.PRM.CONT.1,(De Facto) Percent of teachers proficient in the subjects they teach,Global Education Policy Dashboard,World Bank,NA,33.76577
-SE.PRM.CONT.1.F,(De Facto) Percent of teachers proficient in the subjects they teach - Female,Global Education Policy Dashboard,World Bank,NA,34.83492
-SE.PRM.CONT.1.M,(De Facto) Percent of teachers proficient in the subjects they teach - Male,Global Education Policy Dashboard,World Bank,NA,32.07581
-SE.PRM.CONT.1.R,(De Facto) Percent of teachers proficient in the subjects they teach - Rural,Global Education Policy Dashboard,World Bank,NA,34.71786
-SE.PRM.CONT.1.U,(De Facto) Percent of teachers proficient in the subjects they teach - Urban,Global Education Policy Dashboard,World Bank,NA,33.48719
-SE.PRM.CONT.2,(De Facto) Percent of teachers proficient in the subject of language,Global Education Policy Dashboard,World Bank,NA,25.02363
-SE.PRM.CONT.2.F,(De Facto) Percent of teachers proficient in the subject of language - Female,Global Education Policy Dashboard,World Bank,NA,26.16153
-SE.PRM.CONT.2.M,(De Facto) Percent of teachers proficient in the subject of language - Male,Global Education Policy Dashboard,World Bank,NA,16.16396
-SE.PRM.CONT.2.R,(De Facto) Percent of teachers proficient in the subject of language - Rural,Global Education Policy Dashboard,World Bank,NA,25.88303
-SE.PRM.CONT.2.U,(De Facto) Percent of teachers proficient in the subject of language - Urban,Global Education Policy Dashboard,World Bank,NA,24.77019
-SE.PRM.CONT.3,(De Facto) Percent of teachers proficient in the subject of mathematics,Global Education Policy Dashboard,World Bank,NA,57.69519
-SE.PRM.CONT.3.F,(De Facto) Percent of teachers proficient in the subject of mathematics - Female,Global Education Policy Dashboard,World Bank,NA,58.91897
-SE.PRM.CONT.3.M,(De Facto) Percent of teachers proficient in the subject of mathematics - Male,Global Education Policy Dashboard,World Bank,NA,61.35081
-SE.PRM.CONT.3.R,(De Facto) Percent of teachers proficient in the subject of mathematics - Rural,Global Education Policy Dashboard,World Bank,NA,56.93056
-SE.PRM.CONT.3.U,(De Facto) Percent of teachers proficient in the subject of mathematics - Urban,Global Education Policy Dashboard,World Bank,NA,57.93926
-SE.PRM.EFFT,Teacher Effort,Global Education Policy Dashboard,World Bank,"School survey.  Percent of teachers present.  Teacher is coded absent if they are:   , not in school   - in school but absent from the class.",81.89981
-SE.PRM.EFFT.1,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit",Global Education Policy Dashboard,World Bank,NA,81.89981
-SE.PRM.EFFT.1.F,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Female",Global Education Policy Dashboard,World Bank,NA,81.92879
-SE.PRM.EFFT.1.M,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Male",Global Education Policy Dashboard,World Bank,NA,83.42349
-SE.PRM.EFFT.1.R,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Rural",Global Education Policy Dashboard,World Bank,NA,78.68181
-SE.PRM.EFFT.1.U,"(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Urban",Global Education Policy Dashboard,World Bank,NA,82.82632
-SE.PRM.EFFT.2,(De Facto) Percent of teachers present in their schools during an announced visit,Global Education Policy Dashboard,World Bank,NA,93.42893
-SE.PRM.EFFT.2.F,(De Facto) Percent of teachers present in their schools during an announced visit - Female,Global Education Policy Dashboard,World Bank,NA,93.34485
-SE.PRM.EFFT.2.M,(De Facto) Percent of teachers present in their schools during an announced visit - Male,Global Education Policy Dashboard,World Bank,NA,91.73686
-SE.PRM.EFFT.2.R,(De Facto) Percent of teachers present in their schools during an announced visit - Rural,Global Education Policy Dashboard,World Bank,NA,90.96267
-SE.PRM.EFFT.2.U,(De Facto) Percent of teachers present in their schools during an announced visit - Urban,Global Education Policy Dashboard,World Bank,NA,94.139
-SE.PRM.ILDR,Instructional Leadership,Global Education Policy Dashboard,World Bank,"School survey.  Total score starts at 1 and points added are the sum  of whether a teacher has:   , Had a classroom observation in past year   - Had a discussion based on that observation that lasted longer than 30 min   - Received actionable feedback from that observation   - Teacher had a lesson plan and discussed it with another person",3.264003
-SE.PRM.ILDR.1,(De Facto) Average score for the presence and quality of instructional leadership,Global Education Policy Dashboard,World Bank,NA,3.264003
-SE.PRM.ILDR.1.F,(De Facto) Average score for the presence and quality of instructional leadership - Female,Global Education Policy Dashboard,World Bank,NA,3.313386
-SE.PRM.ILDR.1.M,(De Facto) Average score for the presence and quality of instructional leadership - Male,Global Education Policy Dashboard,World Bank,NA,3.060573
-SE.PRM.ILDR.1.R,(De Facto) Average score for the presence and quality of instructional leadership - Rural,Global Education Policy Dashboard,World Bank,NA,3.168936
-SE.PRM.ILDR.1.U,(De Facto) Average score for the presence and quality of instructional leadership - Urban,Global Education Policy Dashboard,World Bank,NA,3.29112
-SE.PRM.ILDR.2,(De Facto) Percent of teachers reporting having had their class observed,Global Education Policy Dashboard,World Bank,NA,75.11221
-SE.PRM.ILDR.2.F,(De Facto) Percent of teachers reporting having had their class observed - Female,Global Education Policy Dashboard,World Bank,NA,77.9564
-SE.PRM.ILDR.2.M,(De Facto) Percent of teachers reporting having had their class observed - Male,Global Education Policy Dashboard,World Bank,NA,63.39158
-SE.PRM.ILDR.2.R,(De Facto) Percent of teachers reporting having had their class observed - Rural,Global Education Policy Dashboard,World Bank,NA,71.67006
-SE.PRM.ILDR.2.U,(De Facto) Percent of teachers reporting having had their class observed - Urban,Global Education Policy Dashboard,World Bank,NA,76.09406
-SE.PRM.ILDR.3,(De Facto) Percent of teachers reporting that the classroom observation happened recently,Global Education Policy Dashboard,World Bank,NA,74.6993
-SE.PRM.ILDR.3.F,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Female,Global Education Policy Dashboard,World Bank,NA,77.44665
-SE.PRM.ILDR.3.M,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Male,Global Education Policy Dashboard,World Bank,NA,63.39158
-SE.PRM.ILDR.3.R,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Rural,Global Education Policy Dashboard,World Bank,NA,71.67006
-SE.PRM.ILDR.3.U,(De Facto) Percent of teachers reporting that the classroom observation happened recently - Urban,Global Education Policy Dashboard,World Bank,NA,75.56337
-SE.PRM.ILDR.4,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation,Global Education Policy Dashboard,World Bank,NA,27.11905
-SE.PRM.ILDR.4.F,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Female,Global Education Policy Dashboard,World Bank,NA,27.83667
-SE.PRM.ILDR.4.M,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Male,Global Education Policy Dashboard,World Bank,NA,24.27111
-SE.PRM.ILDR.4.R,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Rural,Global Education Policy Dashboard,World Bank,NA,28.67568
-SE.PRM.ILDR.4.U,(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Urban,Global Education Policy Dashboard,World Bank,NA,26.67502
-SE.PRM.ILDR.5,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes,Global Education Policy Dashboard,World Bank,NA,3.683087
-SE.PRM.ILDR.5.F,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Female,Global Education Policy Dashboard,World Bank,NA,4.407592
-SE.PRM.ILDR.5.M,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Male,Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.ILDR.5.R,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Rural,Global Education Policy Dashboard,World Bank,NA,5.293373
-SE.PRM.ILDR.5.U,(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Urban,Global Education Policy Dashboard,World Bank,NA,3.232405
-SE.PRM.ILDR.6,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion,Global Education Policy Dashboard,World Bank,NA,52.92595
-SE.PRM.ILDR.6.F,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Female,Global Education Policy Dashboard,World Bank,NA,55.2264
-SE.PRM.ILDR.6.M,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Male,Global Education Policy Dashboard,World Bank,NA,43.40216
-SE.PRM.ILDR.6.R,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Rural,Global Education Policy Dashboard,World Bank,NA,50.00229
-SE.PRM.ILDR.6.U,(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Urban,Global Education Policy Dashboard,World Bank,NA,53.75991
-SE.PRM.ILDR.7,(De Facto) Percent of teachers reporting having lesson plans,Global Education Policy Dashboard,World Bank,NA,12.70266
-SE.PRM.ILDR.7.F,(De Facto) Percent of teachers reporting having lesson plans - Female,Global Education Policy Dashboard,World Bank,NA,10.83327
-SE.PRM.ILDR.7.M,(De Facto) Percent of teachers reporting having lesson plans - Male,Global Education Policy Dashboard,World Bank,NA,20.75927
-SE.PRM.ILDR.7.R,(De Facto) Percent of teachers reporting having lesson plans - Rural,Global Education Policy Dashboard,World Bank,NA,14.07834
-SE.PRM.ILDR.7.U,(De Facto) Percent of teachers reporting having lesson plans - Urban,Global Education Policy Dashboard,World Bank,NA,12.31026
-SE.PRM.ILDR.8,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)",Global Education Policy Dashboard,World Bank,NA,65.64388
-SE.PRM.ILDR.8.F,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Female",Global Education Policy Dashboard,World Bank,NA,66.49142
-SE.PRM.ILDR.8.M,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Male",Global Education Policy Dashboard,World Bank,NA,62.0121
-SE.PRM.ILDR.8.R,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Rural",Global Education Policy Dashboard,World Bank,NA,59.04584
-SE.PRM.ILDR.8.U,"(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Urban",Global Education Policy Dashboard,World Bank,NA,67.53281
-SE.PRM.IMON,Policy Lever (Inputs & Infrastructure) - Monitoring,Global Education Policy Dashboard,World Bank,"School Survey.  A score of 1,5 based on 3 factors. Each factor has received an equal weight in terms of points. The factors are the following:  -	Someone is monitoring  -	System for monitoring available (E.g. inventory)  -	Community involved in monitoring",2.964312
-SE.PRM.IMON.1,(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students,Global Education Policy Dashboard,World Bank,NA,0.9990139
-SE.PRM.IMON.10,(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.IMON.2,(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic inputs,Global Education Policy Dashboard,World Bank,NA,0.1577165
-SE.PRM.IMON.3,(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs,Global Education Policy Dashboard,World Bank,NA,1.075062
-SE.PRM.IMON.4,(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available,Global Education Policy Dashboard,World Bank,NA,0.9120864
-SE.PRM.IMON.5,(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic infrastructure,Global Education Policy Dashboard,World Bank,NA,0.3038412
-SE.PRM.IMON.6,(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure,Global Education Policy Dashboard,World Bank,NA,0.7782931
-SE.PRM.IMON.7,(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.IMON.8,(De Jure) Number of basic inputs clearly articulated as needing to be monitored,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.IMON.9,(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.IMON.DF,(De Facto) Policy Lever (Inputs & Infrastructure) - Monitoring,Global Education Policy Dashboard,World Bank,NA,2.964312
-SE.PRM.IMON.DJ,(De Jure) Policy Lever (Inputs & Infrastructure) - Monitoring,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.INFR,Basic Infrastructure,Global Education Policy Dashboard,World Bank,"School survey.  Total score is the sum  of whether a school has:   , Access to adequate drinking water   -Functional toilets that are separate for boys/girls, private, useable, and have hand washing facilities   - Electricity   - Internet   - School is accessible for those with disabilities (road access, a school ramp for wheelchairs, an entrance wide enough for wheelchairs, ramps to classrooms where needed, accessible toilets, and disability screening for seeing, hearing, and learning disabilities with partial credit for having 1 or 2 or the 3).)",4.119731
-SE.PRM.INFR.1,(De Facto) Average number of infrastructure aspects present in schools,Global Education Policy Dashboard,World Bank,NA,4.119731
-SE.PRM.INFR.1.R,(De Facto) Average number of infrastructure aspects present in schools - Rural,Global Education Policy Dashboard,World Bank,NA,3.982528
-SE.PRM.INFR.1.U,(De Facto) Average number of infrastructure aspects present in schools - Urban,Global Education Policy Dashboard,World Bank,NA,4.159156
-SE.PRM.INFR.2,(De Facto) Percent of schools with drinking water,Global Education Policy Dashboard,World Bank,NA,89.24267
-SE.PRM.INFR.2.R,(De Facto) Percent of schools with drinking water - Rural,Global Education Policy Dashboard,World Bank,NA,86.24981
-SE.PRM.INFR.2.U,(De Facto) Percent of schools with drinking water - Urban,Global Education Policy Dashboard,World Bank,NA,90.10591
-SE.PRM.INFR.3,(De Facto) Percent of schools with functioning toilets,Global Education Policy Dashboard,World Bank,NA,68.73854
-SE.PRM.INFR.3.R,(De Facto) Percent of schools with functioning toilets - Rural,Global Education Policy Dashboard,World Bank,NA,70.07107
-SE.PRM.INFR.3.U,(De Facto) Percent of schools with functioning toilets - Urban,Global Education Policy Dashboard,World Bank,NA,68.35419
-SE.PRM.INFR.4,(De Facto) Percent of schools with access to electricity,Global Education Policy Dashboard,World Bank,NA,99.51527
-SE.PRM.INFR.4.R,(De Facto) Percent of schools with access to electricity - Rural,Global Education Policy Dashboard,World Bank,NA,100
-SE.PRM.INFR.4.U,(De Facto) Percent of schools with access to electricity - Urban,Global Education Policy Dashboard,World Bank,NA,99.37545
-SE.PRM.INFR.5,(De Facto) Percent of schools with access to internet,Global Education Policy Dashboard,World Bank,NA,88.23704
-SE.PRM.INFR.5.R,(De Facto) Percent of schools with access to internet - Rural,Global Education Policy Dashboard,World Bank,NA,76.78396
-SE.PRM.INFR.5.U,(De Facto) Percent of schools with access to internet - Urban,Global Education Policy Dashboard,World Bank,NA,91.53508
-SE.PRM.INFR.6,(De Facto) Percent of schools accessible to children with special needs,Global Education Policy Dashboard,World Bank,NA,65.78263
-SE.PRM.INFR.6.R,(De Facto) Percent of schools accessible to children with special needs - Rural,Global Education Policy Dashboard,World Bank,NA,65.9149
-SE.PRM.INFR.6.U,(De Facto) Percent of schools accessible to children with special needs - Urban,Global Education Policy Dashboard,World Bank,NA,65.74462
-SE.PRM.INPT,Basic Inputs,Global Education Policy Dashboard,World Bank,"School survey.  Total score is the sum of whether a school has:   , Functional blackboard    - Pens, pencils, exercise books   - Textbooks   - Fraction of students in class with a desk    - Used ICT in class and have access to ICT in the school.",4.280387
-SE.PRM.INPT.1,(De Facto) Average number of classroom inputs in classrooms,Global Education Policy Dashboard,World Bank,NA,4.280387
-SE.PRM.INPT.1.R,(De Facto) Average number of classroom inputs in classrooms - Rural,Global Education Policy Dashboard,World Bank,NA,4.184231
-SE.PRM.INPT.1.U,(De Facto) Average number of classroom inputs in classrooms - Urban,Global Education Policy Dashboard,World Bank,NA,4.30818
-SE.PRM.INPT.2,(De Facto) Percent of classrooms with a functional blackboard and chalk,Global Education Policy Dashboard,World Bank,NA,87.2302
-SE.PRM.INPT.2.R,(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural,Global Education Policy Dashboard,World Bank,NA,83.98264
-SE.PRM.INPT.2.U,(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban,Global Education Policy Dashboard,World Bank,NA,85.89873
-SE.PRM.INPT.3,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",Global Education Policy Dashboard,World Bank,NA,97.66239
-SE.PRM.INPT.3.R,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",Global Education Policy Dashboard,World Bank,NA,97.12865
-SE.PRM.INPT.3.U,"(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",Global Education Policy Dashboard,World Bank,NA,97.81676
-SE.PRM.INPT.4,(De Facto) Percent of classrooms with basic classroom furniture,Global Education Policy Dashboard,World Bank,NA,87.85294
-SE.PRM.INPT.4.R,(De Facto) Percent of classrooms with basic classroom furniture - Rural,Global Education Policy Dashboard,World Bank,NA,90.26992
-SE.PRM.INPT.4.U,(De Facto) Percent of classrooms with basic classroom furniture - Urban,Global Education Policy Dashboard,World Bank,NA,87.15388
-SE.PRM.INPT.5,(De Facto) Percent of schools with access to EdTech,Global Education Policy Dashboard,World Bank,NA,89.31349
-SE.PRM.INPT.5.R,(De Facto) Percent of schools with access to EdTech - Rural,Global Education Policy Dashboard,World Bank,NA,89.1715
-SE.PRM.INPT.5.U,(De Facto) Percent of schools with access to EdTech - Urban,Global Education Policy Dashboard,World Bank,NA,89.35445
-SE.PRM.ISTD,Policy Lever (Inputs & Infrastructure) - Standards,Global Education Policy Dashboard,World Bank,"School Survey.  A score of 1,5 based on 1 factor for all inputs and infrastructure. Principals are asked “do you know if there are standards in place requiring all schools to have…?”This question is asked for all 5 inputs and all 5 infrastructure aspects. Each question has received an equal weight in terms of points.",3.755672
-SE.PRM.ISTD.1,(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.10,(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?,Global Education Policy Dashboard,World Bank,NA,63.76862
-SE.PRM.ISTD.11,(De Jure) Is there a policy in place to require that schools have functioning toilets?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.12,(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?,Global Education Policy Dashboard,World Bank,NA,95.5207
-SE.PRM.ISTD.13,(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.14,(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with special needs?,Global Education Policy Dashboard,World Bank,NA,96.24229
-SE.PRM.ISTD.2,(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?,Global Education Policy Dashboard,World Bank,NA,68.38859
-SE.PRM.ISTD.3,(De Jure) Is there a national connectivity program?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.4,(De Facto) Do you know if there is a national connectivity program?,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.ISTD.5,"(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.6,"(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",Global Education Policy Dashboard,World Bank,NA,52.39271
-SE.PRM.ISTD.7,(De Jure) Is there a policy in place to require that schools have access to electricity?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.8,(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?,Global Education Policy Dashboard,World Bank,NA,96.22
-SE.PRM.ISTD.9,(De Jure) Is there a policy in place to require that schools have access to drinking water?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.ISTD.DF,(De Facto) Policy Lever (Inputs & Infrastructure) - Standards,Global Education Policy Dashboard,World Bank,NA,3.755672
-SE.PRM.ISTD.DJ,(De Jure) Policy Lever (Inputs & Infrastructure) - Standards,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.LCAP,Capacity for Learning,Global Education Policy Dashboard,World Bank,"School survey.  Percent of sampled 1st grade students scoring at least 80% on GEPD Direct Assessment. In such assessment, total equal points (100) are allocated equally across the 4 domains measured. These include numeracy, literacy, socioemotional skills, and executive function. Within each domain, all questions are given an equal weight.",37.17005
-SE.PRM.LCAP.1,(De Facto) Average developmental score for 1st Graders,Global Education Policy Dashboard,World Bank,NA,73.098
-SE.PRM.LCAP.1.F,(De Facto) Average developmental score for 1st Graders - Female,Global Education Policy Dashboard,World Bank,NA,74.87921
-SE.PRM.LCAP.1.M,(De Facto) Average developmental score for 1st Graders - Male,Global Education Policy Dashboard,World Bank,NA,73.57965
-SE.PRM.LCAP.1.R,(De Facto) Average developmental score for 1st Graders - Rural,Global Education Policy Dashboard,World Bank,NA,73.56392
-SE.PRM.LCAP.1.U,(De Facto) Average developmental score for 1st Graders - Urban,Global Education Policy Dashboard,World Bank,NA,72.97277
-SE.PRM.LCAP.2,(De Facto) Average numeracy score for 1st Graders,Global Education Policy Dashboard,World Bank,NA,92.42793
-SE.PRM.LCAP.2.F,(De Facto) Average numeracy score for 1st Graders - Female,Global Education Policy Dashboard,World Bank,NA,93.18885
-SE.PRM.LCAP.2.M,(De Facto) Average numeracy score for 1st Graders - Male,Global Education Policy Dashboard,World Bank,NA,92.35242
-SE.PRM.LCAP.2.R,(De Facto) Average numeracy score for 1st Graders - Rural,Global Education Policy Dashboard,World Bank,NA,90.52072
-SE.PRM.LCAP.2.U,(De Facto) Average numeracy score for 1st Graders - Urban,Global Education Policy Dashboard,World Bank,NA,92.94054
-SE.PRM.LCAP.3,(De Facto) Average literacy score for 1st Graders,Global Education Policy Dashboard,World Bank,NA,75.68527
-SE.PRM.LCAP.3.F,(De Facto) Average literacy score for 1st Graders - Female,Global Education Policy Dashboard,World Bank,NA,77.06826
-SE.PRM.LCAP.3.M,(De Facto) Average literacy score for 1st Graders - Male,Global Education Policy Dashboard,World Bank,NA,76.19879
-SE.PRM.LCAP.3.R,(De Facto) Average literacy score for 1st Graders - Rural,Global Education Policy Dashboard,World Bank,NA,75.51715
-SE.PRM.LCAP.3.U,(De Facto) Average literacy score for 1st Graders - Urban,Global Education Policy Dashboard,World Bank,NA,75.73045
-SE.PRM.LCAP.4,(De Facto) Average executive funcion score for 1st Graders,Global Education Policy Dashboard,World Bank,NA,68.37962
-SE.PRM.LCAP.4.F,(De Facto) Average executive funcion score for 1st Graders - Female,Global Education Policy Dashboard,World Bank,NA,69.82967
-SE.PRM.LCAP.4.M,(De Facto) Average executive funcion score for 1st Graders - Male,Global Education Policy Dashboard,World Bank,NA,69.71698
-SE.PRM.LCAP.4.R,(De Facto) Average executive funcion score for 1st Graders - Rural,Global Education Policy Dashboard,World Bank,NA,70.06888
-SE.PRM.LCAP.4.U,(De Facto) Average executive funcion score for 1st Graders - Urban,Global Education Policy Dashboard,World Bank,NA,67.92558
-SE.PRM.LCAP.5,(De Facto) Average socioemotional score for 1st Graders,Global Education Policy Dashboard,World Bank,NA,55.89918
-SE.PRM.LCAP.5.F,(De Facto) Average socioemotional score for 1st Graders - Female,Global Education Policy Dashboard,World Bank,NA,59.43004
-SE.PRM.LCAP.5.M,(De Facto) Average socioemotional score for 1st Graders - Male,Global Education Policy Dashboard,World Bank,NA,56.05042
-SE.PRM.LCAP.5.R,(De Facto) Average socioemotional score for 1st Graders - Rural,Global Education Policy Dashboard,World Bank,NA,58.14894
-SE.PRM.LCAP.5.U,(De Facto) Average socioemotional score for 1st Graders - Urban,Global Education Policy Dashboard,World Bank,NA,55.29449
-SE.PRM.LCBC,Policy Lever (Learners) - Center-Based Care,Global Education Policy Dashboard,World Bank,"Policy Survey. A score of 1,5 based on 2 factors. Each factor has received an equal weight in terms of points (2). The factors are the following:  -	Percentage of children age 36-59 months who are attending ECE  -	Percentage of ECE Classrooms with Effective Practices. Each percentage is treated as the share of the possible points, and thus to create the total score, the sum of the share times the possible points is added to 1.",1.52
-SE.PRM.LCBC.1,(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary education (for children age 0-83 months)?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LCBC.2,(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme,Global Education Policy Dashboard,World Bank,NA,13
-SE.PRM.LCBC.3,(De Jure) Are there developmental standards established for early childhood care and education?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LCBC.4,"(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary teacher?",Global Education Policy Dashboard,World Bank,NA,3
-SE.PRM.LCBC.5,"(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-service training in ECCE service delivery?",Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LCBC.DF,(De Facto) Policy Lever (Learners) - Center-Based Care,Global Education Policy Dashboard,World Bank,NA,1.52
-SE.PRM.LCBC.DJ,(De Jure) Policy Lever (Learners) - Center-Based Care,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.LERN,Proficiency on GEPD Assessment,Global Education Policy Dashboard,World Bank,The fraction of students scoring at least 20/24 points on 4th grade language and 14/17 points on the math student assessment.  Our team consulted several content experts to advise on how many of our math and language items a minimally proficient 4th grade student should be able to get correct to decide these thresholds.,4.403961
-SE.PRM.LERN.1,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey,Global Education Policy Dashboard,World Bank,NA,4.403961
-SE.PRM.LERN.1.F,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Female,Global Education Policy Dashboard,World Bank,NA,5.802397
-SE.PRM.LERN.1.M,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Male,Global Education Policy Dashboard,World Bank,NA,3.873308
-SE.PRM.LERN.1.R,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Rural,Global Education Policy Dashboard,World Bank,NA,5.638794
-SE.PRM.LERN.1.U,(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Urban,Global Education Policy Dashboard,World Bank,NA,4.043447
-SE.PRM.LERN.2,(De Facto) Percent of children proficient in literacy according to GEPD School Survey,Global Education Policy Dashboard,World Bank,NA,21.83177
-SE.PRM.LERN.2.F,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Female,Global Education Policy Dashboard,World Bank,NA,25.00168
-SE.PRM.LERN.2.M,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Male,Global Education Policy Dashboard,World Bank,NA,23.3454
-SE.PRM.LERN.2.R,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Rural,Global Education Policy Dashboard,World Bank,NA,22.3169
-SE.PRM.LERN.2.U,(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Urban,Global Education Policy Dashboard,World Bank,NA,21.69014
-SE.PRM.LERN.3,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey,Global Education Policy Dashboard,World Bank,NA,1.952223
-SE.PRM.LERN.3.F,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Female,Global Education Policy Dashboard,World Bank,NA,2.607031
-SE.PRM.LERN.3.M,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Male,Global Education Policy Dashboard,World Bank,NA,2.130636
-SE.PRM.LERN.3.R,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Rural,Global Education Policy Dashboard,World Bank,NA,2.869835
-SE.PRM.LERN.3.U,(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Urban,Global Education Policy Dashboard,World Bank,NA,1.684323
-SE.PRM.LFCP,Policy Lever (Learners) - Caregiver Capacity – Financial Capacity,Global Education Policy Dashboard,World Bank,NA,4.4
-SE.PRM.LFCP.1,(De Jure) Are anti poverty interventions that focus on ECD publicly supported?,Global Education Policy Dashboard,World Bank,NA,2
-SE.PRM.LFCP.2,(De Jure) Are cash transfers conditional on ECD services/enrollment publicly supported?,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.LFCP.3,(De Jure) Are cash transfers focused partially on ECD publicly supported?,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.LFCP.4,(De Facto) Coverage of social protection programs,Global Education Policy Dashboard,World Bank,NA,85
-SE.PRM.LFCP.DF,(De Facto) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity,Global Education Policy Dashboard,World Bank,NA,4.4
-SE.PRM.LFCP.DJ,(De Jure) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.LHTH,Policy Lever (Learners) - Health,Global Education Policy Dashboard,World Bank,"Policy Survey. A score of 1,5 based on 4 factors. Each factor has received an equal weight in terms of points (1). The factors are the following:  -	Percentage of children who at age: a) 12-23 months had received all basic vaccinations recommended in the national immunization schedule  -	Percentage of  children under 5 covered by health insurance   -	Percentage of children age 6-59 months who received deworming medication.  -	Percentage of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility.  Each percentage is treated as the share of the possible points, and thus to create the total score, their sum is added to 1.",3.626667
-SE.PRM.LHTH.1,(De Jure) Are young children required to receive a complete course of childhood immunizations?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LHTH.2,(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immunization schedule,Global Education Policy Dashboard,World Bank,NA,98
-SE.PRM.LHTH.3,(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free or by subsidizing them,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LHTH.4,(De Facto) Percent of  children under 5 covered by health insurance,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.LHTH.5,(De Jure) Are deworming pills funded and distributed by the government?,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.LHTH.6,(De Facto) Percent of children age 6-59 months who received deworming medication,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.LHTH.7,(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?,Global Education Policy Dashboard,World Bank,NA,2
-SE.PRM.LHTH.8,(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility,Global Education Policy Dashboard,World Bank,NA,98
-SE.PRM.LHTH.DF,(De Facto) Policy Lever (Learners) - Health,Global Education Policy Dashboard,World Bank,NA,3.626667
-SE.PRM.LHTH.DJ,(De Jure) Policy Lever (Learners) - Health,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.LNTN,Policy Lever (Learners) - Nutrition Programs,Global Education Policy Dashboard,World Bank,"Policy Survey. A score of 1,5 based on 4 factors. Each factor has received an equal weight in terms of points (1). The factors are the following:  -	Percentage of households with salt testing positive for any iodide among households  -	Percentage of children age 6–23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day  -	Percentage of schools with a school feeding program  -	Percentage of children born in the five (three) years preceding the survey who were ever breastfedEach percentage is treated as the share of the possible points, and thus to create the total score, their sum is added to 1.",3.543433
-SE.PRM.LNTN.1,(De Jure) Does a national policy to encourage salt iodization exist?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LNTN.2,(De Facto) Percent of households with salt testing positive for any iodide among households,Global Education Policy Dashboard,World Bank,NA,88
-SE.PRM.LNTN.3,"(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?",Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LNTN.4,(De Facto) Percent of children age 6–23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day,Global Education Policy Dashboard,World Bank,NA,36
-SE.PRM.LNTN.5,(De Jure) Does a national policy exist to encourage breastfeeding?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LNTN.6,(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed,Global Education Policy Dashboard,World Bank,NA,91
-SE.PRM.LNTN.7,(De Jure) Is there a publicly funded school feeding program?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LNTN.8,(De Facto) Percent of schools reporting having publicly funded school feeding program,Global Education Policy Dashboard,World Bank,NA,39.34329
-SE.PRM.LNTN.DF,(De Facto) Policy Lever (Learners) - Nutrition Programs,Global Education Policy Dashboard,World Bank,NA,3.543433
-SE.PRM.LNTN.DJ,(De Jure) Policy Lever (Learners) - Nutrition Programs,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.LSKC,Policy Lever (Learners) - Caregiver Capacity – Skills Capacity,Global Education Policy Dashboard,World Bank,NA,4.68
-SE.PRM.LSKC.1,(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.LSKC.2,"(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early childhood stimulation? Home visits, Group sessions, Community health programs, Health center waiting rooms, School-based groups, Mass media/Information campaigns",Global Education Policy Dashboard,World Bank,NA,2
-SE.PRM.LSKC.3,(De Facto) Percent of children under age 5 who have three or more children’s books,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.LSKC.4,(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household,Global Education Policy Dashboard,World Bank,NA,92
-SE.PRM.LSKC.DF,(De Facto) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity,Global Education Policy Dashboard,World Bank,NA,4.68
-SE.PRM.LSKC.DJ,(De Jure) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.OPMN,Operational Management,Global Education Policy Dashboard,World Bank,"School Survey.  Principals/head teachers are given two vignettes:   , One on solving the problem of a hypothetical leaky roof   - One on solving a problem of inadequate numbers of textbooks.    Each vignette is worth 2 points.      The indicator will measure two things: presence of functions and quality of functions. In each vignette:   - 0.5 points are awarded for someone specific having the responsibility to fix   - 0.5 point is awarded if the school can fully fund the repair, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community   - 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved.",4.68998
-SE.PRM.OPMN.1,(De Facto) Average score for the presence and quality of core operational management functions,Global Education Policy Dashboard,World Bank,NA,4.68998
-SE.PRM.OPMN.1.F,(De Facto) Average score for the presence and quality of core operational management functions - Female,Global Education Policy Dashboard,World Bank,NA,4.702555
-SE.PRM.OPMN.1.M,(De Facto) Average score for the presence and quality of core operational management functions - Male,Global Education Policy Dashboard,World Bank,NA,4.633495
-SE.PRM.OPMN.1.R,(De Facto) Average score for the presence and quality of core operational management functions - Rural,Global Education Policy Dashboard,World Bank,NA,4.570292
-SE.PRM.OPMN.1.U,(De Facto) Average score for the presence and quality of core operational management functions - Urban,Global Education Policy Dashboard,World Bank,NA,4.723842
-SE.PRM.OPMN.2,(De Facto) Average score for infrastructure repair/maintenance,Global Education Policy Dashboard,World Bank,NA,4.422753
-SE.PRM.OPMN.2.F,(De Facto) Average score for infrastructure repair/maintenance - Female,Global Education Policy Dashboard,World Bank,NA,4.456541
-SE.PRM.OPMN.2.M,(De Facto) Average score for infrastructure repair/maintenance - Male,Global Education Policy Dashboard,World Bank,NA,4.271911
-SE.PRM.OPMN.2.R,(De Facto) Average score for infrastructure repair/maintenance - Rural,Global Education Policy Dashboard,World Bank,NA,4.206943
-SE.PRM.OPMN.2.U,(De Facto) Average score for infrastructure repair/maintenance - Urban,Global Education Policy Dashboard,World Bank,NA,4.48381
-SE.PRM.OPMN.3,(De Facto) Average score for ensuring  availability of school inputs,Global Education Policy Dashboard,World Bank,NA,4.95438
-SE.PRM.OPMN.3.F,(De Facto) Average score for ensuring  availability of school inputs - Female,Global Education Policy Dashboard,World Bank,NA,4.945147
-SE.PRM.OPMN.3.M,(De Facto) Average score for ensuring  availability of school inputs - Male,Global Education Policy Dashboard,World Bank,NA,4.995079
-SE.PRM.OPMN.3.R,(De Facto) Average score for ensuring  availability of school inputs - Rural,Global Education Policy Dashboard,World Bank,NA,4.921462
-SE.PRM.OPMN.3.U,(De Facto) Average score for ensuring  availability of school inputs - Urban,Global Education Policy Dashboard,World Bank,NA,4.963874
-SE.PRM.PEDG,Teacher Pedagogical Skills,Global Education Policy Dashboard,World Bank,School survey.  Based on TEACH ratings from classroom observations,67.96402
-SE.PRM.PEDG.1,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score),Global Education Policy Dashboard,World Bank,NA,67.96402
-SE.PRM.PEDG.1.F,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.1.M,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.1.R,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Rural,Global Education Policy Dashboard,World Bank,NA,56.75977
-SE.PRM.PEDG.1.U,(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Urban,Global Education Policy Dashboard,World Bank,NA,71.22572
-SE.PRM.PEDG.2,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score),Global Education Policy Dashboard,World Bank,NA,71.61713
-SE.PRM.PEDG.2.F,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.2.M,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.2.R,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Rural,Global Education Policy Dashboard,World Bank,NA,72.16639
-SE.PRM.PEDG.2.U,(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Urban,Global Education Policy Dashboard,World Bank,NA,71.45724
-SE.PRM.PEDG.3,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score),Global Education Policy Dashboard,World Bank,NA,73.88194
-SE.PRM.PEDG.3.F,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.3.M,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.3.R,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Rural,Global Education Policy Dashboard,World Bank,NA,58.5381
-SE.PRM.PEDG.3.U,(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Urban,Global Education Policy Dashboard,World Bank,NA,78.34872
-SE.PRM.PEDG.4,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score),Global Education Policy Dashboard,World Bank,NA,67.557
-SE.PRM.PEDG.4.F,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Female,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.4.M,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Male,Global Education Policy Dashboard,World Bank,NA,NA
-SE.PRM.PEDG.4.R,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Rural,Global Education Policy Dashboard,World Bank,NA,54.99351
-SE.PRM.PEDG.4.U,(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Urban,Global Education Policy Dashboard,World Bank,NA,0.7121439
-SE.PRM.PKNW,Principal School Knowledge,Global Education Policy Dashboard,World Bank,NA,3.781961
-SE.PRM.PKNW.1,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school,Global Education Policy Dashboard,World Bank,NA,3.781961
-SE.PRM.PKNW.1.F,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Female,Global Education Policy Dashboard,World Bank,NA,3.884735
-SE.PRM.PKNW.1.M,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Male,Global Education Policy Dashboard,World Bank,NA,3.31374
-SE.PRM.PKNW.1.R,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Rural,Global Education Policy Dashboard,World Bank,NA,4.025373
-SE.PRM.PKNW.1.U,(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Urban,Global Education Policy Dashboard,World Bank,NA,3.711302
-SE.PRM.PKNW.2,(De Facto) Percent of principals familiar with teachers' content knowledge,Global Education Policy Dashboard,World Bank,NA,71.09892
-SE.PRM.PKNW.2.F,(De Facto) Percent of principals familiar with teachers' content knowledge - Female,Global Education Policy Dashboard,World Bank,NA,73.92525
-SE.PRM.PKNW.2.M,(De Facto) Percent of principals familiar with teachers' content knowledge - Male,Global Education Policy Dashboard,World Bank,NA,59.70187
-SE.PRM.PKNW.2.R,(De Facto) Percent of principals familiar with teachers' content knowledge - Rural,Global Education Policy Dashboard,World Bank,NA,73.99107
-SE.PRM.PKNW.2.U,(De Facto) Percent of principals familiar with teachers' content knowledge - Urban,Global Education Policy Dashboard,World Bank,NA,70.1661
-SE.PRM.PKNW.3,(De Facto) Percent of principals familiar with teachers' experience,Global Education Policy Dashboard,World Bank,NA,99.3545
-SE.PRM.PKNW.3.F,(De Facto) Percent of principals familiar with teachers' experience - Female,Global Education Policy Dashboard,World Bank,NA,99.20829
-SE.PRM.PKNW.3.M,(De Facto) Percent of principals familiar with teachers' experience - Male,Global Education Policy Dashboard,World Bank,NA,100
-SE.PRM.PKNW.3.R,(De Facto) Percent of principals familiar with teachers' experience - Rural,Global Education Policy Dashboard,World Bank,NA,99.11532
-SE.PRM.PKNW.3.U,(De Facto) Percent of principals familiar with teachers' experience - Urban,Global Education Policy Dashboard,World Bank,NA,99.42349
-SE.PRM.PKNW.4,(De Facto) Percent of principals familiar with availability of classroom inputs,Global Education Policy Dashboard,World Bank,NA,82.12106
-SE.PRM.PKNW.4.F,(De Facto) Percent of principals familiar with availability of classroom inputs - Female,Global Education Policy Dashboard,World Bank,NA,82.85216
-SE.PRM.PKNW.4.M,(De Facto) Percent of principals familiar with availability of classroom inputs - Male,Global Education Policy Dashboard,World Bank,NA,78.61553
-SE.PRM.PKNW.4.R,(De Facto) Percent of principals familiar with availability of classroom inputs - Rural,Global Education Policy Dashboard,World Bank,NA,87.37576
-SE.PRM.PKNW.4.U,(De Facto) Percent of principals familiar with availability of classroom inputs - Urban,Global Education Policy Dashboard,World Bank,NA,80.61112
-SE.PRM.PMAN,Principal Management Skills,Global Education Policy Dashboard,World Bank,"Score of 1,5 based on sum of two components (goal setting and problem solving):   - 0.5 Point. School Goals Exists    - 0.5 Point. School goals are clear to school director, teachers, students, parents, and other members of community (partial credit available)   - 0.5 Point. Specific goals related to improving student achievement ( improving test scores, improving pass rates, reducing drop out, reducing absenteeism, improving pedagogy, more resources for infrastructure, more resources for inputs)    - 0.5 Point. School has defined system to measure goals (partial credit available).     - 0.67 Point. Principal takes proactive role in problem solving  - 0.67 Point. Principal collects relevant information   - 0.67 Point. Principal comes up with effective solution for solving problem",3.999664
-SE.PRM.PMAN.1,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term",Global Education Policy Dashboard,World Bank,NA,3.999664
-SE.PRM.PMAN.1.F,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Female",Global Education Policy Dashboard,World Bank,NA,4.012534
-SE.PRM.PMAN.1.M,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Male",Global Education Policy Dashboard,World Bank,NA,3.940592
-SE.PRM.PMAN.1.R,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Rural",Global Education Policy Dashboard,World Bank,NA,4.066314
-SE.PRM.PMAN.1.U,"(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Urban",Global Education Policy Dashboard,World Bank,NA,3.98044
-SE.PRM.PMAN.2,(De Facto) Average score for the extent to which principals master problem-solving in the short-term,Global Education Policy Dashboard,World Bank,NA,4.576138
-SE.PRM.PMAN.2.F,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Female,Global Education Policy Dashboard,World Bank,NA,4.600279
-SE.PRM.PMAN.2.M,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Male,Global Education Policy Dashboard,World Bank,NA,4.464253
-SE.PRM.PMAN.2.R,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Rural,Global Education Policy Dashboard,World Bank,NA,4.647202
-SE.PRM.PMAN.2.U,(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Urban,Global Education Policy Dashboard,World Bank,NA,4.555641
-SE.PRM.PMAN.3,(De Facto) Average score for the extent to which principals master goal-setting in the long term,Global Education Policy Dashboard,World Bank,NA,3.423191
-SE.PRM.PMAN.3.F,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Female,Global Education Policy Dashboard,World Bank,NA,3.424789
-SE.PRM.PMAN.3.M,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Male,Global Education Policy Dashboard,World Bank,NA,3.416931
-SE.PRM.PMAN.3.R,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Rural,Global Education Policy Dashboard,World Bank,NA,3.485425
-SE.PRM.PMAN.3.U,(De Facto) Average score for the extent to which principals master goal-setting in the long term - Urban,Global Education Policy Dashboard,World Bank,NA,3.40524
-SE.PRM.PROE,Proficiency by Grade 2/3,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.PROE.1,"(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS",Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.SATT,Policy Lever (School Management) - Attraction,Global Education Policy Dashboard,World Bank,"This policy lever measures whether the right candidates are being attracted to the profession of school principals. The questions will aim to capture the provision of benefits to attract and maintain the best people to serve as principals.     Scoring:   , For now, score is between 1-5 based on how satisfied the principal is with status in community.  We  also add in component based on Principal salaries as a share of GDP per capita.  GDP per capita data is pulled from the World Development Indicators database of the World Bank.    Principal salary points are put on a 1-5 scale as follows:   -	1 point. Salary less than 50% of GDP per capita   -	2 points. Salary 50-75% of GDP per capita   - 3 points. Salary 75-100% of GDP per capita   -	4 points. Salary 100-150% of GDP per capita   -	5 points. Salary more than 150% of GDP per capita",4.513657
-SE.PRM.SATT.1,(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as professionalized and distinct figure within schools?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SATT.2,(De Facto) Average principal salary as percent of GDP per capita,Global Education Policy Dashboard,World Bank,NA,2.44115
-SE.PRM.SATT.3,(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community,Global Education Policy Dashboard,World Bank,NA,4.225477
-SE.PRM.SATT.DF,(De Facto) Policy Lever (School Management) - Attraction,Global Education Policy Dashboard,World Bank,NA,4.513657
-SE.PRM.SATT.DJ,(De Jure) Policy Lever (School Management) - Attraction,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.SCFN,Policy Lever (School Management) - Clarity of Functions,Global Education Policy Dashboard,World Bank,"Policy Survey. A score of 1,5 based on 1 factor for 7 functions. To score this question, principals are asked “Do you know if the policies governing schools assign responsibility for the implementation of each of the following? Indicate for each, Yes/No as well as the level at which they are allocated: national, sub-national, local, or school.” The total score has been split among the 7 functions equally. The functions are the following:   -	Maintenance and expansion of school infrastructure   -	Procurement of materials   -	Teacher hiring and assignment   -	Teacher supervision, training, and coaching of teachers   -	Student learning assessments   -	Principal hiring and assignment  -	Principal supervision and training. Points are assigned for each function if the principal said that responsibility was allocated, regardless of the level.",4.962868
-SE.PRM.SCFN.1,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance and expansion of school infrastructure?,Global Education Policy Dashboard,World Bank,NA,97.42655
-SE.PRM.SCFN.10,(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SCFN.11,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hiring and assignment?,Global Education Policy Dashboard,World Bank,NA,98.56372
-SE.PRM.SCFN.12,(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SCFN.13,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal supervision and training?,Global Education Policy Dashboard,World Bank,NA,99.77132
-SE.PRM.SCFN.14,(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SCFN.2,(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastructure?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SCFN.3,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement of materials?,Global Education Policy Dashboard,World Bank,NA,98.1115
-SE.PRM.SCFN.4,(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SCFN.5,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring and assignment?,Global Education Policy Dashboard,World Bank,NA,99.10351
-SE.PRM.SCFN.6,(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?,Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.SCFN.7,"(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervision, training, and coaching?",Global Education Policy Dashboard,World Bank,NA,99.92377
-SE.PRM.SCFN.8,"(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?",Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SCFN.9,(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learning assessments?,Global Education Policy Dashboard,World Bank,NA,99.83666
-SE.PRM.SCFN.DF,(De Facto) Policy Lever (School Management) - Clarity of Functions,Global Education Policy Dashboard,World Bank,NA,4.962868
-SE.PRM.SCFN.DJ,(De Jure) Policy Lever (School Management) - Clarity of Functions,Global Education Policy Dashboard,World Bank,NA,4.5
-SE.PRM.SEVL,Policy Lever (School Management) - Evaluation,Global Education Policy Dashboard,World Bank,"School Survey. This policy lever measures the extent to which principal performance is being monitored and enforced via accountability measures. The idea is that the indicator will be based on: 1) there is a legislation outlining the need to monitor, 2) principals are being evaluated, 3) principals are being evaluated on multiple things, and 4) there the accountability mechanisms in place. Score is the sum of the following:   , 1 Point. Was principal formally evaluated in past school year?   - 1 Point. Evaluation based on multiple components. Partial Credit available. 1/3 point for just one component, 2/3 points for 2-5 components, 1 point for more than 5 components.    - 1 Point.  Consequences exist if principal receives 2 or more negative evaluations   - 1 Point. Rewards exist if principal receives 2 or more positive evaluations",3.589704
-SE.PRM.SEVL.1,(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SEVL.2,(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?,Global Education Policy Dashboard,World Bank,NA,3
-SE.PRM.SEVL.3,(De Facto) Percent of principals that report having been evaluated  during the last school year,Global Education Policy Dashboard,World Bank,NA,57.44516
-SE.PRM.SEVL.4,(De Facto) Percent of principals that report having been evaluated on multiple factors,Global Education Policy Dashboard,World Bank,NA,89.23277
-SE.PRM.SEVL.5,(De Facto) Percent of principals that report there would be consequences after two negative evaluations,Global Education Policy Dashboard,World Bank,NA,51.85771
-SE.PRM.SEVL.6,(De Facto) Percent of principals that report there would be consequences after two positive evaluations,Global Education Policy Dashboard,World Bank,NA,47.22421
-SE.PRM.SEVL.DF,(De Facto) Policy Lever (School Management) - Evaluation,Global Education Policy Dashboard,World Bank,NA,3.589704
-SE.PRM.SEVL.DJ,(De Jure) Policy Lever (School Management) - Evaluation,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.SSLD,Policy Lever (School Management) - Selection & Deployment,Global Education Policy Dashboard,World Bank,"This policy lever  measures whether the right candidates being selected. These questions will probe what the recruitment process is like to ensure that these individuals are getting the positions. The question would ultimately be based on: 1) there is a standard approach for selecting principals, 2) that approach relies on professional/academic requirements, and 3) those requirements are common in practice.     Scoring:   , 1 (lowest score) Most important factor is political affiliations or ethnic group.   - 2  Political affiliations or ethnic group is a consideration, but other factors considered as well.   - 3 Most important factor is years of experience, good relationship with owner/education department, and does not factor in quality teaching, demonstrated management qualities, or knowledge of local community.   - 4 Quality teaching, demonstrated management qualities, or knowledge of local community is a consideration in hiring, but not the most important factor   - 5 Quality teaching, demonstrated management qualities, or knowledge of local community is the most important factor in hiring.",4.591908
-SE.PRM.SSLD.1,(De Jure) Is there a systematic approach/rubric for the selection of principals?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SSLD.10,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is years of experience,Global Education Policy Dashboard,World Bank,NA,28.24496
-SE.PRM.SSLD.11,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is quality of teaching,Global Education Policy Dashboard,World Bank,NA,3.694167
-SE.PRM.SSLD.12,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is demonstrated management qualities,Global Education Policy Dashboard,World Bank,NA,62.24074
-SE.PRM.SSLD.13,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is having a good relationship with the owner of the school,Global Education Policy Dashboard,World Bank,NA,0.1188298
-SE.PRM.SSLD.14,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is political affiliations,Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.SSLD.15,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is ethnic group,Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.SSLD.16,(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is knowledge of the local community,Global Education Policy Dashboard,World Bank,NA,1.803683
-SE.PRM.SSLD.2,"(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?",Global Education Policy Dashboard,World Bank,NA,3
-SE.PRM.SSLD.3,(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of experience,Global Education Policy Dashboard,World Bank,NA,89.04792
-SE.PRM.SSLD.4,(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of teaching,Global Education Policy Dashboard,World Bank,NA,57.45866
-SE.PRM.SSLD.5,(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated management qualities,Global Education Policy Dashboard,World Bank,NA,92.66841
-SE.PRM.SSLD.6,(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relationship with the owner of the school,Global Education Policy Dashboard,World Bank,NA,23.11228
-SE.PRM.SSLD.7,(De Facto) Percent of principals that report that the factors considered when selecting a principal include political affiliations,Global Education Policy Dashboard,World Bank,NA,8.982212
-SE.PRM.SSLD.8,(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group,Global Education Policy Dashboard,World Bank,NA,6.453038
-SE.PRM.SSLD.9,(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of the local community,Global Education Policy Dashboard,World Bank,NA,35.02789
-SE.PRM.SSLD.DF,(De Facto) Policy Lever (School Management) - Selection & Deployment,Global Education Policy Dashboard,World Bank,NA,4.591908
-SE.PRM.SSLD.DJ,(De Jure) Policy Lever (School Management) - Selection & Deployment,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.SSUP,Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,"This policy lever measures the extent to which principals receive training and/or exposure to other professional opportunities that could help them be better school leaders. The questions aim to figure out if such programs are provided, and if they are, their level of quality.      Scoring (sum of components below):    , 1 Point.  Principal has received formal training on managing school.   - 1 Point.  Training involved training for new principals, in-service training, and mentoring/coaching (partial credit available)  Had mentoring/coaching by experienced principals.   - 1 Point.  Have used skills gained at training.   - 1 Point.  Principals offered training at least once per year",3.480374
-SE.PRM.SSUP.1,(De Jure) Are principals required to have training on how to manage a school?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SSUP.10,(De Facto) Percent of principals that report having used the skills they gained at the last training they attended,Global Education Policy Dashboard,World Bank,NA,94.22036
-SE.PRM.SSUP.11,(De Facto) Average number of trainings that principals report having been offered to them in the past year,Global Education Policy Dashboard,World Bank,NA,2.548124
-SE.PRM.SSUP.2,(De Jure) Are principals required to have management training for new principals?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SSUP.3,(De Jure) Are principals required to have in-service training?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SSUP.4,(De Jure) Are principals required to have mentoring/coaching by experienced principals?,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.SSUP.5,(De Jure) How many times per year do principals have trainings?,Global Education Policy Dashboard,World Bank,NA,2
-SE.PRM.SSUP.6,(De Facto) Percent of principals that report ever having received formal training,Global Education Policy Dashboard,World Bank,NA,77.29937
-SE.PRM.SSUP.7,(De Facto) Percent of principals that report having received management training for new principals,Global Education Policy Dashboard,World Bank,NA,57.48539
-SE.PRM.SSUP.8,(De Facto) Percent of principals that report having received in-service training,Global Education Policy Dashboard,World Bank,NA,56.23238
-SE.PRM.SSUP.9,(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals,Global Education Policy Dashboard,World Bank,NA,26.87236
-SE.PRM.SSUP.DF,(De Facto) Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,NA,3.480374
-SE.PRM.SSUP.DJ,(De Jure) Policy Lever (School Management) - Support,Global Education Policy Dashboard,World Bank,NA,4.5
-SE.PRM.TATT,Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,"In the school survey, a number of De Facto questions on teacher attraction are asked.  0.8 points is awarded for each of the following:   , 0.8 Points. Teacher satisfied with job   - 0.8 Points. Teacher satisfied with status in community   - 0.8 Points. Would better teachers be promoted faster?   - 0.8 Points. Do teachers receive bonuses?   - 0.8 Points. One minus the fraction of months in past year with a salary delay.",3.519829
-SE.PRM.TATT.1,(De Jure) Average starting public-school teacher salary as percent of GDP per capita,Global Education Policy Dashboard,World Bank,NA,164.9402
-SE.PRM.TATT.2,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community,Global Education Policy Dashboard,World Bank,NA,79.00697
-SE.PRM.TATT.3,(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher,Global Education Policy Dashboard,World Bank,NA,80.23495
-SE.PRM.TATT.4,(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries,Global Education Policy Dashboard,World Bank,NA,17.18978
-SE.PRM.TATT.5,(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas,Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.TATT.6,(De Facto) Percent of teachers that performance matters for promotions,Global Education Policy Dashboard,World Bank,NA,39.98632
-SE.PRM.TATT.7,(De Jure) Is there a well-established career path for teachers?,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.TATT.8,(De Facto) Percent of teachers that report salary delays in the past 12 months,Global Education Policy Dashboard,World Bank,NA,17.33464
-SE.PRM.TATT.DF,(De Facto) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.TATT.DJ,(De Jure) Policy Lever (Teaching) - Attraction,Global Education Policy Dashboard,World Bank,NA,3.519829
-SE.PRM.TENR,Net Adjusted Enrollment Rate,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.TENR.1,(De Facto) Percent of primary school age children who are enrolled at primary education,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.TEVL,Policy Lever (Teaching) - Evaluation,Global Education Policy Dashboard,World Bank,"School survey.  This policy lever measures whether there is a teacher evaluation system in place, and if so, the types of decisions that are made based on the evaluation results.  Score is the sum of the following:   , 1 Point. Was teacher formally evaluated in past school year?   - 1 Point total.  0.2 points for each of the following: Evaluation included evaluation of attendance, knowledge of subject matter, pedagogical skills in the classroom, students' academic achievement, students' socio-emotional development       - 1 Point.  Consequences exist if teacher receives 2 or more negative evaluations   - 1 Point. Rewards exist if teacher receives 2 or more positive evaluations",3.599852
-SE.PRM.TEVL.1,"(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national, regional, local)",Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.TEVL.2,(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TEVL.3,(De Facto) Percent of teachers that report being evaluated in the past 12 months,Global Education Policy Dashboard,World Bank,NA,61.15424
-SE.PRM.TEVL.4,(De Jure) The criteria to evaluate teachers is clear,Global Education Policy Dashboard,World Bank,NA,3
-SE.PRM.TEVL.5,(De Facto) Number of criteria used to evaluate teachers,Global Education Policy Dashboard,World Bank,NA,4.703585
-SE.PRM.TEVL.6,(De Facto) Percent of teachers that report there would be consequences after two negative evaluations,Global Education Policy Dashboard,World Bank,NA,79.89253
-SE.PRM.TEVL.7,(De Facto) Percent of teachers that report there would be consequences after two positive evaluations,Global Education Policy Dashboard,World Bank,NA,77.73793
-SE.PRM.TEVL.8,(De Jure) There are clear consequences for teachers who receive two or more negative evaluations,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TEVL.9,(De Jure) There are clear consequences for teachers who receive two or more positive evaluations,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TEVL.DF,(De Facto) Policy Lever (Teaching) - Evaluation,Global Education Policy Dashboard,World Bank,NA,3.599852
-SE.PRM.TEVL.DJ,(De Jure) Policy Lever (Teaching) - Evaluation,Global Education Policy Dashboard,World Bank,NA,4.75
-SE.PRM.TINM,Policy Lever (Teaching) - Intrinsic Motivation,Global Education Policy Dashboard,World Bank,"School Survey. This lever measures whether teachers are intrinsically motivated to teach. The question(s) aim to address this phenomenon by measuring the level of intrinsic motivation among teachers as well as teacher values that may be relevant for ensuring that the teacher is motivated to focus on all children and not just some.  Score is sum of the following      , Max 0.8 Points.. Average response to battery of questions on whether teachers considers it acceptable to be absent in certain situations.  Average response scores scaled to be continuous score between 0-1.     - Max 10.8 Points.. Average response to battery of questions on whether teachers consider some students to be more deserving of attention.  Average response scores scaled to be continuous score between 0-1.    - Max 0.8 point. Average response to battery of questions on teachers growth mindset regarding students.  Average response scores scaled to be continuous score between 0-1.    - 0.8 Points. Binary response to whether teacher said they became teacher, because teaching offered steady career.  Teacher scored 0 points if they reported wanting to teach for a steady career.    -0.8 Points.  Binary response of whether there is a probationary period for teachers.",3.393966
-SE.PRM.TINM.1,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the assigned curriculum has been completed""",Global Education Policy Dashboard,World Bank,NA,713.0139
-SE.PRM.TINM.10,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can change even their basic intelligence level considerably""",Global Education Policy Dashboard,World Bank,NA,6574.387
-SE.PRM.TINM.11,(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers,Global Education Policy Dashboard,World Bank,NA,58.5266
-SE.PRM.TINM.12,(De Facto) New teachers are required to undergo a probationary period,Global Education Policy Dashboard,World Bank,NA,46.07011
-SE.PRM.TINM.13,(De Jure) New teachers are required to undergo a probationary period,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TINM.2,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if students are left with work to do""",Global Education Policy Dashboard,World Bank,NA,1007.504
-SE.PRM.TINM.3,"(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the teacher is doing something useful for the community""",Global Education Policy Dashboard,World Bank,NA,3785.369
-SE.PRM.TINM.4,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they attend school regularly""",Global Education Policy Dashboard,World Bank,NA,6402.248
-SE.PRM.TINM.5,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they come to school with materials""",Global Education Policy Dashboard,World Bank,NA,6638.137
-SE.PRM.TINM.6,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they are motivated to learn""",Global Education Policy Dashboard,World Bank,NA,7491.895
-SE.PRM.TINM.7,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students have a certain amount of intelligence and they really can’t do much to change it""",Global Education Policy Dashboard,World Bank,NA,5009.32
-SE.PRM.TINM.8,"(De Facto) Percent of teachers that agree or strongly agrees with ""To be honest, students can’t really change how intelligent they are""",Global Education Policy Dashboard,World Bank,NA,4233.655
-SE.PRM.TINM.9,"(De Facto) Percent of teachers that agree or strongly agrees with ""Students can always substantially change how intelligent they are""",Global Education Policy Dashboard,World Bank,NA,7389.649
-SE.PRM.TINM.DF,(De Facto) Policy Lever (Teaching) - Intrinsic Motivation,Global Education Policy Dashboard,World Bank,NA,3.393966
-SE.PRM.TINM.DJ,(De Jure) Policy Lever (Teaching) - Intrinsic Motivation,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.TMNA,Policy Lever (Teaching) - Monitoring & Accountability,Global Education Policy Dashboard,World Bank,"School Survey.  This policy lever measures the extent to which teacher presence is being monitored, whether attendance is rewarded, and whether there are consequences for chronic absence. Score is the sum of the following:   , 1 Point. Teachers evaluated by some authority on basis of absence.   - 1 Point.  Good attendance is rewarded.    - 1 Point.  There are consequences for chronic absence (more than 30% absence).   - 1 Point. One minus the fraction of teachers that had to miss class because of any of the following: collect paycheck, school administrative procedure, errands or request of the school district office, other administrative tasks.",3.066513
-SE.PRM.TMNA.1,(De Jure) Information on teacher presence/absenteeism is being collected on a regular basis,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TMNA.2,(De Jure) Teachers receive monetary compensation for being present,Global Education Policy Dashboard,World Bank,NA,0
-SE.PRM.TMNA.3,(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present,Global Education Policy Dashboard,World Bank,NA,7.376552
-SE.PRM.TMNA.4,(De Facto) Percent of teachers that report having been absent because of administrative processes,Global Education Policy Dashboard,World Bank,NA,6.809742
-SE.PRM.TMNA.5,(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time,Global Education Policy Dashboard,World Bank,NA,69.17882
-SE.PRM.TMNA.DF,(De Facto) Policy Lever (Teaching) - Monitoring & Accountability,Global Education Policy Dashboard,World Bank,NA,3.066513
-SE.PRM.TMNA.DJ,(De Jure) Policy Lever (Teaching) - Monitoring & Accountability,Global Education Policy Dashboard,World Bank,NA,3
-SE.PRM.TSDP,Policy Lever (Teaching) - Selection & Deployment,Global Education Policy Dashboard,World Bank,"School Survey.  The De Facto portion of the Teacher Selection and Deployment Indicator considers two issues: how teachers are selected into the profession and how teachers are assigned to positions (transferred) once in the profession. Research shows that degrees and years of experience explain in little variation in teacher quality, so more points are assigned for systems that also base hiring on content knowledge or pedagogical skill.  2 points are available for the way teachers are selected and 2 points are available for deployment.     Selection   , 0 Points. None of the below   - 1 point.  Teachers selected based on completion of coursework, educational qualifications, graduating from tertiary program (including specialized programs), selected based on experience   - 2 points. Teacher recruited based on passing written content knowledge test, passed interview stage assessment, passed an assessment conducted by supervisor based on practical experience, conduct during mockup class.      Deployment   - 0 Points. None of the below   - 1 point.  Teachers deployed based on years of experience or job title hierarchy or other criteria   - 2 points. Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview.",3.517357
-SE.PRM.TSDP.1,(De Jure) Requirements to enter into initial education programs,Global Education Policy Dashboard,World Bank,NA,4
-SE.PRM.TSDP.2,(De Facto) Average quality of applicants accepted into initial education programs,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.TSDP.3,(De Jure) Requirements to become a primary school teacher,Global Education Policy Dashboard,World Bank,NA,4
-SE.PRM.TSDP.4,(De Facto) Requirements to become a primary school teacher,Global Education Policy Dashboard,World Bank,NA,1.632099
-SE.PRM.TSDP.5,(De Jure) Requirements to fulfill a transfer request,Global Education Policy Dashboard,World Bank,NA,5
-SE.PRM.TSDP.6,(De Facto) Requirements to fulfill a transfer request,Global Education Policy Dashboard,World Bank,NA,0.8852582
-SE.PRM.TSDP.7,(De Jure) Selectivity of teacher hiring process,Global Education Policy Dashboard,World Bank,NA,-999
-SE.PRM.TSDP.DF,(De Facto) Policy Lever (Teaching) - Selection & Deployment,Global Education Policy Dashboard,World Bank,NA,3.517357
-SE.PRM.TSDP.DJ,(De Jure) Policy Lever (Teaching) - Selection & Deployment,Global Education Policy Dashboard,World Bank,NA,4.333333
-SE.PRM.TSUP,Policy Lever (Teaching) - Support,Global Education Policy Dashboard,World Bank,"School survey.  Our teaching support indicator asks teachers about participation and the experience with several types of formal/informal training:      Pre,Service (Induction) Training:   - 0.5 Points. Had a pre-service training   - 0.5 Points.  Teacher reported receiving usable skills from training      Teacher practicum (teach a class with supervision)   - 0.5 Points. Teacher participated in a practicum   - 0.5 Points.  Practicum lasted more than 3 months and teacher spent more than one hour per day teaching to students.     In-Service Training:   - 0.5 Points. Had an in-service training   - 0.25 Points. In-service training lasted more than 2 total days   - 0.125 Points. More than 25% of the in-service training was done in the classroom.   - 0.125 Points. More than 50% of the in-service training was done in the classroom.     Opportunities for teachers to come together to share ways of improving teaching: <br>  - 1 Point if such opportunities exist.",2.623925
-SE.PRM.TSUP.1,(De Jure) Practicum required as part of pre-service training,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TSUP.2,(De Facto) Percent reporting they completed a practicum as part of pre-service training,Global Education Policy Dashboard,World Bank,NA,22.51991
-SE.PRM.TSUP.3,(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program,Global Education Policy Dashboard,World Bank,NA,44.92961
-SE.PRM.TSUP.4,(De Jure) Participation in professional development has professional implications for teachers,Global Education Policy Dashboard,World Bank,NA,1
-SE.PRM.TSUP.5,(De Facto) Percent of teachers reporting having attended in-service trainings in the past 12 months,Global Education Policy Dashboard,World Bank,NA,27.5097
-SE.PRM.TSUP.6,(De Facto) Average length of the trainings attended,Global Education Policy Dashboard,World Bank,NA,18.39827
-SE.PRM.TSUP.7,(De Facto) Average span of time (in weeks) of those trainings,Global Education Policy Dashboard,World Bank,NA,3.341416
-SE.PRM.TSUP.8,(De Facto) Average percent of time spent inside the classrooms during the trainings,Global Education Policy Dashboard,World Bank,NA,70.49317
-SE.PRM.TSUP.9,(De Facto) Percent of teachers that report having opportunities to come together with other teachers to discuss ways of improving teaching,Global Education Policy Dashboard,World Bank,NA,74.74058
-SE.PRM.TSUP.DF,(De Facto) Policy Lever (Teaching) - Support,Global Education Policy Dashboard,World Bank,NA,2.623925
-SE.PRM.TSUP.DJ,(De Jure) Policy Lever (Teaching) - Support,Global Education Policy Dashboard,World Bank,NA,5
+﻿"Series","Indicator Name","value","value_metadata","year","cty_or_agg","countrycode"
+"SE.GEPD.PRIM","Learning poverty: Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%)",52,"Needs Improvement",2019,"cty","JOR"
+"SE.GEPD.PRIM.1","(De Facto) Share of Children at the End-of-Primary age below minimum reading proficiency adjusted by Out-of-School Children (%)",52,"Needs Improvement",2019,"cty","JOR"
+"SE.GEPD.PRIM.BMP","Proficiency by End of Primary",50,"Needs Improvement",2019,"cty","JOR"
+"SE.GEPD.PRIM.BMP.1","(De Facto) Percent of children proficient in literacy and numeracy by end of primary, as reported by UIS",50,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ATTD","Student Attendance",97.1,"On Target",2019,"cty","JOR"
+"SE.PRM.ATTD.1","(De Facto) Percent of 4th grade students present during an unannounced visit",97.1,"On Target",2019,"cty","JOR"
+"SE.PRM.ATTD.1.F","(De Facto) Percent of 4th grade students present during an unannounced visit - Female",81.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ATTD.1.M","(De Facto) Percent of 4th grade students present during an unannounced visit - Male",78.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ATTD.1.R","(De Facto) Percent of 4th grade students present during an unannounced visit - Rural",98.6,"On Target",2019,"cty","JOR"
+"SE.PRM.ATTD.1.U","(De Facto) Percent of 4th grade students present during an unannounced visit - Urban",96.7,"On Target",2019,"cty","JOR"
+"SE.PRM.BFIN","Politics & Bureaucratic Capacity - Financing",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.BFIN.1","Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, efficiency, and equity.",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.BFIN.2","(Financing) - Adequacy expressed by the per child spending",5,"On Target",2019,"cty","JOR"
+"SE.PRM.BFIN.3","(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.BFIN.4","(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest",4,"On Target",2019,"cty","JOR"
+"SE.PRM.BFIN.5","(Financing) - Equity",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.BIMP","Politics & Bureaucratic Capacity - Impartial Decision-Making",3.1,"Caution",2019,"cty","JOR"
+"SE.PRM.BIMP.1","Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.1,"Caution",2019,"cty","JOR"
+"SE.PRM.BIMP.2","(Impartial Decision-Making) average score for politicized personnel management",3.1,"Caution",2019,"cty","JOR"
+"SE.PRM.BIMP.3","(Impartial Decision-Making) average score for politicized policy-making",3.8,"Caution",2019,"cty","JOR"
+"SE.PRM.BIMP.4","(Impartial Decision-Making) average score for politicized policy implementation",2.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.BIMP.5","(Impartial Decision-Making) average score for employee unions as facilitators",3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.BMAC","Politics & Bureaucratic Capacity - Mandates & Accountability",4.2,"On Target",2019,"cty","JOR"
+"SE.PRM.BMAC.1","Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",4.2,"On Target",2019,"cty","JOR"
+"SE.PRM.BMAC.2","(Mandates & Accountability) Average score for coherence",4,"Caution",2019,"cty","JOR"
+"SE.PRM.BMAC.3","(Mandates & Accountability) Average score for transparency",4.2,"On Target",2019,"cty","JOR"
+"SE.PRM.BMAC.4","(Mandates & Accountability) Average score for accountability of public officials",4.4,"On Target",2019,"cty","JOR"
+"SE.PRM.BNLG","Politics & Bureaucratic Capacity - National Learning Goals",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.BNLG.1","Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.BNLG.2","(National Learning Goals) Average score for targeting",4,"On Target",2019,"cty","JOR"
+"SE.PRM.BNLG.3","(National Learning Goals) Average score for monitoring",3.9,"Caution",2019,"cty","JOR"
+"SE.PRM.BNLG.4","(National Learning Goals) Average score for incentives",2.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.BNLG.5","(National Learning Goals) Average score for community engagement",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.BQBR","Politics & Bureaucratic Capacity - Characteristics of Bureaucracy",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.BQBR.1","Average score for Characteristics of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.BQBR.2","(Characteristics of Bureaucracy) average score for knowledge and skills",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.BQBR.3","(Characteristics of Bureaucracy) average score for work environment",4.1,"On Target",2019,"cty","JOR"
+"SE.PRM.BQBR.4","(Characteristics of Bureaucracy) average score for merit",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.BQBR.5","(Characteristics of Bureaucracy) average score for motivation and attitudes",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.CONT","Teacher Content Knowledge",33.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.1","(De Facto) Percent of teachers proficient in the subjects they teach",33.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.1.F","(De Facto) Percent of teachers proficient in the subjects they teach - Female",34.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.1.M","(De Facto) Percent of teachers proficient in the subjects they teach - Male",32.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.1.R","(De Facto) Percent of teachers proficient in the subjects they teach - Rural",34.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.1.U","(De Facto) Percent of teachers proficient in the subjects they teach - Urban",33.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.2","(De Facto) Percent of teachers proficient in the subject of language",25,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.2.F","(De Facto) Percent of teachers proficient in the subject of language - Female",26.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.2.M","(De Facto) Percent of teachers proficient in the subject of language - Male",16.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.2.R","(De Facto) Percent of teachers proficient in the subject of language - Rural",25.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.2.U","(De Facto) Percent of teachers proficient in the subject of language - Urban",24.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.3","(De Facto) Percent of teachers proficient in the subject of mathematics",57.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.3.F","(De Facto) Percent of teachers proficient in the subject of mathematics - Female",58.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.3.M","(De Facto) Percent of teachers proficient in the subject of mathematics - Male",61.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.3.R","(De Facto) Percent of teachers proficient in the subject of mathematics - Rural",56.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.CONT.3.U","(De Facto) Percent of teachers proficient in the subject of mathematics - Urban",57.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.EFFT","Teacher Presence",93.4,"On Target",2019,"cty","JOR"
+"SE.PRM.EFFT.1","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit",81.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.EFFT.1.F","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Female",81.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.EFFT.1.M","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Male",83.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.EFFT.1.R","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Rural",78.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.EFFT.1.U","(De Facto) Percent of teachers present in their classrooms, when they are scheduled to be teaching, during an announced visit - Urban",82.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.EFFT.2","(De Facto) Percent of teachers present in their schools during an announced visit",93.4,"On Target",2019,"cty","JOR"
+"SE.PRM.EFFT.2.F","(De Facto) Percent of teachers present in their schools during an announced visit - Female",93.3,"On Target",2019,"cty","JOR"
+"SE.PRM.EFFT.2.M","(De Facto) Percent of teachers present in their schools during an announced visit - Male",91.7,"On Target",2019,"cty","JOR"
+"SE.PRM.EFFT.2.R","(De Facto) Percent of teachers present in their schools during an announced visit - Rural",91,"On Target",2019,"cty","JOR"
+"SE.PRM.EFFT.2.U","(De Facto) Percent of teachers present in their schools during an announced visit - Urban",94.1,"On Target",2019,"cty","JOR"
+"SE.PRM.ILDR","Instructional Leadership",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.ILDR.1","(De Facto) Average score for the presence and quality of instructional leadership",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.ILDR.1.F","(De Facto) Average score for the presence and quality of instructional leadership - Female",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.ILDR.1.M","(De Facto) Average score for the presence and quality of instructional leadership - Male",3.1,"Caution",2019,"cty","JOR"
+"SE.PRM.ILDR.1.R","(De Facto) Average score for the presence and quality of instructional leadership - Rural",3.2,"Caution",2019,"cty","JOR"
+"SE.PRM.ILDR.1.U","(De Facto) Average score for the presence and quality of instructional leadership - Urban",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.ILDR.2","(De Facto) Percent of teachers reporting having had their class observed",75.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.2.F","(De Facto) Percent of teachers reporting having had their class observed - Female",78,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.2.M","(De Facto) Percent of teachers reporting having had their class observed - Male",63.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.2.R","(De Facto) Percent of teachers reporting having had their class observed - Rural",71.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.2.U","(De Facto) Percent of teachers reporting having had their class observed - Urban",76.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.3","(De Facto) Percent of teachers reporting that the classroom observation happened recently",74.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.3.F","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Female",77.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.3.M","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Male",63.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.3.R","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Rural",71.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.3.U","(De Facto) Percent of teachers reporting that the classroom observation happened recently - Urban",75.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.4","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation",27.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.4.F","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Female",27.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.4.M","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Male",24.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.4.R","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Rural",28.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.4.U","(De Facto) Percent of teachers reporting having discussed the results of the classroom observation - Urban",26.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.5","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes",3.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.5.F","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Female",4.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.5.M","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Male",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.5.R","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Rural",5.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.5.U","(De Facto) Percent of teachers reporting that the discussion was over 30 minutes - Urban",3.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.6","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion",52.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.6.F","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Female",55.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.6.M","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Male",43.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.6.R","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Rural",50,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.6.U","(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion - Urban",53.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.7","(De Facto) Percent of teachers reporting having lesson plans",12.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.7.F","(De Facto) Percent of teachers reporting having lesson plans - Female",10.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.7.M","(De Facto) Percent of teachers reporting having lesson plans - Male",20.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.7.R","(De Facto) Percent of teachers reporting having lesson plans - Rural",14.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.7.U","(De Facto) Percent of teachers reporting having lesson plans - Urban",12.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.8","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)",65.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.8.F","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Female",66.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.8.M","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Male",62,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.8.R","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Rural",59,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ILDR.8.U","(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher) - Urban",67.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON","Policy Lever (Inputs & Infrastructure) - Monitoring",3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.1","(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.10","(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.IMON.2","(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic inputs",0.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.3","(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs",1.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.4","(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available",0.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.5","(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availability of basic infrastructure",0.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.6","(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure",0.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.7","(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.IMON.8","(De Jure) Number of basic inputs clearly articulated as needing to be monitored",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.IMON.9","(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.IMON.DF","(De Facto) Policy Lever (Inputs & Infrastructure) - Monitoring",3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.IMON.DJ","(De Jure) Policy Lever (Inputs & Infrastructure) - Monitoring",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.INFR","Basic Infrastructure",4.1,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.1","(De Facto) Average number of infrastructure aspects present in schools",4.1,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.1.R","(De Facto) Average number of infrastructure aspects present in schools - Rural",4,"Caution",2019,"cty","JOR"
+"SE.PRM.INFR.1.U","(De Facto) Average number of infrastructure aspects present in schools - Urban",4.2,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.2","(De Facto) Percent of schools with drinking water",89.2,"Caution",2019,"cty","JOR"
+"SE.PRM.INFR.2.R","(De Facto) Percent of schools with drinking water - Rural",86.2,"Caution",2019,"cty","JOR"
+"SE.PRM.INFR.2.U","(De Facto) Percent of schools with drinking water - Urban",90.1,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.3","(De Facto) Percent of schools with functioning toilets",68.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INFR.3.R","(De Facto) Percent of schools with functioning toilets - Rural",70.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INFR.3.U","(De Facto) Percent of schools with functioning toilets - Urban",68.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INFR.4","(De Facto) Percent of schools with access to electricity",99.5,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.4.R","(De Facto) Percent of schools with access to electricity - Rural",100,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.4.U","(De Facto) Percent of schools with access to electricity - Urban",99.4,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.5","(De Facto) Percent of schools with access to internet",88.2,"Caution",2019,"cty","JOR"
+"SE.PRM.INFR.5.R","(De Facto) Percent of schools with access to internet - Rural",76.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INFR.5.U","(De Facto) Percent of schools with access to internet - Urban",91.5,"On Target",2019,"cty","JOR"
+"SE.PRM.INFR.6","(De Facto) Percent of schools accessible to children with special needs",65.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INFR.6.R","(De Facto) Percent of schools accessible to children with special needs - Rural",65.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INFR.6.U","(De Facto) Percent of schools accessible to children with special needs - Urban",65.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INPT","Basic Inputs",4.3,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.1","(De Facto) Average number of classroom inputs in classrooms",4.3,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.1.R","(De Facto) Average number of classroom inputs in classrooms - Rural",4.2,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.1.U","(De Facto) Average number of classroom inputs in classrooms - Urban",4.3,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.2","(De Facto) Percent of classrooms with a functional blackboard and chalk",97.7,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.2.R","(De Facto) Percent of classrooms with a functional blackboard and chalk - Rural",97.1,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.2.U","(De Facto) Percent of classrooms with a functional blackboard and chalk - Urban",97.8,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.3","(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books",87.2,"Caution",2019,"cty","JOR"
+"SE.PRM.INPT.3.R","(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Rural",84,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.INPT.3.U","(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books - Urban",85.9,"Caution",2019,"cty","JOR"
+"SE.PRM.INPT.4","(De Facto) Percent of classrooms with basic classroom furniture",87.9,"Caution",2019,"cty","JOR"
+"SE.PRM.INPT.4.R","(De Facto) Percent of classrooms with basic classroom furniture - Rural",90.3,"On Target",2019,"cty","JOR"
+"SE.PRM.INPT.4.U","(De Facto) Percent of classrooms with basic classroom furniture - Urban",87.2,"Caution",2019,"cty","JOR"
+"SE.PRM.INPT.5","(De Facto) Percent of schools with access to EdTech",89.3,"Caution",2019,"cty","JOR"
+"SE.PRM.INPT.5.R","(De Facto) Percent of schools with access to EdTech - Rural",89.2,"Caution",2019,"cty","JOR"
+"SE.PRM.INPT.5.U","(De Facto) Percent of schools with access to EdTech - Urban",89.4,"Caution",2019,"cty","JOR"
+"SE.PRM.ISTD","Policy Lever (Inputs & Infrastructure) - Standards",3.8,"Caution",2019,"cty","JOR"
+"SE.PRM.ISTD.1","(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.10","(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?",63.8,"On Target",2019,"cty","JOR"
+"SE.PRM.ISTD.11","(De Jure) Is there a policy in place to require that schools have functioning toilets?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.12","(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?",95.5,"On Target",2019,"cty","JOR"
+"SE.PRM.ISTD.13","(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.14","(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with special needs?",96.2,"On Target",2019,"cty","JOR"
+"SE.PRM.ISTD.2","(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?",68.4,"On Target",2019,"cty","JOR"
+"SE.PRM.ISTD.3","(De Jure) Is there a national connectivity program?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.4","(De Facto) Do you know if there is a national connectivity program?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.ISTD.5","(De Jure) Is there a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.6","(De Facto) Do you know if there is a policy in place to require that students have access to PCs, laptops, tablets, and/or other computing devices?",52.4,"On Target",2019,"cty","JOR"
+"SE.PRM.ISTD.7","(De Jure) Is there a policy in place to require that schools have access to electricity?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.8","(De Facto) Do you know if there is a policy in place to require that schools have access to electricity?",96.2,"On Target",2019,"cty","JOR"
+"SE.PRM.ISTD.9","(De Jure) Is there a policy in place to require that schools have access to drinking water?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.ISTD.DF","(De Facto) Policy Lever (Inputs & Infrastructure) - Standards",3.8,"Caution",2019,"cty","JOR"
+"SE.PRM.ISTD.DJ","(De Jure) Policy Lever (Inputs & Infrastructure) - Standards",5,"On Target",2019,"cty","JOR"
+"SE.PRM.LCAP","Student Readiness",37.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.1","(De Facto) Average developmental score for 1st Graders",73.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.1.F","(De Facto) Average developmental score for 1st Graders - Female",74.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.1.M","(De Facto) Average developmental score for 1st Graders - Male",73.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.1.R","(De Facto) Average developmental score for 1st Graders - Rural",73.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.1.U","(De Facto) Average developmental score for 1st Graders - Urban",73,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.2","(De Facto) Average numeracy score for 1st Graders",92.4,"On Target",2019,"cty","JOR"
+"SE.PRM.LCAP.2.F","(De Facto) Average numeracy score for 1st Graders - Female",93.2,"On Target",2019,"cty","JOR"
+"SE.PRM.LCAP.2.M","(De Facto) Average numeracy score for 1st Graders - Male",92.4,"On Target",2019,"cty","JOR"
+"SE.PRM.LCAP.2.R","(De Facto) Average numeracy score for 1st Graders - Rural",90.5,"On Target",2019,"cty","JOR"
+"SE.PRM.LCAP.2.U","(De Facto) Average numeracy score for 1st Graders - Urban",92.9,"On Target",2019,"cty","JOR"
+"SE.PRM.LCAP.3","(De Facto) Average literacy score for 1st Graders",75.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.3.F","(De Facto) Average literacy score for 1st Graders - Female",77.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.3.M","(De Facto) Average literacy score for 1st Graders - Male",76.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.3.R","(De Facto) Average literacy score for 1st Graders - Rural",75.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.3.U","(De Facto) Average literacy score for 1st Graders - Urban",75.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.4","(De Facto) Average executive funcion score for 1st Graders",68.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.4.F","(De Facto) Average executive funcion score for 1st Graders - Female",69.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.4.M","(De Facto) Average executive funcion score for 1st Graders - Male",69.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.4.R","(De Facto) Average executive funcion score for 1st Graders - Rural",70.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.4.U","(De Facto) Average executive funcion score for 1st Graders - Urban",67.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.5","(De Facto) Average socioemotional score for 1st Graders",55.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.5.F","(De Facto) Average socioemotional score for 1st Graders - Female",59.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.5.M","(De Facto) Average socioemotional score for 1st Graders - Male",56.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.5.R","(De Facto) Average socioemotional score for 1st Graders - Rural",58.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCAP.5.U","(De Facto) Average socioemotional score for 1st Graders - Urban",55.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC","Policy Lever (Learners) - Center-Based Care",1.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC.1","(De Jure) Is there a policy that guarantees free education for some or all grades and ages included in pre-primary education (for children age 0-83 months)?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC.2","(De Facto) Percent of children age 36-59 months who are attending an early childhood education programme",13,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC.3","(De Jure) Are there developmental standards established for early childhood care and education?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC.4","(De Jure) According to laws and regulations, are there requirement to become an early childhood educator, pre-primary teacher?",3,"Caution",2019,"cty","JOR"
+"SE.PRM.LCBC.5","(De Jure) According to policy, are ECCE professionals working at public or private centers required to complete in-service training in ECCE service delivery?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC.DF","(De Facto) Policy Lever (Learners) - Center-Based Care",1.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LCBC.DJ","(De Jure) Policy Lever (Learners) - Center-Based Care",5,"On Target",2019,"cty","JOR"
+"SE.PRM.LERN","Proficiency on GEPD Assessment",4.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.1","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey",4.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.1.F","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Female",5.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.1.M","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Male",3.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.1.R","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Rural",5.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.1.U","(De Facto) Percent of children proficient in literacy and numeracy according to GEPD School Survey - Urban",4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.2","(De Facto) Percent of children proficient in literacy according to GEPD School Survey",21.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.2.F","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Female",25,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.2.M","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Male",23.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.2.R","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Rural",22.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.2.U","(De Facto) Percent of children proficient in literacy according to GEPD School Survey - Urban",21.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.3","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey",2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.3.F","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Female",2.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.3.M","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Male",2.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.3.R","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Rural",2.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LERN.3.U","(De Facto) Percent of children proficient in numeracy according to GEPD School Survey - Urban",1.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LFCP","Policy Lever (Learners) - Caregiver Capacity – Financial Capacity",4.4,"On Target",2019,"cty","JOR"
+"SE.PRM.LFCP.1","(De Jure) Are anti poverty interventions that focus on ECD publicly supported?",2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LFCP.2","(De Jure) Are cash transfers conditional on ECD services/enrollment publicly supported?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.LFCP.3","(De Jure) Are cash transfers focused partially on ECD publicly supported?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.LFCP.4","(De Facto) Coverage of social protection programs",85,"On Target",2019,"cty","JOR"
+"SE.PRM.LFCP.DF","(De Facto) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity",4.4,"On Target",2019,"cty","JOR"
+"SE.PRM.LFCP.DJ","(De Jure) Policy Lever (Learners) - Caregiver Capacity – Financial Capacity",5,"On Target",2019,"cty","JOR"
+"SE.PRM.LHTH","Policy Lever (Learners) - Health",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.LHTH.1","(De Jure) Are young children required to receive a complete course of childhood immunizations?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LHTH.2","(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immunization schedule",98,"On Target",2019,"cty","JOR"
+"SE.PRM.LHTH.3","(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free or by subsidizing them",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LHTH.4","(De Facto) Percent of  children under 5 covered by health insurance",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.LHTH.5","(De Jure) Are deworming pills funded and distributed by the government?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.LHTH.6","(De Facto) Percent of children age 6-59 months who received deworming medication",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.LHTH.7","(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?",2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LHTH.8","(De Facto) Percent of women age 15-49 years with a live birth in the last 2 years whose most recent live birth was delivered in a health facility",98,"On Target",2019,"cty","JOR"
+"SE.PRM.LHTH.DF","(De Facto) Policy Lever (Learners) - Health",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.LHTH.DJ","(De Jure) Policy Lever (Learners) - Health",5,"On Target",2019,"cty","JOR"
+"SE.PRM.LNTN","Policy Lever (Learners) - Nutrition Programs",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.LNTN.1","(De Jure) Does a national policy to encourage salt iodization exist?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LNTN.2","(De Facto) Percent of households with salt testing positive for any iodide among households",88,"Caution",2019,"cty","JOR"
+"SE.PRM.LNTN.3","(De Jure) Does a national policy exist to encourage iron fortification of staples like wheat, maize, or rice?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LNTN.4","(De Facto) Percent of children age 6–23 months who had at least the minimum dietary diversity and the minimum meal frequency during the previous day",36,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LNTN.5","(De Jure) Does a national policy exist to encourage breastfeeding?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LNTN.6","(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed",91,"On Target",2019,"cty","JOR"
+"SE.PRM.LNTN.7","(De Jure) Is there a publicly funded school feeding program?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LNTN.8","(De Facto) Percent of schools reporting having publicly funded school feeding program",39.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LNTN.DF","(De Facto) Policy Lever (Learners) - Nutrition Programs",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.LNTN.DJ","(De Jure) Policy Lever (Learners) - Nutrition Programs",5,"On Target",2019,"cty","JOR"
+"SE.PRM.LSKC","Policy Lever (Learners) - Caregiver Capacity – Skills Capacity",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.LSKC.1","(De Jure) Does the government offer programs that aim to share good parenting practices with caregivers?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LSKC.2","(De Jure) Are any of the following publicly-supported delivery channels used to reach families in order to promote early childhood stimulation? Home visits, Group sessions, Community health programs, Health center waiting rooms, School-based groups, Mass media/Information campaigns",2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.LSKC.3","(De Facto) Percent of children under age 5 who have three or more children’s books",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.LSKC.4","(De Facto) Percent of children age 24-59 months engaged in four or more activities to provide early stimulation and responsive care in the last 3 days with any adult in the household",92,"On Target",2019,"cty","JOR"
+"SE.PRM.LSKC.DF","(De Facto) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.LSKC.DJ","(De Jure) Policy Lever (Learners) - Caregiver Capacity – Skills Capacity",5,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN","Operational Management",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.1","(De Facto) Average score for the presence and quality of core operational management functions",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.1.F","(De Facto) Average score for the presence and quality of core operational management functions - Female",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.1.M","(De Facto) Average score for the presence and quality of core operational management functions - Male",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.1.R","(De Facto) Average score for the presence and quality of core operational management functions - Rural",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.1.U","(De Facto) Average score for the presence and quality of core operational management functions - Urban",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.2","(De Facto) Average score for infrastructure repair/maintenance",4.4,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.2.F","(De Facto) Average score for infrastructure repair/maintenance - Female",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.2.M","(De Facto) Average score for infrastructure repair/maintenance - Male",4.3,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.2.R","(De Facto) Average score for infrastructure repair/maintenance - Rural",4.2,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.2.U","(De Facto) Average score for infrastructure repair/maintenance - Urban",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.3","(De Facto) Average score for ensuring  availability of school inputs",5,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.3.F","(De Facto) Average score for ensuring  availability of school inputs - Female",4.9,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.3.M","(De Facto) Average score for ensuring  availability of school inputs - Male",5,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.3.R","(De Facto) Average score for ensuring  availability of school inputs - Rural",4.9,"On Target",2019,"cty","JOR"
+"SE.PRM.OPMN.3.U","(De Facto) Average score for ensuring  availability of school inputs - Urban",5,"On Target",2019,"cty","JOR"
+"SE.PRM.PEDG","Teacher Pedagogical Skills",68,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.1","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score)",68,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.1.F","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Female",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.1.M","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Male",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.1.R","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Rural",56.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.1.U","(De Facto) Percent of teachers with good pedagogical skills (3 or above on Teach overall score) - Urban",71.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.2","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score)",71.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.2.F","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Female",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.2.M","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Male",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.2.R","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Rural",72.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.2.U","(De Facto) Percent of teachers with good classroom culture practices (3 or above on Teach Classroom Culture score) - Urban",71.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.3","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score)",73.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.3.F","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Female",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.3.M","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Male",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.3.R","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Rural",58.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.3.U","(De Facto) Percent of teachers with good instruction practices (3 or above on Teach Instruction score) - Urban",78.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.4","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score)",67.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.4.F","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Female",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.4.M","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Male",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PEDG.4.R","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Rural",55,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PEDG.4.U","(De Facto) Percent of teachers with good practices on socioemotional skills (3 or above on Teach Socioemotional Skills score) - Urban",0.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW","Principal School Knowledge",3.8,"Caution",2019,"cty","JOR"
+"SE.PRM.PKNW.1","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school",3.8,"Caution",2019,"cty","JOR"
+"SE.PRM.PKNW.1.F","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Female",3.9,"Caution",2019,"cty","JOR"
+"SE.PRM.PKNW.1.M","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Male",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.PKNW.1.R","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Rural",4,"On Target",2019,"cty","JOR"
+"SE.PRM.PKNW.1.U","(De Facto) Average score for the extent to which principals are familiar with certain key aspects of the day-to-day workings of the school - Urban",3.7,"Caution",2019,"cty","JOR"
+"SE.PRM.PKNW.2","(De Facto) Percent of principals familiar with teachers' content knowledge",71.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.2.F","(De Facto) Percent of principals familiar with teachers' content knowledge - Female",73.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.2.M","(De Facto) Percent of principals familiar with teachers' content knowledge - Male",59.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.2.R","(De Facto) Percent of principals familiar with teachers' content knowledge - Rural",74,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.2.U","(De Facto) Percent of principals familiar with teachers' content knowledge - Urban",70.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.3","(De Facto) Percent of principals familiar with teachers' experience",99.4,"On Target",2019,"cty","JOR"
+"SE.PRM.PKNW.3.F","(De Facto) Percent of principals familiar with teachers' experience - Female",99.2,"On Target",2019,"cty","JOR"
+"SE.PRM.PKNW.3.M","(De Facto) Percent of principals familiar with teachers' experience - Male",100,"On Target",2019,"cty","JOR"
+"SE.PRM.PKNW.3.R","(De Facto) Percent of principals familiar with teachers' experience - Rural",99.1,"On Target",2019,"cty","JOR"
+"SE.PRM.PKNW.3.U","(De Facto) Percent of principals familiar with teachers' experience - Urban",99.4,"On Target",2019,"cty","JOR"
+"SE.PRM.PKNW.4","(De Facto) Percent of principals familiar with availability of classroom inputs",82.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.4.F","(De Facto) Percent of principals familiar with availability of classroom inputs - Female",82.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.4.M","(De Facto) Percent of principals familiar with availability of classroom inputs - Male",78.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PKNW.4.R","(De Facto) Percent of principals familiar with availability of classroom inputs - Rural",87.4,"Caution",2019,"cty","JOR"
+"SE.PRM.PKNW.4.U","(De Facto) Percent of principals familiar with availability of classroom inputs - Urban",80.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.PMAN","Principal Management Skills",4,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.1","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term",4,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.1.F","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Female",4,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.1.M","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Male",3.9,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.1.R","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Rural",4.1,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.1.U","(De Facto) Average score for the extent to which principals master two key managerial skills - problem-solving in the short-term, and goal-setting in the long term - Urban",4,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.2","(De Facto) Average score for the extent to which principals master problem-solving in the short-term",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.2.F","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Female",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.2.M","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Male",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.2.R","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Rural",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.2.U","(De Facto) Average score for the extent to which principals master problem-solving in the short-term - Urban",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.PMAN.3","(De Facto) Average score for the extent to which principals master goal-setting in the long term",3.4,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.3.F","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Female",3.4,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.3.M","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Male",3.4,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.3.R","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Rural",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.PMAN.3.U","(De Facto) Average score for the extent to which principals master goal-setting in the long term - Urban",3.4,"Caution",2019,"cty","JOR"
+"SE.PRM.PROE","Proficiency by Grade 2/3",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.PROE.1","(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.SATT","Policy Lever (School Management) - Attraction",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.SATT.1","(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as professionalized and distinct figure within schools?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SATT.2","(De Facto) Average principal salary as percent of GDP per capita",2.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SATT.3","(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community",4.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SATT.DF","(De Facto) Policy Lever (School Management) - Attraction",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.SATT.DJ","(De Jure) Policy Lever (School Management) - Attraction",5,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN","Policy Lever (School Management) - Clarity of Functions",5,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.1","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the maintenance and expansion of school infrastructure?",97.4,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.10","(De Jure) Do the policies governing schools assign the responsibility of student learning assessments?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.11","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal hiring and assignment?",98.6,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.12","(De Jure) Do the policies governing schools assign the responsibility of principal hiring and assignment?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.13","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of principal supervision and training?",99.8,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.14","(De Jure) Do the policies governing schools assign the responsibility of principal supervision and training?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.2","(De Jure) Do the policies governing schools assign the responsibility of maintenance and expansion of school infrastructure?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.3","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of the procurement of materials?",98.1,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.4","(De Jure) Do the policies governing schools assign the responsibility of procurement of materials?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.5","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher hiring and assignment?",99.1,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.6","(De Jure) Do the policies governing schools assign the responsibility of teacher hiring and assignment?",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.7","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of teacher supervision, training, and coaching?",99.9,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.8","(De Jure) Do the policies governing schools assign the responsibility of teacher supervision, training, and coaching?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SCFN.9","(De Facto) Do you know if the policies governing schools assign responsibility for the implementation of student learning assessments?",99.8,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.DF","(De Facto) Policy Lever (School Management) - Clarity of Functions",5,"On Target",2019,"cty","JOR"
+"SE.PRM.SCFN.DJ","(De Jure) Policy Lever (School Management) - Clarity of Functions",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.SEVL","Policy Lever (School Management) - Evaluation",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.SEVL.1","(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SEVL.2","(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?",3,"Caution",2019,"cty","JOR"
+"SE.PRM.SEVL.3","(De Facto) Percent of principals that report having been evaluated  during the last school year",57.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SEVL.4","(De Facto) Percent of principals that report having been evaluated on multiple factors",89.2,"Caution",2019,"cty","JOR"
+"SE.PRM.SEVL.5","(De Facto) Percent of principals that report there would be consequences after two negative evaluations",51.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SEVL.6","(De Facto) Percent of principals that report there would be consequences after two positive evaluations",47.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SEVL.DF","(De Facto) Policy Lever (School Management) - Evaluation",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.SEVL.DJ","(De Jure) Policy Lever (School Management) - Evaluation",5,"On Target",2019,"cty","JOR"
+"SE.PRM.SSLD","Policy Lever (School Management) - Selection & Deployment",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.SSLD.1","(De Jure) Is there a systematic approach/rubric for the selection of principals?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.10","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is years of experience",28.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.11","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is quality of teaching",3.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.12","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is demonstrated management qualities",62.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.13","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is having a good relationship with the owner of the school",0.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.14","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is political affiliations",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.15","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is ethnic group",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.16","(De Facto) Percent of principals that report that the most important factor considered when selecting a principal is knowledge of the local community",1.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.2","(De Jure) How are the principals selected? Based on the requirements, is the selection system meritocratic?",3,"Caution",2019,"cty","JOR"
+"SE.PRM.SSLD.3","(De Facto) Percent of principals that report that the factors considered when selecting a principal include years of experience",89,"Caution",2019,"cty","JOR"
+"SE.PRM.SSLD.4","(De Facto)  Percent of principals that report that the factors considered when selecting a principal include quality of teaching",57.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.5","(De Facto) Percent of principals that report that the factors considered when selecting a principal include demonstrated management qualities",92.7,"On Target",2019,"cty","JOR"
+"SE.PRM.SSLD.6","(De Facto) Percent of principals that report that the factors considered when selecting a principal include good relationship with the owner of the school",23.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.7","(De Facto) Percent of principals that report that the factors considered when selecting a principal include political affiliations",9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.8","(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group",6.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.9","(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of the local community",35,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSLD.DF","(De Facto) Policy Lever (School Management) - Selection & Deployment",4.6,"On Target",2019,"cty","JOR"
+"SE.PRM.SSLD.DJ","(De Jure) Policy Lever (School Management) - Selection & Deployment",5,"On Target",2019,"cty","JOR"
+"SE.PRM.SSUP","Policy Lever (School Management) - Support",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.SSUP.1","(De Jure) Are principals required to have training on how to manage a school?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.10","(De Facto) Percent of principals that report having used the skills they gained at the last training they attended",94.2,"On Target",2019,"cty","JOR"
+"SE.PRM.SSUP.11","(De Facto) Average number of trainings that principals report having been offered to them in the past year",2.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.2","(De Jure) Are principals required to have management training for new principals?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.3","(De Jure) Are principals required to have in-service training?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.4","(De Jure) Are principals required to have mentoring/coaching by experienced principals?",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.5","(De Jure) How many times per year do principals have trainings?",2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.6","(De Facto) Percent of principals that report ever having received formal training",77.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.7","(De Facto) Percent of principals that report having received management training for new principals",57.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.8","(De Facto) Percent of principals that report having received in-service training",56.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.9","(De Facto) Percent of principals that report having received mentoring/coaching by experienced principals",26.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.SSUP.DF","(De Facto) Policy Lever (School Management) - Support",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.SSUP.DJ","(De Jure) Policy Lever (School Management) - Support",4.5,"On Target",2019,"cty","JOR"
+"SE.PRM.TATT","Policy Lever (Teaching) - Attraction",3.7,"Caution",2019,"cty","JOR"
+"SE.PRM.TATT.1","(De Jure) Average starting public-school teacher salary as percent of GDP per capita",164.9,"On Target",2019,"cty","JOR"
+"SE.PRM.TATT.2","(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community",90.7,"On Target",2019,"cty","JOR"
+"SE.PRM.TATT.3","(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher",89.4,"Caution",2019,"cty","JOR"
+"SE.PRM.TATT.4","(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries",17.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TATT.5","(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TATT.6","(De Facto) Percent of teachers that performance matters for promotions",40,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TATT.7","(De Jure) Is there a well-established career path for teachers?",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.TATT.8","(De Facto) Percent of teachers that report salary delays in the past 12 months",17.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TATT.DF","(De Facto) Policy Lever (Teaching) - Attraction",5,"On Target",2019,"cty","JOR"
+"SE.PRM.TATT.DJ","(De Jure) Policy Lever (Teaching) - Attraction",3.7,"Caution",2019,"cty","JOR"
+"SE.PRM.TENR","Net Adjusted Enrollment Rate",81,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TENR.1","(De Facto) Percent of primary school age children who are enrolled at primary education",81,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL","Policy Lever (Teaching) - Evaluation",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.TEVL.1","(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national, regional, local)",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.2","(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.3","(De Facto) Percent of teachers that report being evaluated in the past 12 months",61.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.4","(De Jure) The criteria to evaluate teachers is clear",3,"Caution",2019,"cty","JOR"
+"SE.PRM.TEVL.5","(De Facto) Number of criteria used to evaluate teachers",4.7,"On Target",2019,"cty","JOR"
+"SE.PRM.TEVL.6","(De Facto) Percent of teachers that report there would be consequences after two negative evaluations",79.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.7","(De Facto) Percent of teachers that report there would be consequences after two positive evaluations",77.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.8","(De Jure) There are clear consequences for teachers who receive two or more negative evaluations",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.9","(De Jure) There are clear consequences for teachers who receive two or more positive evaluations",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TEVL.DF","(De Facto) Policy Lever (Teaching) - Evaluation",3.6,"Caution",2019,"cty","JOR"
+"SE.PRM.TEVL.DJ","(De Jure) Policy Lever (Teaching) - Evaluation",4.8,"On Target",2019,"cty","JOR"
+"SE.PRM.TINM","Policy Lever (Teaching) - Intrinsic Motivation",3.4,"Caution",2019,"cty","JOR"
+"SE.PRM.TINM.1","(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the assigned curriculum has been completed""",7.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.10","(De Facto) Percent of teachers that agree or strongly agrees with ""Students can change even their basic intelligence level considerably""",65.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.11","(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers",0.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.12","(De Facto) New teachers are required to undergo a probationary period",0.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.13","(De Jure) New teachers are required to undergo a probationary period",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.2","(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if students are left with work to do""",10.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.3","(De Facto) Percent of teachers that agree or strongly agrees with ""It is acceptable for a teacher to be absent if the teacher is doing something useful for the community""",37.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.4","(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they attend school regularly""",64,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.5","(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they come to school with materials""",66.4,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.6","(De Facto) Percent of teachers that agree or strongly agrees with ""Students deserve more attention if they are motivated to learn""",74.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.7","(De Facto) Percent of teachers that agree or strongly agrees with ""Students have a certain amount of intelligence and they really can’t do much to change it""",50.1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.8","(De Facto) Percent of teachers that agree or strongly agrees with ""To be honest, students can’t really change how intelligent they are""",42.3,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.9","(De Facto) Percent of teachers that agree or strongly agrees with ""Students can always substantially change how intelligent they are""",73.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TINM.DF","(De Facto) Policy Lever (Teaching) - Intrinsic Motivation",3.4,"Caution",2019,"cty","JOR"
+"SE.PRM.TINM.DJ","(De Jure) Policy Lever (Teaching) - Intrinsic Motivation",5,"On Target",2019,"cty","JOR"
+"SE.PRM.TMNA","Policy Lever (Teaching) - Monitoring & Accountability",3.1,"Caution",2019,"cty","JOR"
+"SE.PRM.TMNA.1","(De Jure) Information on teacher presence/absenteeism is being collected on a regular basis",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TMNA.2","(De Jure) Teachers receive monetary compensation for being present",0,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TMNA.3","(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present",7.4,"On Target",2019,"cty","JOR"
+"SE.PRM.TMNA.4","(De Facto) Percent of teachers that report having been absent because of administrative processes",6.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TMNA.5","(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time",69.2,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TMNA.DF","(De Facto) Policy Lever (Teaching) - Monitoring & Accountability",3.1,"Caution",2019,"cty","JOR"
+"SE.PRM.TMNA.DJ","(De Jure) Policy Lever (Teaching) - Monitoring & Accountability",3,"Caution",2019,"cty","JOR"
+"SE.PRM.TSDP","Policy Lever (Teaching) - Selection & Deployment",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.TSDP.1","(De Jure) Requirements to enter into initial education programs",4,"On Target",2019,"cty","JOR"
+"SE.PRM.TSDP.2","(De Facto) Average quality of applicants accepted into initial education programs",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.TSDP.3","(De Jure) Requirements to become a primary school teacher",4,"On Target",2019,"cty","JOR"
+"SE.PRM.TSDP.4","(De Facto) Requirements to become a primary school teacher",4.3,"On Target",2019,"cty","JOR"
+"SE.PRM.TSDP.5","(De Jure) Requirements to fulfill a transfer request",5,"On Target",2019,"cty","JOR"
+"SE.PRM.TSDP.6","(De Facto) Requirements to fulfill a transfer request",2.8,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSDP.7","(De Jure) Selectivity of teacher hiring process",NA,"N/A",2019,"cty","JOR"
+"SE.PRM.TSDP.DF","(De Facto) Policy Lever (Teaching) - Selection & Deployment",3.5,"Caution",2019,"cty","JOR"
+"SE.PRM.TSDP.DJ","(De Jure) Policy Lever (Teaching) - Selection & Deployment",4.3,"On Target",2019,"cty","JOR"
+"SE.PRM.TSUP","Policy Lever (Teaching) - Support",2.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.1","(De Jure) Practicum required as part of pre-service training",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.2","(De Facto) Percent reporting they completed a practicum as part of pre-service training",22.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.3","(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program",44.9,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.4","(De Jure) Participation in professional development has professional implications for teachers",1,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.5","(De Facto) Percent of teachers reporting having attended in-service trainings in the past 12 months",27.5,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.6","(De Facto) Average length of the trainings attended",18.4,"On Target",2019,"cty","JOR"
+"SE.PRM.TSUP.7","(De Facto) Average span of time (in weeks) of those trainings",3.3,"Caution",2019,"cty","JOR"
+"SE.PRM.TSUP.8","(De Facto) Average percent of time spent inside the classrooms during the trainings",70.5,"On Target",2019,"cty","JOR"
+"SE.PRM.TSUP.9","(De Facto) Percent of teachers that report having opportunities to come together with other teachers to discuss ways of improving teaching",74.7,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.DF","(De Facto) Policy Lever (Teaching) - Support",2.6,"Needs Improvement",2019,"cty","JOR"
+"SE.PRM.TSUP.DJ","(De Jure) Policy Lever (Teaching) - Support",5,"On Target",2019,"cty","JOR"

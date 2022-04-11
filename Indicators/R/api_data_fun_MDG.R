@@ -559,7 +559,7 @@ indicator_values_transpose <- indicator_values_transpose %>%
   #Policy Lever (Teaching) - Support                                                                                        
   SE.PRM.TSUP.1  =expert_df$practicum ,
   #(De Jure) Practicum required as part of pre-service training                                                             
-  SE.PRM.TSUP.2 = 100-100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.2 = 100*indicator_means(m3sdq6_tsup			, "school", "TSUP",  "All"),
   #(De Facto) Percent reporting they completed a practicum as part of pre-service training                                  
   SE.PRM.TSUP.3  = 100*indicator_means(m3sdq3_tsup		, "school", "TSUP",  "All"),
   #(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program                

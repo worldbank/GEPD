@@ -193,13 +193,13 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
 #read in data from wbopendata
 #get WDI metadata infor
 #cache_list<-wbstats::wbcache()
-wbopendat<-wbstats::wb_data(country="MDG", 
-            indicator=ind_list,
-            start_date=2000,
-            end_date=2021,
-            return_wide = T,
-            mrv=10,
-            gapfill=TRUE)
+# wbopendat<-wbstats::wb_data(country="MDG", 
+#             indicator=ind_list,
+#             start_date=2000,
+#             end_date=2021,
+#             return_wide = T,
+#             mrv=10,
+#             gapfill=TRUE)
 
 wbopendat<-WDI(country="MG", indicator=ind_list, start=2000, end=2021, extra=T) %>%
   filter(year!=2018) %>% #drop odd year

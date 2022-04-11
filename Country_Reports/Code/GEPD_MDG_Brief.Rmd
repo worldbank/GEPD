@@ -8,7 +8,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 6, fig.cap = "&nbsp;", fig.path = "plots/", dev = c("png"), dpi=500)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.height = 6, fig.cap = "&nbsp;", fig.path = "plots/", dpi=500)
 
 #File written by Brian Stacy on July 30, 2020
 # File will produce automated country briefs of 2 pages and 4 pages
@@ -30,9 +30,9 @@ library(haven)
 library(flextable)
 
 #anchor directory to correct place
-here()
+dir <- here()
 #setwd(here())
-setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
+# setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
 #Set year to pull data for LAYS and LP from WB APIs
 year <- "2019"
 
@@ -59,8 +59,9 @@ takeaway <- "
 ########################
 #anchor directory to correct place
 #here()
-##setwd(here())
-setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
+
+setwd(here())
+# setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
 
 #functions
 FitFlextableToPage <- function(ft, pgwidth = 5){
@@ -221,7 +222,7 @@ GEPD uses 3 data collection instruments to report on nearly 40 indicators that o
 
 #### Figure 1. GEPD framework (practices, policies and politics), expanding on WDR 2018 framework ####
 ```{r out.width = "40%", fig.align = "left", echo=FALSE}
-figure1a <- paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Main_Documents/Design/Images/full_circle.png", sep="")
+figure1a <- paste(dir, "/Data/full_circle.png", sep="")
 knitr::include_graphics(figure1a)
 ```
 ### **INSTRUMENTS OF DATA** ###  
@@ -258,9 +259,9 @@ blank <- "NA"
       (value >= lays_90 &      (Series == "HD.HCI.LAYS")) ~ paste("#85C546", sep=""),
       (value >= lays_85 & value<lays_90 & (Series == "HD.HCI.LAYS")) ~ paste("#FCD606", lays_units, sep=""),
       (value <  lays_85 &      (Series == "HD.HCI.LAYS")) ~ paste("#FF0000", sep=""),
-      (value >= 90 &      (Series == "SE.LPV.PRIM")) ~ paste("#FF0000", sep=""),
-      (value >=85 & value<90 & value<lays_90 & (Series == "SE.LPV.PRIM")) ~ paste("#FCD606", lays_units, sep=""),
-      (value <85 &      (Series == "SE.LPV.PRIM")) ~ paste("#85C546", sep=""),
+      (value >= 90 &      (Series == "SE.GEPD.PRIM")) ~ paste("#FF0000", sep=""),
+      (value >=85 & value<90 & value<lays_90 & (Series == "SE.GEPD.PRIM")) ~ paste("#FCD606", lays_units, sep=""),
+      (value <85 &      (Series == "SE.GEPD.PRIM")) ~ paste("#85C546", sep=""),
       (value >=90 &            (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("#85C546",sep=""),
       (value >=85 & value<90 & (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("#FCD606",sep=""),
       (value <85 &             (grepl(grep_color, Series) | grepl('Percent', Indicator.Name))) ~ paste("#FF0000", sep=""),
@@ -285,9 +286,9 @@ blank <- "NA"
 lays_lp_choice <- if_else(marker ==0, lays, lp)
 # lays_lp_units <- if_else(marker == 0, 
 #                          input$value_units[input$Series=="HD.HCI.LAYS"],
-#                          input$value_units[input$Series=="SE.LPV.PRIM"])
+#                          input$value_units[input$Series=="SE.GEPD.PRIM"])
 # lays_lp_cell <- if_else(marker ==0, input$value_color[input$Series=="HD.HCI.LAYS"],
-#                                     input$value_color[input$Series=="SE.LPV.PRIM"])
+#                                     input$value_color[input$Series=="SE.GEPD.PRIM"])
 ```
 
 
@@ -482,7 +483,7 @@ FitFlextableToPage(reg_table) %>%
 lays_figure_name <- paste("lays_figure_", country_file_name, ".png", sep = '')
 lp_figure_name <- paste("lp_figure_", country_file_name, ".png", sep = '')
 figure <- if_else(marker == 0, lays_figure_name, lp_figure_name)
-figure2 <- paste("C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/LP_LAYS_figures/", figure, sep="")
+figure2 <- paste0(dir, "//LP_LAYS_figures/", figure, sep="")
 knitr::include_graphics(figure2)
 ```
 
@@ -557,7 +558,7 @@ Teacher effectiveness is determined by a teacher's own knowledge level, pedagogi
 ```{r teach_tab, echo=FALSE, message=FALSE, warning=FALSE}
 
 group <- "teacher"
-setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
+setwd(dir = paste0(dir, "//"))
 
 #teacher linkages
 link <- read_csv(paste("./Data/",group,"_link.csv",sep=""),
@@ -643,7 +644,7 @@ Early learning is affected by quality of implementation of health and nutrition 
 ```{r learn_tab, echo=FALSE, message=FALSE, warning=FALSE}
 
 group <- "learners"
-setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
+setwd(dir = paste0(dir, "//"))
 
 #teacher linkages
 link <- read_csv(paste("./Data/",group,"_link.csv",sep=""),
