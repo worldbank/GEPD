@@ -365,7 +365,10 @@ df_updated <- df_selected %>%
 
 df_frame <- df_selected %>%
   filter(sch_type=="B. Primary") %>%
-  filter(class1_combined>=pupil_count_min_threshold_g1 & class4_combined>=pupil_count_min_threshold_g4) 
+  filter(class1_combined>=pupil_count_min_threshold_g1 & class4_combined>=pupil_count_min_threshold_g4) %>%
+  mutate(
+    egra_size=if_else((class2_combined<pupil_count_max_threshold_g2), "Under 30 students", "30 or Greater students")
+  )
 
 
 df_updated %>% #   
@@ -569,7 +572,10 @@ Below is a list of replacement schools for each sampled school. Replacement scho
 #define sampled schools in sample dataset
 sample_chosen <- sample_combined %>%
   mutate(sample="Sampled School") %>%
-  mutate(school_name=if_else(is.na(idschool_name),`School Name`, idschool_name))
+  mutate(school_name=if_else(is.na(idschool_name),`School Name`, idschool_name)) %>%
+  mutate(
+    egra_size=if_else((class2_combined<pupil_count_max_threshold_g2) & School=="Supplemental School", "Under 30 students", "30 or Greater students")
+  )
 
 #add sample schools back to original database
 data_set_updated_chosen <- df_frame %>%
@@ -577,7 +583,7 @@ data_set_updated_chosen <- df_frame %>%
 
 #get list of tehsil
 sampled_districts <- sample_chosen %>%
-  group_by( iddistrict) %>% 
+  group_by( iddistrict,egra_size) %>% 
   summarise(sampled_districts=n()
             )
 
@@ -586,14 +592,14 @@ sample_replace <- data_set_updated_chosen %>%
   left_join(sampled_districts) %>%
   filter(!is.na(sampled_districts)) %>%
   filter(is.na(sample)) %>%
-  group_by(iddistrict) %>% 
-  sample_n(2*sampled_districts) %>% #select two replacement schools
+  group_by(iddistrict,egra_size) %>% 
+  sample_n(2*sampled_districts, weight=class4_combined) %>% #select two replacement schools
   mutate(sample='Replacement School') %>%
-  arrange(iddistrict, idschool_name) 
+  arrange(iddistrict,egra_size, idschool_name) 
 
 sample_replace2 <- sample_chosen %>%
     bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
-    arrange(iddistrict,school_name ) 
+    arrange(iddistrict,egra_size,school_name ) 
 
 
 #add in school info for school that will be replaced
