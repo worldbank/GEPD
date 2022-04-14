@@ -448,6 +448,13 @@ set.seed(2435345)
     sample_n(size=num_schools, weight=total_students)
 
 ```
+```{r}
+sample_final <- school_sample_df %>% select(REGION, code_reg, DEPARTEMENT, code_dep, COMMUNE, code_com, village, code_village,NOM_ETABLISSEMENT, CODE_ADMINISTRATIF, CODE_ETABLISSEMENT, school_type, urban_rural,CODE_ETABLISSEMENT_BILINGUE, total_students, religious_status, ownership)
+  
+
+write.csv(sample_final, paste0("C:/Users/wb577189/OneDrive - WBG/Desktop/school_sample_temp_", Sys.Date(),".csv"), row.names = F, na="")
+```
+
 
 
 

@@ -45,7 +45,7 @@ orphan <- c('Percentage of schools reporting having publicly funded school feedi
             'MICS/Other - Percentage of children age 6-59 months who received deworming medication.',
             'Percentage of ECE Classrooms with Effective Practices',
             'Measure of early childhood education quality (best source to be identified)',
-            'Coverage of social protection programs (Best data source to be identified)',
+            'Coverage of social protection programs (Best data source to be identified)'
             )
 ```
 
@@ -79,6 +79,9 @@ mics_df <- readSDMX(mics_url, isURL=TRUE) %>%
   filter(SEX=="_T" ) %>%
   right_join(mics_indicators_df) %>%
   select(indicator_name, everything())
+
+write_excel_csv(mics_df, "C:/Users/wb577189/OneDrive - WBG/Desktop/mics_mdg.csv")
+
 
 ```
 
