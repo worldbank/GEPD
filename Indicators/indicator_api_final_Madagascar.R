@@ -49,12 +49,16 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ############################
 #Read in indicators.md file
 ###########################
-#Read in list of indicators
-indicators <- read_csv(here::here('Indicators','indicators.csv'))
+# #Read in list of indicators
+# indicators <- read_csv(here::here('Indicators','indicators.csv'))
+# indicators <- read_csv(here::here('Indicators','GEPD_Indicators_info.csv'))
+
+indicators <- read.delim(here::here('Indicators','indicators.md'), sep = "|")
 
 indicators <- indicators %>%
+  select(-c(1)) %>% 
   filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) 
 
 
 
@@ -68,7 +72,9 @@ names(indicators)<-make.names(names(indicators), unique=TRUE)
 
 
 #Read in Sergio's excel with subquestions to include
-subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
+subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') %>% 
+  rename(Series = series)
+
 
 df<-indicators %>%
   left_join(subquestions) %>%
@@ -148,15 +154,20 @@ indicator_match  <- df_overall %>%
   select(Series, Indicator.Name, indicator_tag)
 
 #add extra metadata
+indicator_choices <- read.delim(here::here('Indicators','indicators_choices.md'), sep = "|")
+
+
+
 api_template <- api_template %>%
   mutate(Source="Global Education Policy Dashboard",
          'Source Organization'="World Bank") %>%
   left_join(indicator_choices) %>%
+  rename(Source.Note = `How.is.the.indicator.scored.`) %>% 
   mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
   mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
   rename('Source Note'=Source.Note,
          'Indicator Name'=Indicator.Name) %>%
-  select(-c(indicator_tag, Value))
+  select(-c(Value, X, X.1))
 
 
 
