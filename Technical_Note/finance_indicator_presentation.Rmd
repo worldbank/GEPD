@@ -1,0 +1,437 @@
+---
+title: "GEPD Finance Indicator"
+author: "Brian Stacy"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    fig_width: 5
+    fig_height: 4
+    dpi: 250
+    fig_caption: true
+    background-size: contain;
+    css: xaringan-themer.css
+---
+<style>
+
+.center2 {
+  margin: 0;
+  position: absolute;
+  top: -80px;
+  right: 0;  
+  width: 800px;
+  height: 800px;
+  dpi: 250;
+}
+.center3 {
+  margin: 0;
+  position: absolute;
+  top: 20px;
+  right: 40px;  
+  width: 800px;
+  height: 800px;
+  dpi: 250;
+}
+.reduced{
+   font-size: 0.5em;
+}
+</style>
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(htmltools.dir.version = FALSE)
+library(tidyverse)
+library(rsdmx)
+library(wbstats)
+library(here)
+library(flextable)
+library(Hmisc)
+library(GGally)
+
+#directories
+
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+      
+    dir <- here()
+    shared_loc <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+
+    dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
+    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  }
+
+
+indicators_dir <- paste(dir, 'Indicators', sep="/")
+out_dir <- paste(dir, 'Output', sep="/")
+
+#path to confidential directory
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+    #directories
+    confidential_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
+
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+    #directories
+    confidential_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+
+  }
+
+
+
+# change_here <- function(new_path){
+#   new_root <- here:::.root_env
+#   
+#   new_root$f <- function(...){file.path(new_path, ...)}
+#   
+#   assignInNamespace(".root_env", new_root, ns = "here")
+# }
+
+#list countries
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH")
+
+
+```
+
+
+```{r load, include=FALSE}
+
+#read in indicator metadata
+indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
+
+# read in indicator data
+PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
+  mutate(country="Peru",
+         date='2019') %>%
+  select(-year)
+
+RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
+  mutate(country="Rwanda",
+         date='2020') %>%
+  select(-year)
+
+
+JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
+  mutate(country="Jordan",
+         date='2019') %>%
+  select(-year)
+
+
+ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
+  mutate(country="Ethiopia",
+         date='2020-2021')  %>%
+  select(-year)
+
+# %>%
+#   rename(value=value_pooled)
+
+MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
+  mutate(country="Madagascar",
+         date='2021') %>%
+  select(-year)
+
+
+# Indicator names
+indicator_names_df <- PER_data %>%
+  select(Series, `Indicator Name`)
+
+combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
+write_excel_csv(combined_df_raw, file=paste0(dir, '/Technical_Note/GEPD_finance/combined_df_raw.csv'))
+
+
+  
+  combined_df <- combined_df_raw %>%
+    arrange(Series) %>%
+    mutate(
+           value=round(value,1),
+           value_color=case_when(
+             value_metadata=="Needs Improvement" ~ "#FF0000",
+             value_metadata=="Caution" ~ "#FCD606",
+             value_metadata=="On Target" ~ "#85C546",
+             TRUE ~ "#808080"
+           ),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+
+
+combined_wide_df <- combined_df %>%
+  select(Series, country, value) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_color <- combined_df %>%
+  select(Series, country, value_color) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value_color
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_df %>%
+  rename(Indicator_Name=`Indicator Name`) %>%
+  haven::write_dta(  paste0(confidential_dir, "General/combined_indicators.dta")) %>%
+  haven::write_dta( paste0(shared_loc, "/Data/combined_indicators.dta"))
+
+
+# write_excel_csv(combined_wide_df, file=paste0(dir, '/Technical_Note/GEPD_finance/combined_wide_df.csv'))
+# write_excel_csv(combined_wide_color, file=paste0(dir, '/Technical_Note/GEPD_finance/combined_wide_color_df.csv'))
+
+```
+
+```{r countrytabfn}
+#create function for creating country comparison tables
+country_tab_fn <- function(variables, title) {
+  
+  
+tab_df <- combined_wide_df %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+#set colors
+tab_color_df <- combined_wide_color %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+Peru_col <- tab_color_df$Peru
+Jordan_col <- tab_color_df$Jordan
+Rwanda_col <- tab_color_df$Rwanda
+Ethiopia_col <- tab_color_df$Ethiopia
+Madagascar_col <- tab_color_df$Madagascar
+
+
+#build table
+tab_df <- tab_df  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar)
+
+
+ovr_table <- flextable(tab_df) %>%
+  add_header_lines(title) %>%
+  add_footer_lines('Source: UIS, GEPD, World Bank. 
+ Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' ) %>%
+  theme_vanilla()
+
+#colors
+ovr_table <- ovr_table %>%
+  bg(j = c('Peru'),
+     bg = Peru_col) %>%
+  bg(j = c('Jordan'),
+     bg = Jordan_col) %>%
+  bg(j = c('Ethiopia'),
+     bg = Ethiopia_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
+  bg(j = c('Madagascar'),
+     bg = Madagascar_col)   
+
+
+ovr_table %>%
+  set_table_properties(layout = "autofit")
+
+  
+}
+```
+
+# Introduction
+
+- GEPD Finance Indicator covers three areas:    
+  - Adequacy    
+  - Efficiency    
+  - Equity (Not measured)
+  
+- How to measure Adequecy?
+
+---
+# Finance Indicators
+
+
+
+```{r outtab}
+# Produce a table showing means by country for select practice indicators
+outcome_indicators <- c(
+  'SE.PRM.BFIN',
+  'SE.PRM.BFIN.2',
+  'SE.PRM.BFIN.3',
+  'SE.PRM.BFIN.4'
+
+)
+country_tab_fn(outcome_indicators, 'GEPD Finance Indicators') 
+```
+
+
+---
+# Adequacy Indicator
+
+- How to measures adequacy?   
+
+- Current approach based on commitments made in Education 2030 Framework for Action   
+  - allocating at least 4% to 6% of gross domestic product (GDP) to education   
+  - allocating at least 15% to 20% of public expenditure to education.
+  
+Current indicator scoring:
+  - 5 points if meets either of these targets
+  - 1 point if fails both targets
+  
+---
+# Adequacy Indicator
+
+Pros    
+  - Holds countries accountable for what they said they would do
+
+Cons 
+  - Results in knife edge, very discontinuous jumps in scores
+  - Doesn't quite match description in reference guide
+
+---
+# Alternatives?
+
+1. Government expenditure per student, primary (% of GDP per capita)    
+2. Government expenditure per student, primary (PPP adjusted)   
+3. Government expenditure per school age person, primary (PPP adjusted)    
+
+
+What are the thresholds?
+
+---
+
+
+```{r data, message=FALSE, warning=FALSE, include=FALSE}
+
+# get World Bnak country metadata
+countries_df <- wb_countries()
+
+# get WDI data on Government expenditure per student, primary (% of GDP per capita)
+wdi_df <- wb_data(indicator=c('SE.XPD.PRIM.PC.ZS','SP.POP.TOTL','NY.GDP.PCAP.PP.CD'),
+                  country='countries_only',
+                  start_date = 2010,
+                  end_date=2020)
+
+
+# get WDI data on Government expenditure per student, primary (% of GDP per capita)
+gni_df <- wb_data(indicator=c( 'NY.GNP.PCAP.CD'),
+                  country='countries_only',
+                  start_date = 2020,
+                  end_date=2020) %>%
+  select(iso3c, NY.GNP.PCAP.CD) %>%
+  write_excel_csv(file=paste0(dir, '/Technical_Note/GEPD_finance/gni_df.csv'))
+
+#pull finance indicator data from UIS
+finance_pull <- 'http://data.uis.unesco.org/RestSDMX/sdmx.ashx/GetData/NATMON_DS/X_PPP_1_FSGOV+SAP_1+20062.AFG+ALA+ALB+DZA+ASM+AND+AGO+AIA+ATG+ARG+ARM+ABW+AUS+AUT+AZE+BHS+BHR+BGD+BRB+BLR+BEL+BLZ+BEN+BMU+BTN+BOL+BIH+BWA+BRA+VGB+BRN+BGR+BFA+BDI+KHM+CMR+CAN+CPV+CYM+CAF+TCD+ZZA+CHL+CHN+HKG+MAC+COL+COM+COG+COK+CRI+CIV+HRV+CUB+CUW+CYP+CZE+PRK+COD+DNK+DJI+DMA+DOM+ECU+EGY+SLV+GNQ+ERI+EST+SWZ+ETH+FRO+FLK+FJI+FIN+FRA+GUF+PYF+GAB+GMB+GEO+DEU+GHA+GIB+GRC+GRL+GRD+GLP+GUM+GTM+GGY+GIN+GNB+GUY+HTI+VAT+HND+HUN+ISL+IND+IDN+IRN+IRQ+IRL+IMN+ISR+ITA+JAM+JPN+JEY+JOR+KAZ+KEN+KIR+KWT+KGZ+LAO+LVA+LBN+LSO+LBR+LBY+LIE+LTU+LUX+MDG+MWI+MYS+MDV+MLI+MLT+MHL+MTQ+MRT+MUS+MYT+MEX+FSM+MCO+MNG+MNE+MSR+MAR+MOZ+MMR+NAM+NRU+NPL+NLD+ANT+NCL+NZL+NIC+NER+NGA+NIU+NFK+MKD+MNP+NOR+OMN+PAK+PLW+PSE+PAN+PNG+PRY+PER+PHL+PCN+POL+PRT+PRI+QAT+KOR+MDA+REU+ROU+RUS+RWA+SHN+KNA+LCA+SPM+VCT+BLM+MAF+WSM+SMR+STP+SAU+SEN+SRB+SYC+SLE+SGP+SXM+SVK+SVN+SLB+SOM+ZAF+SSD+ESP+LKA+SDN+XDN+SUR+SJM+SWE+CHE+SYR+TJK+THA+TLS+TGO+TKL+TON+TTO+TUN+TUR+TKM+TCA+TUV+UGA+UKR+ARE+GBR+TZA+USA+VIR+URY+UZB+VUT+VEN+VNM+WLF+ESH+YEM+ZMB+ZWE/all?startTime=2010&endTime=2021'
+
+finance_sdmx_df <- readSDMX(file=finance_pull) %>% as_tibble()
+
+
+finance_df <- finance_sdmx_df %>%
+  pivot_wider(id_cols = c('LOCATION', 'obsTime'),
+              names_from = NATMON_IND,
+              values_from=obsValue
+  ) %>%
+  mutate(spending_per_sap=X_PPP_1_FSGOV*1000000/SAP_1,
+         spending_per_pupil=X_PPP_1_FSGOV*1000000/`20062`) %>%
+  filter(!is.na(X_PPP_1_FSGOV)) %>%
+  rename(iso3c=LOCATION,
+         date=obsTime) %>%
+  mutate(date=as.numeric(date))  %>%
+  left_join(wdi_df) %>%
+  left_join(countries_df) %>%
+  mutate(spender_per_sap_gdp=100*spending_per_sap/NY.GDP.PCAP.PP.CD) %>%
+  fill(spending_per_sap,spender_per_sap_gdp, spending_per_pupil, SE.XPD.PRIM.PC.ZS, .direction = 'downup') %>%
+  group_by(iso3c) %>%
+  filter(row_number()==max(row_number()))
+
+write_excel_csv(finance_df, file=paste0(dir, '/Technical_Note/GEPD_finance/finance_df.csv'))
+
+
+
+```
+
+.reduced[
+```{r thresh}
+
+income_df <- finance_df %>%
+  group_by(income_level) %>%
+  summarise(spending_per_sap=wtd.mean(spending_per_sap, w=`SAP_1`),
+            spending_per_pupil=wtd.mean(spending_per_pupil, w=`SAP_1`),
+            SE.XPD.PRIM.PC.ZS=wtd.mean(SE.XPD.PRIM.PC.ZS, w=`SAP_1`)) %>%
+  ungroup() %>%
+  rename(country=income_level) %>%
+  mutate(order=case_when(
+    country=="Low income" ~ 1,
+    country == "Lower middle income"~ 2,
+    country == "Upper middle income"~ 3,
+    country=="High income"~ 4
+  )) %>%
+  arrange(order) %>%
+  select(-order)
+
+thresh_df <- finance_df %>%
+  filter(iso3c %in% countries) %>%
+  ungroup() %>%
+  select(country, date, SE.XPD.PRIM.PC.ZS,spending_per_pupil, spending_per_sap) %>%
+  bind_rows(income_df) %>%
+  rename(
+    Country=country,
+    Year=date,
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+  mutate(Year=as.character(Year))
+
+
+flextable(thresh_df) %>%
+  add_header_lines('Alternative Finance Indicators') %>%
+  add_footer_lines('Source: UIS, GEPD, World Bank. ') %>%
+  theme_vanilla() %>%
+  colformat_double(j=3:5,
+                   digits=2)
+
+```
+
+]
+
+
+---
+
+```{r}
+
+finance_df %>%
+  rename(
+    spending_per_student_GDP=SE.XPD.PRIM.PC.ZS
+  ) %>%
+  ggpairs(columns=c("spending_per_student_GDP", "spending_per_pupil", "spending_per_sap" ), title="Adequacy Indicators") +
+  theme_bw()
+```
+
+---
+
+```{r echo=FALSE}
+finance_df %>%
+  mutate(colr = case_when(
+    iso3c %in% countries ~ 'red',
+    TRUE ~ 'black'
+  )) %>%
+ggplot(  aes(x=NY.GDP.PCAP.PP.CD, y=spending_per_pupil)) +
+  geom_text(aes(label=iso3c, color=colr)) + 
+  geom_smooth(method='lm') +
+  scale_x_log10(
+    labels=scales::comma
+  ) +
+  scale_y_log10(
+    labels=scales::comma
+  ) +
+  theme_bw()
+
+```
+
+
+

@@ -1,0 +1,112 @@
+---
+title: "GEPD Finance Dashboard"
+runtime: shiny
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(flextable)
+
+
+```
+
+
+
+Thresholds {.sidebar data-width=400}
+==============================
+
+### Choose threshold per variable
+
+```{r}
+
+
+# Spatial
+numericInput(inputId = 'n_country', 
+            label = 'No. Countries:',
+            min = min(wdic$n_country, na.rm = T), 
+            max = max(wdic$n_country, na.rm = T), 
+            value = 50,
+            step = 1)
+
+numericInput(inputId = 'p_lmic', 
+            label = 'Percent LMICs:',
+            min = min(wdic$p_lmic, na.rm = T), 
+            max = max(wdic$p_lmic, na.rm = T), 
+            value = 50, 
+            step = 1)
+
+# Staleness
+numericInput(inputId = 'yearlatest_median', 
+            label = 'Median Last Year:',
+            min = min(wdic$yearlatest_median, na.rm = T), 
+            max = max(wdic$yearlatest_median, na.rm = T), 
+            value = 2012, 
+            step = 1)
+
+numericInput(inputId = 'yearlatest', 
+             label = 'Max Last Year:',
+             min = min(wdic$yearlatest, na.rm = T),
+             max = max(wdic$yearlatest, na.rm = T), 
+             value = 2014, 
+             step = 1)
+
+# Span
+numericInput(inputId = 'span_years', 
+            label = 'No. Years Spanned:',
+            min = min(wdic$span_years, na.rm = T), 
+            max = max(wdic$span_years, na.rm = T), 
+            value = 10, 
+            step = 1)
+
+numericInput(inputId = 'nonmiss', 
+            label = 'Non-missing data:',
+            min = min(wdic$nonmiss, na.rm = T), 
+            max = max(wdic$nonmiss, na.rm = T), 
+            value = 20, 
+            step = 0)
+
+# Usage
+numericInput(inputId = 'uniquevisitors', 
+             label = paste('No. Unique Visitors (0 to ', 
+                           ceiling(max(wdic$uniquevisitors, na.rm = T)), ')'),
+             min = min(wdic$uniquevisitors, na.rm = T),
+             max = max(wdic$uniquevisitors, na.rm = T), 
+             value = 100, 
+             step = 1)
+
+```
+
+No. Countries
+==============================
+
+```{r}
+radioButtons(inputId = 'density1', 
+             label = 'Choose Distribution:',
+             choiceNames  = c('Density', 'Cumulative Counts'), 
+             choiceValues = c(F, T))
+```
+
+### No. Countries
+
+```{r}
+renderPlot({
+  plot_density(input, 
+               'n_country', 
+               'Number of Countries', 
+               input$density1)
+  })
+```
+
+### Percent LMICs
+
+```{r}
+renderPlot({
+  plot_density(input, 
+               'p_lmic', 
+               'LMIC Coverage (%)', 
+               input$density1
+               )})
+```

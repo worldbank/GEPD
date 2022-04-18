@@ -1,7 +1,7 @@
 ---
 title: "Finance Indicator"
 author: "Brian Stacy"
-date: "5/11/2021"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -12,84 +12,162 @@ knitr::opts_chunk$set(
 	warning = FALSE
 )
 library(tidyverse)
-library(readxl)
 library(here)
-library(flextable)
-library(gtsummary)
-library(gt)
 
 dir <- here()
 
 
 ```
 
-# Read in GEPD indicators
 
-```{r gepd}
 
-gepd_df <- read_excel(path=paste0(dir,"/Indicators/GEPD_Indicators_for_EdStats_PER_JOR_v3.xlsx"))
 
-gepd_df %>%
-  filter(grepl("SE.PRM.BFIN", Series)) %>%
-  gt() %>%
-  tab_header(
-    title="GEPD Finance Indicators for Jordan and Peru"
+# Background on Finance Indicator
+
+## Essence
+The aim of this indicator is to capture three aspects of education financing that play a key role in promoting learning for all. These are adequacy, equity, and efficiency.
+
+## Indicator  
+
+The indicator is a score ranging from 1 to 5 that considers the quality of financing using three lenses – adequacy, equity, and efficiency. This score is calculated using 4 sub-indicators: 1) per child spending (adequacy), 2) public management financing performance (efficiency), 3) outcomes per spending (efficiency), and 4) an equity measure.  The disaggregated information for each of these 4 sub-indicators is available as a drill-down option.
+
+## Background  
+
+Data shows that many countries have successfully increased their investments in education. Just in the last 15 years, government spending on education has doubled. However, more is needed to achieve the ambitious learning agenda that countries must have. At the same time, it is not sufficient to invest more, countries need to invest differently to reach the desired learning outcomes. Using resources differently will require tackling weak links in spending-learning chains. This will involve solving misalignments between funds and learning, address unequal spending, avoid spending on the wrong things, and prevent situations in which the funds don’t reach the schools. For this, the indicator proposed is aiming to measure not just adequacy (how much money is being invested), but also equity and efficiency (how the investment is being distributed and whether it is achieving the expected results).
+
+## Instrument Used for Measurement  
+
+- School Survey  
+- Policy Survey  
+- Survey of Public Officials  
+- Existing Data Source
+
+## Measurement Approach
+All four sub-indicators mentioned above will be indexed, so that a summary score can be generated to measure overall health of financing. The methodology for each of the sub-indicators is the following:    
+
+1. To capture adequacy: Calculate per child spending using data from the UIS.  
+2.	To capture efficiency in terms of performance of the financing processes: Use the summary score resulting from the Public Expenditure and Financial Accountability (PEFA) assessment. The score is then weighted to give additional weight to the service delivery pillar that is part of the PEFA assessment.  
+
+3. 	To capture efficiency in terms of outcomes achieved for the given level of investment (return on education investment): Use linear regressions to estimate the expected adjusted learning outcomes (combination of access and learning outcomes) associated with the different levels of per child spending. The sub-indicator reports the distance between the observed outcomes and the expected outcomes.  
+
+4. 	To capture equity: Calculate how much education spending goes towards the bottom two quintiles of the income distribution. First, calculate total spending going towards primary, secondary, and tertiary education.  
+
+### Instrument Sources
+UIS for spending per child and spending per education level (primary, secondary, and tertiary)  
+
+Public Expenditure and Financial Accountability (PEFA)
+
+
+# PEFA
+
+For PEFA download data at https://www.pefa.org/assessments/batch-downloads.
+
+Download all indicators for all countries.  Score A=4.0, B+=3.5, B=3.0, C+=2.5, C=2, D+=1.5, D=1.
+
+Composite 2016 weighted index is Composite of 31 pillars and 94 indicators; all indicators weighted 1% except 4 indicators in “Pillar 8: Performance Information for Service Delivery” weighted 2.5% each
+Composite 2011 weighted index is Composite of 31 pillars and 76 indicators; all indicators weighted 1.2% except 1 indicator in “Pillar 23: Availability of information on resources received by service delivery units” weighted 10%
+
+When available the 2016 version of PEFA is used.  When not available, the 2011 versions is used.
+
+```{r pefa}
+#get data based on 2016 framework
+pefa_2016_df <- read_csv(file=paste0(dir, "/Technical_Note/Finance_Data/PEFA_2016_framework_data_20220418.csv")) %>%
+  select(Country, Year, contains(".")) %>%
+  mutate(across(starts_with(c('PI','UD')),~case_when(
+    . == "A" ~ 4,
+    . == "B+" ~ 3.5,
+    . == "B" ~ 3,
+    . == "C+" ~ 2.5,
+    . == "C" ~ 2,
+    . == "D+" ~ 1.5,
+    grepl("D",.) ~ 1,
+    TRUE ~ as.numeric(NA)
+  )),
+  mutate(
+    across(starts_with(c('PI','UD')),.fns=~case_when(
+      grepl("PI-08",cur_column()) ~ 2.5*./100, #100 items total weight_sum <- rowSums(select(pefa_2016_df, starts_with('wt_')), na.rm = TRUE)
+      TRUE ~ 1*./100
+    ), .names="wt_{.col}")
+  )) 
+
+
+pefa_2016_final_df <- pefa_2016_df %>%
+  transmute(
+    Country=Country,
+    Year=Year,
+    composite_2016=rowMeans(select(pefa_2016_df, starts_with(c('PI','UD'))), na.rm = TRUE),
+    composite_2016_weighted=rowSums(select(pefa_2016_df, starts_with("wt_")), na.rm = TRUE)
   )
-  
 
-```
 
-# Finance Summary Stats
+#get data based on 2011 framework
+pefa_2011_df <- read_csv(file=paste0(dir, "/Technical_Note/Finance_Data/PEFA_2011_framework_data_20220418.csv")) %>%
+  select(Country, Year, contains(".")) %>%
+  mutate(across(starts_with(c('PI','UD')),~case_when(
+    . == "A" ~ 4,
+    . == "B+" ~ 3.5,
+    . == "B" ~ 3,
+    . == "C+" ~ 2.5,
+    . == "C" ~ 2,
+    . == "D+" ~ 1.5,
+    grepl("D",.) ~ 1,
+    TRUE ~ as.numeric(NA)
+  )),
+  mutate(
+    across(starts_with(c('PI','UD')),.fns=~case_when(
+      grepl("PI-23",cur_column()) ~ 10*./100, #132 items total weight_sum <- rowSums(select(pefa_2011_df, starts_with('wt_')), na.rm = TRUE)
+      TRUE ~ 1.2*./100
+    ), .names="wt_{.col}")
+  )) 
 
-```{r financedf}
 
-finance_df <- read_excel(path=paste0(dir, "/Technical_Note/Expenditure per student_Mar17 2021__2.xls"))
-
-#summary table ty region
-finance_df %>%
-  select(region, `Spending per primary school-age child as % of GDP per capita`) %>%
-  tbl_summary(
-    by='region',
-    type = all_continuous() ~ "continuous2",
-    digits= all_continuous() ~ 1,
-    statistic = all_continuous() ~ c(
-                                     "{mean}",     
-                                     "{median} ({p25}, {p75})", 
-                                     "{min}, {max}",
-                                     "{N_nonmiss}"),
-      
-  ) %>%
-  as_gt() %>%
-  tab_header(
-    title="Spending per primary school-age child as % of GDP per capita by Region"
+pefa_2011_final_df <- pefa_2011_df %>%
+  transmute(
+    Country=Country,
+    Year=Year,
+    composite_2011=rowMeans(select(pefa_2011_df, starts_with(c('PI','UD'))), na.rm = TRUE),
+    composite_2011_weighted=rowSums(select(pefa_2011_df, starts_with("wt_")), na.rm = TRUE)
   )
 
 
+#combine 2011 and 2016 versions.  Choose 2016 when availab le
+pefa_final_df <- pefa_2016_final_df %>% 
+  bind_rows(pefa_2011_final_df ) %>%
+  group_by(Country) %>%
+  fill(starts_with('composite'),.direction='downup') %>%
+  filter(Year==max(Year)) %>%
+  mutate(composite=if_else(!is.na(composite_2016),composite_2016, composite_2011 ),
+         composite_weighted=if_else(!is.na(composite_2016_weighted),composite_2016_weighted, composite_2011_weighted ))
+
+
+
+write_excel_csv(pefa_final_df, paste0(dir, "/Technical_Note/Finance_Data/pefa_final_data_",Sys.Date(),'.csv'))
 ```
 
-```{r finance_plot}
-finance_df %>%
-  mutate(highlight=if_else(country %in% c("Jordan", "Peru", "Rwanda"),TRUE,FALSE),) %>%
-ggplot(aes(x=`Spending per primary school-age child as % of GDP per capita`, y=region, color=highlight, size=highlight)) +
-  geom_point() +
-  theme_bw() +
-  guides(color=guide_legend(title="Peru, Jordan, Rwanda")) +
-  ggtitle("Spending per primary school-age child as % of GDP per capita by Region")
+# Frontier Analysis
 
+ A brief description of the finance indicator is below.  The original analysis and code was run in Stata.  Below is the documentation for the stochastic analysis command.  
+
+Frontier fits stochastic production or cost frontier models; the default is a production frontier model. It provides estimators for the parameters of a linear model with a disturbance that is assumed to be a mixture of two components, which have a strictly nonnegative and symmetric distribution, respectively. Frontier can fit models in which the nonnegative distribution component (a measurement of inefficiency) is assumed to be from a half-normal, exponential, or truncated-normal distribution.  See Kumbhakar and Lovell (2000) for a detailed introduction to frontier analysis.
+
+``` Stata
+ge x1=ln(learn_adj_yrs_sch_5yr) if learn_adj_yrs_sch_5yr~=.
+ge x2=ln(exp_total_perchild_5yr) if exp_total_perchild_5yr~=.
+frontier x1 x2 if learn_adj_yrs_sch_5yr~=. & exp_total_perchild_5yr~=.
+predict xb_adj, xb
+predict u_adj, u 
 ```
 
+The model for the stochastic frontier model is as follows.  Let $y_i$ be an outcome indicator, in our case it is the learning adjusted years of schooling, and $x_i$ be the inputs, in our case expenditures per child over a 5 year period.
 
-```{r countrynum}
+$$ln(y_i) = \beta_0 + \beta_1 ln(x_i) + \epsilon_i - u_i$$
+and 
 
-#summary table ty region
-finance_df %>%
-  select(country, region, `Spending per primary school-age child as % of GDP per capita`) %>%
-  filter(country %in% c("Jordan", "Peru", "Rwanda")) %>%
-  mutate(`Spending per primary school-age child as % of GDP per capita`=round(`Spending per primary school-age child as % of GDP per capita`,1)) %>%
-  gt() %>%
-  tab_header(
-    title="Spending per primary school-age child as % of GDP per capita for Jordan, Rwanda, and Peru"
-  )
+$$e^{u_i}$$ is the country's efficiency paramater.  These parameters are estimated using maximum likelihood.
 
+
+```{r}
+stochastic_frontier_df <- read_csv(paste0(dir, "/Technical_Note/Finance_Data/stochastic_frontier.csv"))
 ```
+
 
