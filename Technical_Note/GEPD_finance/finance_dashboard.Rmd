@@ -116,13 +116,14 @@ adequacy_dat <- reactive({
   ) %>%
   mutate(Year=as.character(Year)) %>%
     rename(base_ind= !!input$ind) %>%
+   filter(!is.na(base_ind)) %>%
     arrange(NY.GNP.PCAP.CD) 
   
   q1 <- temp %>% filter(row_number()<=input$bins)
-  q1_val<- mean(q1$base_ind)
+  q1_val<- mean(q1$base_ind, na.rm=T)
 
   q3 <- temp %>% filter(row_number()>=(nrow(finance_df)-input$bins))
-  q3_val<- mean(q1$base_ind)
+  q3_val<- mean(q1$base_ind, na.rm=T)
     
   temp %>%
     mutate(local_avg=rollmean(base_ind, k=input$bins, fill=c(q1_val, mean(base_ind, na.rm=T), q3_val))) %>%
