@@ -236,6 +236,7 @@ The **Survey of public officials** collects information about the capacity and o
 ```{r, code = readLines("Learning poverty_lays.R"), include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
 ```
 
+
 ```{r color_codes, echo=FALSE, message = FALSE, warning = FALSE}
 
 
@@ -293,6 +294,7 @@ lays_lp_choice <- if_else(marker ==0, lays, lp)
 
 
 #### Table 1. GEPD Indicators, `r country`, `r year` ####
+
 ```{r tab1, echo=FALSE, message=FALSE, warning=FALSE}
 ####
 # create table
@@ -346,9 +348,11 @@ FitFlextableToPage(ovr_table) %>%
   align(j=2:4, align = "left", part = "body") %>%
   align(j=1, align = "center", part = "body") %>%
   set_table_properties(layout = "autofit")
+
 ```
 
 #### Table 2. GEPD Indicators by gender, `r country`, `r country_year` ####
+
 ```{r tab_gender, echo=FALSE, message=FALSE, warning=FALSE}
 
 gend_df_1 <- input %>%
@@ -407,13 +411,13 @@ FitFlextableToPage(gend_table) %>%
   align( align = "left", part = "body")
 
 
-
 ```
 
 
 
 
 #### Table 3. GEPD Indicators by region, `r country`, `r country_year` ####
+
 ```{r tab_region, echo=FALSE, message=FALSE, warning=FALSE}
 
 reg_df_1 <- input %>%
@@ -470,7 +474,6 @@ reg_table <- reg_table %>%
 FitFlextableToPage(reg_table) %>%
   width(width=1.8) %>%
   align( align = "left", part = "body")
-
 
 
 ```
@@ -702,9 +705,6 @@ pol_prac_tab <- pol_prac_tab %>%
 FitFlextableToPage(pol_prac_tab) %>%
   width(width=1.8) %>%
   align( align = "left", part = "body")
-
-
-
 ```
 
 
@@ -792,10 +792,6 @@ pol_prac_tab <- pol_prac_tab %>%
 FitFlextableToPage(pol_prac_tab) %>%
   width(width=1.8) %>%
   align( align = "left", part = "body")
-
-
-
-
 ```
 
 ```{r manage_content, echo=FALSE, message=FALSE, warning=FALSE}
@@ -880,12 +876,6 @@ pol_prac_tab <- pol_prac_tab %>%
 FitFlextableToPage(pol_prac_tab) %>%
   width(width=1.8) %>%
   align( align = "left", part = "body")
-
-
-
-
-
-
 ```
 
 ```{r defacto_data, echo=FALSE, message=FALSE, warning=FALSE}
@@ -1271,5 +1261,4 @@ pol_tab <- pol_tab %>%
 FitFlextableToPage(pol_tab) %>%
   width(width=1.8) %>%
   align( align = "left", part = "body")
-
 ```
