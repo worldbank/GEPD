@@ -260,7 +260,7 @@ lire_df <- read_excel(path = paste0(sampling_folder,"/Liste_Ecoles_Primaires_Pro
   mutate(LIRE="LIRE School")
 
 lire_matchable <- lire_df %>%
-  left_join(df_filtered %>% select(REGION, DEPARTEMENT, COMMUNE, village, NOM_ETABLISSEMENT, CODE_ADMINISTRATIF,CODE_ETABLISSEMENT, total_students ))
+  left_join(df_filtered %>% select(REGION, DEPARTEMENT, COMMUNE, village, NOM_ETABLISSEMENT, CODE_ADMINISTRATIF,CODE_ETABLISSEMENT, total_students, urban_rural ))
 
 df_updated <- df_filtered %>%
   left_join(lire_df) %>%
@@ -397,7 +397,7 @@ write_excel_csv(school_sample_df, paste(sampling_folder, '/sample_schools_', Sys
 
 ```{r}
 # The strata are based on the 8 regions and urban/rural status
-set.seed(2435345)
+set.seed(243545)
 
 
   ## Adding the 70 LIRE schools
@@ -406,22 +406,36 @@ set.seed(2435345)
 
   lire_matchable_sample <- lire_matchable %>% filter(!CODE_ETABLISSEMENT %in%  lire_sampled_first)
   
+  
+  strata_size_lire <- lire_matchable_sample %>%
+  filter(!is.na(urban_rural)) %>%
+  group_by(REGION,urban_rural ) %>%
+  summarise(
+    n_schools=n(),
+    n_students=sum(total_students),
+    share_students=n_students/sum(lire_matchable_sample$total_students, na.rm=T),
+    exp_num_schools=70*share_students,
+    ini_num_schools=round(exp_num_schools,0)
+  ) %>%
+  ungroup() %>%
+  sample_n(nrow(.)) #randomly order the rows
+
     #pick number of schools in each strata so that total adds to 200
   # get vector of exp_num_schools
-  num_schools <- strata_size$ini_num_schools
+  num_schools <- strata_size_lire$ini_num_schools
   
   #do a while loop sequentially randomly adding or subtracting a school to the list for a randomly selected strata until total is 200
   while (sum(num_schools)!=70) {
     
     if (sum(num_schools)<70) {
       
-      nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
-      extra_schools <- rep(0,16) #create vector of 0s
+      nr <- round(runif(n=1,min=1,max=10),0) #randomly choose integer between 0 and 16
+      extra_schools <- rep(0,10) #create vector of 0s
       extra_schools[nr] <- 1 # for one random strata add one.
       num_schools <- num_schools + extra_schools #add to list of schools.
     } else {
-      nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
-      extra_schools <- rep(0,16) #create vector of 0s
+      nr <- round(runif(n=1,min=1,max=10),0) #randomly choose integer between 0 and 16
+      extra_schools <- rep(0,10) #create vector of 0s
       extra_schools[nr] <- -1 # for one random strata add one.
       num_schools <- num_schools + extra_schools #add to list of schools.
     }
@@ -430,12 +444,12 @@ set.seed(2435345)
   
   
   sum(num_schools)
-  strata_size$num_schools <- num_schools
+  strata_size_lire$num_schools <- num_schools
   
-  sum(strata_size$chosen_num_schools)
+  sum(strata_size_lire$num_schools)
   
   # There are 34 schools, so we need to choose 6 more randomly
-  districts <- strata_size %>%
+  districts <- strata_size_lire %>%
     group_by(REGION,urban_rural) %>%
     summarise(num_schools=sum(num_schools),
               n_students=sum(n_students))
@@ -443,7 +457,8 @@ set.seed(2435345)
   
    #now choose the schools LIRE within strata
   school_sample_LIRE_df <- lire_matchable_sample %>%
-    left_join(strata_size) %>%
+    filter(!is.na(total_students)) %>%
+    left_join(strata_size_lire) %>%
     group_by(REGION,urban_rural) %>%
     sample_n(size=num_schools, weight=total_students)
 
