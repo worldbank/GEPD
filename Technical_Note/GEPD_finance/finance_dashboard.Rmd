@@ -289,19 +289,19 @@ renderHighchart({
      qtiles <- quantile(hcht_dat$base_ind, na.rm=T)
 
 hchart(hcht_dat, 'scatter',
-       hcaes(x=HD.HCI.HLOS,y=base_ind, group=Country, color=colors),
+       hcaes(y=HD.HCI.HLOS,x=base_ind, group=Country, color=colors),
        tooltip=list(pointFormat='<b>Country:</b> {point.Country} <br>
-                                     <b>HLO Score:</b> {point.x:.2f} <br>
-                                     <b>Finance indicator value:</b> {point.y:.2f}
+                                     <b>HLO Score:</b> {point.y:.2f} <br>
+                                     <b>Finance indicator value:</b> {point.x:.2f}
                         '),
        marker=list(
        radius=6)
         ) %>%
   hc_add_series(
-    fit, type = "line", hcaes(x = HD.HCI.HLOS, y = .fitted),
+    fit, type = "line", hcaes(y = HD.HCI.HLOS, x = .fitted),
     name = "Line of Best Fit", id = "fit"
     ) %>%
-  hc_xAxis(
+  hc_yAxis(
     title=list(text="Harmonized Test Scores",
                style=list(fontSize=18)),
     type='linear',
@@ -309,7 +309,7 @@ hchart(hcht_dat, 'scatter',
       style=list(fontSize=14)
     )
   ) %>%
-  hc_yAxis(
+  hc_xAxis(
     title=list(text=input$ind,
                style=list(fontSize=18)),
     plotBands=list(
