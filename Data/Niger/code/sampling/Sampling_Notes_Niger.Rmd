@@ -462,6 +462,12 @@ set.seed(243545)
     group_by(REGION,urban_rural) %>%
     sample_n(size=num_schools, weight=total_students)
 
+#append lLIRE schools
+  
+  school_sample_df %>%
+    bind_rows(school_sample_LIRE_df) %>%
+    write_excel_csv( paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
+
 ```
 ```{r}
 sample_final <- school_sample_df %>% select(REGION, code_reg, DEPARTEMENT, code_dep, COMMUNE, code_com, village, code_village,NOM_ETABLISSEMENT, CODE_ADMINISTRATIF, CODE_ETABLISSEMENT, school_type, urban_rural,CODE_ETABLISSEMENT_BILINGUE, total_students, religious_status, ownership)
