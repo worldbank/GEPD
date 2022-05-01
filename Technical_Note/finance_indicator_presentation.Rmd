@@ -310,7 +310,7 @@ What are the thresholds?
 countries_df <- wb_countries()
 
 # get WDI data on Government expenditure per student, primary (% of GDP per capita)
-wdi_df <- wb_data(indicator=c('SE.XPD.PRIM.PC.ZS','SP.POP.TOTL','NY.GDP.PCAP.PP.CD'),
+wdi_df <- wb_data(indicator=c('SE.XPD.PRIM.PC.ZS','SP.POP.TOTL','NY.GDP.PCAP.PP.CD','HD.HCI.HLOS'),
                   country='countries_only',
                   start_date = 2010,
                   end_date=2020)
@@ -344,7 +344,9 @@ finance_df <- finance_sdmx_df %>%
   left_join(wdi_df) %>%
   left_join(countries_df) %>%
   mutate(spender_per_sap_gdp=100*spending_per_sap/NY.GDP.PCAP.PP.CD) %>%
-  fill(spending_per_sap,spender_per_sap_gdp, spending_per_pupil, SE.XPD.PRIM.PC.ZS, .direction = 'downup') %>%
+  group_by(iso3c) %>%
+  arrange(date) %>%
+  fill(spending_per_sap,spender_per_sap_gdp, spending_per_pupil, SE.XPD.PRIM.PC.ZS,HD.HCI.HLOS, .direction = 'downup') %>%
   group_by(iso3c) %>%
   filter(row_number()==max(row_number()))
 
