@@ -614,7 +614,7 @@ sample_replace %>%
 sample_replace <- sample_replace %>%
   select(idemis_code, idschool_name, iddistrict, replaced_school_emis, replaced_school_name, replaced_district, everything())
   
-write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+#write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
 
 
 
