@@ -1,0 +1,147 @@
+﻿Variable,How Was Data Collected?,Details on Scoring
+4th Grade Student Knowledge,4th Grade Student Assessment,Fraction correct on our 4th grade assessment
+4th Grade Math Knowledge,4th Grade Student Assessment,Fraction correct on our 4th grade math assessment
+4th Grade Literacy Knowledge,4th Grade Student Assessment,Fraction correct on our 4th grade language assessment
+4th Grade Student Proficiency,4th Grade Student Assessment,Whether or not student reached 34/41 items correct
+4th Grade Student Proficiency Literacy,4th Grade Student Assessment,Whether or not student reached 20/24 items correct
+4th Grade Student Proficiency Math,4th Grade Student Assessment,Whether or not student reached 14/17 items correct
+4th Grade Student Proficiency at 70% threshold,4th Grade Student Assessment,4th Grade Student Proficiency at 70% threshold
+4th Grade Student Proficiency at 75% threshold,4th Grade Student Assessment,4th Grade Student Proficiency at 75% threshold
+Student Attendance Rate,Student Roster and Classroom Observation,# of students present divided by # according to class list
+Teacher Classroom Presence Rate ,Teacher Roster and School Inspection,Fraction of teachers out of 10 that were in class and school during attendance check
+Teacher Classroom Absence Rate ,Teacher Roster and School Inspection,Fraction of teacher not in class or school during attendance check
+Teacher School Absence Rate,Teacher Roster and School Inspection,Fraction of teacher not in school during attendance check
+Teacher Content Proficiency,Teacher Assessment,Fraction of teachers scoring 80% of higher on overall content assessment
+Teacher Content Proficiency Literacy,Teacher Assessment,Fraction of teachers scoring 80% of higher on literacy content assessment
+Teacher Content Proficiency Math,Teacher Assessment,Fraction of teachers scoring 80% of higher on math content assessment
+Teacher Content Proficiency at 70% threshold,Teacher Assessment,Teacher Content Proficiency at 70% threshold
+Teacher Content Proficiency at 75% threshold,Teacher Assessment,Teacher Content Proficiency at 75% threshold
+Teacher Content Knowledge,Teacher Assessment,Average score at school level on math and literacy portion of content exam
+Teacher Math Content Knowledge,Teacher Assessment,Fraction correct on overall math assessment
+Teacher Literacy Content Knowledge,Teacher Assessment,Fraction correct on overall literacy assessment
+Grammar,Teacher Assessment,Fraction correct on grammar task of content assessment
+Cloze Task,Teacher Assessment,Fraction correct on cloze task of content assessment
+Read Passage,Teacher Assessment,Fraction correct on read a passage task of content assessment
+Arithmetic & Number Relations,Teacher Assessment,Fraction correct on arithmetic and number relations task of content assessment
+Geometry,Teacher Assessment,Fraction correct on geometry task of content assessment
+Interpret Data,Teacher Assessment,Fraction correct on interpretting data task of content assessment
+1st Grade Assessment Score,1st Grade Direct Assessment,"Average of the fraction correct in numeracy, literacy, socio-emotional, and executive functioning"
+1st Grade Numeracy Score,1st Grade Direct Assessment,1st Grade Numeracy Fraction Correct
+1st Grade Literacy Score,1st Grade Direct Assessment,1st Grade Literacy Fraction Correct
+1st Grade Executive Functioning Score,1st Grade Direct Assessment,1st Grade Executive Functioning Fraction Correct
+1st Grade Socio-Emotional Score,1st Grade Direct Assessment,1st Grade Socio-Emotional Fraction Correct
+1st Grade Assessment Proficiency,1st Grade Direct Assessment,Marked as proficient if student could score at least 80% of items correct
+1st Grade Numeracy Proficiency,1st Grade Direct Assessment,Marked as proficient if student could score at least 90% of math items correct
+1st Grade Literacy Proficiency,1st Grade Direct Assessment,Marked as proficient if student could score at least 80% of literacyitems correct
+1st Grade Executive Functioning Proficiency,1st Grade Direct Assessment,Marked as proficient if student could score at least 70% of executive functiong items correct
+1st Grade Socio-Emotional Proficiency,1st Grade Direct Assessment,Marked as proficient if student could score at least 80% of socio-emotional items correct
+Inputs,Classroom Observation,"Total of whether there is functional blackboard, materials, desks, and ICT"
+"Functioning Blackboard (Based on classroom observation: Is there a blackboard, Is there chalk, and Is there sufficient light",Classroom Observation,"Functioning Blackboard (Based on classroom observation: Is there a blackboard, Is there chalk, and Is there sufficient light"
+"Classroom Materials (Pens, Pencils, Exercise Books)",Classroom Observation,"# of Classroom Materials (Pens, Pencils, Exercise Books) divided by # of students in class"
+Textbooks,Classroom Observation,# of Classroom  Textbooks divided by # of students in class
+Desks,Classroom Observation,# of Classroom  Desks divided by # of students in class
+ICT Usage,Teacher Inverview,Whether or not teacher reported using ICT
+ICT Access,School Inspection,Whether tablets/computers were working and had internet connectivity
+Infrastructure,School Inspection,Infrastructure
+Clean Drinking Water,School Inspection,"Enumerators assess whether water comes from piped water, protected well, packaged bottle water, or tanker truck.  No credit for unprotected sources"
+Functioning Toilets,School Inspection,"Toilets exist, separate for boys/girls, clean, private, useable,  handwashing available"
+Internet,School Inspection,"1 point if internet working, 0.5 if doesn't work well, 0 if not at all"
+Electricity,School Inspection,Enuermator assessment of whether electricity worked in randomly selected class
+Disability Accessibility,School Inspection,"Accessibility from road, has ramp with accessible entrance for school and classrooms"
+Operational Management,Principal Interview,Operational Management
+Operational Management - Vignette 1,Principal Interview,"Leaky roof vignette: 0.5 points are awarded for someone specific having the responsibility to fix,0.5 point is awarded if the school can fully fund the repair, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community, 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved."
+Operational Management - Vignette 2,Principal Interview,"Inadequate number of textbooks vignette: 0.5 points are awarded for someone specific having the responsibility to fix,0.5 point is awarded if the school can fully address, 0.25 points is awarded if the school must get partial help from the community, and 0 points are awarded if the full cost must be born by the community, 1 point is awarded if the problem is fully resolved in a timely manner, with partial credit given if problem can only be partly resolved."
+Teacher Intrinsic Motivation,Teacher Interview,Teacher Intrinsic Motivation
+Scores on set of questions to teachers on whether it is ever acceptable to be absent,Teacher Interview,Scores on set of questions to teachers on whether it is ever acceptable to be absent
+Scores on set of questions to teachers on whether some students deserve more attention than others,Teacher Interview,Scores on set of questions to teachers on whether some students deserve more attention than others
+Scores on questions related to growth mindset,Teacher Interview,Scores on questions related to growth mindset
+Motivation to teach based on whether teacher joined teaching just for job security,Teacher Interview,Motivation to teach based on whether teacher joined teaching just for job security
+Instructional Leadership,Teacher Interview,Instructional Leadership
+Whether or not classroom has been observed,Teacher Interview,Whether or not classroom has been observed
+Whether observation took place in last 12 months,Teacher Interview,Whether observation took place in last 12 months
+Whether teacher discussed classroom observation with principal/head teacher,Teacher Interview,Whether teacher discussed classroom observation with principal/head teacher
+Whehter feedback was given on classroom observation and converation lasted more than 30 min,Teacher Interview,Whehter feedback was given on classroom observation and converation lasted more than 30 min
+Whether teacher had feedback on lesson plan,Teacher Interview,Whether teacher had feedback on lesson plan
+Principal Knowledge of School,Principal Interview,Principal Knowledge of School
+Correct on # of Teachers correct on Triple Digit Addition,Principal Interview,Correct on # of Teachers correct on Triple Digit Addition
+Correct on # of Teachers correct on Double Digit Multiplication,Principal Interview,Correct on # of Teachers correct on Double Digit Multiplication
+Correct on # of Teachers correct on Completing Sentence Question,Principal Interview,Correct on # of Teachers correct on Completing Sentence Question
+Correct on # of Teachers Under 3 Years Experience,Principal Interview,Correct on # of Teachers Under 3 Years Experience
+Correct on # of Students with Textbooks ,Principal Interview,Correct on # of Students with Textbooks 
+Correct on Functional Blackboard,Principal Interview,Correct on Functional Blackboard
+Principal Management Skills,Principal Interview,Principal Management Skills
+According to Principal: School Goals Exist,Principal Interview,According to Principal: School Goals Exist
+According to Principal:  to Principal: School Goals Clear,Principal Interview,According to Principal:  to Principal: School Goals Clear
+According to Principal: School Goals Relevant,Principal Interview,According to Principal: School Goals Relevant
+According to Principal: School Goals Measured,Principal Interview,According to Principal: School Goals Measured
+Teacher Attraction (De Facto),Teacher Interview,Teacher Attraction (De Facto)
+Teacher Satisfied with Job,Teacher Interview,Teacher Satisfied with Job
+Teachers Satisfied with Status in Community,Teacher Interview,Teachers Satisfied with Status in Community
+Teacher perceives that better teachers more likely to be promoted,Teacher Interview,Teacher perceives that better teachers more likely to be promoted
+Teacher received bonus in past year,Teacher Interview,Teacher received bonus in past year
+Salary Delays reported by teacher,Teacher Interview,Salary Delays reported by teacher
+Teacher Selection & Deployment (De Facto),Teacher Interview,Teacher Selection & Deployment (De Facto)
+"Teacher recruited based on passing written content knowledge test, passed interview stage assessment, passed an assessment conducted by supervisor based on practical experience, conduct during mockup class",Teacher Interview,"Teacher recruited based on passing written content knowledge test, passed interview stage assessment, passed an assessment conducted by supervisor based on practical experience, conduct during mockup class"
+"Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview.",Teacher Interview,"Teacher deployed based on performance assessed by school authority, colleagues, or external evaluator, results of interview."
+Teacher Support (De Facto),Teacher Interview,Teacher Support (De Facto)
+Had pre-service training and teacher reported finding it useful,Teacher Interview,Had pre-service training and teacher reported finding it useful
+Had a practicum and training lasted multiple days,Teacher Interview,Had a practicum and training lasted multiple days
+Had in-service training that lasted more than 2 days and had a component that took place in classroom ,Teacher Interview,Had in-service training that lasted more than 2 days and had a component that took place in classroom 
+Whether teacher reported having opportunities to come together and share ways of improving teaching,Teacher Interview,Whether teacher reported having opportunities to come together and share ways of improving teaching
+Teacher Evaluation (De Facto),Teacher Interview,Teacher Evaluation (De Facto)
+Teacher reported being formally evaluated,Teacher Interview,Teacher reported being formally evaluated
+Evaluation had multiple components,Teacher Interview,Evaluation had multiple components
+Teacher reported negative consequences would occur if received 2 or more negative evaluations,Teacher Interview,Teacher reported negative consequences would occur if received 2 or more negative evaluations
+Teacher reported positive consequences would occur if received 2 or more positive evaluations,Teacher Interview,Teacher reported positive consequences would occur if received 2 or more positive evaluations
+Teacher Monitoring & Accountability (De Facto),Teacher Interview,Teacher Monitoring & Accountability (De Facto)
+Teachers evaluated by some authority on basis of absence,Teacher Interview,Teachers evaluated by some authority on basis of absence
+Teacher reported good attendance is rewarded. ,Teacher Interview,Teacher reported good attendance is rewarded. 
+Teacher reported there are consequences for chronic absence (more than 30% absence),Teacher Interview,Teacher reported there are consequences for chronic absence (more than 30% absence)
+Teacher reported having to miss class for administrative reasons,Teacher Interview,Teacher reported having to miss class for administrative reasons
+Inputs and Infrastructure Standards,Principal Interview,Inputs and Infrastructure Standards
+Inputs and Infrastructure Monitoring,Principal Interview,Inputs and Infrastructure Monitoring
+"Fraction of inputs Principal reported being monitored (functioning blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade classrooms, basic classroom furniture, and at least one computer in the schools)",Principal Interview,"Fraction of inputs Principal reported being monitored (functioning blackboard, chalk, pens, pencils, textbooks, exercise books in 4th grade classrooms, basic classroom furniture, and at least one computer in the schools)"
+"Fraction of infrastructure elements Principal reported being monitored (functioning toilets, electricity, drinking water, and accessibility for people with disabilities)",Principal Interview,"Fraction of infrastructure elements Principal reported being monitored (functioning toilets, electricity, drinking water, and accessibility for people with disabilities)"
+Principal reports community involved in the monitoring,Principal Interview,Principal reports community involved in the monitoring
+School Management Clarity of Functions,Principal Interview,School Management Clarity of Functions
+Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Maintenance of Infrastructure,Principal Interview,Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Maintenance of Infrastructure
+Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Procurement of materials,Principal Interview,Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Procurement of materials
+Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher hiring and assignment,Principal Interview,Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher hiring and assignment
+"Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher supervision, training, and coaching",Principal Interview,"Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Teacher supervision, training, and coaching"
+Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Student Learning Assessments,Principal Interview,Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Student Learning Assessments
+Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal hiring and assignment,Principal Interview,Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal hiring and assignment
+Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal Supervision and training,Principal Interview,Do you know if the policies governing schools assign responsibility for the implementation of each of the following: Principal Supervision and training
+School Management Attraction,Principal Interview,School Management Attraction
+Principal satisfied with status in community,Principal Interview,Principal satisfied with status in community
+Principal reported salary as fraction of GDP,Principal Interview,Principal reported salary as fraction of GDP
+School Management Selection & Deployment,Principal Interview,School Management Selection & Deployment
+School Management Support,Principal Interview,School Management Support
+Principal reported receiving formal training on managing school,Principal Interview,Principal reported receiving formal training on managing school
+"Principal had received the following training (1/3 point for each): Management training for new principals, in-service training, mentoring coaching",Principal Interview,"Principal had received the following training (1/3 point for each): Management training for new principals, in-service training, mentoring coaching"
+Principal reported using skills from training,Principal Interview,Principal reported using skills from training
+Principal reported offered training at least once per year,Principal Interview,Principal reported offered training at least once per year
+School Management Evaluation,Principal Interview,School Management Evaluation
+Principal reported being formally evaluated,Principal Interview,Principal reported being formally evaluated
+Principal evaluation based on multiple components (at least 5 components for full credit,Principal Interview,Principal evaluation based on multiple components (at least 5 components for full credit
+Principal reported negative consequences would occur if received 2 or more negative evaluations,Principal Interview,Principal reported negative consequences would occur if received 2 or more negative evaluations
+Principal reported negative consequences would occur if received 2 or more negative evaluations,Principal Interview,Principal reported negative consequences would occur if received 2 or more negative evaluations
+National Learning Goals,Public Official Interview,"Average of Targeting, Monitoring, Incentives, and Community Engagement components"
+Targeting,Public Official Interview,"Questions on whether learning goals exist, are measurable, whether tasks aligned"
+Monitorinig,Public Official Interview,"Questions on how well performance goals tracked, EMIS system, how info reviewed"
+Incentives,Public Official Interview,"Are rewards given for high performance, rewards for excellence in contributing to learning goals, does information inform budgets"
+Community Engagement,Public Official Interview,"Most common means of getting feedback from parents, is feedback used for evaluation/budgets"
+Mandates and Accountability,Public Official Interview,"Average of coherence, transparency, accountability of public officials"
+Coherence,Public Official Interview,Is organizational responsibilities clear
+Transparency,Public Official Interview,"Are achievements related to performance targets made public, is transparency beneficial"
+Accountability of Public Officials,Public Official Interview,What would happen to public officials in cases of malfeasance
+Quality of Bureaucracy,Public Official Interview,"Average score of knowledge and skills, work environment, merit, movitation and attitudes"
+Knowledge and Skills,Public Official Interview,"Public officials asked if they know numbers on average class size, teacher absences"
+Work Environment,Public Official Interview,"Do employees trust one another, gifts to public officials, encouragement of new ideas"
+Merit,Public Official Interview,How is selection and deployment done
+Motivation and Attitudes,Public Official Interview,"How satisfied are public officials, how motivated, is it OK for teachers to be absent, ok for some students get less attention"
+Motivation Relative to Starting Public Service,Public Official Interview,Motivation Relative to Starting Public Service
+Impartial Decision Making,Public Official Interview,Impartial Decision Making
+Politicized personnel management,Public Official Interview,Are hiring/promotion decisions/evaluations based on public influence
+Politicized policy-making,Public Official Interview,"Are budget,procurement, curriculum decisions affected by politics?"
+Politicized policy-implementation,Public Official Interview,"What proportion of public officials broken rules, are contracts/procuements subject to politics"
+Employee unions as facilitators,Public Official Interview,"Does union membership affect teacher hiring, do public official union members get preferential treatment, are new practices influence by unions?"

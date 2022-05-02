@@ -45,129 +45,8 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # PER_data_2019 <- api_data(data_dir1, data_dir2, data_dir3, 'PER', 2019)
 
-
-############################
-#Read in indicators.md file
-###########################
-# #Read in list of indicators
-# indicators <- read_csv(here::here('Indicators','indicators.csv'))
-# indicators <- read_csv(here::here('Indicators','GEPD_Indicators_info.csv'))
-
-indicators <- read.delim(here::here('Indicators','indicators.md'), sep = "|")
-
-indicators <- indicators %>%
-  select(-c(1)) %>% 
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) 
-
-
-
-indicator_names <-  indicators$indicator_tag
-indicator_names <- sapply(indicator_names, tolower)
-
-names(indicators)<-make.names(names(indicators), unique=TRUE)
-
-
-
-
-
-#Read in Sergio's excel with subquestions to include
-subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') %>% 
-  rename(Series = series)
-
-
-df<-indicators %>%
-  left_join(subquestions) %>%
-  select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
-
-
-
-df_overall <- df %>%
-  select(Series, Indicator.Name, indicator_tag ) 
-
-
-df_defacto_dejure <- df %>%
-  filter(grepl("Policy Lever", Indicator.Name )) %>%
-  select(Series, Indicator.Name ) %>%
-  mutate('De Facto' = "DF",
-         'De Jure' = "DJ") %>%
-  pivot_longer(cols=c('De Facto', 'De Jure'),
-               names_to="type",
-               values_to="type_val") %>%
-  mutate(Series=paste(Series, type_val, sep="."),
-         Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
-  select(Series, Indicator.Name)
-
-# Prepare a data frame, on which we can add values
-
-##########################
-# Now create database for upload with correct format for EdStats
-###########################
-#Pivot longer
-df_longer<-df %>%
-  pivot_longer(cols=c(
-    'Subquestion_1', 'Subquestion_2', 'Subquestion_3',
-    'Subquestion_4', 'Subquestion_5', 'Subquestion_6',
-    'Subquestion_7', 'Subquestion_8','Subquestion_9',
-    'Subquestion_10', 'Subquestion_11', 'Subquestion_12',
-    'Subquestion_13', 'Subquestion_14', 'Subquestion_15',
-    'Subquestion_16', 'Subquestion_17', 'Subquestion_18',
-    'Subquestion_19', 'Subquestion_20'),
-    values_to='short_desc') %>%
-  filter(short_desc!="") %>%
-  filter(short_desc!="Overall") %>%
-  pivot_longer(cols=c(    "Column_2", "Column_3", "Column_4","Column_5", "Column_6"),
-               values_to='urban_rural_gender',
-               names_to = 'urban_rural_gender_name')  %>%
-  select(-urban_rural_gender_name) %>%
-  filter(urban_rural_gender!="") 
-
-#break up name into two components
-# (type=="Column" & num!="1") ~ paste(Series, substr(short_desc,1,1), sep="."),
-# (type=="Column" & num!="1") ~ paste(Indicator.Name, short_desc, sep=" - "),
-
-#now modify API IDs
-df_sub<-df_longer %>%
-  separate(name, c("type", "num"), "_") %>%
-  mutate(Series=paste(Series, num, sep="."))  %>% #add tag for subindicators
-  mutate(Series=case_when( #add tag for urban/rural gender
-    ( urban_rural_gender=="Overall") ~ Series,
-    ( urban_rural_gender!="Overall") ~ paste(Series, substr(urban_rural_gender,1,1), sep="."),
-    TRUE ~ Series  )) %>%
-  mutate(Indicator.Name= short_desc) %>%
-  mutate(Indicator.Name=case_when( #add tag for urban/rural gender for indicator name
-    (urban_rural_gender=="Overall") ~ Indicator.Name,
-    (urban_rural_gender!="Overall") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
-    TRUE ~ Indicator.Name  )) %>%
-  select(-Column_1, -type, -num, -urban_rural_gender) 
-
-api_template  <- df_overall %>%
-  bind_rows(df_defacto_dejure) %>%
-  bind_rows(df_sub) %>%
-  arrange(Series) %>%
-  select(Series, Indicator.Name)
-
-indicator_match  <- df_overall %>%
-  bind_rows(df_defacto_dejure) %>%
-  bind_rows(df_sub) %>%
-  arrange(Series) %>%
-  select(Series, Indicator.Name, indicator_tag)
-
-#add extra metadata
-indicator_choices <- read.delim(here::here('Indicators','indicators_choices.md'), sep = "|")
-
-
-
-api_template <- api_template %>%
-  mutate(Source="Global Education Policy Dashboard",
-         'Source Organization'="World Bank") %>%
-  left_join(indicator_choices) %>%
-  rename(Source.Note = `How.is.the.indicator.scored.`) %>% 
-  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
-  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
-  rename('Source Note'=Source.Note,
-         'Indicator Name'=Indicator.Name) %>%
-  select(-c(Value, X, X.1))
+source('R/api_template_fun.R', echo=TRUE)
+api_template <- api_template_fun()
 
 
 
@@ -258,15 +137,14 @@ source('R/api_data_fun_MDG.R', echo=TRUE)
 
 
 
-
 #Tags
 practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
 
 #function to create score data for a specified country and year
 api_metadata_fn <- function(cntry, yr) {
   api_metadata_fn_p <- api_final %>%
-    #rename(Indicator.Name='Indicator Name') %>%
-    filter(grepl(practice_tags, Series) | grepl("Percent", `Indicator.Name`)) %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
     select(Series, `Indicator Name`, value) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
@@ -283,8 +161,8 @@ api_metadata_fn <- function(cntry, yr) {
   
   
   api_metadata_fn_c <- api_final %>%
-    #rename(Indicator.Name='Indicator Name') %>%
-    filter(!(grepl(practice_tags, Series) | grepl("Percent", `Indicator.Name`))) %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
     select(Series, `Indicator Name`, value) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
@@ -305,6 +183,7 @@ api_metadata_fn <- function(cntry, yr) {
            value=round(value,1),
            Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
 }
+
 
 
 MDG_data_2021 <- api_metadata_fn('MDG', 2021)
