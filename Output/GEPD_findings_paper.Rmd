@@ -3376,7 +3376,7 @@ The table below breaks down the principal knowledge and school instructional lea
           
           
        )
-    ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable) %>% filter(!is.na(.))
+    ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable) %>% ungroup()
  
  
  
@@ -3438,7 +3438,7 @@ The table below breaks down the principal knowledge and school instructional lea
        )
     ) %>% 
     
-    arrange(skim_variable) %>% bind_cols(breaking_up_all_principal %>% select(-skim_variable)) %>% 
+    arrange(skim_variable) %>% ungroup() %>% bind_cols(breaking_up_all_principal %>% filter(!is.na(skim_variable)) %>% select(-skim_variable) ) %>% 
     
     mutate(
        
