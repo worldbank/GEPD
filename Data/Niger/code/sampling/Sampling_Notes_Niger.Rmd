@@ -390,7 +390,7 @@ school_sample_df <- df_updated %>%
   sample_n(size=num_schools, weight=total_students)
 
 
-write_excel_csv(school_sample_df, paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
+#write_excel_csv(school_sample_df, paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
 ```
 
 
@@ -464,12 +464,16 @@ set.seed(243545)
 
 #append lLIRE schools
   
-  school_sample_df %>%
-    bind_rows(school_sample_LIRE_df) %>%
-    write_excel_csv( paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
+  sample_final <- school_sample_df %>%
+    bind_rows(school_sample_LIRE_df) 
+  
+  
+    write_excel_csv(sample_final, paste(sampling_folder, '/sample_schools_', Sys.Date(),  '.csv', sep=""))
 
 ```
-```{r}
+
+
+```{r eval=FALSE, include=FALSE}
 sample_final <- school_sample_df %>% select(REGION, code_reg, DEPARTEMENT, code_dep, COMMUNE, code_com, village, code_village,NOM_ETABLISSEMENT, CODE_ADMINISTRATIF, CODE_ETABLISSEMENT, school_type, urban_rural,CODE_ETABLISSEMENT_BILINGUE, total_students, religious_status, ownership)
   
 
@@ -479,67 +483,59 @@ write.csv(sample_final, paste0("C:/Users/wb577189/OneDrive - WBG/Desktop/school_
 
 
 
+# Replacement Schools
+
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
 
 
 
-## Map of Nigerien Sample of Schools
+```{r update_dataset_public, echo=FALSE, message=FALSE, warning=FALSE}
+#define sampled schools in sample dataset
+sample_chosen <- sample_final %>%
+  mutate(sample="Sampled School") 
 
-We lack geocode information on schools at this sampling stage, but never the less we can still map our sampled schools to Region and sector (Departement) to see how they are allocated.  The map below shows a heat map based on the number of schools per regions.
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated %>%
+  left_join(sample_chosen) 
 
-
-```{r country_map, echo=FALSE, warning=FALSE}
-
-map_sampled_schools <- wb.poly.2 %>% 
-  mutate(across(ends_with("_NAME"),
-                
-                ~ str_to_upper(.))) %>% 
-  
-  group_by(ADM1_NAME) %>% 
-  
-    summarise(geometry = sf::st_union(geometry)) %>%
-  
-    ungroup() %>% 
-  
-  left_join(school_sample_df %>% 
-              
-              rename(ADM1_NAME = REGION) %>% 
-              
-              select(ADM1_NAME, n_schools, num_schools) %>% 
-              
-              group_by(ADM1_NAME) %>% 
-              
-              mutate(sample_schools= n()) %>% 
-              
-              mutate(ADM1_NAME = str_replace(ADM1_NAME, "TILLABERY", "TILLABERI")) %>% 
-              
-              distinct(ADM1_NAME, .keep_all=T)
-            
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by( REGION,urban_rural, LIRE) %>% 
+  summarise(sampled_districts=n()
             )
 
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(REGION,urban_rural,LIRE) %>% 
+  mutate(total_students=if_else(is.na(total_students), mean(total_students, na.rm=TRUE),total_students)) %>% #if missing total number of students, then impute with mean of the strata
+  sample_n(3*sampled_districts, weight=total_students) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(REGION,urban_rural,LIRE, NOM_ETABLISSEMENT) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(REGION,urban_rural,LIRE, NOM_ETABLISSEMENT ) 
 
 
-pal <- colorNumeric("YlOrRd", domain = map_sampled_schools$num_schools)
-
-
-labels <- sprintf(
-  "<strong>%s</strong><br/> %g schools sampled <br/> %g schools total ",
-  map_sampled_schools$ADM1_NAME, map_sampled_schools$num_schools, map_sampled_schools$n_schools
-) %>% lapply(htmltools::HTML)
-
-
-leaflet(map_sampled_schools) %>% 
-  addTiles()  %>%
-  addPolygons(
-    fillColor = ~pal(num_schools),
-    weight = 1,
-    opacity=1,
-    fillOpacity = 0.2,
-    label=labels
-  ) %>%
-  addLegend(pal=pal, values=~num_schools, opacity=0.7, title="N Sampled Schools", position="bottomright")
+#add in school info for school that will be replaced
+sample_replace$replaced_NOM_ETABLISSEMENT=sample_replace2$NOM_ETABLISSEMENT
+sample_replace$replaced_CODE_ETABLISSEMENT=sample_replace2$CODE_ETABLISSEMENT
+sample_replace$replaced_REGION=sample_replace2$REGION
 
 
 
+sample_replace %>%
+  select(NOM_ETABLISSEMENT, CODE_ETABLISSEMENT, REGION, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_REGION) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(NOM_ETABLISSEMENT, CODE_ETABLISSEMENT, REGION, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_REGION, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
 
 
 
