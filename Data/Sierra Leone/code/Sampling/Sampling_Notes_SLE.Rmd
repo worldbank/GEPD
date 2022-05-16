@@ -140,7 +140,7 @@ miss_plt <- gg_miss_var(df_raw, show_pct = TRUE)  +
   theme(axis.text.y = element_blank()) 
 
 
-  plotly::ggplotly(miss_plt)
+  #plotly::ggplotly(miss_plt)
   
 df_selected <- df_raw %>%
     select(c(

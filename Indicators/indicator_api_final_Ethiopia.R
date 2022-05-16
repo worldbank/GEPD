@@ -199,7 +199,7 @@ practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE
 #function to create score data for a specified country and year
 api_metadata_fn <- function(cntry, yr) {
   api_metadata_fn_p <- api_final_pooled %>%
-    #rename(Indicator.Name='Indicator Name') %>%
+    rename(Indicator.Name='Indicator Name') %>%
     filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
     select(Series, `Indicator Name`, value) %>%
@@ -217,7 +217,7 @@ api_metadata_fn <- function(cntry, yr) {
   
   
   api_metadata_fn_c <- api_final_pooled %>%
-    #rename(Indicator.Name='Indicator Name') %>%
+    rename(Indicator.Name='Indicator Name') %>%
     filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
     select(Series, `Indicator Name`, value) %>%

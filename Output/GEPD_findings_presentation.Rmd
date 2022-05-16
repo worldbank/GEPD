@@ -1,0 +1,1540 @@
+---
+title: 'Measuring the Drivers of the Learning Crisis Across Countries using the Global Education Policy Dashboard'
+author: "GEPD Team"
+date: "`r Sys.Date()`"
+output: 
+  powerpoint_presentation:
+    reference_doc: GEPD_presentation_template.pptx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(foreign)
+library(here)
+library(vtable)
+library(flextable)
+library(ggthemes)
+library(Hmisc)
+library(httr)
+library(patchwork)
+library(ggrepel)
+library(lubridate)
+library(haven)
+library(zoo)
+library(readxl)
+library(ggbeeswarm)
+library(estimatr)
+library(ggpmisc)
+library(ggthemes)
+library(ggtext)
+library(gtsummary)
+library(geosphere)
+library(fixest)
+library(modelr)
+library(modelsummary)
+options(modelsummary_factory_word = 'flextable')
+custom_theme <- function(x, ...) {
+    x %>% set_table_properties(layout = "autofit")
+}
+options("modelsummary_theme_flextable" = custom_theme)
+
+#directories
+
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+      
+    dir <- here()
+    shared_loc <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+
+    dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
+    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  }
+
+
+indicators_dir <- paste(dir, 'Indicators', sep="/")
+out_dir <- paste(dir, 'Output', sep="/")
+
+#path to confidential directory
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+    #directories
+    confidential_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
+
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+    #directories
+    confidential_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+
+  }
+
+
+
+# change_here <- function(new_path){
+#   new_root <- here:::.root_env
+#   
+#   new_root$f <- function(...){file.path(new_path, ...)}
+#   
+#   assignInNamespace(".root_env", new_root, ns = "here")
+# }
+
+#list countries
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH")
+
+```
+
+```{r functions}
+#functions
+FitFlextableToPage <- function(ft, pgwidth = 5){
+
+  ft_out <- ft %>% autofit()
+
+  ft_out <- width(ft_out, width = dim(ft_out)$widths*pgwidth /(flextable_dim(ft_out)$widths))
+  return(ft_out)
+}
+
+#add equations to plots
+eq_plot_txt <- function(y,x,data) {
+  
+  f <- as.formula(paste(y,x, sep="~"))
+  
+  eq <- lm_robust(f, data=data, se_type='HC2')
+  coef <- coef(eq)
+  std_err <- sqrt(diag(vcov(eq)))
+  r_2<- summary(eq)$r.squared
+  glue::glue("y = {round(coef[1],3)} + {round(coef[2],3)} x, R<sup>2</sup> = {round(r_2[1],3)} <br> &nbsp;   &nbsp;  	&nbsp; 	&nbsp;   ({round(std_err[1],3)}) &nbsp;   &nbsp;  ({round(std_err[2],3)})" )
+}
+
+#modelsummary output
+gm <- tibble::tribble(
+  ~raw,        ~clean,          ~fmt,
+  "nobs",      "N",             0,
+  "r.squared", "R Sq.", 2)
+```
+
+
+```{r load}
+
+#read in indicator metadata
+indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
+
+# read in indicator data
+PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
+  mutate(country="Peru",
+         date='2019') %>%
+  select(-year)
+
+RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
+  mutate(country="Rwanda",
+         date='2020') %>%
+  select(-year)
+
+
+JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
+  mutate(country="Jordan",
+         date='2019') %>%
+  select(-year)
+
+
+ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
+  mutate(country="Ethiopia",
+         date='2020-2021')  %>%
+  select(-year)
+
+# %>%
+#   rename(value=value_pooled)
+
+MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
+  mutate(country="Madagascar",
+         date='2021') %>%
+  select(-year)
+
+
+# Indicator names
+indicator_names_df <- PER_data %>%
+  select(Series, `Indicator Name`)
+
+combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
+
+
+  
+  combined_df <- combined_df_raw %>%
+    arrange(Series) %>%
+    mutate(
+           value=round(value,1),
+           value_color=case_when(
+             value_metadata=="Needs Improvement" ~ "#FF0000",
+             value_metadata=="Caution" ~ "#FCD606",
+             value_metadata=="On Target" ~ "#85C546",
+             TRUE ~ "#808080"
+           ),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+
+
+combined_wide_df <- combined_df %>%
+  select(Series, country, value) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_color <- combined_df %>%
+  select(Series, country, value_color) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value_color
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_df %>%
+  rename(Indicator_Name=`Indicator Name`) %>%
+  haven::write_dta(  paste0(confidential_dir, "General/combined_indicators.dta")) %>%
+  haven::write_dta( paste0(shared_loc, "/Data/combined_indicators.dta"))
+
+
+```
+
+
+```{r countrytabfn}
+#create function for creating country comparison tables
+country_tab_fn <- function(variables, title) {
+  
+  
+tab_df <- combined_wide_df %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+#set colors
+tab_color_df <- combined_wide_color %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+Peru_col <- tab_color_df$Peru
+Jordan_col <- tab_color_df$Jordan
+Rwanda_col <- tab_color_df$Rwanda
+Ethiopia_col <- tab_color_df$Ethiopia
+Madagascar_col <- tab_color_df$Madagascar
+
+
+#build table
+tab_df <- tab_df  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar)
+
+
+ovr_table <- flextable(tab_df) %>%
+  add_header_lines(title) %>%
+  add_footer_lines('Source: UIS, GLAD, GEPD, World Bank. 
+ Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' ) %>%
+  theme_vanilla()
+
+#colors
+ovr_table <- ovr_table %>%
+  bg(j = c('Peru'),
+     bg = Peru_col) %>%
+  bg(j = c('Jordan'),
+     bg = Jordan_col) %>%
+  bg(j = c('Ethiopia'),
+     bg = Ethiopia_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
+  bg(j = c('Madagascar'),
+     bg = Madagascar_col)   
+
+
+FitFlextableToPage(ovr_table) %>%
+  set_table_properties(layout = "autofit")
+
+  
+}
+```
+
+## Learning disparities exacerbate schooling gaps
+
+```{r}
+
+load(paste0(out_dir, '/misc/maps.Rdata'))
+standard_crop_wintri <- function() {
+  l <- list(
+    left=-12000000, right=16396891,
+    top=9400000, bottom=-6500000
+  )
+  l$xlim <- c(l$left, l$right)
+  l$ylim <- c(l$bottom, l$top)
+  l
+}
+
+HCI_dat<-wbstats::wb_data(indicator=c("HD.HCI.LAYS", "HD.HCI.LAYS.MA","HD.HCI.LAYS.FE", "SE.LPV.PRIM" ), start_date=2015, end_date=2020)
+
+
+gepd_mapper <- function(data, indicator, title) {
+  
+
+  indicator<-indicator
+
+  map_df <- get(data) %>%
+    filter(date==max(date, na.rm=T)) %>%
+    filter(!(country %in% c('Greenland'))) %>% #drop a few countries for which we do not collect data.
+    group_by( country) %>%
+    #summarise(across(!! indicator,last)) %>%
+    rename(data_available=!! indicator) %>%
+    select(iso3c, date, data_available) %>%
+    mutate(data_available=if_else(is.na(data_available), as.numeric(NA), as.numeric(data_available)))     
+
+
+  HCI_groups_quantiles <- quantile(map_df$data_available, probs=c(1,2,3)/4,na.rm=T)
+  
+  HCI_map <- map_df %>%
+    mutate(HCI_groups=case_when(
+      between(data_available, HCI_groups_quantiles[3],100) ~ "Top 25%",
+      between(data_available, HCI_groups_quantiles[2],HCI_groups_quantiles[3]) ~ "3rd Quartile",
+      between(data_available, HCI_groups_quantiles[1],HCI_groups_quantiles[2]) ~ "2nd Quartile",
+      between(data_available, 0,HCI_groups_quantiles[1]) ~ "Bottom 25%"
+      
+    )) %>%
+    mutate(HCI_groups=factor(HCI_groups, 
+                             levels=c("Top 25%","3rd Quartile","2nd Quartile","Bottom 25%" )))  
+  
+  #set color pallete
+  col_pal <- c("#9BD8E1","#A2D6BE","#F5E88F","#F3D995","#A0A4A3")  
+  names(col_pal) <- c("Top 25%","3rd Quartile","2nd Quartile","Bottom 25%", "N/A" )
+  
+  p1<-ggplot() +
+    geom_map(data = HCI_map, aes(map_id = iso3c, fill = HCI_groups), map = maps$countries) + 
+    geom_polygon(data = maps$disputed, aes(long, lat, group = group, map_id = id), fill = "grey80") + 
+    geom_polygon(data = maps$lakes, aes(long, lat, group = group), fill = "white")  +
+    geom_path(data = maps$boundaries,
+              aes(long, lat, group = group),
+              color = "white",
+              size = 0.3,
+              lineend = maps$boundaries$lineend,
+              linetype = maps$boundaries$linetype) +
+    scale_x_continuous(expand = c(0, 0), limits = standard_crop_wintri()$xlim) +
+    scale_y_continuous(expand = c(0, 0), limits = standard_crop_wintri()$ylim) +
+    scale_fill_manual(
+      name='LAYS',
+      values=col_pal,
+      na.value='grey'
+    ) +
+    coord_equal() +
+    theme_map(base_size=12) +
+    labs(
+      title=str_wrap(title,100),
+      caption = 'Source: World Bank.'
+    )
+ print(p1)
+
+}
+
+
+
+gepd_mapper2 <- function(data, indicator, title) {
+  
+
+  indicator<-indicator
+
+  map_df <- get(data) %>%
+    filter(date==max(date, na.rm=T)) %>%
+    filter(!(country %in% c('Greenland'))) %>% #drop a few countries for which we do not collect data.
+    group_by( country) %>%
+    #summarise(across(!! indicator,last)) %>%
+    rename(data_available=!! indicator) %>%
+    select(iso3c, date, data_available) %>%
+    mutate(data_available=if_else(is.na(data_available), as.numeric(NA), as.numeric(data_available)))     
+
+
+  HCI_groups_quantiles <- quantile(map_df$data_available, probs=c(1,2,3)/4,na.rm=T)
+  
+  HCI_map <- map_df %>%
+    mutate(HCI_groups=case_when(
+      between(data_available, HCI_groups_quantiles[3],100) ~ "Top 25%",
+      between(data_available, HCI_groups_quantiles[2],HCI_groups_quantiles[3]) ~ "3rd Quartile",
+      between(data_available, HCI_groups_quantiles[1],HCI_groups_quantiles[2]) ~ "2nd Quartile",
+      between(data_available, 0,HCI_groups_quantiles[1]) ~ "Bottom 25%"
+      
+    )) %>%
+    mutate(HCI_groups=if_else(iso3c %in% cntry, HCI_groups,as.character(NA))) %>%
+    mutate(HCI_groups=factor(HCI_groups, 
+                             levels=c("Top 25%","3rd Quartile","2nd Quartile","Bottom 25%" ))) 
+  
+  #set color pallete
+  col_pal <- c("#9BD8E1","#A2D6BE","#F5E88F","#F3D995","#A0A4A3")  
+  names(col_pal) <- c("Top 25%","3rd Quartile","2nd Quartile","Bottom 25%", "N/A" )
+  
+  p1<-ggplot() +
+    geom_map(data = HCI_map, aes(map_id = iso3c, fill = HCI_groups), map = maps$countries) + 
+    geom_polygon(data = maps$disputed, aes(long, lat, group = group, map_id = id), fill = "grey80") + 
+    geom_polygon(data = maps$lakes, aes(long, lat, group = group), fill = "white")  +
+    geom_path(data = maps$boundaries,
+              aes(long, lat, group = group),
+              color = "white",
+              size = 0.3,
+              lineend = maps$boundaries$lineend,
+              linetype = maps$boundaries$linetype) +
+    scale_x_continuous(expand = c(0, 0), limits = standard_crop_wintri()$xlim) +
+    scale_y_continuous(expand = c(0, 0), limits = standard_crop_wintri()$ylim) +
+    scale_fill_manual(
+      name='LAYS',
+      values=col_pal,
+      na.value='grey'
+    ) +
+    coord_equal() +
+    theme_map(base_size=12) +
+    labs(
+      title=str_wrap(title,100),
+      caption = 'Source: World Bank.'
+    )
+ print(p1)
+
+}
+
+```
+
+```{r hcimap,, fig.width = 14, fig.height = 9}
+
+gepd_mapper('HCI_dat','HD.HCI.LAYS', "")
+
+```
+
+
+
+## Slide with R Output
+
+
+```{r outtab}
+# Produce a table showing means by country for select practice indicators
+outcome_indicators <- c(
+  'SE.GEPD.PRIM',
+  'SE.GEPD.PRIM.BMP',
+  'SE.PRM.TENR'
+
+)
+country_tab_fn(outcome_indicators, 'GEPD Outcome Indicators') %>%
+  add_footer_lines('Rwanda does not have an internationally comparable learning assessment to report on Learning Poverty.')
+```
+
+## Slide with Plot
+
+```{r ovltab}
+# Produce a table showing means by country for select practice indicators
+practice_indicators <- c(
+  'SE.PRM.LERN',
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.INPT',
+  'SE.PRM.INFR',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD',
+  'SE.PRM.OPMN',
+  'SE.PRM.ILDR',
+  'SE.PRM.PKNW',
+  'SE.PRM.PMAN'
+)
+country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
+```
+## G4
+
+```{r g4dat}
+########
+# Peru
+#######
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+PER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+   mutate(student_proficient=100*as.numeric(student_knowledge>=86.6), #26/30
+         student_proficient_70=100*as.numeric(student_knowledge>=70),
+         student_proficient_75=100*as.numeric(student_knowledge>=75),
+         literacy_student_proficient=100*as.numeric(literacy_student_knowledge>=92), #12/13 points
+         literacy_student_proficient_70=100*as.numeric(literacy_student_knowledge>=70),
+         literacy_student_proficient_75=100*as.numeric(literacy_student_knowledge>=75),
+         math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
+         math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
+         math_student_proficient_75=100*as.numeric(math_student_knowledge>=75),
+         math_student_proficient_60=100*as.numeric(math_student_knowledge>=60)) %>% 
+  distinct(hashed_school_code, student_number, .keep_all = TRUE)
+########
+# Jordan
+#######
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+JOR_g4_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.dta", sep="/")) %>%
+  mutate(iso3c=country)
+########
+# Rwanda
+#######
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+RWA_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country)
+########
+# Ethiopia
+#######
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+ETH_g4_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2020.csv", sep="/")) %>%
+  mutate(iso3c=country)
+ETH_g4_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_2021.csv", sep="/")) %>%
+  mutate(iso3c=country)
+########
+# Madagascar
+#######
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(-district)
+########
+#combined
+########
+combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df) %>%
+  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")),
+         `Student Proficient`=if_else(student_proficient==100,"Yes", "No"),
+         `Student Proficient Math`=if_else(math_student_proficient==100,"Yes", "No"),
+         `Student Proficient Literacy`=if_else(literacy_student_proficient==100,"Yes", "No"))
+
+weights_df <- combined_g4_df %>%
+  group_by(iso3c, hashed_school_code) %>%
+  summarise(ipw=mean(ipw, na.rm=T))
+
+
+
+
+```
+
+```{r echo=FALSE}
+
+ 
+ ### Grade 4 assessment breaking up  -------------------
+ library(skimr)
+ 
+ breaking_up_all_g4 <- combined_g4_df %>%
+   skim() %>% 
+   filter(str_detect(skim_variable, "m8saq2_id|m8saq3_id|m8saq4_id|m8saq5_story|m8saq6_story|m8sbq3c_arithmetic|m8sbq3b_arithmetic|m8sbq3g_arithmetic|m8sbq5_word_problem")) %>% 
+   
+   mutate(iso3c = "ALL") %>% 
+   
+   mutate(
+     
+     across(where(is.numeric),
+            
+            ~ round(., digits = 2)),
+     
+     skim_variable = case_when(
+       
+       skim_variable == "m8saq2_id" ~ "Letters identification",
+       skim_variable == "m8saq3_id" ~ "Words identification",
+       skim_variable == "m8saq4_id" ~ "Pictures identification",
+       skim_variable == "m8saq5_story" ~ "Understanding story 1",
+       skim_variable == "m8saq6_story" ~ "Understanding story 2",
+       
+       skim_variable == "m8sbq3b_arithmetic" ~ "Can add double digits ",
+       skim_variable == "m8sbq3c_arithmetic" ~ "Can subtract double digits",
+       skim_variable == "m8sbq3g_arithmetic" ~ "Can multiply double digits",
+       skim_variable == "m8sbq5_word_problem" ~ "Can solve simple math story problem"
+       
+       
+     )
+   ) %>% select(skim_variable, iso3c, numeric.mean) %>% rename(mean_country= iso3c, mean_var = numeric.mean) %>% arrange(skim_variable)
+ 
+ 
+ 
+ 
+ breaking_up_g4 <- combined_g4_df %>%
+   group_by(iso3c) %>% 
+    skim() %>% 
+   filter(str_detect(skim_variable, "m8saq2_id|m8saq3_id|m8saq4_id|m8saq5_story|m8saq6_story|m8sbq3c_arithmetic|m8sbq3b_arithmetic|m8sbq3g_arithmetic|m8sbq5_word_problem")) %>% 
+   
+   
+   group_by(skim_variable) %>% 
+ 
+ 
+   summarise(min_var = min(numeric.mean), min_country = iso3c[which.min(numeric.mean)], 
+             max_var = max(numeric.mean), max_country = iso3c[which.max(numeric.mean)]) %>% 
+   
+   mutate(
+     
+     across(where(is.numeric),
+            
+            ~ round(., digits = 2)),
+     
+     across(ends_with("country"),
+            
+            ~ case_when(str_detect(., "MDG") ~ "Madagascar",
+                        str_detect(., "ETH") ~ "Ethiopia",
+                        str_detect(., "PER") ~ "Peru",
+                        str_detect(., "RWA") ~ "Rwanda",
+                        str_detect(., "JOR") ~ "Jordan")),
+            
+      skim_variable = case_when(
+        
+        skim_variable == "m8saq2_id" ~ "Letters identification",
+        skim_variable == "m8saq3_id" ~ "Words identification",
+        skim_variable == "m8saq4_id" ~ "Pictures identification",
+        skim_variable == "m8saq5_story" ~ "Understanding story 1",
+        skim_variable == "m8saq6_story" ~ "Understanding story 2",
+        
+        skim_variable == "m8sbq3b_arithmetic" ~ "Can add double digits ",
+        skim_variable == "m8sbq3c_arithmetic" ~ "Can subtract double digits",
+        skim_variable == "m8sbq3g_arithmetic" ~ "Can multiply double digits",
+        skim_variable == "m8sbq5_word_problem" ~ "Can solve simple math story problem"
+        
+      )
+   ) %>% 
+   
+arrange(skim_variable) %>% bind_cols(breaking_up_all_g4 %>% select(-skim_variable)) %>% 
+   
+   mutate(
+     
+     All = paste0(mean_var*100, "%"),
+     Min = paste0(min_var*100, "%", " (", min_country, ")"),
+     Max = paste0(max_var*100, "%", " (", max_country, ")"),
+     
+   ) %>% rename(`Sub-tasks` = skim_variable) %>% 
+   select(`Sub-tasks`, All, Min, Max) %>% 
+   
+   mutate(Tasks= case_when(
+     
+     
+     str_detect(`Sub-tasks`, "digits|math") ~ "Math",
+     !str_detect(`Sub-tasks`, "digits|maths") ~ "Literacy"
+     
+     
+   )) %>% 
+ as_grouped_data(., groups = c("Tasks")) %>% 
+   flextable() %>% 
+   bold(j = c("Tasks"), bold = TRUE) %>% 
+   italic(j = c("Tasks"), italic = TRUE) %>% 
+   add_footer(Tasks= paste0('Notes: The table presents the percentage of students in Grade 4 that were able to perform on various language and math tasks.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses.' )) %>% 
+   merge_at( j = 1:5, part = "footer") %>%
+   add_header_lines("Comparison across countries of sub-indicators for 4th Grade students") %>%
+  set_table_properties(layout = "autofit")
+ 
+ breaking_up_g4
+ 
+```
+
+
+## g1
+
+
+```{r g1dat}
+########
+# Peru
+#######
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+PER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) 
+########
+# Jordan
+#######
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+JOR_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
+  mutate(iso3c=country)
+########
+# Rwanda
+#######
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+RWA_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  filter(!is.na(ecd_student_knowledge))
+########
+# Ethiopia
+#######
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+ETH_g1_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2020.csv", sep="/")) %>%
+  mutate(iso3c=country)
+ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2021.csv", sep="/")) %>%
+  mutate(iso3c=country)
+########
+# Madagascar
+#######
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(-district)
+########
+#combined
+########
+combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
+  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER"))) %>%
+  left_join(weights_df) %>%
+  mutate(`Student Proficient`=if_else(ecd_student_knowledge>=80,"Yes","No"),
+         Rural=case_when(
+           rural==1 ~ "Rural",
+           rural==0 ~ "Urban",
+           urban_rural=="Rural" ~ "Rural", 
+           urban_rural=="Urban" ~ "Urban",
+           TRUE ~ "Rural"),
+         Gender=if_else(m6s1q3==1,"Male", "Female"))
+
+
+```
+
+```{r, fig.height=6, fig.width=8}
+indicators <- c("ecd_student_knowledge", "m6s2q2c_letters", "m6s2q12c_simple_add", "m6s2q13b_backward_digit", "m6s2q16a_conflict_resol")
+indicator_desc <- c("Overall Score", "Recognize letter: A", "Simple addition: 5+2", "Backward Digit Span", "Conflict Resolution")
+combined_g1_mn <- combined_g1_df %>% 
+  mutate(across(c("m6s2q2c_letters", "m6s2q12c_simple_add", "m6s2q13b_backward_digit", "m6s2q16a_conflict_resol"),~.*100)) %>%
+  group_by(iso3c) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+colnames(combined_g1_mn) <- c('country', indicator_desc)
+combined_g1_mn <- combined_g1_mn %>%
+  pivot_longer(
+    cols = c(2:6),
+    names_to='Domain',
+    values_to="Mean"
+  ) %>%
+  mutate(Mean=Mean/100) %>%
+  mutate(Domain=factor(Domain, levels=indicator_desc))
+ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
+  geom_point(size=3) +
+  geom_text_repel(aes(label=paste0(country,": ",round(100*Mean, 1), "%")), size=5) +
+  geom_hline(aes(yintercept=.80), alpha=0.7) +
+  expand_limits(y=c(0,1)) +
+  scale_x_discrete(limits=rev) +
+  scale_y_continuous(
+    labels=scales::percent
+  ) +
+  coord_flip() +
+  theme_bw() +
+  labs(
+    title="Country Performance on 1st Grade Assessment",
+    caption="Summary Statistics Weighted using Inverse Propensity Weights."
+  ) +
+  theme(
+    axis.text = element_text(size=12),
+    title=element_text(size=14),
+    legend.position = 'none'
+  )
+```
+
+
+## Teachers
+
+
+
+```{r pedgcont}
+#read in teacher pedagogy scores and link to content knowledge
+####### 
+# Peru
+#######
+country <- "PER"
+year <- "2019"
+PER_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+PER_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+PER_teachers_df <- PER_pedg_df %>%
+  left_join(PER_cont_df) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+####### 
+# Jordan
+#######
+country <- "JOR"
+year <- "2019"
+JOR_teach_code_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
+  filter(!is.na(m4saq1_number)) %>%
+  select(hashed_school_code, m4saq1_number, territory, governorate, ipw) 
+JOR_pedg_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.dta", sep="/")) %>%
+  left_join(JOR_teach_code_df) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+JOR_cont_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.dta", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+JOR_teachers_df <- JOR_pedg_df %>%
+  left_join(JOR_cont_df) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+####### 
+# Rwanda
+#######
+country <- "RWA"
+year <- "2020"
+RWA_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+RWA_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum)  %>% distinct(hashed_school_code, teacher_assessment_answers__id, .keep_all = TRUE)
+RWA_teachers_df <- RWA_pedg_df %>%
+  left_join(RWA_cont_df) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+####### 
+# Ethiopia
+#######
+country <- "ETH"
+year <- "2020_2021"
+ETH_teach_code_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  filter(!is.na(m4saq1_number)) %>%
+  select(hashed_school_code, m4saq1_number, ipw) 
+ETH_pedg_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon_2020.csv", sep="/")) %>%
+  filter(!is.na(hashed_school_code) ) %>%
+  left_join(ETH_teach_code_df) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+ETH_cont_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon_2020.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+ETH_teachers_df_2020 <- ETH_pedg_df_2020 %>%
+  left_join(ETH_cont_df_2020) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+ETH_pedg_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon_2021.csv", sep="/")) %>%
+    filter(!is.na(hashed_school_code) ) %>%
+  left_join(ETH_teach_code_df) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+ETH_cont_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon_2021.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum) 
+ETH_teachers_df_2021 <- ETH_pedg_df_2021 %>%
+  left_join(ETH_cont_df_2021) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+
+######
+# Combined
+######
+combined_teachers_df <- bind_rows(PER_teachers_df, JOR_teachers_df, RWA_teachers_df, ETH_teachers_df_2020, ETH_teachers_df_2021) %>%
+  mutate(iso3c=factor(iso3c, levels=c("ETH","RWA", "JOR", "PER")))
+
+
+
+```
+
+
+```{r pedgcontplt,fig.height=6, fig.width=8}
+
+
+combined_teachers_df %>%
+  ggplot(aes(x=teach_score, y=content_knowledge, color=iso3c)) +
+    geom_point() +
+    annotate('rect',xmin=1,xmax=5, ymin=0,ymax=80, fill='#e76f51', alpha=0.2) +
+    annotate('rect',xmin=1,xmax=3, ymin=80,ymax=100, fill='#e76f51', alpha=0.2) +
+    annotate('rect',xmin=3,xmax=4, ymin=80,ymax=100, fill='#e9c46a', alpha=0.2) +
+    annotate('rect',xmin=4,xmax=5, ymin=80,ymax=100, fill='#2a9d8f', alpha=0.2) +
+    theme_bw() +
+    xlab('Teacher Content Knowledge') +
+    ylab("Teacher Pedagogical Skill") +
+    expand_limits(x=c(1,5),y=c(0,100)) +
+    labs(
+      title=str_wrap('Scatterplot between Teacher Pedagogical Skill and Teacher Content Knowledge',70)
+    ) +
+    theme(
+      legend.position = 'bottom',
+      axis.text=element_text(size=12),
+      title=element_text(size=14)
+    )
+```
+
+## Urban/Rural
+
+
+```{r}
+
+tab_df_ovrl <- combined_wide_df %>%
+  filter(Series %in% practice_indicators) %>%
+  arrange(factor(Series, levels=practice_indicators))
+
+#urban rural split
+practice_indicators_R <- c(
+  'SE.PRM.LERN.1.R',
+  'SE.PRM.EFFT.2.R',
+  'SE.PRM.CONT.1.R',
+  'SE.PRM.PEDG.1.R',
+  'SE.PRM.INPT.1.R',
+  'SE.PRM.INFR.1.R',
+  'SE.PRM.LCAP.1.R',
+  'SE.PRM.ATTD.1.R',
+  'SE.PRM.OPMN.1.R',
+  'SE.PRM.ILDR.1.R',
+  'SE.PRM.PKNW.1.R',
+  'SE.PRM.PMAN.1.R'
+)
+
+title <- 'GEPD Practice Indicators Urban/Rural'
+  
+tab_df_R <- combined_wide_df %>%
+  filter(Series %in% practice_indicators_R) %>%
+  arrange(factor(Series, levels=practice_indicators_R))
+
+#set colors
+tab_color_df_R <- combined_wide_color %>%
+  filter(Series %in% practice_indicators_R) %>%
+  arrange(factor(Series, levels=practice_indicators_R))
+
+Peru_col_R <- tab_color_df_R$Peru
+Jordan_col_R <- tab_color_df_R$Jordan
+Rwanda_col_R <- tab_color_df_R$Rwanda
+Ethiopia_col_R <- tab_color_df_R$Ethiopia
+Madagascar_col_R <- tab_color_df_R$Madagascar
+
+
+#build table
+tab_df_R <- tab_df_R  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar) %>%
+  rename(Peru_R=Peru, 
+         Jordan_R=Jordan, 
+         Rwanda_R=Rwanda,
+         Ethiopia_R=Ethiopia, 
+         Madagascar_R=Madagascar)
+
+tab_df_R$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+tab_df_R$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+
+# urban 
+practice_indicators_U <- c(
+  'SE.PRM.LERN.1.U',
+  'SE.PRM.EFFT.2.U',
+  'SE.PRM.CONT.1.U',
+  'SE.PRM.PEDG.1.U',
+  'SE.PRM.INPT.1.U',
+  'SE.PRM.INFR.1.U',
+  'SE.PRM.LCAP.1.U',
+  'SE.PRM.ATTD.1.U',
+  'SE.PRM.OPMN.1.U',
+  'SE.PRM.ILDR.1.U',
+  'SE.PRM.PKNW.1.U',
+  'SE.PRM.PMAN.1.U'
+)
+
+
+tab_df_U <- combined_wide_df %>%
+  filter(Series %in% practice_indicators_U) %>%
+  arrange(factor(Series, levels=practice_indicators_U))
+
+#set colors
+tab_color_df_U <- combined_wide_color %>%
+  filter(Series %in% practice_indicators_U) %>%
+  arrange(factor(Series, levels=practice_indicators_U))
+
+Peru_col_U <- tab_color_df_U$Peru
+Jordan_col_U <- tab_color_df_U$Jordan
+Rwanda_col_U <- tab_color_df_U$Rwanda
+Ethiopia_col_U <- tab_color_df_U$Ethiopia
+Madagascar_col_U <- tab_color_df_U$Madagascar
+
+
+#build table
+tab_df_U <- tab_df_U  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar) %>%
+  rename(Peru_U=Peru, 
+         Jordan_U=Jordan, 
+         Rwanda_U=Rwanda,
+         Ethiopia_U=Ethiopia, 
+         Madagascar_U=Madagascar)
+
+tab_df_U$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+tab_df_U$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+
+
+#combined
+tab_df_comb <- tab_df_R %>%
+  left_join(tab_df_U) %>%
+  select(`Indicator Name`, Peru_R, Peru_U, Jordan_R, Jordan_U, Rwanda_R, Rwanda_U, Ethiopia_R, Ethiopia_U, Madagascar_R, Madagascar_U)
+
+
+
+
+
+```
+
+
+
+```{r spider1, fig.width = 9, fig.height = 6}
+
+#list of indicaors with scale 0-100
+list_100 <-  c(
+    "Proficiency on GEPD Assessment",
+    "Teacher Presence",
+    "Teacher Pedagogical Skills",
+    "Teacher Content Knowledge",
+    "Student Readiness (percentage correct)",
+    "Student Attendance")
+
+list_1_5 <- c(
+  "Basic Inputs",
+  "Basic Infrastructure" 
+)
+
+spider_df <- tab_df_comb %>%
+  pivot_longer(
+    cols=2:11,
+    names_to=c("Country", "Type"),
+    names_pattern="(.*)_(.)",
+    values_to="value"
+  ) %>%
+  mutate(Type=if_else(Type=="R", "Rural", "Urban")) %>%
+  mutate(
+    value=case_when(
+      `Indicator Name` %in% list_100 ~ value/100, #scale indicators with scale 0-100
+      `Indicator Name` %in% list_1_5 ~ value/5, #scale indicators with scale 0-5
+      TRUE ~ (value-1)/4 #scale indicators with scale 1-5
+    )) %>%
+  ungroup()
+  # pivot_wider(
+  #   names_from='Type',
+  #   values_from='value'
+  # ) %>% #now scale all indicators to 0 to 1
+  # mutate(
+  #   Rural=case_when(
+  #     `Indicator Name` %in% list_100 ~ Rural/100, #scale indicators with scale 0-100
+  #     `Indicator Name` %in% list_1_5 ~ Rural/5, #scale indicators with scale 0-5
+  #     TRUE ~ (Rural-1)/4 #scale indicators with scale 1-5
+  #   ),
+  #   Urban=case_when(
+  #     `Indicator Name` %in% list_100 ~ Urban/100, #scale indicators with scale 0-100
+  #     `Indicator Name` %in% list_1_5 ~ Urban/5, #scale indicators with scale 0-5
+  #     TRUE ~ (Urban-1)/4 #scale indicators with scale 1-5
+  #   )
+  # )
+
+
+p1 <- spider_df %>%
+  mutate(`Indicator Name`=str_wrap(`Indicator Name`, width=20)) 
+
+p1 <- p1 %>%
+  mutate(`Indicator Name`=factor(`Indicator Name`, levels=c(
+            str_wrap("Principal Management Skills" , width=20),
+            str_wrap( "Principal School Knowledge"   , width=20),
+            str_wrap( "Instructional Leadership"     , width=20),  
+            str_wrap("Operational Management"       , width=20),
+            str_wrap("Student Attendance"           , width=20), 
+            str_wrap("Student Readiness (percentage correct)", width=20), 
+            str_wrap("Basic Infrastructure"         , width=20), 
+            str_wrap("Basic Inputs"                 , width=20), 
+            str_wrap("Teacher Pedagogical Skills"   , width=20),  
+            str_wrap("Teacher Content Knowledge"      , width=20), 
+            str_wrap("Teacher Presence"                , width=20),  
+            str_wrap("Proficiency on GEPD Assessment"  , width=20)     
+
+          )
+                                 )) %>%
+  ggplot(aes(x=`Indicator Name`, y=value, color=Type, group=`Indicator Name`)) +
+  facet_wrap(~Country, ncol=5) +
+  geom_point(size=4) +
+  geom_line(color='black') +
+  theme_bw() +
+  theme(legend.position = 'top',
+        axis.text.x=element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.title = element_blank(),
+        panel.grid.major.y = element_blank()
+           # explicitly set the horizontal lines (or they will disappear too)
+        #panel.grid.major.x = element_line( size=.1, color="grey" ) 
+        ) +
+  coord_flip() 
+
+p1
+```
+
+```{r g4_gender, fig.width = 9, fig.height = 6}
+
+indicators <- c("student_knowledge", "math_student_knowledge", "literacy_student_knowledge")
+combined_g4_gend_mn <- combined_g4_df %>% 
+  mutate( Rural=case_when(
+           rural==1 ~ "Rural",
+           rural==0 ~ "Urban",
+           urban_rural=="Rural" ~ "Rural", 
+           urban_rural=="Urban" ~ "Urban",
+           TRUE ~ "Rural")) %>%
+  group_by(iso3c, Rural) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+
+p1 <- combined_g4_df %>%
+  mutate( Rural=case_when(
+           rural==1 ~ "Rural",
+           rural==0 ~ "Urban",
+           urban_rural=="Rural" ~ "Rural", 
+           urban_rural=="Urban" ~ "Urban",
+           TRUE ~ "Rural")) %>%  
+  ggplot( aes(x=Rural, y=student_knowledge, color=`Student Proficient`)) +
+    facet_wrap(~iso3c) +
+    geom_quasirandom() +
+    geom_segment(data=combined_g4_gend_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+    geom_segment(data=combined_g4_gend_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+    geom_text(data=combined_g4_gend_mn, aes(label=paste0(round(student_knowledge, 1), "%")), hjust=-.15, color='black', size=3) +
+    coord_flip() +
+    scale_color_manual(
+      values=c("#ef476f", "#06d6a0")
+    ) +
+    theme_bw() +
+    xlab("") +
+    ylab("GEPD 4th Grade Assessment Score") +
+    labs(
+      title="Percentage of Items Correct on GEPD 4th Grade Assessment by Urban/Rural",
+      caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
+    ) +
+    theme(
+      axis.text = element_text(size=12),
+      title=element_text(size=14),
+      legend.position = 'bottom'
+    )
+p1
+
+```
+
+
+## De facto/De jure
+
+```{r defadejudf}
+#gather defacto and de jure indicators
+
+defact_df <- combined_wide_df %>%
+  filter(grepl(".DF",Series)) %>%
+  mutate(`Indicator Name`=str_remove_all(`Indicator Name`, "\\(De Facto\\) ")) %>%
+  pivot_longer(cols=c("Peru", "Jordan", "Ethiopia", "Rwanda", "Madagascar"),
+               names_to='country',
+               values_to='defacto') %>%
+  select(-Series)
+
+dejur_df <-combined_wide_df %>%
+  filter(grepl(".DJ",Series)) %>%
+  mutate(`Indicator Name`=str_remove_all(`Indicator Name`, "\\(De Jure\\) ")) %>%
+    pivot_longer(cols=c("Peru", "Jordan", "Ethiopia", "Rwanda", "Madagascar"),
+               names_to='country',
+               values_to='dejure') %>%
+  select(-Series)
+
+defact_dejure_df <- defact_df %>%
+  left_join(dejur_df) %>%
+  mutate(`Indicator Name` = str_wrap(`Indicator Name`, 30))
+
+
+means_dfdj <- defact_dejure_df %>%
+  group_by(country) %>%
+  summarise(defacto=mean(defacto, na.rm=TRUE),
+            dejure=mean(dejure, na.rm=TRUE))
+
+mn_low_defacto <- min(means_dfdj$defacto)
+mn_low_defacto_nm <- means_dfdj$country[which(means_dfdj$defacto==mn_low_defacto)]
+
+mn_low_dejure <- min(means_dfdj$dejure)
+mn_low_dejure_nm <- means_dfdj$country[which(means_dfdj$dejure==mn_low_dejure)]
+
+mn_high_defacto <- max(means_dfdj$defacto)
+mn_high_defacto_nm <- means_dfdj$country[which(means_dfdj$defacto==mn_high_defacto)]
+
+mn_high_dejure <- max(means_dfdj$dejure)
+mn_high_dejure_nm <- means_dfdj$country[which(means_dfdj$dejure==mn_high_dejure)]
+
+```
+
+```{r}
+
+means_dfdj %>%
+  mutate(defacto=round(defacto,1),
+         dejure=round(dejure,1)) %>%
+  rename(`De Facto`=defacto,
+         `De Jure`=dejure) %>%
+  flextable() %>%
+    add_header_lines('Average De Facto and De Jure scores across GEPD policy indicators.')
+
+```
+
+## De facto/ De jure
+```{r defactodejure, fig.width=10, fig.height=10}
+
+
+
+
+ggplot(defact_dejure_df, aes(y=`Indicator Name`, x=defacto)) +
+  facet_wrap(~country, ncol=5) +
+  geom_point(aes(color='De Facto'), size=4) +
+  geom_point(aes(x=dejure, color="De Jure"), size=4) +
+  geom_segment(aes( yend=`Indicator Name`, xend=dejure)) +
+  xlab('Value') +
+  scale_color_manual(
+    values=c('De Facto'='#7209b7',
+             'De Jure'='#4361ee')
+  ) +
+  labs(color="Legend") +
+  theme_bw() +
+  theme(
+    legend.position="bottom"
+  )
+
+
+
+```
+
+## Variation
+
+
+```{r}
+
+
+#specify some key indicators to be imputed with mean value when necessary
+practices <- c('presence_rate', 'content_knowledge', 'teach_score', 'inputs', 'infrastructure', 'ecd_student_knowledge', 'student_attendance', 'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management')
+policies <- c('teacher_attraction', 'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring', 'intrinsic_motivation', 'standards_monitoring', 'sch_monitoring', 'sch_management_clarity', 'sch_management_attraction', 'sch_selection_deployment', 'sch_support', 'principal_evaluation')
+politics <- c('quality_bureaucracy', 'national_learning_goals', 'impartial_decision_making', 'mandates_accountability')
+
+
+# read in the microdata
+########
+## Peru
+########
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+PER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+PER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+PER_school_office_link_df <- PER_school_anon_df %>%
+  left_join(PER_school_gdp) %>%
+  left_join(PER_school_office_linkages) %>%
+  left_join(PER_school_size) %>%
+  mutate(country="Peru") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Jordan
+########
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+JOR_school_anon_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/"))
+JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+JOR_school_gdp <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.dta", sep="/")) %>%
+  select(hashed_school_code, GDP)
+#load school size info
+JOR_school_size <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")),
+         students_enrolled=as.character(students_enrolled)) %>%
+  filter(!is.na(students_enrolled))
+JOR_school_office_link_df <- JOR_school_anon_df %>%
+  left_join(JOR_school_gdp) %>%
+  left_join(JOR_school_office_linkages) %>%
+  left_join(JOR_school_size) %>%
+  mutate(country="Jordan") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         rural=if_else(rural==1, TRUE,FALSE),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Rwanda
+########
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+RWA_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+RWA_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+RWA_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+RWA_school_office_link_df <- RWA_school_anon_df %>%
+  left_join(RWA_school_gdp) %>%
+  left_join(RWA_school_office_linkages) %>%
+  left_join(RWA_school_size) %>%
+  mutate(country="Rwanda") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+########
+## Ethiopia
+########
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+ETH_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+ETH_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+ETH_school_office_link_df <- ETH_school_anon_df %>%
+  left_join(ETH_school_gdp) %>%
+  left_join(ETH_school_office_linkages) %>%
+  left_join(ETH_school_size) %>%
+  mutate(country="Ethiopia")  %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Madagascar
+########
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv")) %>%
+  select(hashed_school_code, national_learning_goals, targeting,monitoring, incentives, community_engagement, mandates_accountability, coherence, transparency, accountability, quality_bureaucracy, knowledge_skills, work_environment, merit, motivation_attitudes, motivation_relative_start, impartial_decision_making, politicized_policy_implementation, employee_unions_as_facilitators, school_lat, school_lon, office_lat, office_lon)
+#load gdp info
+
+MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+MDG_school_office_link_df <- MDG_school_anon_df %>%
+  left_join(MDG_school_gdp) %>%
+  left_join(MDG_school_office_linkages) %>%  
+  select(-district) %>%
+  mutate(country="Madagascar") %>%
+  mutate(
+    presence_rate=100-absence_rate,
+    dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE)
+  ) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(c('presence_rate', 'content_knowledge', 'inputs', 'infrastructure', 'ecd_student_knowledge',  'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management'), ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+
+
+
+###########
+# Combined
+##########
+
+
+
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
+
+
+
+```
+
+```{r anova}
+#set controls
+controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
+practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
+policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
+politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+
+#create formulas for regression
+baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
+baseline_pract_pol <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies))
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+baseline_pract_pol_bur_cntl <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics," + ", controls))
+
+#get a constant sample
+
+anova_df <- combined_school_office_df %>%
+  select(student_knowledge, GDP, rural, students_enrolled, country,
+         presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
+         teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
+         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+  na.omit
+
+
+models <- list(
+  
+
+'Practices' = feols(baseline_pract, data=anova_df,vcov='hetero'),
+
+'Practices + Policies' = feols(baseline_pract_pol, data=anova_df,vcov='hetero'),
+
+'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df,vcov='hetero'),
+
+'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df,vcov='hetero')
+)
+
+
+
+```
+
+## P
+
+```{r, fig.height=6, fig.width=8}
+controls <- 'log(GDP) + rural + students_enrolled'
+practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
+policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
+politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+
+
+# baseline
+baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
+
+m <- feols(baseline_pract , data=anova_df)
+
+baseline_pract_df <- anova_df %>%
+  add_predictions(m)
+
+ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black') +
+  xlab('Fitted value from regression') +
+  ylab('4th grade student knowledge') +
+  ggtitle(str_wrap('Explaining 4th Grade Student Outcomes using just School Practices (Service Delivery)',70)) +
+  theme_bw() 
+```
+## PP
+
+```{r, fig.height=6, fig.width=8}
+# baseline
+baseline_pract_pol <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies))
+m <- feols(baseline_pract_pol , data=anova_df)
+
+baseline_pract_pol_df <- anova_df %>%
+  add_predictions(m)
+
+ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black') +
+  xlab('Fitted value from regression') +
+  ylab('4th grade student knowledge') +
+    ggtitle(str_wrap('Explaining 4th Grade Student Outcomes using School Practices + Policies',70)) +
+  theme_bw() 
+```
+## PPP
+
+```{r, fig.height=6, fig.width=8}
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+
+m <- feols(baseline_pract_pol_bur , data=anova_df)
+
+baseline_pract_pol_bur_df <- anova_df %>%
+  add_predictions(m)
+
+ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black') +
+  xlab('Fitted value from regression') +
+  ylab('4th grade student knowledge') +
+  ggtitle(str_wrap('Explaining 4th Grade Student Outcomes using School Practices + Policies + Politics',70)) +
+  theme_bw() 
+```
+
+
