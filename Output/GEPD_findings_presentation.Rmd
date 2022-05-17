@@ -169,7 +169,7 @@ combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
     mutate(
            value=round(value,1),
            value_color=case_when(
-             value_metadata=="Needs Improvement" ~ "#FF0000",
+             value_metadata=="Needs Improvement" ~ "#FF4747",
              value_metadata=="Caution" ~ "#FCD606",
              value_metadata=="On Target" ~ "#85C546",
              TRUE ~ "#808080"
@@ -236,6 +236,8 @@ ovr_table <- flextable(tab_df) %>%
 
 #colors
 ovr_table <- ovr_table %>%
+  color(j=c('Peru','Jordan','Ethiopia','Rwanda','Madagascar'),
+        color='black') %>%
   bg(j = c('Peru'),
      bg = Peru_col) %>%
   bg(j = c('Jordan'),
@@ -619,7 +621,7 @@ arrange(skim_variable) %>% bind_cols(breaking_up_all_g4 %>% select(-skim_variabl
    italic(j = c("Tasks"), italic = TRUE) %>% 
    add_footer(Tasks= paste0('Notes: The table presents the percentage of students in Grade 4 that were able to perform on various language and math tasks.All individual country statistics are calculated using country-specific sampling weights. The average for all countries, reported under the heading. “All,” is taken by averaging over the country averages. Names of the countries with the lowest (Min) and highest (Max) score for each item are given in parentheses.' )) %>% 
    merge_at( j = 1:5, part = "footer") %>%
-   add_header_lines("Comparison across countries of sub-indicators for 4th Grade students") %>%
+   add_header_lines("Comparison across countries of sub-indicators for 4th-grade students") %>%
   set_table_properties(layout = "autofit")
  
  breaking_up_g4
@@ -723,7 +725,7 @@ ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
   coord_flip() +
   theme_bw() +
   labs(
-    title="Country Performance on 1st Grade Assessment",
+    title="Country Performance on 1st-grade Assessment",
     caption="Summary Statistics Weighted using Inverse Propensity Weights."
   ) +
   theme(
@@ -845,8 +847,8 @@ combined_teachers_df %>%
     annotate('rect',xmin=3,xmax=4, ymin=80,ymax=100, fill='#e9c46a', alpha=0.2) +
     annotate('rect',xmin=4,xmax=5, ymin=80,ymax=100, fill='#2a9d8f', alpha=0.2) +
     theme_bw() +
-    xlab('Teacher Content Knowledge') +
-    ylab("Teacher Pedagogical Skill") +
+    ylab('Teacher Content Knowledge') +
+    xlab("Teacher Pedagogical Skill") +
     expand_limits(x=c(1,5),y=c(0,100)) +
     labs(
       title=str_wrap('Scatterplot between Teacher Pedagogical Skill and Teacher Content Knowledge',70)
@@ -1090,16 +1092,16 @@ p1 <- combined_g4_df %>%
     geom_quasirandom() +
     geom_segment(data=combined_g4_gend_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
     geom_segment(data=combined_g4_gend_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
-    geom_text(data=combined_g4_gend_mn, aes(label=paste0(round(student_knowledge, 1), "%")), hjust=-.15, color='black', size=3) +
+    geom_text(data=combined_g4_gend_mn, aes(label=paste0(round(student_knowledge, 1), "%")),  vjust=-2.8, color='black', size=4) +
     coord_flip() +
     scale_color_manual(
       values=c("#ef476f", "#06d6a0")
     ) +
     theme_bw() +
     xlab("") +
-    ylab("GEPD 4th Grade Assessment Score") +
+    ylab("GEPD 4th-grade Assessment Score") +
     labs(
-      title="Percentage of Items Correct on GEPD 4th Grade Assessment by Urban/Rural",
+      title="Percentage of Items Correct on GEPD 4th-grade Assessment by Urban/Rural",
       caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
     ) +
     theme(
@@ -1110,9 +1112,96 @@ p1 <- combined_g4_df %>%
 p1
 
 ```
+## G1
 
 
-## De facto/De jure
+
+```{r, fig.width = 9, fig.height = 6}
+indicators <- c("ecd_student_knowledge", "ecd_math_student_knowledge", "ecd_literacy_student_knowledge")
+combined_g1_mn <- combined_g1_df %>% 
+  group_by(iso3c, Rural) %>%
+  mutate(ipw=if_else(is.na(ipw),mean(ipw, na.rm=T),ipw)) %>%
+  summarise(across(indicators, wtd.mean, weights=ipw, na.rm=T)) %>%
+  ungroup() 
+
+p1 <- ggplot(combined_g1_df, aes(x=Rural, y=ecd_student_knowledge, color=`Student Proficient`)) +
+  facet_wrap(~iso3c) +
+  geom_quasirandom() +
+  geom_segment(data=combined_g1_mn, aes( xend=..x..+.3, yend=..y..), color='black', size=1)  +
+  geom_segment(data=combined_g1_mn, aes( xend=..x..-.3, yend=..y..), color='black', size=1)  +
+  geom_text(data=combined_g1_mn, aes(label=paste0(round(ecd_student_knowledge, 1), "%")),  vjust=-2.8, color='black', size=4) +
+  coord_flip() +
+  scale_color_manual(
+    values=c("#ef476f", "#06d6a0")
+  ) +
+  theme_bw() +
+  xlab("") +
+  ylab("GEPD 1st Grade Assessment Score") +
+  labs(
+    title="Percentage of Items Correct on GEPD 1st Grade Assessment",
+    caption="Solid black lines represent country weighted average. \n Summary Statistics Weighted using Inverse Propensity Weights."
+  ) +
+  theme(
+    axis.text = element_text(size=12),
+    title=element_text(size=14),
+    legend.position = 'bottom'
+  )
+p1
+
+```
+
+## Inputs/Infrastructure
+
+```{r, fig.width = 9, fig.height = 6}
+
+series_list <- c('SE.PRM.INPT.5.U', 'SE.PRM.INPT.5.R', #(De Facto) Percent of schools with access to EdTech
+                 'SE.PRM.INPT.3.U','SE.PRM.INPT.3.R', # (De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books 
+                 'SE.PRM.INFR.3.U','SE.PRM.INFR.3.R', # (De Facto) Percent of schools with functioning toilets
+                 'SE.PRM.INFR.5.U', 'SE.PRM.INFR.5.R' # Percent of schools with access to internet
+                 ) 
+
+infra_df <- combined_df %>%
+  filter(Series %in% series_list) %>%
+  mutate(Rural=if_else(grepl("\\.R",Series),"Rural","Urban"),
+         Indicator=case_when(
+           grepl("SE.PRM.INPT.5",Series) ~ 'Working tablet/computer',
+           grepl("SE.PRM.INPT.3",Series) ~ 'Equipped with pens/pencils, textbooks, and exercise books ',
+           grepl("SE.PRM.INFR.3",Series) ~ 'Functioning toilets',
+           grepl("SE.PRM.INFR.5",Series) ~ 'Working internet connection',
+         )) %>%
+  select(country, Indicator, Rural, value) %>%
+  pivot_wider(
+    names_from=Rural,
+    values_from=value
+  ) %>%
+  mutate(Indicator=str_wrap(Indicator,20),
+         country=factor(country, levels=c("Madagascar", "Ethiopia", "Rwanda", "Jordan", "Peru")))
+
+ggplot(infra_df, aes(x=country)) +
+  facet_wrap(~Indicator, nrow=1) +
+  geom_point(aes(y=Rural, color='Rural'), size=4) +
+  geom_text_repel(aes(y=Rural, color='Rural', label=paste0(Rural,"%")), size=4, nudge_x=-0.25) +
+  geom_point(aes(y=Urban, color='Urban'), size=4) +
+  geom_text_repel(aes(y=Urban, color='Urban', label=paste0(Urban,"%")), size=4, nudge_x=0.25) +
+  geom_segment(aes(y=Rural, yend=Urban, xend=country)) +
+  scale_color_manual(
+    values=c(
+      'Rural'='red',
+      'Urban'='blue'
+    )
+  ) +
+  labs(color="Legend") +
+  ggtitle('Percent of Schools with Inputs or Infrastructure') +
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position = 'top',
+        axis.title = element_blank())
+
+```
+
+
+## DF/ DJ
+
 
 ```{r defadejudf}
 #gather defacto and de jure indicators
@@ -1182,8 +1271,8 @@ ggplot(defact_dejure_df, aes(y=`Indicator Name`, x=defacto)) +
   geom_segment(aes( yend=`Indicator Name`, xend=dejure)) +
   xlab('Value') +
   scale_color_manual(
-    values=c('De Facto'='#7209b7',
-             'De Jure'='#4361ee')
+    values=c('De Facto'='#4cc9f0',
+             'De Jure'='#f72585')
   ) +
   labs(color="Legend") +
   theme_bw() +
@@ -1494,8 +1583,8 @@ ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
   geom_smooth(method='lm',color='black') +
   stat_poly_eq(color='black') +
   xlab('Fitted value from regression') +
-  ylab('4th grade student knowledge') +
-  ggtitle(str_wrap('Explaining 4th Grade Student Outcomes using just School Practices (Service Delivery)',70)) +
+  ylab('4th-grade student knowledge') +
+  ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using just School Practices (Service Delivery)',70)) +
   theme_bw() 
 ```
 ## PP
@@ -1513,8 +1602,8 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
   geom_smooth(method='lm',color='black') +
   stat_poly_eq(color='black') +
   xlab('Fitted value from regression') +
-  ylab('4th grade student knowledge') +
-    ggtitle(str_wrap('Explaining 4th Grade Student Outcomes using School Practices + Policies',70)) +
+  ylab('4th-grade student knowledge') +
+    ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies',70)) +
   theme_bw() 
 ```
 ## PPP
@@ -1532,8 +1621,8 @@ ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country
   geom_smooth(method='lm',color='black') +
   stat_poly_eq(color='black') +
   xlab('Fitted value from regression') +
-  ylab('4th grade student knowledge') +
-  ggtitle(str_wrap('Explaining 4th Grade Student Outcomes using School Practices + Policies + Politics',70)) +
+  ylab('4th-grade student knowledge') +
+  ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70)) +
   theme_bw() 
 ```
 
