@@ -37,6 +37,9 @@ library(geosphere)
 library(fixest)
 library(modelr)
 library(modelsummary)
+library(mice)
+library(caret)
+
 options(modelsummary_factory_word = 'flextable')
 custom_theme <- function(x, ...) {
     x %>% set_table_properties(layout = "autofit")
@@ -1157,7 +1160,9 @@ p1
 series_list <- c('SE.PRM.INPT.5.U', 'SE.PRM.INPT.5.R', #(De Facto) Percent of schools with access to EdTech
                  'SE.PRM.INPT.3.U','SE.PRM.INPT.3.R', # (De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books 
                  'SE.PRM.INFR.3.U','SE.PRM.INFR.3.R', # (De Facto) Percent of schools with functioning toilets
-                 'SE.PRM.INFR.5.U', 'SE.PRM.INFR.5.R' # Percent of schools with access to internet
+                 'SE.PRM.INFR.5.U', 'SE.PRM.INFR.5.R', # Percent of schools with access to internet
+                 'SE.PRM.INFR.6.U', 'SE.PRM.INFR.6.R' # Percent of schools accessible to children with special needs
+
                  ) 
 
 infra_df <- combined_df %>%
@@ -1168,6 +1173,7 @@ infra_df <- combined_df %>%
            grepl("SE.PRM.INPT.3",Series) ~ 'Equipped with pens/pencils, textbooks, and exercise books ',
            grepl("SE.PRM.INFR.3",Series) ~ 'Functioning toilets',
            grepl("SE.PRM.INFR.5",Series) ~ 'Working internet connection',
+           grepl("SE.PRM.INFR.6",Series) ~ 'Accessible to children with special needs',
          )) %>%
   select(country, Indicator, Rural, value) %>%
   pivot_wider(
@@ -1541,9 +1547,17 @@ anova_df <- combined_school_office_df %>%
   select(student_knowledge, GDP, rural, students_enrolled, country,
          presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
          teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
-         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability, hashed_school_district) %>%
   na.omit
 
+#impute missing data for MDG (teacher pedagogy and student attendance)
+anova_imp <- combined_school_office_df %>%
+  select(student_knowledge, GDP, rural, students_enrolled, country,
+         presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
+         teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
+         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability, hashed_school_district) %>%
+  mice(method='rf') %>%
+  complete(1)
 
 models <- list(
   
@@ -1581,7 +1595,9 @@ baseline_pract_df <- anova_df %>%
 ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
   geom_point() +
   geom_smooth(method='lm',color='black') +
-  stat_poly_eq(color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
   ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using just School Practices (Service Delivery)',70)) +
@@ -1600,7 +1616,9 @@ baseline_pract_pol_df <- anova_df %>%
 ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
   geom_point() +
   geom_smooth(method='lm',color='black') +
-  stat_poly_eq(color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
     ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies',70)) +
@@ -1609,6 +1627,9 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
 ## PPP
 
 ```{r, fig.height=6, fig.width=8}
+
+
+
 baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
 
 m <- feols(baseline_pract_pol_bur , data=anova_df)
@@ -1619,11 +1640,337 @@ baseline_pract_pol_bur_df <- anova_df %>%
 ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
   geom_point() +
   geom_smooth(method='lm',color='black') +
-  stat_poly_eq(color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
   ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70)) +
   theme_bw() 
 ```
+
+## Machine learning
+
+```{r, fig.height=6, fig.width=8}
+
+#use a number of machine learning regression tools to see about increasing R squared
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+
+
+inTraining <- createDataPartition(anova_imp$student_knowledge, p = .75, list = FALSE)
+
+training <- anova_imp[ inTraining,]
+testing  <- anova_imp[-inTraining,]
+
+rf_model <- train(
+  baseline_pract_pol_bur,
+  data=training, 
+  method='lm'
+)
+
+
+
+
+
+baseline_pract_pol_bur_df <- testing %>%
+  add_predictions(rf_model)
+
+ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+  labs(title=str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70),
+       subtitle='OLS Linear Regression') +
+  theme_bw() 
+```
+
+```{r, fig.height=6, fig.width=8}
+
+#use a number of machine learning regression tools to see about increasing R squared
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+
+rf_model <- train(
+  baseline_pract_pol_bur,
+  data=training, 
+  method='ranger'
+)
+
+
+
+
+
+baseline_pract_pol_bur_df <- testing %>%
+  add_predictions(rf_model)
+
+ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+  labs(title=str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70),
+       subtitle='Random Forest Model') +
+  theme_bw() 
+```
+
+
+```{r eval=FALSE, fig.height=6, fig.width=8, include=FALSE}
+
+#use a number of machine learning regression tools to see about increasing R squared
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+
+boost_model <- train(
+  baseline_pract_pol_bur,
+  data=training, 
+  method='neuralnet'
+)
+
+
+
+
+
+baseline_pract_pol_bur_df <- testing %>%
+  add_predictions(boost_model)
+
+ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+  labs(title=str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70),
+       subtitle='Neural Net Model') +
+  theme_bw() 
+```
+```{r, fig.height=6, fig.width=8}
+
+#use a number of machine learning regression tools to see about increasing R squared
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+
+boost_model <- train(
+  baseline_pract_pol_bur,
+  data=training, 
+  method='xgbTree'
+)
+
+
+
+
+
+baseline_pract_pol_bur_df <- testing %>%
+  add_predictions(boost_model)
+
+ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+  labs(title=str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70),
+       subtitle='Extreme Gradient Boosted Model') +
+  theme_bw() 
+```
+## Reg plot
+
+```{r, fig.height=7, fig.width=9}
+
+practices <- 'scale(presence_rate) + scale(content_knowledge) + scale(teach_score) + scale(inputs) + scale(infrastructure) + scale(ecd_student_knowledge) + scale(student_attendance) + scale(operational_management) + scale(instructional_leadership) + scale(principal_knowledge_score) + scale(principal_management)'
+policies <- 'scale(teacher_attraction) + scale(teacher_selection_deployment) + scale(teacher_support) + scale(teaching_evaluation) + scale(teacher_monitoring) + scale(intrinsic_motivation) + scale(standards_monitoring) + scale(sch_monitoring) + scale(sch_management_clarity) + scale(sch_management_attraction) + scale(sch_selection_deployment) + scale(sch_support) + scale(principal_evaluation)'
+politics <- 'scale(quality_bureaucracy) + scale(national_learning_goals) + scale(impartial_decision_making) + scale(mandates_accountability)'
+
+baseline_pract_pol_bur <-  as.formula(paste0('scale(student_knowledge)', "~",practices," + ", policies," + ", politics, " + rural + log(GDP) + students_enrolled | country"))
+
+m <- feols(baseline_pract_pol_bur , data=anova_df, cluster="hashed_school_district")
+
+plot <-modelplot(m, coef_omit = 'Interc',
+          coef_map = c(
+                            "scale(mandates_accountability)"= "Mandates & Accountability",
+                            "scale(impartial_decision_making)" = "Impartial Decision Making",
+                            "scale(national_learning_goals)" = "National Learning Goals",
+                            "scale(quality_bureaucracy)" = "Characteristics of Bureaucracy",
+                            "scale(principal_evaluation)" = "School Management Evaluation",
+                            "scale(sch_support)" = "School Management Support",
+                            "scale(sch_selection_deployment)" = "School Management Selection & Deployment",
+                            "scale(sch_management_attraction)" = "School Management Attraction",
+                            "scale(sch_management_clarity)" = "Clarity of Functions",
+                            "scale(sch_monitoring)" = "Monitoring",
+                            "scale(standards_monitoring)" = "Standards",
+                            "scale(intrinsic_motivation)" = "Teacher Intrinsic Motivation",
+                            "scale(teacher_monitoring)" = "Teacher Monitoring & Accountability",
+                            "scale(teaching_evaluation)" = "Teacher Evaluation",
+                            "scale(teacher_support)" = "Teacher Support",
+                            "scale(teacher_selection_deployment)" = "Teacher Selection & Deployment",
+                            "scale(teacher_attraction)" = "Teacher Attraction",
+                            "scale(principal_management)" = "Principal Management",
+                            "scale(principal_knowledge_score)" = "Principal Knowledge",
+                            "scale(instructional_leadership)" = "Instructional Leadership",
+                            "scale(operational_management)" = "Operational Management",
+                            "scale(student_attendance)"="Student Attendance",
+                            "scale(ecd_student_knowledge)" = "1st Grade Student Knowledge",
+                            "scale(infrastructure)" = "Basic Infrastructure",
+                            "scale(inputs)" = "Basic Inputs",
+                            "scale(teach_score)" = "Teacher Pedagogy",
+                            "scale(content_knowledge)" = "Teacher Content Knowledge",
+                            "scale(presence_rate)"  = "Teacher Presence"
+  
+                            )) +
+  geom_vline(xintercept = 0) +
+  labs(
+    title=str_wrap("Standardized Coefficients from Regression of 4th Grade Learning on Practices, Policies, and Politics", 60),
+    caption=str_wrap('OLS multiple regression of 4th grade student knowledge on practices, policies, and politics variables.  N=393.  Regressions include country fixed effects, urban/rural status, student enrollment, log GDP within 5km of school.  Confidence intervals formed using cluster robust standard errors at Admin 2 level.',110)
+  ) 
+
+
+
+#colorize the axis text
+
+col  <- c(
+                            "scale(mandates_accountability)"= "#264653",
+                            "scale(impartial_decision_making)" = "#264653",
+                            "scale(national_learning_goals)" = "#264653",
+                            "scale(quality_bureaucracy)" = "#264653",
+                            "scale(principal_evaluation)" = "#2a9d8f",
+                            "scale(sch_support)" = "#2a9d8f",
+                            "scale(sch_selection_deployment)" = "#2a9d8f",
+                            "scale(sch_management_attraction)" = "#2a9d8f",
+                            "scale(sch_management_clarity)" = "#2a9d8f",
+                            "scale(sch_monitoring)" = "#2a9d8f",
+                            "scale(standards_monitoring)" = "#2a9d8f",
+                            "scale(intrinsic_motivation)" = "#2a9d8f",
+                            "scale(teacher_monitoring)" = "#2a9d8f",
+                            "scale(teaching_evaluation)" = "#2a9d8f",
+                            "scale(teacher_support)" = "#2a9d8f",
+                            "scale(teacher_selection_deployment)" = "#2a9d8f",
+                            "scale(teacher_attraction)" = "#2a9d8f",
+                            "scale(principal_management)" = "#e76f51",
+                            "scale(principal_knowledge_score)" = "#e76f51",
+                            "scale(instructional_leadership)" = "#e76f51",
+                            "scale(operational_management)" = "#e76f51",
+                            "scale(student_attendance)"="#e76f51",
+                            "scale(ecd_student_knowledge)" = "#e76f51",
+                            "scale(infrastructure)" = "#e76f51",
+                            "scale(inputs)" = "#e76f51",
+                            "scale(teach_score)" = "#e76f51",
+                            "scale(content_knowledge)" = "#e76f51",
+                            "scale(presence_rate)"  = "#e76f51"
+)
+
+axis_text_color <- function(plot) {
+  c <- ggplot_build(plot)$data[[1]]
+  plot +
+    theme(axis.text.y = element_text(colour = col,
+                                     size=10))
+}
+
+axis_text_color(plot)
+
+```
+
+## Alt
+
+```{r, fig.height=7, fig.width=9}
+
+practices <- 'scale(presence_rate) + scale(content_knowledge) + scale(teach_score) + scale(inputs) + scale(infrastructure) + scale(ecd_student_knowledge) + scale(student_attendance) + scale(operational_management) + scale(instructional_leadership) + scale(principal_knowledge_score) + scale(principal_management)'
+policies <- 'scale(teacher_attraction) + scale(teacher_selection_deployment) + scale(teacher_support) + scale(teaching_evaluation) + scale(teacher_monitoring) + scale(intrinsic_motivation) + scale(standards_monitoring) + scale(sch_monitoring) + scale(sch_management_clarity) + scale(sch_management_attraction) + scale(sch_selection_deployment) + scale(sch_support) + scale(principal_evaluation)'
+politics <- 'scale(quality_bureaucracy) + scale(national_learning_goals) + scale(impartial_decision_making) + scale(mandates_accountability)'
+
+baseline_pract_pol_bur <-  as.formula(paste0('scale(student_knowledge)', "~",practices," + ", policies," + ", politics, " + rural + log(GDP) + students_enrolled | country"))
+
+m <- feols(baseline_pract_pol_bur , data=anova_imp, cluster='hashed_school_district')
+
+plot <-modelplot(m, coef_omit = 'Interc',
+          coef_map = c(
+                            "scale(mandates_accountability)"= "Mandates & Accountability",
+                            "scale(impartial_decision_making)" = "Impartial Decision Making",
+                            "scale(national_learning_goals)" = "National Learning Goals",
+                            "scale(quality_bureaucracy)" = "Characteristics of Bureaucracy",
+                            "scale(principal_evaluation)" = "School Management Evaluation",
+                            "scale(sch_support)" = "School Management Support",
+                            "scale(sch_selection_deployment)" = "School Management Selection & Deployment",
+                            "scale(sch_management_attraction)" = "School Management Attraction",
+                            "scale(sch_management_clarity)" = "Clarity of Functions",
+                            "scale(sch_monitoring)" = "Monitoring",
+                            "scale(standards_monitoring)" = "Standards",
+                            "scale(intrinsic_motivation)" = "Teacher Intrinsic Motivation",
+                            "scale(teacher_monitoring)" = "Teacher Monitoring & Accountability",
+                            "scale(teaching_evaluation)" = "Teacher Evaluation",
+                            "scale(teacher_support)" = "Teacher Support",
+                            "scale(teacher_selection_deployment)" = "Teacher Selection & Deployment",
+                            "scale(teacher_attraction)" = "Teacher Attraction",
+                            "scale(principal_management)" = "Principal Management",
+                            "scale(principal_knowledge_score)" = "Principal Knowledge",
+                            "scale(instructional_leadership)" = "Instructional Leadership",
+                            "scale(operational_management)" = "Operational Management",
+                            "scale(student_attendance)"="Student Attendance",
+                            "scale(ecd_student_knowledge)" = "1st Grade Student Knowledge",
+                            "scale(infrastructure)" = "Basic Infrastructure",
+                            "scale(inputs)" = "Basic Inputs",
+                            "scale(teach_score)" = "Teacher Pedagogy",
+                            "scale(content_knowledge)" = "Teacher Content Knowledge",
+                            "scale(presence_rate)"  = "Teacher Presence"
+  
+                            )) +
+  geom_vline(xintercept = 0) +
+  labs(
+    title=str_wrap("Standardized Coefficients from Regression of 4th Grade Learning on Practices, Policies, and Politics", 60),
+    caption=str_wrap('OLS multiple regression of 4th grade student knowledge on practices, policies, and politics variables. Missing data is imputed using regression forest imputation method. N=1162.  Regressions include country fixed effects, urban/rural status, student enrollment, log GDP within 5km of school.  Confidence intervals formed using heteroskedasticity robust standard errors',110)
+  ) 
+
+
+
+#colorize the axis text
+
+col  <- c(
+                            "scale(mandates_accountability)"= "#264653",
+                            "scale(impartial_decision_making)" = "#264653",
+                            "scale(national_learning_goals)" = "#264653",
+                            "scale(quality_bureaucracy)" = "#264653",
+                            "scale(principal_evaluation)" = "#2a9d8f",
+                            "scale(sch_support)" = "#2a9d8f",
+                            "scale(sch_selection_deployment)" = "#2a9d8f",
+                            "scale(sch_management_attraction)" = "#2a9d8f",
+                            "scale(sch_management_clarity)" = "#2a9d8f",
+                            "scale(sch_monitoring)" = "#2a9d8f",
+                            "scale(standards_monitoring)" = "#2a9d8f",
+                            "scale(intrinsic_motivation)" = "#2a9d8f",
+                            "scale(teacher_monitoring)" = "#2a9d8f",
+                            "scale(teaching_evaluation)" = "#2a9d8f",
+                            "scale(teacher_support)" = "#2a9d8f",
+                            "scale(teacher_selection_deployment)" = "#2a9d8f",
+                            "scale(teacher_attraction)" = "#2a9d8f",
+                            "scale(principal_management)" = "#e76f51",
+                            "scale(principal_knowledge_score)" = "#e76f51",
+                            "scale(instructional_leadership)" = "#e76f51",
+                            "scale(operational_management)" = "#e76f51",
+                            "scale(student_attendance)"="#e76f51",
+                            "scale(ecd_student_knowledge)" = "#e76f51",
+                            "scale(infrastructure)" = "#e76f51",
+                            "scale(inputs)" = "#e76f51",
+                            "scale(teach_score)" = "#e76f51",
+                            "scale(content_knowledge)" = "#e76f51",
+                            "scale(presence_rate)"  = "#e76f51"
+)
+
+axis_text_color <- function(plot) {
+  c <- ggplot_build(plot)$data[[1]]
+  plot +
+    theme(axis.text.y = element_text(colour = col,
+                                     size=10))
+}
+
+axis_text_color(plot)
+
+```
+
 
 
