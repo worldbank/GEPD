@@ -22,89 +22,89 @@ library(here)
 # User Inputs for API #
 ######################################
 
-# Here you need to indicate the path where you replicated the folder structures on your own computer
-here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
-
-#user credentials
-#Check whether password.R file is in Github repo
-pw_file<-here::here("password.R")
-if (file.exists(pw_file)) {
-  source(pw_file)
-} else {
-  #these credentials may need to be entered
-  user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
-  password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
-}
-
-#Survey Solutions Server address
-#e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://gepdrwa.mysurvey.solutions')$res
-
-#questionnaire version
-#e.g. quest_version<-8
-quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter integer')$res 
-
-#path and folder where the .zip file will be stored
-#this needs to be entered
-#Please note that the following directory path may need to be created
-
-
-currentDate<-Sys.Date()
-
-tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
-  
-######################################
-# Interactions with API
-######################################
-  
-#Get list of questionnaires available
-#the server address may need to be modified
-q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
-       authenticate(user, password))
-
-str(content(q))
-
-
-#pull data from version of our Education Policy Dashboard Questionnaire
-POST(paste(server_add,"/api/v1/export/paradata/f5366202a24043d59d85dbf14fb0a32d$",quest_version,"/start", sep=""),
-     authenticate(user, password))
-
-
-#sleep for 10 seconds to wait for stata file to compile
-Sys.sleep(10)
-
-dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/f5366202a24043d59d85dbf14fb0a32d$", quest_version,"/",sep=""),
-                    authenticate(user, password))
-
-redirectURL <- dataDownload$url 
-RawData <- GET(redirectURL) #Sucess!!
-
-
-#Now save zip to computer
-filecon <- file(file.path(download_folder, tounzip), "wb")
-
-writeBin(RawData$content, filecon) 
-#close the connection
-close(filecon)
-
-
-
-#unzip
-
-#unzip
-if (quest_version==17) {
-  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
-  
-} else if  (quest_version==16) {
-  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
-  
-} else if  (quest_version==18) {
-  unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
-  
-} else {
-  unzip(file.path(download_folder, tounzip), exdir=download_folder)
-}
-
+# # Here you need to indicate the path where you replicated the folder structures on your own computer
+# here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
+# 
+# #user credentials
+# #Check whether password.R file is in Github repo
+# pw_file<-here::here("password.R")
+# if (file.exists(pw_file)) {
+#   source(pw_file)
+# } else {
+#   #these credentials may need to be entered
+#   user<-rstudioapi::askForPassword(prompt = 'Please enter API username:')
+#   password <- rstudioapi::askForPassword(prompt = 'Please enter API password:')
+# }
+# 
+# #Survey Solutions Server address
+# #e.g. server_add<-"https://gepd.mysurvey.solutions"
+# server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://gepdrwa.mysurvey.solutions')$res
+# 
+# #questionnaire version
+# #e.g. quest_version<-8
+# quest_version<-svDialogs::dlgInput("Please enter Questionnaire Version:", 'Enter integer')$res 
+# 
+# #path and folder where the .zip file will be stored
+# #this needs to be entered
+# #Please note that the following directory path may need to be created
+# 
+# 
+# currentDate<-Sys.Date()
+# 
+# tounzip <- paste("myparadata-",currentDate, ".zip" ,sep="")
+#   
+# ######################################
+# # Interactions with API
+# ######################################
+#   
+# #Get list of questionnaires available
+# #the server address may need to be modified
+# q<-GET(paste(server_add,"/api/v1/questionnaires", sep=""),
+#        authenticate(user, password))
+# 
+# str(content(q))
+# 
+# 
+# #pull data from version of our Education Policy Dashboard Questionnaire
+# POST(paste(server_add,"/api/v1/export/paradata/f5366202a24043d59d85dbf14fb0a32d$",quest_version,"/start", sep=""),
+#      authenticate(user, password))
+# 
+# 
+# #sleep for 10 seconds to wait for stata file to compile
+# Sys.sleep(10)
+# 
+# dataDownload <- GET(paste(server_add,"/api/v1/export/paradata/f5366202a24043d59d85dbf14fb0a32d$", quest_version,"/",sep=""),
+#                     authenticate(user, password))
+# 
+# redirectURL <- dataDownload$url 
+# RawData <- GET(redirectURL) #Sucess!!
+# 
+# 
+# #Now save zip to computer
+# filecon <- file(file.path(download_folder, tounzip), "wb")
+# 
+# writeBin(RawData$content, filecon) 
+# #close the connection
+# close(filecon)
+# 
+# 
+# 
+# #unzip
+# 
+# #unzip
+# if (quest_version==17) {
+#   unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_17', sep="/"))
+#   
+# } else if  (quest_version==16) {
+#   unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
+#   
+# } else if  (quest_version==18) {
+#   unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_16', sep="/"))
+#   
+# } else {
+#   unzip(file.path(download_folder, tounzip), exdir=download_folder)
+# }
+# 
 
 #########################################
 # Read in paradata and do basic cleaning
@@ -113,12 +113,14 @@ if (quest_version==17) {
 #read in data
 
 
-  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t")
-  para_df_18<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t") %>%   
+    mutate(across(everything(), as.character))
 
-  para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
-  para_df_16<-read.delim(paste(paste(download_folder,'version_16', sep="/"), "paradata.tab", sep="/"), sep="\t")
-  
+  # para_df_18<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  # 
+  # para_df_17<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  # para_df_16<-read.delim(paste(paste(download_folder,'version_16', sep="/"), "paradata.tab", sep="/"), sep="\t")
+  # 
   #para_df <-  bind_rows(para_df,para_df_17, para_df_16)
   
 
@@ -143,7 +145,7 @@ label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 ######################################
 #clean up timestamp
 para_df <- para_df %>% 
-  mutate(timestamp= ymd_hms(timestamp))
+  mutate(timestamp= ymd_hms(timestamp_utc))
 
 #Generate length of time for each question, by calculating gap in time between when question was entered and previous question
 para_df <- para_df %>% 
@@ -172,7 +174,7 @@ para_df <- para_df %>%
   mutate(indicator = str_to_upper(indicator))
 
 #Read in list of indicators
-indicators <- read_delim(here::here("Indicators","indicators.md"), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators.md', delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -230,7 +232,9 @@ write_dta(para_dta, path=paste(save_folder, "paradata.dta", sep="/"))
 
 para_df_section <- para_df %>% 
   group_by(ï..interview__id, section) %>% 
-  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec))
+  summarise(responsible=first(responsible), date=first(date), module=first(module), timelength_sec=sum(timelength_sec)) %>% 
+  ## AC - TO LOOK AT LATER
+  filter(timelength_sec>0)
 
 para_df_tab <- para_df %>%
   select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id) %>%
@@ -243,16 +247,18 @@ para_df_module <- para_df %>%
   summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec))
 
 school_dta_preamble_id <- school_dta %>%
-  select(interview__id, interview__key, school_code, school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon )
+  select(interview__id, interview__key, school_emis_preload, school_name_preload, school_province_preload, school_district_preload, lat, lon ) %>% 
+  mutate(across(everything(), as.character))
 
 school_modules_complete <- para_df_module %>%
   mutate(interview__id=ï..interview__id) %>%
   ungroup() %>%
   select(-c('ï..interview__id', 'timelength_sec')) %>%
+  mutate(interview__id = as.character(interview__id)) %>% 
   left_join(school_dta_preamble_id) %>%
   mutate(value='Yes') %>%
   pivot_wider(names_from=module, values_from = value) %>%
-  group_by(school_code) %>%
+  group_by(school_emis_preload) %>%
   mutate(interview__key1=first(interview__key),
          interview__key2=nth(interview__key,2),
          interview__key3=nth(interview__key,3),
@@ -265,11 +271,11 @@ school_modules_complete <- para_df_module %>%
          responsible4=nth(responsible,4),
          responsible5=nth(responsible,5)) %>%
   summarise_all(~first(na.omit(.))) %>%
-  select(school_code, M1, M2, M3, M4, M5, M6, M7, M8,  
+  select(school_emis_preload, M1, M2, M3, M4, M5, M6, M7, M8,  
          responsible1, responsible2, responsible3, responsible4, responsible5,  
          interview__key1, interview__key2, interview__key3, interview__key4, interview__key5,
-         school_name_preload, school_address_preload, school_province_preload, school_district_preload, lat, lon) %>%
-  arrange(school_code)
+         school_name_preload, school_province_preload, school_district_preload, lat, lon) %>%
+  arrange(school_emis_preload)
   
 
 save(para_df_section, para_df_tab, school_modules_complete, file=paste(save_folder, "paradata_light.RData", sep="/"))

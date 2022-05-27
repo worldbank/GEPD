@@ -45,11 +45,11 @@ vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number= as.double(m1s0q1_number_other) ,
+        # enumerator_number= as.double(m1s0q1_number_other) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
+         school_code=if_else(!is.na(school_emis_preload),as.double(school_emis_preload), as.double(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7
   ) %>%
@@ -60,7 +60,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators.md', delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -70,8 +70,8 @@ indicator_names <- indicators$indicator_tag
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info <- c( 'interview__key', 'school_code',
-                   'school_name_preload', 'school_address_preload', 
-                   'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                   'school_name_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                    'survey_time', 'lat', 'lon' , 'total_enrolled' 
                    )
@@ -828,7 +828,7 @@ assess_4th_grade_anon <- assess_4th_grade_dta %>%
 assess_4th_grade_metadata <- makeVlist(assess_4th_grade_dta)
 
 
-save(assess_4th_grade_anon, assess_4th_grade_metadta, 
+save(assess_4th_grade_anon, assess_4th_grade_metadata, 
      file = file.path(save_folder, "dashboard_4th_grade_assessment_data.RData"))
 
 
@@ -1079,12 +1079,12 @@ school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
   group_by(school_code) %>%
   summarise(used_ict_pct=mean(m3sbq4_inpt, na.rm=TRUE))
 
-school_data_INPT <- school_data_INPT %>%
-  mutate(used_ict_num=case_when(
-    m1sbq12_inpt==0  ~ 0,
-    (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
-    (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
-  ))
+# school_data_INPT <- school_data_INPT %>%
+#   mutate(used_ict_num=case_when(
+#     m1sbq12_inpt==0  ~ 0,
+#     (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
+#     (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
+#   ))
 
 #access to ICT
 school_data_INPT <- school_data_INPT %>%
@@ -1788,11 +1788,11 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
 #   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
 
 school_data_ISTD <- school_data_IMON %>%
-  mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
+  mutate(standards_mon_inp=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                     pattern="m1scq13_imon__")], na.rm=TRUE),
-         standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
+         standards_mon_inf=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                              pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
-  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2)
+  mutate(standards_monitoring=(standards_mon_inp*6+standards_mon_inf*4)/2)
 
 
 final_indicator_data_ISTD <- school_data_ISTD %>%
@@ -2013,14 +2013,14 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
 #first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
 #list additional info that will be useful to keep in each indicator dataframe
 drop_info <- c('interview__id', 'interview__key',                    
-               'school_name_preload', 'school_address_preload', 
-               'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+               'school_name_preload', 
+               'school_province_preload', 'school_district_preload', 'school_emis_preload',
                'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                'survey_time', 'lat', 'lon' )
 
 keep_info <-       c('school_code',
-                     'school_name_preload', 'school_address_preload', 
-                     'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                     'school_name_preload', 
+                     'school_province_preload', 'school_district_preload', 'school_emis_preload',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                      'survey_time', 'lat', 'lon', 'total_enrolled')
 
@@ -2035,7 +2035,12 @@ school_data_preamble_short<-school_data_preamble %>%
   select(keep_info) %>%
   summarise_all(~first(na.omit(.)))
 
-final_school_data <- school_data_preamble_short
+final_school_data <- school_data_preamble_short  
+
+## AC - some renaming for stata
+school_data_ISTD <- school_data_ISTD %>% 
+  rename(standards_mon_inf = standards_monitoring_infrastructure,
+         standards_mon_inp = standards_monitoring_input )
 
 
 for (i in indicator_names ) {
@@ -2069,7 +2074,6 @@ for (i in indicator_names ) {
     }
   }
 }
-
 
 #add male/female breakdowns to ind_data_list
 if (graded_data=='yes') {
@@ -2119,6 +2123,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
 
 final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
+  select(-grade) %>% 
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   select(keep_info, one_of(ind_list), everything())

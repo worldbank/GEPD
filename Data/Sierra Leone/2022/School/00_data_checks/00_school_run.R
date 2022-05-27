@@ -37,7 +37,7 @@ year <- '2022'
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
 
-backup_onedrive="no"
+backup_onedrive="yes"
 
 #Add your UPI here and set the directory paths of your choice.
 if (Sys.getenv("USERNAME") == "wb469649"){
@@ -60,7 +60,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   
   # This is experimental and not currently in use.
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/School", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/School_Survey", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -77,10 +77,10 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # change name of school file
-school_file<-"EPDash_RWA.dta"
+school_file<-"EPDash.dta"
 
 # #launch file to access data from API
-source('01_school_api.R', local=TRUE)
+#source('01_school_api.R', local=TRUE)
  
 # #launch file to clear data=
 source('02_school_data_cleaner.R', local=TRUE)
@@ -92,6 +92,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source('03_school_paradata.R', local=TRUE)
 
  #create R markdown file with quality checks
- rmarkdown::render('04_school_data_quality_checks.Rmd',  
-                   output_file =  paste("school_data_quality_checks_",country_name,".html", sep=''), 
+ rmarkdown::render('04_school_data_quality_checks.Rmd',
+                   output_file =  paste("school_data_quality_checks_",country_name,".html", sep=''),
                    output_dir = save_folder_onedrive)
+ 
