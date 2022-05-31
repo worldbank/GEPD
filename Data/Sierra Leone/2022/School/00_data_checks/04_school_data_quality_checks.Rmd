@@ -62,28 +62,28 @@ A useful check is to examine the length of time that passes between questions in
 #   select( responsible, date, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id)
 
 # linked_q_df<-SharedData$new(para_df_tab)
-# 
-# 
+#
+#
 # bscols(widths=c(3,NA),
 #        list(
 #          filter_slider("time", "Length in Seconds", linked_q_df, ~timelength_sec),
 #          filter_select("enumerator", "Enumerator", linked_q_df, ~responsible),
 #          filter_checkbox("date", "Date of Survey", linked_q_df, ~as.character(date), inline=FALSE),
 #          filter_checkbox("module", "Module", linked_q_df, ~module, inline=FALSE)
-#          
+#
 #        ),
-#       
+#
 #        list (
 #          plot_ly(linked_q_df, x=~responsible, y=~timelength_sec, type='scatter', mode='markers', color=~question) %>%
 #            layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Enumerator ID'))
-#          # datatable(linked_q_df, 
+#          # datatable(linked_q_df,
 #          #           colnames=c( 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
 #          #                    'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
 #          #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
 #          #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
-#          
+#
 #        )
-#        
+#
 # )
 
 ######################################
