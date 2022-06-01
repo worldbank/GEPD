@@ -290,7 +290,7 @@ TATT_rules <- validator(
   teacher_satisfied_status=in_range(teacher_satisfied_status,0,1),
   better_teachers_promoted=in_range(better_teachers_promoted,0,1),
   teacher_bonus=in_range(teacher_bonus,0,1),
-  salary_delays=in_range(salary_delays,0,1),
+  salary_delays=in_range(salary_delays,0,12),
   teacher_attraction=in_range(teacher_attraction,1,5)
 )
 
@@ -335,6 +335,31 @@ TMNA_rules <- validator(
   miss_class_admin=in_range(miss_class_admin,0,1),
   teacher_monitoring=in_range(teacher_monitoring,1,5)
 )
+
+TINM_rules <- validator(
+  acceptable_absent=in_range(acceptable_absent,1,5),
+  students_deserve_attention=in_range(students_deserve_attention,1,5),
+  growth_mindset=in_range(growth_mindset,1,5),
+  motivation_teaching=in_range(motivation_teaching,0,1),
+  reason_teaching=in_range(bin_var(m3sdq2_tmna,1),0,1),
+  intrinsic_motivation=in_range(intrinsic_motivation,1,5)
+)
+
+# Input Standards
+ISTD_rules <- validator(
+  standards_monitoring_input=in_range(standards_monitoring_input,0,1),
+  standards_monitoring_infrastructure=in_range(standards_monitoring_infrastructure,0,1),
+  standards_monitoring=in_range(standards_monitoring,1,5)
+)
+# Input Monitoring
+IMON_rules <- validator(
+  monitoring_inputs=in_range(monitoring_inputs,0,1),
+  monitoring_infrastructure=in_range(monitoring_infrastructure,0,1),
+  system_in_place=in_range(system_in_place,0,1),
+  parents_involved=in_range(parents_involved,0,1),  
+  sch_monitoring=in_range(sch_monitoring,1,5)
+)
+
 
 ```
 
@@ -2363,10 +2388,170 @@ out <- confront(final_indicator_data_TMNA, TMNA_rules)
 summary(out)
 plot(out)
 ```
+## Intrinsic Motivation
 
+```{r}
+
+#############################################
+##### Teacher  Intrinsic Motivation ###########
+#############################################
+
+# 
+# School Survey. This lever measures whether teachers are intrinsically motivated to teach. The question(s) aim to address this 
+# phenomenon by measuring the level of intrinsic motivation among teachers as well as teacher values that may be relevant for 
+# ensuring that the teacher is motivated to focus on all children and not just some. Average score (1 (worst) - 5 (best)) on items 
+# given to teachers on intrinsic motivation.
+
+intrinsic_motiv_q_rev <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
+                           'm3scq7_tinm', 'm3scq10_tinm')
+
+intrinsic_motiv_q <- c( 'm3scq11_tinm', 'm3scq14_tinm')
+
+intrinsic_motiv_q_all <- c('m3scq1_tinm','m3scq2_tinm', 'm3scq3_tinm', 'm3scq4_tinm', 'm3scq5_tinm', 'm3scq6_tinm',
+                           'm3scq7_tinm', 'm3scq10_tinm', 'm3scq11_tinm', 'm3scq14_tinm')
+
+teacher_questionnaire_TINM2 <- teacher_questionnaire_TMNA %>%
+  dplyr::select(school_code, preamble_info_teacher, m3sdq2_tmna)
+
+intrinsic_motivation_df <- teacher_questionnaire_TINM %>%
+  left_join(teacher_questionnaire_TINM2) %>%
+  mutate(n_mssing_TINM=n_miss_row(.)) %>%
+  mutate(    
+    SE_PRM_TINM_1 = 100*if_else(m3scq1_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+    SE_PRM_TINM_2 = 100*if_else(m3scq2_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+    SE_PRM_TINM_3 = 100*if_else(m3scq3_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+    SE_PRM_TINM_4 = 100*if_else(m3scq4_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+    SE_PRM_TINM_5 = 100*if_else(m3scq5_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
+    SE_PRM_TINM_6 = 100*if_else(m3scq6_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
+    SE_PRM_TINM_7 = 100*if_else(m3scq7_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+    SE_PRM_TINM_8 = 100*if_else(m3scq10_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+    SE_PRM_TINM_9 = 100*if_else(m3scq11_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+    SE_PRM_TINM_10 = 100*if_else(m3scq14_tinm>=3,1,0) #(De Facto) Percent of teachers that agree or strongly agrees with /"Students can change even their basic intelligence l~
+  ) %>%
+  mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
+  mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
+  mutate(acceptable_absent=(m3scq1_tinm+ m3scq2_tinm + m3scq3_tinm)/3,
+         students_deserve_attention=(m3scq4_tinm+ m3scq5_tinm + m3scq6_tinm )/3,
+         growth_mindset=(m3scq7_tinm + m3scq10_tinm + m3scq11_tinm + m3scq14_tinm)/4,
+         motivation_teaching=case_when(
+           m3scq15_tinm__3>=1 ~ 0,
+           (m3scq15_tinm__3!=1 & (m3scq15_tinm__1>=1 | m3scq15_tinm__2>=1 | m3scq15_tinm__4>=1 & m3scq15_tinm__5>=1)) ~ 1,
+           TRUE ~ as.numeric(NA)
+         )) %>%
+  mutate(intrinsic_motivation=1+0.8*(0.2*acceptable_absent + 0.2*students_deserve_attention + 0.2*growth_mindset + motivation_teaching+bin_var(m3sdq2_tmna,1))) 
+
+
+final_indicator_data_TINM <- intrinsic_motivation_df %>%
+  group_by(school_code) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+  select(-drop_teacher_info)  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+
+  
+
+ggpairs(intrinsic_motivation_df, columns=c(
+                                             "acceptable_absent", "students_deserve_attention", "growth_mindset",
+                                             "motivation_teaching", "m3sdq2_tmna",
+                                             "intrinsic_motivation"), title="Teacher Intrinsic Motivation ") +
+  theme_bw()
+
+
+#validate 
+out <- confront(intrinsic_motivation_df, TINM_rules)
+summary(out)
+plot(out)
+```
+# Input and Infrastructure Policies
+
+```{r}
+#############################################
+##### School  Inputs and Infrastructure Standards ###########
+#############################################
+#   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
+
+school_data_ISTD <- school_data_IMON %>%
+  mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                    pattern="m1scq13_imon__")], na.rm=TRUE),
+         standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                             pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
+  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2)
+
+
+final_indicator_data_ISTD <- school_data_ISTD %>%
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_ISTD=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+ggpairs(final_indicator_data_ISTD, columns=c(
+                                             "standards_monitoring_infrastructure", 
+                                             "standards_monitoring_input",
+                                             "standards_monitoring"), title="Standards ") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_ISTD, ISTD_rules)
+summary(out)
+plot(out)
+```
+
+```{r}
+#############################################
+##### School  Inputs and Infrastructure Monitoring ###########
+#############################################
+
+# School Survey. A score of 1-5 based on 3 factors. Each factor has received an equal weight in terms of points. The factors are the following: 
+#-	Someone is monitoring 
+#-	System for monitoring available (E.g. inventory)
+#-	Community involved in monitoring 
+
+
+school_data_IMON <- school_data_IMON %>%
+  mutate(m1scq3_imon=bin_var(m1scq3_imon,1),
+         system_in_place=case_when(
+           m1scq5_imon==0 ~ 0,
+           m1scq5_imon==1 ~ 1,
+           m1scq5_imon==2 ~ 0.5,
+           TRUE ~ 0
+         )) %>%
+  mutate(monitoring_inputs=if_else(m1scq1_imon==1,
+                                   rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                   pattern="m1scq4_imon__")], na.rm=TRUE),
+                                   0),
+         monitoring_infrastructure=if_else(m1scq7_imon==1,
+                                           rowMeans(.[grep(x=colnames(school_data_IMON), 
+                                                           pattern="m1scq9_imon__")], na.rm=TRUE),
+                                           0),
+  ) %>%
+  mutate(parents_involved=if_else(m1scq3_imon==1,1,0,0)) %>%
+  mutate(sch_monitoring=1+(monitoring_inputs+monitoring_infrastructure)/2+system_in_place+parents_involved)
+
+
+
+final_indicator_data_IMON <- school_data_IMON %>%
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_IMON=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+ggpairs(final_indicator_data_IMON, columns=c(
+                                             "monitoring_inputs", 
+                                             "monitoring_infrastructure",
+                                             "system_in_place",
+                                             "parents_involved",
+                                             "sch_monitoring"), title="Monitoring ") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_IMON, IMON_rules)
+summary(out)
+plot(out)
+```
 
 # School Management POlicies
 
-# Input and Infrastructure Policies
 
 #
