@@ -540,3 +540,64 @@ write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_scho
 
 
 ```
+
+Select additional replacements from safe departments due to security issues June 1,2022.
+
+
+```{r}
+safe_department<- c('FILINGUE','KOLLO','BALLEYARA', 'TORODI')
+
+#define sampled schools in sample dataset
+sample_chosen2 <- sample_replace %>%
+  bind_rows(sample_chosen)  
+
+#add sample schools back to original database
+data_set_updated_chosen_til <- df_updated %>%
+  left_join(sample_chosen2) 
+
+#get list of tehsil
+sampled_districts <- sample_chosen2 %>%
+  filter(sample=="Sampled School") %>%
+  filter(REGION=='TILLABERY') %>%
+  filter(!(DEPARTEMENT %in% safe_department)) %>%
+  group_by( REGION,urban_rural, LIRE) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace_til <- data_set_updated_chosen_til %>%
+  select(-sampled_districts) %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  filter((DEPARTEMENT %in% safe_department)) %>%
+  group_by(REGION,urban_rural,LIRE) %>% 
+  mutate(total_students=if_else(is.na(total_students), mean(total_students, na.rm=TRUE),total_students)) %>% #if missing total number of students, then impute with mean of the strata
+  sample_n(2*sampled_districts, weight=total_students) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(REGION,urban_rural,LIRE, NOM_ETABLISSEMENT) %>%
+  select(-starts_with('replaced_')  )
+
+
+
+sample_replace2 <- sample_chosen %>%   filter(REGION=='TILLABERY') %>%  filter(!(DEPARTEMENT %in% safe_department)) %>%
+    bind_rows(sample_chosen %>% filter(REGION=='TILLABERY') %>% filter(!(DEPARTEMENT %in% safe_department))) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(REGION,urban_rural,LIRE, NOM_ETABLISSEMENT ) 
+
+
+#add in school info for school that will be replaced
+sample_replace_til$replaced_NOM_ETABLISSEMENT=sample_replace2$NOM_ETABLISSEMENT
+sample_replace_til$replaced_CODE_ETABLISSEMENT=sample_replace2$CODE_ETABLISSEMENT
+sample_replace_til$replaced_REGION=sample_replace2$REGION
+sample_replace_til$replaced_DEPARTEMENT=sample_replace2$DEPARTEMENT
+sample_replace_til$replaced_COMMUNE=sample_replace2$COMMUNE
+
+
+sample_replace_til <- sample_replace_til %>%
+  select(NOM_ETABLISSEMENT, CODE_ETABLISSEMENT, REGION, DEPARTEMENT, COMMUNE, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_REGION,replaced_DEPARTEMENT ,replaced_COMMUNE, everything())
+
+write_excel_csv(sample_replace_til, paste(sampling_folder, '/sample_replacement_schools_TILLABERY_', Sys.Date(),  '.csv', sep=""))
+
+
+```
+
