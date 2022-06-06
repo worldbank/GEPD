@@ -119,15 +119,15 @@ public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My 
   
   
   commune_list_sample <- commune_list%>%
-    dplyr::select(REGION, COMMUNE) %>% 
+    dplyr::select(REGION, COMMUNE) 
   
   # CANNOT DO IT BECAUSE WE DO NOT HAVE ADMIN CODE AND THE MATCHING ON STRING IS INEFFICIENT 
   #%>%
-  left_join(public_officials_list %>%
-              mutate(REGION=str_trim(str_to_upper(REGION)),
-                     COMMUNE=str_trim(str_to_upper(COMMUNE)))) %>%
-  group_by(COMMUNE) %>%
-  slice_sample(n=5)
+  # left_join(public_officials_list %>%
+  #             mutate(REGION=str_trim(str_to_upper(REGION)),
+  #                    COMMUNE=str_trim(str_to_upper(COMMUNE)))) %>%
+  # group_by(COMMUNE) %>%
+  # slice_sample(n=5)
 
   
   #save as csv
@@ -136,7 +136,7 @@ public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My 
             options = list(pageLength = 21),
             caption="Communes selectionnees pour l'enquete des fonctionnaires")
 
-  write_excel_csv(commune_list_sample,dist_frame_name) 
+  #write_excel_csv(commune_list_sample,dist_frame_name) 
 
 ```
 
