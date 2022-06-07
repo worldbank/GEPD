@@ -87,7 +87,7 @@ public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My 
 ```{r communes}
 
   #From within regions, assign how many communes to visit
-  commune_list <- sample_updated %>%
+  commune_list_bis <- sample_updated %>%
   select(REGION, n_students) %>% 
   distinct(REGION, .keep_all=T) %>% 
   ungroup() %>%
@@ -95,7 +95,7 @@ public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My 
 
 
 
-  commune_list <- commune_list %>% 
+  commune_list_bis <- commune_list_bis %>% 
     mutate(N_commune_to_sample=case_when(
       REGION=="DOSSO" ~3,
       REGION=="MARADI" ~6,
@@ -110,11 +110,13 @@ public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My 
 
     
   commune_list<- sample_updated %>%
+    # delete communes missing
+    # filter(COMMUNE!="DAOUTCHE") %>% 
     group_by(REGION, COMMUNE) %>%
     mutate(n_schools_commune=n()) %>%
     summarise_all(first) %>%
-        group_by(REGION) %>%
-    left_join(commune_list, by="REGION") %>%
+    group_by(REGION) %>%
+    left_join(commune_list_bis, by="REGION") %>%
     sample_n(N_commune_to_sample) 
   
   
@@ -140,6 +142,52 @@ public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My 
 
 ```
 
+```{r}
+# Replacement Communes
+
+# Below is a list of replacement communes for each sampled communes. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+#define sampled schools in sample dataset
+sample_chosen <- commune_list_sample %>%
+  mutate(sample="Sampled Commune") 
+#add sample schools back to original database
+data_set_updated_chosen <- sample_updated %>%
+  left_join(sample_chosen) 
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by(REGION,COMMUNE) %>% 
+  summarise(sampled_districts=n()
+  )
+# select one replacement per region
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(is.na(sampled_districts)) %>%
+group_by(REGION, COMMUNE) %>%
+  mutate(n_schools_commune=n()) %>%
+  summarise_all(first) %>%
+  group_by(REGION) %>%
+  left_join(commune_list_bis, by="REGION") %>%
+  sample_n(N_commune_to_sample, replace = T) %>% #select two replacement schools
+  mutate(sample='Replacement Commune') %>%
+  arrange(REGION,COMMUNE, sample) 
+
+sample_replace2 <- sample_chosen %>%
+  bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+  bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+  arrange(REGION,COMMUNE) 
+#add in school info for school that will be replaced
+sample_replace$replaced_COMMUNE=sample_chosen$COMMUNE
+sample_replace$replaced_REGION=sample_chosen$REGION
+sample_replace %>%
+  select(COMMUNE,REGION, replaced_COMMUNE, replaced_REGION) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+sample_replace <- sample_replace %>%
+  select(COMMUNE,REGION, replaced_COMMUNE, replaced_REGION)
+
+write_excel_csv(sample_replace, paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Niger/Preparatory_work/Sampling/public_officials/sample_replacement_communes_", Sys.Date(),  '.csv', sep=""))
+```
 
 
 
