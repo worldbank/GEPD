@@ -37,7 +37,7 @@ indicator_names <- indicators$indicator_tag
 
 
 #Get a list of enumerator names and IDs
-enumerator_id <- readxl::read_excel(path=file.path(download_folder, "Enumerator_ID_Survey of Public Officials - Sierra_Leone.xlsx")) %>%
+enumerator_id <- readxl::read_excel(path=file.path(download_folder, "Enumerator_ID_Survey of Public Officials - Niger.xlsx")) %>%
   transmute(m1s0q1_number_other = id ,
             enumerator_code=text )
 
@@ -71,7 +71,8 @@ public_officials_dta<- public_officials_dta %>%
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         govt_tier=factor(m1s0q2_name, levels=c(1,3), labels=c('Ministry of Education (or equivalent)', 
+         govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c('Ministry of Education (or equivalent)', 
+                                                                 'Regional office (or equivalent)',
                                                                'District office (or equivalent)')),
          consent=m1s2q2,
          occupational_category=DEM1q1,
@@ -236,7 +237,7 @@ public_officials_dta <- public_officials_dta %>%
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'interview__key', 'office_preload', 'govt_tier',
+preamble_info <- c('interview__id', 'interview__key', 'office_preload', 'govt_tier', 'location',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
@@ -364,7 +365,7 @@ write.csv(public_officials_dta_clean, file = file.path(save_folder, "public_offi
 #write_dta(public_officials_dta_clean, path = file.path(save_folder, "public_officials_survey_data.dta"), version = 14)
 
 
-keep_info <- c('interview__id','interview__key', 'office_preload', 'govt_tier',
+keep_info <- c('interview__id','interview__key', 'office_preload', 'location' ,'govt_tier',
                'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 

@@ -246,7 +246,7 @@ The following table shows the position of the individual interviewed in each off
 interviewed<- public_officials_dta_clean %>%
   mutate(ID = group_indices(., govt_tier, office_preload))  %>%
   arrange(govt_tier, office_preload) %>%
-  select(ID, govt_tier, office_preload,  position) 
+  select(ID, govt_tier, office_preload,  location) 
 ```
 
 

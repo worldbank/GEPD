@@ -29,8 +29,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 #Country name
 country <-'Sierra Leone'
-country_name <-'Sierra Leone'
-
+country_name <- "Sierra Leone"
 year <- '2022'
 
 #########################
@@ -50,7 +49,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   
 } else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work"
   
   download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/Public_Officials", sep="/"))
   save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/Public_Officials", sep="/"))

@@ -98,8 +98,10 @@ library(here)
 
 #read in data
 
-para_df<-read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Niger/2022/Data/raw/Public_Officials/paradata.tab", sep="\t") %>% 
-  mutate(across(everything(), as.character)) 
+para_df<-read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2022/Data/raw/Public_Officials/paradata_v3.tab", sep="\t") %>% 
+  mutate(across(everything(), as.character)) %>% 
+  bind_rows(read.delim("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Sierra Leone/2022/Data/raw/Public_Officials/paradata_v4.tab", sep="\t") %>% mutate(across(everything(), as.character)))
+
 #label variables
 var.labels=c(
   interview__id = "Unique 32-character long identifier of the interview",
@@ -127,7 +129,6 @@ para_df <- para_df %>%
   arrange(ï..interview__id, order) %>% 
   mutate(timelength=lag(timestamp) %--% timestamp) %>% 
   mutate(timelength_sec=int_length(timelength)) %>%
-  filter(timelength_sec<100000) %>% 
   mutate(date=date(timestamp),
          hour=hour(timestamp),
          am_pm=am(timestamp))
