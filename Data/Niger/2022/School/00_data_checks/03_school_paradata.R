@@ -113,7 +113,9 @@ library(here)
 #read in data
 
 
-  para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t") %>%   
+  para_df<-read.delim(paste(download_folder, "completed/paradata.tab", sep="/"), sep="\t")%>% 
+    bind_rows(read.delim(paste(download_folder, "approved_hq/paradata.tab", sep="/"), sep="\t")) %>% 
+    bind_rows(read.delim(paste(download_folder, "approved_supervisor/paradata.tab", sep="/"), sep="\t"))%>%   
     mutate(across(everything(), as.character))
 
   # para_df_18<-read.delim(paste(paste(download_folder,'version_17', sep="/"), "paradata.tab", sep="/"), sep="\t")
@@ -195,23 +197,37 @@ makeVlist <- function(dta) {
 
 
 #create school metadata frame
-raw_school_dta<-read_dta(file.path(download_folder, school_file))
+raw_school_dta<-read_dta(file.path(download_folder, "completed/EPDash.dta")) %>% 
+  bind_rows(read_dta(file.path(download_folder, "approved_hq/EPDash.dta"))) %>% 
+  bind_rows(read_dta(file.path(download_folder, "approved_supervisor/EPDash.dta"))) %>% 
+  ## If school information are incorrect or blank interview, then we replace the NAME and EMIS values
+  mutate(school_name_preload = if_else(as.numeric(school_info_correct) == 0, m1s0q2_name, school_name_preload),
+         school_emis_preload = if_else(as.numeric(school_info_correct) == 0, m1s0q2_emis, school_emis_preload),
+         school_code_preload = if_else(as.numeric(school_info_correct) == 0, m1s0q2_emis, school_code_preload))
 school_metadta<-makeVlist(raw_school_dta)
 
 #create teacher questionnaire metadata frame
-raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+raw_teacher_questionnaire<-read_dta(file.path(download_folder, "completed/questionnaire_roster.dta"))%>%
+  bind_rows(read_dta(file.path(download_folder, "approved_hq/questionnaire_roster.dta"))) %>% 
+  bind_rows(read_dta(file.path(download_folder, "approved_supervisor/questionnaire_roster.dta")))
 teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
 
 #create teacher absence metadata frame
-raw_teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "completed/TEACHERS.dta")) %>%
+  bind_rows(read_dta(file.path(download_folder, "approved_hq/TEACHERS.dta"))) %>% 
+  bind_rows(read_dta(file.path(download_folder, "approved_supervisor/TEACHERS.dta")))
 teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
 
 #create ecd metadata frame
-raw_ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+raw_ecd_dta<-read_dta(file.path(download_folder, "completed/ecd_assessment.dta"))%>%
+  bind_rows(read_dta(file.path(download_folder, "approved_hq/ecd_assessment.dta"))) %>% 
+  bind_rows(read_dta(file.path(download_folder, "approved_supervisor/ecd_assessment.dta")))
 ecd_metadta<-makeVlist(raw_ecd_dta)
 
 #create 4th grade assessment metadata frame
-raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "completed/fourth_grade_assessment.dta"))%>%
+  bind_rows(read_dta(file.path(download_folder, "approved_hq/fourth_grade_assessment.dta"))) %>% 
+  bind_rows(read_dta(file.path(download_folder, "approved_supervisor/fourth_grade_assessment.dta")))
 assess_4th_grade_metadta<-makeVlist(raw_assess_4th_grade_dta)
 
 metadata <- rbind(school_metadta, teacher_questionnaire_metadta, ecd_metadta, assess_4th_grade_metadta)
@@ -247,7 +263,7 @@ para_df_module <- para_df %>%
   summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec))
 
 school_dta_preamble_id <- school_dta %>%
-  select(interview__id, interview__key, school_emis_preload, school_name_preload, school_province_preload, school_district_preload, lat, lon ) %>% 
+  select(interview__id, interview__key, school_emis_preload, school_name_preload, school_province_preload, school_district_preload, m1s0q9__Latitude, m1s0q9__Longitude ) %>% 
   mutate(across(everything(), as.character))
 
 school_modules_complete <- para_df_module %>%
@@ -274,7 +290,7 @@ school_modules_complete <- para_df_module %>%
   select(school_emis_preload, M1, M2, M3, M4, M5, M6, M7, M8,  
          responsible1, responsible2, responsible3, responsible4, responsible5,  
          interview__key1, interview__key2, interview__key3, interview__key4, interview__key5,
-         school_name_preload, school_province_preload, school_district_preload, lat, lon) %>%
+         school_name_preload, school_province_preload, school_district_preload, m1s0q9__Latitude, m1s0q9__Longitude) %>%
   arrange(school_emis_preload)
   
 
