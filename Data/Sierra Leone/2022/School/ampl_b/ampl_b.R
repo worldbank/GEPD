@@ -108,7 +108,13 @@ ampl_b <- roster %>%
   relocate(ends_with("preload")) %>% 
   mutate(unique_id= paste0(unique_id, interview__id))
 
-preamble <- ampl_b %>% select(1:15, unique_id, starts_with("Item7")) %>% label_to_colnames(starts_with("Item7"))
+
+socio_eco <- ampl_b %>%  
+  select_if(.predicate = (grepl("ST", Hmisc::label(.), ignore.case = TRUE))) %>% select(-c(1))
+
+preamble <- ampl_b %>% select(1:15, unique_id) %>%
+   bind_cols(socio_eco)%>% label_to_colnames(starts_with("Item7|Item6"))
+
 
 key <- ampl_b %>% select(student_name, ends_with("id"), ends_with("key"))
 
@@ -203,21 +209,70 @@ df_list <- mget(ls(pattern = "^item_[A-Z].*"))
 
 final <- df_list %>% reduce(full_join, by = "unique_id")%>%
   select(unique_id, everything()) %>% 
-  left_join(preamble %>% select(-MM208, -MR003)) %>% 
+  left_join(preamble ) %>% 
   ## Add complex MM175
   left_join(MM175) %>% 
   relocate(names(preamble)) %>% 
   distinct(unique_id, .keep_all=T)
 
 n_distinct(final$unique_id)
+n_distinct(final$school_emis_preload)
+
+
+######################################
+# sample_combined <- read.csv("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT//SLE/SLE_2022_GEPD/SLE_2022_GEPD_v01_M/Data/Sampling/sample_schools_2022-05-08.csv") %>% 
+#   bind_rows(read.csv("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT//SLE/SLE_2022_GEPD/SLE_2022_GEPD_v01_M/Data/Sampling/sample_replacement_schools_2022-04-12.csv"))
+# 
+# #create weights for each school
+# data_set_updated <- sample_combined %>%
+#   mutate(N_sch=n()) %>% #get total number of schools
+#   #now calculate probability of selecting woreda
+#   group_by(idregion, iddistrict) %>%
+#   mutate(N_school_district=n(),
+#          N_students_district=sum(class4_combined,na.rm=T)) %>%
+#   group_by(idregion) %>%
+#   mutate(strat_total=sum(class4_combined, na.rm=T),
+#          N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
+#          N_sch_strata=n()) #stratum weights (three schools selected)
+# 
+# df_weights_function <- function(dataset,scode, snumber, prov) {
+#   scode<-enquo(scode)  
+#   snumber<-enquo(snumber)
+#   prov<-enquo(prov)
+#   
+#   dataset %>%
+#     mutate(!! scode := as.numeric(.data$school_code)) %>%
+#     left_join(weights_df %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list)  %>% filter(Zone %in% zone_list)  %>% filter(Woreda %in% woreda_list)  %>% filter(Program==1)) %>%
+#     left_join(data_set_updated %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list) %>% filter(Zone %in% zone_list)   %>% filter(Woreda %in% woreda_list) %>% filter(Program==1))  %>%
+#     mutate(
+#       N_schools=N_sch,
+#       N_schools_strata=N_sch_strata,
+#       N_selected_strata=N_sel_strata,
+#       school_weights=ipw,
+#       ipw=ipw*!! snumber,
+#       ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
+#     mutate(province=Region,
+#            urban_rural=Location
+#     ) %>%
+#     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
+#                                                         names(data_set_updated) == "owner" )])))
+# }
+
+
+
+
 
 
 ## Save the data
-write_dta(final %>% select(-student_name), file.path(save_folder, "amplb_sl.dta"))
-write.csv(final %>% select(-student_name), file.path(save_folder, "amplb_sl.csv"), row.names = F)
+write_dta(final %>% select(-student_name) %>% rename(assessment_y_n=`Was the student present during the assessment?`,
+                                                     type_booklet=`Type of booklet`), file.path(save_folder, "amplb_sl.dta"))
+write.csv(final %>% select(-student_name) %>% rename(assessment_y_n=`Was the student present during the assessment?`,
+                                                     type_booklet=`Type of booklet`), file.path(save_folder, "amplb_sl.csv"), row.names = F)
 
-write_dta(final, file.path(save_folder, "amplb_key_confidential_sl.dta"))
-write.csv(final, file.path(save_folder, "amplb_key_confidential_sl.csv"), row.names = F)
+write_dta(final %>% rename(assessment_y_n=`Was the student present during the assessment?`,
+                           type_booklet=`Type of booklet`), file.path(save_folder, "amplb_key_confidential_sl.dta"))
+write.csv(final%>% rename(assessment_y_n=`Was the student present during the assessment?`,
+                          type_booklet=`Type of booklet`), file.path(save_folder, "amplb_key_confidential_sl.csv"), row.names = F)
 
 
 
