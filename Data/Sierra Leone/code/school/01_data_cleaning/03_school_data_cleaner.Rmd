@@ -360,7 +360,44 @@ IMON_rules <- validator(
   sch_monitoring=in_range(sch_monitoring,1,5)
 )
 
+#clarity of functions
+SCFN_rules <- validator(
+  infrastructure_scfn=in_range(infrastructure_scfn,0,1),
+  materials_scfn=in_range(materials_scfn,0,1),
+  hiring_scfn=in_range(hiring_scfn,0,1),
+  supervision_scfn=in_range(supervision_scfn,0,1),  
+  student_scfn=in_range(student_scfn,0,1),  
+  principal_hiring_scfn=in_range(principal_hiring_scfn,0,1),  
+  supervision_scfn=in_range(supervision_scfn,0,1),  
+  sch_management_clarity=in_range(sch_management_clarity,1,5)
+)
 
+SATT_rules <- validator(
+  principal_satisfaction=in_range(principal_satisfaction,1,5),
+  principal_salary=principal_salary>0,
+  principal_salary_score=in_range(principal_salary_score,1,5),
+  sch_management_attraction=in_range(sch_management_attraction,1,5)
+)
+
+SSLD_rules <- validator(
+  sch_selection_deployment=in_range(sch_selection_deployment,1,5)
+)
+
+SSUP_rules <- validator(
+  prinicipal_trained=in_range(prinicipal_trained,0,1),
+  principal_training=in_range(principal_training,0,1),
+  principal_used_skills=in_range(principal_used_skills,0,1),
+  principal_offered=in_range(principal_offered,0,1),
+  sch_support=in_range(sch_support,1,5)
+)
+
+SEVL_rules <- validator(
+  principal_formally_evaluated=in_range(principal_formally_evaluated,0,1),
+  principal_evaluation_multiple=in_range(principal_evaluation_multiple,0,1),
+  principal_negative_consequences=in_range(principal_negative_consequences,0,1),
+  principal_positive_consequences=in_range(principal_positive_consequences,0,1),
+  principal_evaluation=in_range(principal_evaluation,1,5)
+)
 ```
 
 
@@ -1650,6 +1687,7 @@ out <- confront(final_indicator_data_INFR, INFR_rules)
 summary(out)
 plot(out)
 ```
+
 # School Management
 
 ## Operational Management
@@ -2475,7 +2513,7 @@ school_data_ISTD <- school_data_IMON %>%
                                                     pattern="m1scq13_imon__")], na.rm=TRUE),
          standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                              pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
-  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2)
+  mutate(standards_monitoring=1+(standards_monitoring_input*6+standards_monitoring_infrastructure*4)*0.4)
 
 
 final_indicator_data_ISTD <- school_data_ISTD %>%
@@ -2551,7 +2589,572 @@ summary(out)
 plot(out)
 ```
 
-# School Management POlicies
+# School Management Policies
 
 
-#
+##  School Management - Clarity of Functions
+
+```{r}
+#############################################
+  ##### School School Management Clarity of Functions  ###########
+  #############################################
+  
+  school_data_SCFN <- school_data_PKNW %>%
+    mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
+           materials_scfn=if_else((m7sfq15b_pknw__0==1 | m7sfq15b_pknw__98==1),0,1),
+           hiring_scfn=if_else((m7sfq15c_pknw__0==1 | m7sfq15c_pknw__98==1),0,1),
+           supervision_scfn=if_else((m7sfq15d_pknw__0==1 | m7sfq15d_pknw__98==1),0,1),
+           student_scfn=if_else((m7sfq15e_pknw__0==1 | m7sfq15e_pknw__98==1),0,1),
+           principal_hiring_scfn=if_else((m7sfq15f_pknw__0==1 | m7sfq15f_pknw__98==1),0,1),
+           principal_supervision_scfn=if_else((m7sfq15g_pknw__0==1 | m7sfq15g_pknw__98==1),0,1)
+    ) %>%
+    mutate(sch_management_clarity=1+
+             (infrastructure_scfn+materials_scfn)/2+
+             (hiring_scfn + supervision_scfn)/2 +
+             student_scfn +
+             (principal_hiring_scfn+ principal_supervision_scfn)/2
+    )
+  final_indicator_data_SCFN <- school_data_SCFN %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_SCFN=n_miss_row(.))  %>%
+    select( -starts_with('interview'), -starts_with('enumerator')) 
+  
+  
+ggpairs(final_indicator_data_SCFN, columns=c(
+                                             "infrastructure_scfn", 
+                                             "materials_scfn",
+                                             "hiring_scfn",
+                                             "supervision_scfn",
+                                             "student_scfn",
+                                             "principal_hiring_scfn",
+                                             "sch_management_clarity"
+                                             ), title="Clarity of Functions ") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_SCFN, SCFN_rules)
+summary(out)
+```
+
+
+##  School Management - Attraction
+
+```{r}
+
+#############################################
+  ##### School School Management Attraction  ###########
+  #############################################
+  
+  # This policy lever measures whether the right candidates are being attracted to the profession of school principals. The questions will aim to capture the provision of benefits to attract and maintain the best people to serve as principals. 
+  # 
+  # Scoring: 
+  #   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
+  # For salary, based GDP per capita from 2020 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD?locations=SL.  
+  
+  school_data_SATT <- school_data_SATT %>%
+    mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
+           principal_salary=if_else(m7shq2_satt==999, as.numeric(NA),12*m7shq2_satt/1727.11	)) %>%
+    mutate(
+      principal_salary_score=case_when(
+        between(principal_salary,0,0.5) ~ 1,
+        between(principal_salary,0.5,0.75) ~ 2,
+        between(principal_salary,0.75,1) ~ 3,
+        between(principal_salary,1,1.5) ~ 4,
+        between(principal_salary,1.5,5) ~ 5)) %>%
+    mutate(sch_management_attraction=(principal_satisfaction+principal_salary_score)/2)
+  
+  final_indicator_data_SATT <- school_data_SATT %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_SATT=n_miss_row(.))  %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
+  
+
+ggpairs(final_indicator_data_SATT, columns=c(
+                                             "principal_satisfaction", 
+                                             "principal_salary_score",
+                                             "sch_management_attraction"
+                                             ), title="Attraction") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_SATT, SATT_rules)
+summary(out)
+```
+
+##  School Management - Selection and Deployment 
+
+```{r}
+  
+  #############################################
+  ##### School School Management Selection and Deployment  ###########
+  #############################################
+  
+  
+  # This policy lever measures whether the right candidates being selected. These questions will probe what the recruitment process is like to 
+  # ensure that these individuals are getting the positions. The question would ultimately be based on: 1) there is a standard approach for selecting principals,
+  # 2) that approach relies on professional/academic requirements, and 3) those requirements are common in practice. 
+  # 
+  # Scoring: 
+  #   - 1 (lowest score) Most important factor is political affiliations or ethnic group. 
+  # - 2 Political affiliations or ethnic group is a consideration, but other factors considered as well. 
+  # - 3 Most important factor is years of experience, good relationship with owner/education department, and does not factor in quality teaching, demonstrated management qualities, or knowledge of local community. 
+  # - 4 Quality teaching, demonstrated management qualities, or knowledge of local community is a consideration in hiring, but not the most important factor 
+  # - 5 Quality teaching, demonstrated management qualities, or knowledge of local community is the most important factor in hiring.
+  
+
+school_data_SSLD <- school_data_SSLD %>%
+  mutate(sch_selection_deployment=case_when(
+    (m7sgq2_ssld==2 | m7sgq2_ssld==3 | m7sgq2_ssld==8) ~ 5,
+    (m7sgq2_ssld==6 | m7sgq2_ssld==7) ~ 1,
+    (!(m7sgq2_ssld==6 | m7sgq2_ssld==7) & (m7sgq1_ssld__2==1 | m7sgq1_ssld__3==1 | m7sgq1_ssld__8==1) ) ~ 4,
+    (!(m7sgq2_ssld==6 | m7sgq2_ssld==7) & (m7sgq1_ssld__1==1 | m7sgq1_ssld__4==1 | m7sgq1_ssld__5==1 | m7sgq1_ssld__97==1) ) ~ 3,
+    (m7sgq1_ssld__6==1 | m7sgq1_ssld__7==1 ) ~ 2, 
+    TRUE ~ as.numeric(NA))
+  )
+
+final_indicator_data_SSLD <- school_data_SSLD %>%
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_SSLD=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  
+
+  
+ggpairs(final_indicator_data_SSLD, columns=c(
+                                             "m7sgq2_ssld", 
+                                             "sch_selection_deployment"
+                                             ), title="Attraction") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_SSLD, SSLD_rules)
+summary(out)  
+```
+
+
+##  School Management - Support
+
+```{r}
+
+  #############################################
+  ##### School School Management Support  ###########
+  #############################################
+  
+  
+  # This policy lever measures the extent to which principals receive training and/or exposure to other professional opportunities that could help them be better school leaders. 
+  # The questions aim to figure out if such programs are provided, and if they are, their level of quality. 
+  # 
+  # Scoring (sum of components below): 
+  #   - 1 Point. Principal has received formal training on managing school. 
+  # - 1/3 Point. Had management training for new principals. 
+  # - 1/3 Point. Had management in-service training. 
+  # - 1/3 Point. Had mentoring/coaching by experienced principals. 
+  # - 1 Point. Have used skills gained at training. 
+  # - 1 Point. Principals offered training at least once per year
+  
+  school_data_SSUP <- school_data_SSUP %>%
+    mutate(prinicipal_trained=bin_var(m7sgq3_ssup,1),
+           principal_training=if_else(m7sgq3_ssup==1,
+                                      rowMeans(.[grep(x=colnames(school_data_SSUP), 
+                                                      pattern="m7sgq4_ssup__")], na.rm=TRUE),
+                                      0),
+           principal_used_skills=if_else(m7sgq3_ssup==1,
+                                         bin_var(m7sgq5_ssup,1),0),
+           principal_offered=if_else((m7sgq7_ssup==2 | m7sgq7_ssup==3 | m7sgq7_ssup==4 | m7sgq7_ssup==5),1,0)
+    ) %>%
+    mutate(sch_support=1+prinicipal_trained+principal_training+principal_used_skills+principal_offered)
+  
+  final_indicator_data_SSUP <- school_data_SSUP %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_SSUP=n_miss_row(.))  %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
+  
+  
+ggpairs(final_indicator_data_SSUP, columns=c(
+                                             "prinicipal_trained", 
+                                             "principal_training",
+                                             "principal_used_skills",
+                                             "principal_offered",
+                                             "sch_support"
+                                             ), title="Support") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_SSUP, SSUP_rules)
+summary(out)
+  
+```
+
+##  School Management - Evaluation
+
+```{r}
+ #############################################
+  ##### School School Management Evaluation  ###########
+  #############################################
+  
+  # School Survey. This policy lever measures the extent to which principal performance is being monitored and enforced via accountability measures. 
+  # The idea is that the indicator will be based on: 1) there is a legislation outlining the need to monitor, 2) principals are being evaluated, 3) 
+  # principals are being evaluated on multiple things, and 4) there the accountability mechanisms in place.
+  
+  
+  
+  school_data_SEVL<- school_data_SEVL %>%
+    mutate(principal_formally_evaluated=bin_var(m7sgq8_sevl,1),
+           principal_eval_tot=rowSums(.[grep(x=colnames(school_data_SEVL), 
+                                             pattern="m7sgq10_sevl__")], na.rm=TRUE)-m7sgq10_sevl__98) %>%
+    mutate(principal_evaluation_multiple=if_else(m7sgq8_sevl==1,
+                                                 case_when(
+                                                   principal_eval_tot>=5 ~ 1,
+                                                   (principal_eval_tot>1 & principal_eval_tot<5) ~ 0.666667,
+                                                   principal_eval_tot==1 ~ 0.3333333,
+                                                   TRUE ~ 0
+                                                 ),
+                                                 0),
+           principal_negative_consequences=case_when(
+             (m7sgq11_sevl__1==1 | m7sgq11_sevl__2==1 | m7sgq11_sevl__3==1 | m7sgq11_sevl__4==1 | m7sgq11_sevl__97==1) ~ 1,
+             TRUE ~ 0),
+           principal_positive_consequences=case_when(
+             (m7sgq12_sevl__1==1 | m7sgq12_sevl__2==1 | m7sgq12_sevl__3==1 | m7sgq12_sevl__4==1 | m7sgq12_sevl__97==1) ~ 1,
+             TRUE ~ 0)
+    ) %>%
+    mutate(principal_evaluation=1+principal_formally_evaluated+principal_evaluation_multiple+principal_negative_consequences+principal_positive_consequences)
+  
+  final_indicator_data_SEVL <- school_data_SEVL %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    mutate(n_mssing_SEVL=n_miss_row(.))  %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
+  
+ggpairs(final_indicator_data_SEVL, columns=c(
+                                             "principal_formally_evaluated", 
+                                             "principal_evaluation_multiple",
+                                             "principal_negative_consequences",
+                                             "principal_positive_consequences",
+                                             "principal_evaluation"
+                                             ), title="Evaluation") +
+  theme_bw()
+
+
+#validate 
+out <- confront(final_indicator_data_SEVL, SEVL_rules)
+summary(out)  
+  
+```
+
+
+# School level database
+
+```{r}
+
+#############################################
+##### School Level Info ###########
+#############################################
+
+#Build school level database
+
+#first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
+#list additional info that will be useful to keep in each indicator dataframe
+drop_info <- c('interview__id', 'interview__key',                    
+               'school_name_preload', 'school_address_preload', 
+               'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+               'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+               'survey_time', 'lat', 'lon' )
+
+keep_info <-       c('school_code',
+                     'school_name_preload', 
+                     'school_province_preload', 'school_district_preload', 'school_emis_preload',
+                     'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                     'survey_time', 'lat', 'lon', 'total_enrolled')
+
+if (exists('final_school_data')) {
+  rm('final_school_data')
+}
+
+ind_dta_list<-c()
+
+school_data_preamble_short<-school_data_preamble %>%
+  group_by(school_code) %>%
+  select(keep_info) %>%
+  summarise_all(~first(na.omit(.)))
+
+final_school_data <- school_data_preamble_short
+
+
+for (i in indicator_names ) {
+  if (exists(paste("final_indicator_data_",i, sep=""))) {
+    #form temp data frame with each schools data
+    temp<-get(paste("final_indicator_data_",i, sep="")) 
+    
+    #add element to list
+    ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",i, sep=""))
+    
+    
+    print(i)
+    #Merge this to overall final_school_data frame
+    if (!exists('final_school_data')) {
+      final_school_data<-temp
+      print(i)
+      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      if (backup_onedrive=="yes") {
+        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      }
+      
+    } else {
+      final_school_data<-final_school_data %>%
+        left_join(temp, by='school_code') %>%
+        select(-ends_with(".x"), -ends_with(".y"))
+      
+      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      if (backup_onedrive=="yes") {
+        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      }
+    }
+  }
+}
+
+
+#add male/female breakdowns to ind_data_list
+
+ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
+                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
+                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+
+
+#Create list of key indicators
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+            'student_proficient', 'student_proficient_70', 'student_proficient_75',
+            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
+            'presence_rate','absence_rate', 'sch_absence_rate', 'student_attendance',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
+            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
+            'teach_score','classroom_culture','instruction','socio_emotional_skills',
+            'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof',
+            'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+            'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
+            'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+            'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+            'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+            'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+            'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+            'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+            'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+            'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+            'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+            'standards_monitoring',
+            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','system_in_place','parents_involved',
+            'sch_management_attraction', 'principal_satisfaction',
+            'sch_selection_deployment', 
+            'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+            'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+)
+
+################################
+# Student & Teacher Weight Components
+################################
+
+g4_stud_weights<-school_dta %>%
+  select(school_code,  m4scq4_inpt ) %>%
+  group_by(school_code) %>%
+  summarise(m4scq4_inpt=mean(m4scq4_inpt, na.rm=T)) %>%
+  mutate(g4_stud_weight_component=if_else(m4scq4_inpt>=25,
+                                            m4scq4_inpt/25,
+                                            1)) %>%
+  select(school_code, g4_stud_weight_component)
+
+teacher_absence_weights <-school_dta %>%
+  select(school_code,  numEligible ) %>%
+  group_by(school_code) %>%
+  summarise(numEligible=max(numEligible, na.rm=T)) %>%
+  mutate(abs_weight_component=if_else(numEligible>=10,
+                                      numEligible/10,
+                                      1)) %>%
+  select(school_code, abs_weight_component)
+
+
+teacher_assessment_weights <-school_dta %>%
+  select(school_code,  numEligible4th ) %>%
+  group_by(school_code) %>%
+  summarise(numEligible4th=max(numEligible4th, na.rm=T)) %>%
+  mutate(teacher_weight_component=if_else(numEligible4th>=5,
+                                          numEligible4th/5,
+                                          1)) %>%
+  select(school_code, teacher_weight_component)
+
+g1_stud_weights<-school_dta %>%
+  select(school_code,  m6_class_count ) %>%
+  group_by(school_code) %>%
+  summarise(m6_class_count=mean(m6_class_count, na.rm=T)) %>%
+  mutate(g1_stud_weight_component=if_else(m6_class_count>=3,
+                                          m6_class_count/3,
+                                          1)) %>%
+  select(school_code, g1_stud_weight_component)
+
+school_weights <- g4_stud_weights %>%
+  left_join(teacher_absence_weights) %>%
+  left_join(teacher_assessment_weights) %>%
+  left_join(g1_stud_weights)
+
+
+#weights list
+weights_list<-c('g4_stud_weight_component', 'abs_weight_component', 'teacher_weight_component','g1_stud_weight_component')
+
+
+final_school_data <- final_school_data %>%
+  left_join(school_data_preamble_short) %>%
+  select(all_of(keep_info), one_of(ind_list), everything()) %>%
+  left_join(school_weights)
+
+
+
+write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
+#write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
+#write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+if (backup_onedrive=="yes") {
+  write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
+  #write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+}
+#If indicator in this list doesn't exists, create empty column with Missing values
+
+
+for (i in ind_list ) {
+  if(!(i %in% colnames(final_school_data))) {
+    print(i)
+    final_school_data[, i] <- NA
+  }
+}
+
+
+
+
+
+school_dta_short <- final_school_data %>%
+  select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
+
+write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
+#write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
+
+if (backup_onedrive=="yes") {
+  write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
+  #write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+}
+
+
+extra_info='no'
+
+if (extra_info=='yes') {
+#################################
+# Read in Satellite Data on GDP
+#################################
+#Data downloaded from Here:
+#https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 also see
+#https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
+# In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
+# 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
+# The method also distinguishes between rural and urban population, assuming the latter to have a higher 
+# GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
+# product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
+# Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
+# LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
+# extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
+# constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
+# is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
+# suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
+# Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
+# extrapolation UNEP/GRID-Geneva.
+
+#Load original sample of schools
+currentDate<-c("2022-06-27")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_', currentDate,  '.csv', sep="")
+                             ) %>%
+  select(-internet, -electricity) %>%
+  mutate(school_code=idemis_code)
+
+
+
+#open the raster
+raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
+
+gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
+
+#add GDP to database
+school_gdp <- school_dta_short %>%
+  mutate(organization_code=as.numeric(school_code)) %>%
+  left_join(data_set_updated) %>%
+  mutate(longitude=as.character(geopointlongitude)) %>%
+  mutate(latitude=as.character(geopointlatitude)) %>%
+  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+         lon=if_else(is.na(lon), as.numeric(longitude), lon)) %>%
+  filter(!is.na(lat) & !is.na(lon)) %>%
+  dplyr::select(school_code, lon, lat)
+
+
+sp::coordinates(school_gdp) <- c("lon","lat")
+school_gdp$GDP <- raster::extract(gdp_raster, school_gdp, 
+                                  buffer=1000, # 1000m radius
+                                  fun=mean,na.rm=T,
+                                  method='simple')
+
+
+school_gdp <- as.data.frame(school_gdp) %>%
+  mutate(GDP=as.numeric(GDP)) %>%
+  select(school_code, GDP)
+
+####################################
+# Multiple Imputation of missing values
+###################################
+
+#use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
+#https://academic.oup.com/aje/article/179/6/764/107562
+impdata<-mice::mice(school_dta_short, m=1,
+           method='rf',
+           maxit = 50, seed = 500)
+
+school_dta_short_imp <- mice::complete(impdata, 1)
+
+} else {
+  school_dta_short_imp <- school_dta_short
+  school_gdp <-school_dta_short
+}
+
+
+
+################################
+#Store Key Created Datasets
+################################
+
+
+#read in saved metadata
+metadta <- read_excel(path=file.path(download_folder, "metadata.xlsx"))
+
+#saves the following in R and stata format
+
+data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
+               "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon')
+save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
+
+save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta',  'school_gdp' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
+
+
+if (backup_onedrive=="yes") {
+  save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
+}
+
+```
+

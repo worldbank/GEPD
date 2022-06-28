@@ -1,11 +1,10 @@
 ---
 title: "Sampling Notes - Sierra Leone"
-author: ""
+author: ''
 output:
+  word_document: default
   html_document: default
-
 always_allow_html: yes
-  
 ---
 
 ```{r setup, include=FALSE}
@@ -190,6 +189,12 @@ df_selected <- df_raw %>%
     "total_teachers",
     "total_pupils",
     "total_classrooms",
+    "total_stream_class1",
+    "total_stream_class2",
+    "total_stream_class3",
+    "total_stream_class4",
+    "total_stream_class5",
+    "total_stream_class6",    
     "sch_owner",
     "shift_status",
     "pri_lang_instruct",
@@ -619,3 +624,162 @@ write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_scho
 
 
 ```
+
+# Weights
+
+Get probabilities of selection for each school in the sample.
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of typically around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  
+
+For the AMPL-b assessment, a randomly selected stream is chosen in each school and a random selection of 25 students is selected to take the assessment. The student sampling weight is a combination of the weights for each level of selection (school, classroom, student).  
+
+For the school weights, the weights are the inverse probability that a school is randomly selected for the school survey. Stratification is done on the basis of the schools district (16 districts) and school ownership (4 types: Private, Government, Mission/religious, Community).  There are 64 strata.  The number of units in each strata were allocated based on the number of 4th grade students in the strata.  Within each strata, the schools were selected with the probability proportional to size.
+
+The weight for school i within stratum j is, where m is a measure of school size and n is the number of schools selected per stratum:
+
+$$ SW_i^j=\frac{\sum_{i=1}^{N_j}m_i}{n*m_i} $$
+
+Within each school, one classroom of 5th grade students was chosen randomly.  For the class weight, it is the inverse of the probability that a classroom was selected, where $C_i$ is the number of 5th grade streams in the school.
+
+$$ CW_i^j=\frac{C_i}{1} $$
+
+Within each classroom, 25 students were randomly selected to take the assessment.  The student weight is as follows, where $S_i$ is the total number of students in the selected classroom in school i.
+
+$$ PW_i^j=\frac{S_i}{25} $$
+
+The final weights for school i in strata j are then
+
+$$ FW_i^j= SW_i^j*CW_i^j*PW_i^j$$
+
+
+
+```{r}
+
+
+#in this code chunk, the number of schools to be selected in each stratum will be set.  This will be based on the population of the stratum.
+# The strata are based on the 16 districts 
+
+
+strata_weight_size <- df_updated %>%
+  group_by(idregion,iddistrict,sch_owner) %>%
+  summarise(
+    n_schools=n(),
+    n_students=sum(class4_combined),
+    share_students=n_students/sum(df_updated$class4_combined),
+    exp_num_schools=300*share_students,
+    ini_num_schools=round(exp_num_schools,0)
+  ) %>%
+  ungroup() %>%
+  sample_n(nrow(.)) #randomly order the rows
+
+
+#pick number of schools in each strata so that total adds to 40
+# get vector of exp_num_schools
+num_schools <- strata_weight_size$ini_num_schools
+
+#do a while loop sequentially randomly adding or subtracting a school to the list for a randomly selected strata until total is 40
+while (sum(num_schools)!=300) {
+  
+  if (sum(num_schools)<300) {
+    
+    nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+    extra_schools <- rep(0,16) #create vector of 0s
+    extra_schools[nr] <- 1 # for one random strata add one.
+    num_schools <- num_schools + extra_schools #add to list of schools.
+  } else {
+    nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+    extra_schools <- rep(0,16) #create vector of 0s
+    extra_schools[nr] <- -1 # for one random strata add one.
+    num_schools <- num_schools + extra_schools #add to list of schools.
+  }
+  
+}
+
+
+sum(num_schools)
+strata_weight_size$num_schools <- num_schools
+
+sum(strata_weight_size$num_schools)
+
+
+school_weights_df <- df_frame %>%
+  ungroup() %>%
+  mutate(total_students_frame=sum(class4_combined)) %>%
+  left_join(strata_weight_size) %>%
+  group_by(idregion,iddistrict,sch_owner) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(class4_combined),
+         strata_school_prob=strata_size/total_students_frame) %>%
+  mutate(strata_prob=(num_schools)*(class4_combined/strata_size),
+         ipw=1/strata_school_prob*(1/strata_prob)) 
+
+write_excel_csv(school_weights_df, paste(sampling_folder, '/school_weights_', Sys.Date(),  '.csv', sep=""))
+
+
+# Weights for Ampl-b in 5th grade
+amplb_student_weights <- school_weights_df %>%
+  rename(school_weight=ipw) %>%
+  mutate(class_weight=total_stream_class5/1, # weight is the number of 5th grade streams divided by number selected (1)
+         student_weight=(class5_combined/total_stream_class5)/25,
+         final_weight=school_weight*class_weight*student_weight
+         ) 
+  
+write_excel_csv(amplb_student_weights, paste(sampling_folder, '/amplb_weights_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+df_frame %>%
+  ungroup() %>%
+  mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+  summarise(electricity=mean(electricity))
+
+school_sampler <- function(seed) {
+  set.seed(seed)
+  
+  t <- school_weights_df %>%
+    filter(num_schools>0) %>%
+    group_by(idregion,iddistrict,sch_owner) %>%
+    sample_n(size=num_schools, weight=class4_combined) %>%
+    ungroup() %>%
+    as_survey_design(strata=c('idregion','iddistrict','sch_owner'),
+                   weight=ipw) %>%
+    mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+    summarise(electricity=survey_mean(electricity))
+  
+  return(t)
+}
+
+bootstrap_df <- bind_rows(lapply(sample(x=c(1:10000),size=100),
+                                 school_sampler))
+
+bootstrap_df
+
+linked_sample <- read_csv(file=paste(sampling_folder, '/sample_clean_2022-04-17.csv', sep="")) %>%
+  filter(!is.na(idemis_code)) %>%
+  select(idemis_code) %>%
+  ungroup() %>%
+  left_join(school_weights_df) 
+
+linked_sample %>%
+  mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+  summarise(electricity=Hmisc::wtd.mean(electricity, weights=ipw))
+
+
+
+linked_sample %>%
+  filter(!is.na(ipw)) %>%
+  ungroup() %>%
+  as_survey_design(strata=c('idregion','iddistrict','sch_owner'),
+                   weight=ipw) %>%
+  mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+  summarise(electricity=survey_mean(electricity))
+```
+
+

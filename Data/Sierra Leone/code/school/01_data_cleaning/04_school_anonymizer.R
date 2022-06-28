@@ -75,31 +75,23 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #Load original sample of schools
 
 
-currentDate<-c("2020-02-14")
+#Load original sample of schools
+currentDate<-c("2022-06-27")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
-weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
-  select(-sample) #variable name causes conflict
-load(sample_frame_name)
+data_set_updated <- read_csv(paste(sample_folder, '/school_weights_', currentDate,  '.csv', sep="")
+) %>%
+  mutate(ipw=case_when(
+    is.na(ipw) ~ median(ipw, na.rm=TRUE),
+    is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
+    TRUE ~ ipw)
+    ) %>%
+  ungroup() %>%
+  mutate(school_code=idemis_code,
+         urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural")) %>%
+  select(school_code, sch_owner, idregion, iddistrict, urban_rural,
+         ipw) 
 
-#get list of schools from interview data
-emis_list<-school_dta_short$school_emis_preload
-code_list<-school_dta_short$school_code
-region_list<-school_dta_short$school_address_preload
-zone_list<-school_dta_short$school_province_preload
-woreda_list<-school_dta_short$school_district_preload
 
-#create weights for each school
-data_set_updated <- data_set_updated %>%
-  mutate(N_sch=n()) %>% #get total number of schools
-  #now calculate probability of selecting woreda
-  group_by(Region, Zone, Woreda) %>%
-  mutate(N_school_woreda=n(),
-         N_students_woreda=sum(grd4_total,na.rm=T)) %>%
-  group_by(Region) %>%
-  mutate(strat_total=sum(grd4_total, na.rm=T),
-         N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
-         N_sch_strata=n()) #stratum weights (three schools selected)
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
@@ -107,21 +99,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   prov<-enquo(prov)
   
   dataset %>%
-    mutate(!! scode := as.numeric(.data$school_code)) %>%
-    left_join(weights_df %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list)  %>% filter(Zone %in% zone_list)  %>% filter(Woreda %in% woreda_list)  %>% filter(Program==1)) %>%
-    left_join(data_set_updated %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list) %>% filter(Zone %in% zone_list)   %>% filter(Woreda %in% woreda_list) %>% filter(Program==1))  %>%
-    mutate(
-           N_schools=N_sch,
-           N_schools_strata=N_sch_strata,
-           N_selected_strata=N_sel_strata,
-           school_weights=ipw,
-           ipw=ipw*!! snumber,
-           ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
-    mutate(province=Region,
-           urban_rural=Location
-           ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
-                                                        names(data_set_updated) == "owner" )])))
+    left_join(data_set_updated)  %>%
+    mutate(province=idregion           ) 
 }
 
 

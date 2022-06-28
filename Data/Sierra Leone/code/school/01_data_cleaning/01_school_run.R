@@ -76,7 +76,8 @@ teach_avail=0
 source('02_school_api.R', local=TRUE)
  
 # #launch file to clear data=
-source('03_school_data_cleaner.R', local=TRUE)
+rmarkdown::render("03_school_data_cleaner.Rmd")
+
 
 source('04_school_anonymizer.R', local=TRUE)
 
