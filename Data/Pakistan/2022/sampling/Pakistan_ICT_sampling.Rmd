@@ -6,7 +6,11 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
 library(tidyverse)
 library(here)
 library(readxl)
@@ -133,7 +137,7 @@ However, there is interest in interviewing pre-primary students and students in 
 
 # Sampling
 
-```{r}
+```{r echo=TRUE}
 # get numbers to select from each district
 strata_df <- df_updated_gepd %>%
   group_by(Tehsil, Gender) %>%
@@ -173,8 +177,8 @@ strata_df %>% group_by(Gender) %>% summarise(sum=sum(sample_size))
 
 ```
 
-
-```{r option2}
+Select the sample and save.
+```{r option2, echo=TRUE}
 # set the numbers of schools selected by strata (grade)
 
 sample_df <- df_updated_gepd %>%
@@ -192,7 +196,7 @@ sample_df <- df_updated_gepd %>%
          ipw=1/strata_school_prob*(1/strata_prob))
 
 
-write_excel_csv(sample_df, file=paste0(sampling_folder, "GEPD_ICT_sample_",Sys.Date(),".csv"))
+write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.Date(),".csv"))
 
 ```
 
