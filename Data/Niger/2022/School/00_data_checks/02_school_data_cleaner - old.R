@@ -2246,9 +2246,10 @@ data_list <- c('school_dta', 'school_dta_short', 'school_dta_short_imp', 'school
 
 save(list=data_list, file = file.path(save_folder, "school_survey_data.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
+save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadata', 'school_gdp' ), file = file.path(save_folder, "school_indicators_data.RData"))
 
 
 if (backup_onedrive=="yes") {
   save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
 }
+
