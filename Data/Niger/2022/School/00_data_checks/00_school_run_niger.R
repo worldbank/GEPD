@@ -68,7 +68,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   save_folder_onedrive <- choose.dir(default = "", caption = "Select folder to save backed up data to onedrive")
   
 }
-
+## NOTE FOR USERS
 
 #########################
 # Launch Code
