@@ -68,7 +68,6 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   save_folder_onedrive <- choose.dir(default = "", caption = "Select folder to save backed up data to onedrive")
   
 }
-## NOTE FOR USERS 2.0
 
 #########################
 # Launch Code
@@ -83,7 +82,7 @@ school_file<-"EPDash.dta"
 #source('01_school_api.R', local=TRUE)
  
 # #launch file to clear data=
-source('02_school_data_cleaner- old.R', local=TRUE)
+source('02_school_data_cleaner - old.R', local=TRUE)
 
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
