@@ -1,0 +1,260 @@
+---
+title: "Niger Global Education Policy Dashboard Survey - Public Officials"
+author: "Adrien Ciret"
+date: "5/20/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+#library(rgdal)
+library(tidyverse)
+library(readxl)
+library(leaflet)
+library(kableExtra)
+library(DT)
+library(skimr)
+library(haven)
+library(crosstalk)
+library(purrr)
+set.seed(54351324)
+
+#################################
+#Specify Directories, etc
+#################################
+
+#Specify directory where sampling frame located
+#Specify directory where sampling frame located
+dir_frame<-"C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Niger/Preparatory_work/Sampling/school/"
+
+
+date_frame<-c("2022-04-25")
+
+```
+
+## Introduction
+
+This file outlines the sampling strategy for Niger for the Survey of Public Officials.  
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+
+For our Survey of Public Officials, we will sample a total of 200 public officials.  Roughly 40 officials will be surveyed at the central level, while 56 officials will be surveyed at the regional level and 104 at the district (Commune) level.  For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where 6 Regional offices are chosen at random from among the regions in which schools were sampled.  Then among these 8 Regions, we also select at random 26 commune offices from among the communes in which schools were sampled.  The result of this sampling approach is that for 8 clusters we will have links from the school to the commune office to the Regional office to the central office.  Within the Regional office 10 public officials will be interviewed.  Within the commune offices 4 officials will be interviewed and 7 officials will be interviewed within the regional offices.  
+
+In other countries we interviewed the following profiles: head of organization, head of school monitoring, head of finance, head of planning, head of HR, and, if needed, some randomly chosen officials. The number of public officials to randomize varies according to the type of office (regional or district) and if the above positions are combined.
+
+For the randomly chosen officials, the randomization has to be done with Survey Solutions following these steps:
+
+  1.	Get (or write down on paper) the full list of public officials 
+  2.	Count and assign a number to each public official in the list (exclude those that were directly selected, for example the head of HR)
+  3.	Count the public officials in the list and put the total number of public officials into Survey Solutions 
+  4.	Interview the public officials according to the order given by Survey Solutions (if a public official who was randomly chosen is not available, go with the next one in the list)
+  5.	Take a picture of the full list and upload it to Survey Solutions for quality control
+
+```{r load, echo=FALSE, warning=FALSE}
+#load the school level data
+
+sample_file_name <- paste(dir_frame,"sample_schools_",date_frame,".csv", sep="")
+
+sample_updated <- read.csv(sample_file_name) %>% rename(REGION = `ï..REGION`) %>% mutate(REGION=str_trim(str_to_upper(REGION)))
+
+#Some summary stats and descriptives
+ggplot(data=sample_updated, aes(REGION)) +
+  geom_histogram(stat='count') +
+  stat_count(aes(y=..count..,label=..count..),geom="text",hjust=-.5) +
+  coord_flip() +
+  expand_limits(y=400) +
+  theme_bw() +
+  ggtitle(str_wrap("Repartion par region des 270 ecoles selectionnees dans l'echantillon GEPD",55))
+
+```
+
+
+```{r public_officials, echo=TRUE}
+
+
+public_officials_list <- readxl::read_xlsx("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Niger/Preparatory_work/Sampling/public_officials/LISTE_AGENT_CHAINE_PRIMAIRE.xlsx", sheet = 2) %>% 
+  mutate(REGION= gsub("TIALLABERI", "TILLABERY", REGION),
+         COMMUNE = gsub("AGADEZ", "AGADEZ COMMUNE", COMMUNE))
+
+
+
+```
+
+
+```{r communes}
+
+  #From within regions, assign how many communes to visit
+  commune_list_bis <- sample_updated %>%
+  select(REGION, n_students) %>% 
+  distinct(REGION, .keep_all=T) %>% 
+  ungroup() %>%
+  mutate(N_commune_to_sample=(26*n_students/sum(n_students))) #get number of commune based on number of students in 4th grade
+
+
+
+  commune_list_bis <- commune_list_bis %>% 
+    mutate(N_commune_to_sample=case_when(
+      REGION=="DOSSO" ~3,
+      REGION=="MARADI" ~6,
+      REGION=="NIAMEY" ~3,
+      REGION=="TAHOUA" ~4,
+      REGION=="TILLABERY" ~3,
+      REGION=="ZINDER" ~5,
+      TRUE ~ 1
+    )) #do some reallocation to ensure at least one school from each region
+
+
+
+    
+  commune_list<- sample_updated %>%
+    # delete communes missing
+    # filter(COMMUNE!="DAOUTCHE") %>% 
+    group_by(REGION, COMMUNE) %>%
+    mutate(n_schools_commune=n()) %>%
+    summarise_all(first) %>%
+    group_by(REGION) %>%
+    left_join(commune_list_bis, by="REGION") %>%
+    sample_n(N_commune_to_sample) 
+  
+  
+  commune_list_sample <- commune_list%>%
+    dplyr::select(REGION, COMMUNE) 
+  
+  # CANNOT DO IT BECAUSE WE DO NOT HAVE ADMIN CODE AND THE MATCHING ON STRING IS INEFFICIENT 
+  #%>%
+  # left_join(public_officials_list %>%
+  #             mutate(REGION=str_trim(str_to_upper(REGION)),
+  #                    COMMUNE=str_trim(str_to_upper(COMMUNE)))) %>%
+  # group_by(COMMUNE) %>%
+  # slice_sample(n=5)
+
+  
+  #save as csv
+  dist_frame_name <- paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Niger/Preparatory_work/Sampling/public_officials/communes_sample_",Sys.Date(),".csv", sep="")
+  datatable(commune_list_sample,
+            options = list(pageLength = 21),
+            caption="Communes selectionnees pour l'enquete des fonctionnaires")
+
+  #write_excel_csv(commune_list_sample,dist_frame_name) 
+
+```
+
+```{r}
+# Replacement Communes
+
+# Below is a list of replacement communes for each sampled communes. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+#define sampled schools in sample dataset
+sample_chosen <- commune_list_sample %>%
+  mutate(sample="Sampled Commune") 
+#add sample schools back to original database
+data_set_updated_chosen <- sample_updated %>%
+  left_join(sample_chosen) 
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by(REGION,COMMUNE) %>% 
+  summarise(sampled_districts=n()
+  )
+# select one replacement per region
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(is.na(sampled_districts)) %>%
+group_by(REGION, COMMUNE) %>%
+  mutate(n_schools_commune=n()) %>%
+  summarise_all(first) %>%
+  group_by(REGION) %>%
+  left_join(commune_list_bis, by="REGION") %>%
+  sample_n(N_commune_to_sample, replace = T) %>% #select two replacement schools
+  mutate(sample='Replacement Commune') %>%
+  arrange(REGION,COMMUNE, sample) 
+
+sample_replace2 <- sample_chosen %>%
+  bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+  bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+  arrange(REGION,COMMUNE) 
+#add in school info for school that will be replaced
+sample_replace$replaced_COMMUNE=sample_chosen$COMMUNE
+sample_replace$replaced_REGION=sample_chosen$REGION
+sample_replace %>%
+  select(COMMUNE,REGION, replaced_COMMUNE, replaced_REGION) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+sample_replace <- sample_replace %>%
+  select(COMMUNE,REGION, replaced_COMMUNE, replaced_REGION)
+
+write_excel_csv(sample_replace, paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Niger/Preparatory_work/Sampling/public_officials/sample_replacement_communes_", Sys.Date(),  '.csv', sep=""))
+```
+
+
+
+
+```{r country_map, echo=FALSE, warning=FALSE}
+library(geojsonsf)
+wbgis <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/General/"
+
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == 'Niger')
+  #distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+
+map_sampled_schools <- wb.poly.2 %>% 
+  mutate(across(ends_with("_NAME"),
+                
+                ~ str_to_upper(.))) %>% 
+  
+  group_by(ADM1_NAME) %>% 
+  
+    summarise(geometry = sf::st_union(geometry)) %>%
+  
+    ungroup() %>% 
+  
+  left_join(commune_list %>% 
+              
+              rename(ADM1_NAME = REGION) %>% 
+              
+              select(ADM1_NAME, COMMUNE, N_commune_to_sample) %>% 
+              
+              group_by(ADM1_NAME) %>% 
+              
+              mutate(sample_commune= n()) %>% 
+              
+              mutate(ADM1_NAME = str_replace(ADM1_NAME, "TILLABERY", "TILLABERI")) %>% 
+              
+              distinct(ADM1_NAME, .keep_all=T) 
+              
+        
+            )
+
+
+
+
+pal <- colorNumeric("YlOrRd", domain = map_sampled_schools$N_commune_to_sample)
+
+
+labels <- sprintf(
+  "<strong>%s</strong><br/> %g communes sampled ",
+  map_sampled_schools$ADM1_NAME, map_sampled_schools$N_commune_to_sample
+) %>% lapply(htmltools::HTML)
+
+
+leaflet(map_sampled_schools) %>% 
+  addTiles()  %>%
+  addPolygons(
+    fillColor = ~pal(N_commune_to_sample),
+    weight = 1,
+    opacity=1,
+    fillOpacity = 0.2,
+    label=labels
+  ) %>%
+  addLegend(pal=pal, values=~N_commune_to_sample, opacity=0.7, title="N Sampled Communes", position="bottomright")
+
+
+```
+
+ 
