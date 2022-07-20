@@ -1,5 +1,5 @@
 ---
-title: "Pakistan (ICT) Sampling"
+title: "Pakistan (Punjab) Sampling"
 author: "Brian Stacy"
 date: "7/8/2022"
 output: html_document
@@ -14,16 +14,17 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(here)
 library(readxl)
+library(haven)
 library(flextable) 
 
 #Country name
 country <-'PAK'
 country_name <- "Pakistan"
 year <- '2022'
-province <- "ICT"
+province <- "Punjab"
 #specify name of sampling frame file.  This needs to be a csv file
-file_frame<-"ICT Schools Information for Sampling - 2020-21.xlsx"
-frame_sheet <- "final"
+public_file_frame<-"Punjab Public School Sampling Frame.dta"
+private_file_frame<-"PSC Sampling Frame.dta"
 
 
 set.seed(8473227)
@@ -56,7 +57,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 ## Introduction
 
-This file outlines the sampling strategy for Pakistan (ICT).
+This file outlines the sampling strategy for Pakistan (Punjab).
 
 ## General Notes on Sampling
 The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
@@ -77,14 +78,40 @@ Expert Survey: The Expert Survey will collect information to feed into the polic
 Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
 
-## ICT Sampling
+## Punjab Sampling
 
-100 schools will be drawn in ICT.  Stata are formed on the basis of the Tehsil and the gender status of the schools.  The majority of the schools are either all boy or all girl schools.  34 boys, 34 girls, and 32 mixed schools will be drawn, with the number coming from each Tehsil proportional to the total student enrollment in the Tehsil.
+200 schools will be drawn.  The strata
+
+
 
 ```{r}
+
+
+
+
 #read sample frame
-df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
-              sheet=frame_sheet) 
+public_df=read_stata(paste(sampling_folder, public_file_frame, sep="/"))
+private_df=read_stata(paste(sampling_folder, private_file_frame, sep="/"))
+
+df_raw<-public_df %>%
+    mutate(num_teachers=Teachers,
+            total_enrollment=enrollment,
+            total_katchi_enrollment=if_else(is.na(total_katchi_enrollment),0,total_katchi_enrollment),
+            total_katchi_enrollment_boys=if_else(is.na(eng_kachi_b),0,eng_kachi_b),
+            total_katchi_enrollment_girls=if_else(is.na(eng_kachi_g),0,eng_kachi_g),
+            total_ece_enrollment=if_else(is.na(total_ece_enrollment),0,total_ece_enrollment),
+            total_ece_enrollment_boys=if_else(is.na(ECEBoys),0,ECEBoys),
+            total_ece_enrollment_gils=if_else(is.na(ECEGirls),0,ECEGirls),
+            total_1st_enrollment=total_cls1_enrollment,
+            total_1st_enrollment_boys=eng_cls1_b,
+            total_1st_enrollment_girls=eng_cls1_g,       
+            total_4th_enrollment_boys=eng_cls3_b, # 4th grade boys variable is missing for some reason, so impute using grade 3
+            total_4th_enrollment_girls=eng_cls4_g,      
+            total_4th_enrollment=total_4th_enrollment_boys+total_4th_enrollment_girls,
+            total_5th_enrollment_boys=eng_cls5_b, 
+            total_5th_enrollment_girls=eng_cls5_g,      
+            total_5th_enrollment=total_5th_enrollment_boys+total_5th_enrollment_girls,      
+            rural=if_else(school_location=="Rural", 1,0))
 
 ```
 
@@ -93,110 +120,56 @@ Basic summary stats of overall frame
 ```{r}
 #level
 df_raw %>% 
-  group_by(Institutions_Level) %>% 
-  summarise(n=n(),Students=sum(Grand_total)) %>% 
+  group_by(school_level) %>% 
+  summarise(n=n(),Students=sum(total_enrollment)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Level') %>% 
   autofit()
 
 #Tehsil
 df_raw %>% 
-  group_by(Tehsil) %>% 
-  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
+  group_by(district) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
   flextable() %>% 
-  add_header_lines('Number of Schools by Tehsil') %>% 
+  add_header_lines('Number of Schools by District') %>% 
   autofit()
 
 #Gender
 df_raw %>% 
-  group_by(Gender) %>% 
-  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
+  group_by(school_gender) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Gender') %>% 
   autofit()
+
+#Urban/rural
+df_raw %>% 
+  group_by(rural) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+
+
+
 ```
+
 
 ```{r}
 
 df_updated_gepd <- df_raw %>%
-  filter(Class_1_boys+Class_1_girls>=3,
-         Class_4_boys+Class_4_girls>=3) %>%
-  mutate(Kachi=Kachi_boys+Kachi_girls,
-         Class_5=Class_5_boys+Class_5_girls)
+  filter(total_1st_enrollment>=3,
+         total_4th_enrollment>=3) 
 
 df_updated <- df_raw %>%
-  filter(Kachi_boys+Kachi_girls>=3,
-         Class_1_boys+Class_1_girls>=3,
-         Class_4_boys+Class_4_girls>=3,
-         Class_5_boys+Class_5_girls>=3)
+  filter(total_ece_enrollment+total_katchi_enrollment>=3,
+         total_1st_enrollment>=3,
+         total_4th_enrollment>=3,
+         total_5th_enrollment>=3)
 ```
 
 Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
 
-However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(Kachi<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(Class_5<3))` because of the grade 5 restriction.
-
-# Sampling
-
-```{r echo=TRUE}
-# get numbers to select from each district
-strata_df <- df_updated_gepd %>%
-  group_by(Tehsil, Gender) %>%
-  summarise(nstudents_district=sum(Grand_total),
-                     total_district=n()
-) %>%
-  ungroup() %>%
-  mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
-         sample_size=case_when(
-           Gender=="Female" & Tehsil=="Bhara kau" ~ 6,
-           Gender=="Male" & Tehsil=="Bhara kau" ~ 4,
-           Gender=="Mixed" & Tehsil=="Bhara kau" ~ 3,
-
-           Gender=="Female" & Tehsil=="Nilore" ~ 2,
-           Gender=="Male" & Tehsil=="Nilore" ~ 6,
-           Gender=="Mixed" & Tehsil=="Nilore" ~ 2,
-           
-           Gender=="Female" & Tehsil=="Sihala" ~ 6,
-           Gender=="Male" & Tehsil=="Sihala" ~ 4,
-           Gender=="Mixed" & Tehsil=="Sihala" ~ 2,
-           
-           Gender=="Female" & Tehsil=="Tarnol" ~ 5,
-           Gender=="Male" & Tehsil=="Tarnol" ~ 7,
-           Gender=="Mixed" & Tehsil=="Tarnol" ~ 2,
-           
-           Gender=="Female" & Tehsil=="Urban" ~ 15,
-           Gender=="Male" & Tehsil=="Urban" ~ 13,
-           Gender=="Mixed" & Tehsil=="Urban" ~ 23,           
-           
-         ))
-
-strata_df %>%
-  flextable() %>%
-  add_header_lines('Share of Students per Tehsil and School Type')
-
-strata_df %>% group_by(Gender) %>% summarise(sum=sum(sample_size))
-
-```
-
-Select the sample and save.
-```{r option2, echo=TRUE}
-# set the numbers of schools selected by strata (grade)
-
-sample_df <- df_updated_gepd %>%
-  left_join(strata_df) %>%
-  mutate(
-    totalstudents=sum(Grand_total),
-  ) %>%
-  group_by(Tehsil, Gender ) %>%
-  mutate(strata_count=n(),
-         strata_size=sum(Grand_total),
-         strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = sample_size, weight =Grand_total) %>%
-  ungroup() %>%
-  mutate(strata_prob=(sample_size)*(totalstudents/strata_size),
-         ipw=1/strata_school_prob*(1/strata_prob))
-
-
-write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.Date(),".csv"))
-
-```
+However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(total_ece_enrollment+total_katchi_enrollment<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(total_5th_enrollment<3))` because of the grade 5 restriction.
 

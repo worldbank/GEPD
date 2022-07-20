@@ -242,7 +242,7 @@ api_metadata_fn <- function(cntry, yr) {
 
 
 
-ETH_data_2020_2021 <- api_metadata_fn('ETH', '2020-2021')
+ETH_data_2020_2021 <- api_metadata_fn('ETH', '2021')
 
 
 
