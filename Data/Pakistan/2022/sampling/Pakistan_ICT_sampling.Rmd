@@ -192,7 +192,7 @@ sample_df <- df_updated_gepd %>%
          strata_school_prob=strata_size/totalstudents) %>%
   sample_n(size = sample_size, weight =Grand_total) %>%
   ungroup() %>%
-  mutate(strata_prob=(sample_size)*(totalstudents/strata_size),
+  mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
          ipw=1/strata_school_prob*(1/strata_prob))
 
 
