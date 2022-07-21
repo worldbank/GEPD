@@ -105,6 +105,10 @@ df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
     class_12=`Class 12`
   )
 
+NDM_list <- c('BAJAUR','MOHMAND','ORAKZAI',
+              'KHYBER','KURRAM',
+              'NORTH WAZIRISTAN','SOUTH WAZIRISTAN')
+
 ```
 
 Basic summary stats of overall frame
@@ -160,11 +164,30 @@ df_updated_gepd <- df_raw %>%
   filter(class_1>=3,
          class_4>=3) 
 
+df_updated_gepd_nmd <- df_raw %>%
+  filter(class_1>=3,
+         class_4>=3) %>%
+  filter(!(District %in% NDM_list))
+
+
 df_updated <- df_raw %>%
   filter(class_prep>=3,
          class_1>=3,
          class_4>=3,
          class_5>=3)
+```
+
+
+```{r}
+#calcualte largest NDM districts.  
+df_updated_gepd %>%
+  ungroup() %>%
+  mutate(total_students_g4=sum(class_4)) %>%
+  filter((District %in% NDM_list)) %>%
+  group_by(District,total_students_g4) %>%
+  summarise(n=n(),
+            students=sum(class_4)) %>%
+  mutate(share=students/total_students_g4)
 ```
 
 <!-- Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible. -->
