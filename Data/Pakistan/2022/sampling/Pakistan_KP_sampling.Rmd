@@ -334,8 +334,9 @@ strata_df_175 %>% group_by(Gender) %>% summarise(sum=sum(sample_size))
 
 
 # set the numbers of schools selected by strata (grade)
-
-sample_df_175 <- df_updated_gepd %>%
+#take from original 200
+sample_df_175 <- sample_df_200 %>%
+  select(-nstudents_district, -total_district,-share_district, -sample_size) %>%
   left_join(strata_df_175) %>%
   mutate(
     totalstudents=sum(total_enrollment),
