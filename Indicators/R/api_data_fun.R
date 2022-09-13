@@ -130,12 +130,12 @@ api_template <- api_template %>%
     mutate(
       SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
       SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
-      SE.PRM.TENR	 =-999,
-      SE.PRM.TENR.1	 =-999
+      SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
+      SE.PRM.TENR.1	 =wbopendat$SE.PRM.TENR
     )
   
   
@@ -252,13 +252,13 @@ api_template <- api_template %>%
       SE.PRM.INPT.1.R =indicator_means(inputs, "school", "INPT",  "Rural"),
       SE.PRM.INPT.1.U =indicator_means(inputs, "school", "INPT",  "Urban"),
       #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
-      SE.PRM.INPT.2   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
-      SE.PRM.INPT.2.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.2.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
+      SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
+      SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
       #(De Facto) Percent of classrooms with a functional blackboard and chalk	
-      SE.PRM.INPT.3   =100*indicator_means(blackboard_functional, "school", "INPT",  "All"),
-      SE.PRM.INPT.3.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.3.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban"),
+      SE.PRM.INPT.2   =100*indicator_means(blackboard_functional, "school", "INPT",  "All"),
+      SE.PRM.INPT.2.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural"),
+      SE.PRM.INPT.2.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban"),
       #(De Facto) Percent of classrooms with basic classroom furniture	
       SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All"),
       SE.PRM.INPT.4.R =100*indicator_means(share_desk, "school", "INPT",  "Rural"),
@@ -538,11 +538,11 @@ api_template <- api_template %>%
     #(De Facto) Average quality of applicants accepted into initial education programs
     SE.PRM.TSDP.3  = expert_df$criteria_become,
     #(De Jure) Requirements to become a primary school teacher                        
-    SE.PRM.TSDP.4  = indicator_means(teacher_selection		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.4  = 1+2*indicator_means(teacher_selection		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to become a primary school teacher                       
     SE.PRM.TSDP.5 =expert_df$criteria_transfer,
     #(De Jure) Requirements to fulfill a transfer request                             
-    SE.PRM.TSDP.6  = indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.6  = 1+2*indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to fulfill a transfer request                            
     SE.PRM.TSDP.7  = -999,
     #(De Jure) Selectivity of teacher hiring process                                  

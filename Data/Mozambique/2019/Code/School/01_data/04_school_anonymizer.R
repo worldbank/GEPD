@@ -37,30 +37,26 @@ for (i in indicator_names ) {
   
 }
   
-ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
-                                "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
-                                "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
-                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
-                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
-                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
-                                "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
-                                "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
-                                "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
-                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
+ind_dta_list<-c(ind_dta_list, c( 
+                                "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F"))
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon' )
+               'school_gdp', 'ecd_dta_anon' )
 
 
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-currentDate<-c("2019-10-11")
+currentDate<-c("2020-03-09")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
+
+#remove some conflicting columns
+data_set_updated <- data_set_updated %>%
+  select(codigo, orig_rural, orig_province, orig_distrito, ensino, fim4_hm, weights)
 
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
@@ -72,10 +68,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
     mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
-    mutate(province=governorate) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" | names(data_set_updated) == "province" |
-                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | 
-                                                      names(data_set_updated) == "property_type" | names(data_set_updated) == "supervisory_authority")])))
+    mutate(province=orig_province) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "orig_rural" | names(data_set_updated) == "orig_province" | names(data_set_updated) == "orig_distrito" |
+                                                names(data_set_updated) == "ensino" )])))
 }
 
 
@@ -100,6 +95,7 @@ write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"
 
 
 for (i in data_list ) {
+  print(i)
   if (exists(i)) {
     #form temp data frame with each schools data
     temp<-get(i) 
@@ -114,7 +110,7 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, organization_code, total_students_grade_4, governorate)
+      temp <- df_weights_function(temp, codigo,fim4_hm, orig_province)
     }
     
     #Scrub names, geocodes

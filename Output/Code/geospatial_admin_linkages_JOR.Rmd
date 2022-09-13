@@ -1,0 +1,352 @@
+---
+title: "GEPD Geospatial Admin Linkaged"
+author: "Brian Stacy"
+date: "11/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(sf)
+sf::sf_use_s2(FALSE)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggthemes)
+library(patchwork)
+
+#cnt_map <- ne_countries(country="Peru", scale = "medium", returnclass = "sf", type='map_units')
+
+
+#set directory to bring in data
+country <-'JOR'
+country_name <- "Jordan"
+year <- '2019'
+
+#directories
+project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+
+# load the world bank admin boundaries
+load("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/WB_admin_boundaries.Rdata")
+
+# load the public officials data
+load(file.path(confidential_folder, "/Public_Officials/public_officials_indicators_data.RData"))
+
+# load the school data
+load(file.path(confidential_folder, "/School/school_survey_data.RData"))
+
+
+keyfile <- read_csv(paste0(confidential_folder, "/School/EPDash_linkfile_hashed.csv"))
+
+#get list of indicators
+
+    sch_ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient','student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences')
+    
+    po_ind_list<- c(
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+    
+```
+
+
+## Introduction
+
+This file will read in the World Bank spatial polygon files containing the admin1 and admin2 boundaries for all countries. It will then read in the lat/long data in the GEPD school and public officials files and match them to the official admin1 and admin2 boundaries.  This informatin will then be saved.
+
+```{r geojson_prelim}
+
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+
+
+# load wb polygon data 
+
+## import at district level (adm2 level)
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == country_name) %>%
+  distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+# ## import at district level (adm1 level)
+# geo1 <- geojson_sf(
+#   file.path(wbgis, "GeoJSON/g2015_2014_1.geojson") # where _1 has region-level polys
+#   ) %>%
+#   filter( ADM0_NAME == country_name) %>%
+#   distinct(ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+# 
+# ## keep only the adm0 code and the geometry column.
+# geo1 <- geo1 %>%
+#   select(ADM1_CODE, geometry)
+
+
+# plot to show different geometries: rwa1 has 5 regions and rwa has 30 districts 
+#geo1 %>% select(ADM1_CODE) %>% plot(., main = 'region geometry')
+wb.poly.2 %>% select(ADM2_CODE) %>% plot(., main = 'district geometry')
+
+
+
+```
+
+
+```{r linkages}
+
+m.po <- public_officials_dta_clean
+m.school <- school_dta_short
+
+#get coordinates
+po_coord_df <- public_officials_dta_clean %>%
+  select(interview__id, lat, lon) %>%
+  rename(office_lat=lat,
+         office_lon=lon)
+
+school_coord_df <- school_dta_short %>%
+  select(school_code, lat, lon) %>%
+  rename(school_lat=lat,
+         school_lon=lon) 
+
+# convert po + school dataset to sf objects
+po <- st_as_sf(m.po,
+               coords = c("lon", "lat"), # set geometry/point column first
+               na.fail = FALSE)
+
+school <- st_as_sf(m.school,
+                   coords = c("lon", "lat"),
+                   na.fail = FALSE)
+
+
+
+# set the crs of school + po as the same as the world poly crs
+st_crs(po) <- st_crs(wb.poly.2)
+st_crs(school) <- st_crs(wb.poly.2)
+
+st_is_longlat(po)
+st_is_longlat(school)
+
+
+
+# set the variable order
+order <- c("ADM0_NAME", "ADM1_NAME", "ADM2_NAME",
+           "ADM0_CODE", "ADM1_CODE", "ADM2_CODE")
+
+
+
+# - - - - - - - - -  join poly and po datasets - - - - - - - - -
+# note, this is very important to see that the datasets will be
+# joined NOT by the region or dsitrict -level polygon datasets, but
+# instead the will be joined by the dataset that defines the polygons
+# by the decision-making level
+
+main_po_data <- st_join(po, # points
+                        wb.poly.2, #polys
+                        largest = TRUE) %>%
+  select( interview__id,  order, everything())
+
+
+# join poly and school datasets: should be joing with wb.poly.2 since schools don't apply to dm level
+main_school_data <- st_join(school, # points
+                            wb.poly.2, #polys
+                            largest = TRUE) %>%
+  select(school_code, order, everything())
+```
+```{r poplot}
+
+po_map <- ggplot() +
+  geom_sf(data=wb.poly.2) +
+  geom_sf(data=po) +
+  theme_map() +
+  ggtitle("Locations of Interviews for Survey of Public Officials")
+  
+school_map <- ggplot() +
+  geom_sf(data=wb.poly.2) +
+  geom_sf(data=school) +
+  theme_map() +
+  ggtitle("Locations of Interviews for School Survey")
+  
+po_map + school_map
+
+combined_map <- ggplot() +
+  geom_sf(data=wb.poly.2) +
+  geom_sf(data=school, color='red', shape=1) +
+  geom_sf(data=po, color='blue', shape=2) +
+  theme_map() +
+  labs(title="Locations of Interviews for School Survey and Survey of Public Officials",
+       caption = "School interviews in red.  Public Offiicals interview in blue.")
+  
+combined_map  
+```
+
+
+Merge the school and PO data
+
+```{r}
+#district linkages
+po_district_df <- main_po_data %>%
+  left_join(po_coord_df) %>%
+  filter(govt_tier=='District office (or equivalent)') %>%
+  group_by(ADM2_NAME, ADM2_CODE) %>%
+  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean)) %>%
+  as_tibble() %>%
+  select(-geometry) %>%
+  filter(!is.na(ADM2_NAME))
+
+
+
+linked_school_data <- main_school_data %>%
+  left_join(school_coord_df) %>%
+  left_join(po_district_df) 
+  #filter(!is.na(quality_bureaucracy))
+
+#write to csv
+linked_school_data_csv <- linked_school_data %>%
+  as_tibble() %>% 
+  ungroup() %>%
+  select(-geometry) %>%
+  left_join(keyfile) %>%
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
+
+write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+
+```
+
+Analysis
+
+```{r eval=FALSE, include=FALSE}
+
+linked_school_data_csv <- linked_school_data_csv %>%
+  mutate(dist=distm(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')], fun = distHaversine),
+                                 dist_miles=dist/1609.35)
+
+hist(linked_school_data_csv$dist_miles) #distance in miles
+  
+linked_map <- ggplot() +
+  geom_sf(data=wb.poly.2, fill='#d8e2dc') +
+  geom_sf(data=linked_school_data, color='black', shape=1) +
+  geom_point(data=linked_school_data_csv, aes(x=office_lon, y=office_lat), color='red') +
+  theme_map() +
+  labs(title="Locations of linkable observations for School Survey and Survey of Public Officials"
+       )+
+  theme(panel.background = element_rect(fill='#ece4db')
+  )
+linked_map
+
+po_region_df <- main_po_data %>%
+  filter(govt_tier=='Regional office (or equivalent)') %>%
+  group_by(ADM1_NAME, ADM1_CODE) %>%
+  summarise(across(one_of(po_ind_list),mean)) %>%
+  as_tibble() %>%
+  select(-geometry)
+
+linked_school_region_data <- main_school_data %>%
+  left_join(po_region_df)  %>%
+  filter(!is.na(quality_bureaucracy))
+```
+
+
+```{r student_knowledge, eval=FALSE, include=FALSE}
+
+ggplot(data=linked_school_data, aes(x=quality_bureaucracy, y=student_knowledge)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=national_learning_goals, y=student_knowledge)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=mandates_accountability, y=student_knowledge)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=impartial_decision_making, y=student_knowledge)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+```
+
+```{r inputs, eval=FALSE, include=FALSE}
+
+ggplot(data=linked_school_data, aes(x=quality_bureaucracy, y=inputs)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=national_learning_goals, y=inputs)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=mandates_accountability, y=inputs)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=impartial_decision_making, y=inputs)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+```
+
+```{r infrastructure, eval=FALSE, include=FALSE}
+
+ggplot(data=linked_school_data, aes(x=quality_bureaucracy, y=infrastructure)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=national_learning_goals, y=infrastructure)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=mandates_accountability, y=infrastructure)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+ggplot(data=linked_school_data, aes(x=impartial_decision_making, y=infrastructure)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw()
+
+```
+
+
+

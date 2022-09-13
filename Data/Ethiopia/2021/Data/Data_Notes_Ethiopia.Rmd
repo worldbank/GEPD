@@ -1,0 +1,1349 @@
+---
+title: "Data Collection Notes - Ethiopia"
+author: ""
+output:
+  html_document: default
+
+always_allow_html: yes
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+#load relevant libraries
+library(knitr)
+library(tidyverse)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(kableExtra)
+library(DT)
+library(mice)
+library(stargazer)
+library(gt)
+library(wbstats)
+library(rpart)       # performing regression trees
+library(rpart.plot)  # plotting regression trees
+library(randomForest)
+library(caret)
+library(modelr)
+library(geosphere)
+library(geojsonsf) # reads large .geojson files as sf objects much faster than sf's st_read()
+library(ggthemes)
+#Load the data
+
+#read in school level file with sampling information
+#currentDate<-c("2019-07-22")
+#sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+# define stle for ggplot based on BBC plotting styles
+bbc_style <- function() {
+  font <- "Helvetica"
+  
+  ggplot2::theme(
+    
+    #Text format:
+    #This sets the font, size, type and colour of text for the chart's title
+    plot.title = ggplot2::element_text(family=font,
+                                       size=12,
+                                       face="bold",
+                                       color="#222222"),
+    #This sets the font, size, type and colour of text for the chart's subtitle, as well as setting a margin between the title and the subtitle
+    plot.subtitle = ggplot2::element_text(family=font,
+                                          size=12,
+                                          margin=ggplot2::margin(9,0,9,0)),
+    plot.caption = ggplot2::element_blank(),
+    #This leaves the caption text element empty, because it is set elsewhere in the finalise plot function
+    
+    #Legend format
+    #This sets the position and alignment of the legend, removes a title and backround for it and sets the requirements for any text within the legend. The legend may often need some more manual tweaking when it comes to its exact position based on the plot coordinates.
+    legend.position = "none",
+    legend.text.align = 0,
+    legend.background = ggplot2::element_blank(),
+    legend.title = ggplot2::element_blank(),
+    legend.key = ggplot2::element_blank(),
+    legend.text = ggplot2::element_text(family=font,
+                                        size=14,
+                                        color="#222222"),
+    
+    #Axis format
+    #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_text(family=font,
+                                      size=8,
+                                      color="#222222"),
+    axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
+    axis.ticks = ggplot2::element_blank(),
+    axis.line = ggplot2::element_blank(),
+    
+    #Grid lines
+    #This removes all minor gridlines and adds major y gridlines. In many cases you will want to change this to remove y gridlines and add x gridlines. The cookbook shows you examples for doing so
+    panel.grid.minor = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    panel.grid.major.x = ggplot2::element_blank(),
+    
+    #Blank background
+    #This sets the panel background as blank, removing the standard grey ggplot background colour from the plot
+    panel.background = ggplot2::element_blank(),
+    
+    #Strip background (#This sets the panel background for facet-wrapped plots to white, removing the standard grey ggplot background colour and sets the title size of the facet-wrap title to font size 22)
+    strip.background = ggplot2::element_rect(fill="white"),
+    strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
+  )
+}
+
+
+```
+
+
+```{r data2021}
+
+#Country name and year of survey
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2021'
+
+
+#Add your UPI here and set the directory paths of your choice.
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+
+    project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
+   
+    download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+    
+    confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+    
+    save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+    
+    backup_onedrive="no"
+    
+    save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+    
+    
+  }else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  
+}
+
+currentDate<-c("2020-02-14")
+sample_folder <- file.path(project_folder,paste(country, paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
+  select(-sample) #variable name causes conflict
+load(sample_frame_name)
+
+#attach saved results
+attach(paste0(confidential_folder, "/school_indicators_data.RData"))
+school_gdp_2021 <- school_gdp
+school_dta_2021 <- school_dta_short %>%
+  left_join(weights_df %>% mutate(school_code=Code_School)) %>%
+  distinct(school_code, .keep_all = TRUE) %>%
+  mutate(rural=as.numeric(Location=="Rural")) %>%
+  left_join(school_gdp_2021) 
+
+
+
+
+```
+
+```{r data2020}
+
+#Country name and year of survey
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2020'
+
+
+#Add your UPI here and set the directory paths of your choice.
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+
+    project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
+    
+    download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+    
+    confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+    
+    save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+    
+    backup_onedrive="no"
+    
+    save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+    
+    
+  } else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  
+}
+
+#attach saved results
+attach(paste0(confidential_folder, "/school_indicators_data.Rdata"))
+school_gdp_2020 <- school_gdp
+school_dta_2020 <- school_dta_short %>%
+  left_join(weights_df %>% mutate(school_code=Code_School)) %>%
+  distinct(school_code, .keep_all = TRUE) %>%
+  mutate(rural=as.numeric(Location=="Rural")) %>%  
+  left_join(school_gdp_2020)
+
+
+
+```
+
+```{r combinedata}
+
+#combine the data from 2020 and 2021
+
+combine_gepd_data <- school_dta_2020 %>%
+  mutate(date=2020,
+         survey_time=as.character(survey_time)) %>%
+  bind_rows(school_dta_2021) %>%
+  mutate(date=if_else(is.na(date),2021,date)) 
+
+combine_gepd_data %>%
+  group_by(date) %>%
+  summarise(
+    GDP=mean(GDP, na.rm=T)
+  )
+
+
+```
+
+
+
+
+```{r country_map}
+sample_map <- combine_gepd_data %>%
+    mutate(longitude=as.character(lon)) %>%
+    mutate(latitude=as.character(lat)) %>%
+    mutate(longitude=as.numeric(longitude)) %>%
+    mutate(latitude=as.numeric(latitude)) 
+
+
+  sample_map_chosen <- sample_map %>%
+     mutate(sample_text=if_else(
+       date==2020,
+       "2020",
+       "2021"
+     ))
+
+   
+
+   pal <- colorFactor(
+     palette = c("red", "green"),
+     domain = c("2020", "2021")
+   )
+   
+
+    
+
+```
+
+## Table of Ethiopia Regions Visited Prior to School Closures
+
+Below is a set of tables showing the regions visited by the enumerators prior to school closures.
+
+```{r provtab}
+
+prov_tab <- sample_map_chosen %>%
+  mutate(Province=school_address_preload) %>%
+  group_by(Province, sample_text) %>%
+  summarise(n=n()) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from=sample_text,
+    values_from=n
+  ) %>%
+  mutate(`2020`=if_else(is.na(`2020`),0,as.numeric(`2020`)),
+         `2021`=if_else(is.na(`2021`),0,as.numeric(`2021`))) %>%
+  select(Province, `2020`, `2021`)
+
+gt(prov_tab) %>%
+  tab_header(
+    title="Schools Visited/Not Visited by Province Prior to COVID-19."
+  ) %>%
+  summary_rows(
+    columns = c('2020','2021' ),
+    fns = list(
+      Total = "sum"),
+    formatter=fmt_number,
+    decimals=0
+  ) 
+
+```
+
+
+
+## Map of Ethiopia Schools Visited Prior to School Closures
+
+The below map shows the schools that were visited prior to COVID related school closures that stopped data collection.
+
+
+
+```{r country_map2, echo=FALSE}
+leaflet(data=sample_map_chosen) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~longitude,  lat=~latitude, color=~pal(sample_map_chosen$sample_text),
+                      radius=7,
+                popup =  paste("Name: ", sample_map_chosen$orig_name, " <br>",
+                                  "Province: ", sample_map_chosen$school_address_preload, " <br>",
+                                  "Region: ", sample_map_chosen$school_province_preload, " <br>",
+                                  "Woreda: ", sample_map_chosen$school_district_preload, " <br>",
+                                  "EMIS: ", sample_map_chosen$school_emis_preload)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_map_chosen$sample_text, title="Schools Visited")
+```
+
+The Following table pulls localized GDP data from satellites and compares the local GDP for schools visited in 2020 versus 2021.  The satellite data comes from here:
+
+Data downloaded from Here:
+https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010 
+
+also see
+https://preview.grid.unep.ch/index.php?preview=data&events=socec&evcat=1&lang=eng
+
+ In the distributed global GDP dataset sub-national GRP and national GDP data are allocated to 
+ 30 arc second (approximately 1km) grid cells in proportion to the population residing in that cell. 
+ The method also distinguishes between rural and urban population, assuming the latter to have a higher 
+ GDP per capita. Input data are from 1) a global time-series dataset of GDP, with subnational gross regional 
+ product (GRP) for 74 countries, compiled by the World Bank Development Economics Research Group (DECRG). 2) 
+ Gridded population projections for the year 2009, based on a population grid for the year 2005 provided by 
+ LandScanTM Global Population Database (Oak Ridge, TN: Oak Ridge National Laboratory). This dataset has been 
+ extrapolated to year 2010 by UNEP/GRID-Geneva. Unit is estimated value of production per cell, in thousand of 
+ constant 2000 USD. Cell level anomalies may occur due to poor alignment of multiple input data sources, and it 
+ is strongly recommended that users attempt to verify information, or consult original sources, in order to determine 
+ suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
+ Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
+ extrapolation UNEP/GRID-Geneva.
+
+```{r ttest1}
+
+
+t1 <-  t.test(sample_map_chosen$GDP ~ sample_map_chosen$sample_text) %>% broom::tidy() %>% mutate(indicator="2015 Satellite based GDP Estimate")
+                       
+
+
+t_df <- t1 %>%
+  #bind_rows(t1, t2, t3, t4, t5, t6) %>%
+  transmute(
+    Indicator=indicator,
+    `2020` = round(estimate1,1),
+    `2021`=round(estimate2,1),
+    Difference=round(estimate,1),
+    `P-value`=round(p.value,3), 
+    `95% CI`=paste0("[",round(conf.low,1),",",round(conf.high,1),"]")
+    
+    
+  ) 
+
+gt(t_df) %>%
+  tab_header(
+    title="Test of Differences for Indicators between Schools Visited 2020 and 2021"
+  )
+
+```
+
+## Predictions of Whether School Visited in 2020 or 2021
+
+In the next section, we will use regression to examine characteristics of schools that were visited in 2020 and 2021. Examine GDP as estimated using satellite data, distance from capital, other?
+
+```{r}
+
+#get coordinates of capital city from WDI
+wdi<-wbstats::wbcountries() %>%
+  filter(country=="Ethiopia")
+
+my_lat <- as.numeric(wdi$lat)
+my_lon <- as.numeric(wdi$long)
+
+pred_df <- sample_map_chosen %>% 
+  filter(!is.na(lon) & !is.na(GDP)) %>%
+  rowwise() %>% mutate(
+  dist = distm(c(my_lon, my_lat), c(lon, lat), fun=distHaversine) # this works
+  )
+ # mutate(GDP=GDP+0.01) #some GDP values set to 0
+
+#drop schools directly in addis
+
+#OLS
+reg_mod <- lm(sample_text ~ GDP + dist, data=pred_df)
+summary(reg_mod)
+
+#random forest
+set.seed(222)
+ind <- sample(2, nrow(pred_df), replace = TRUE, prob = c(0.7, 0.3))
+train <- pred_df[ind==1,] %>%
+  select(sample_text, GDP, dist) %>%
+  mutate(sample_text=factor(sample_text))
+
+test <- pred_df[ind==2,] %>%
+  select(sample_text, GDP, dist) %>%
+  mutate(sample_text=factor(sample_text))
+
+#tree
+rt <- rpart(
+  formula = sample_text ~ .,
+  data    = train,
+  method  = "anova"
+  )
+rpart.plot(rt)
+
+rf <- randomForest(sample_text~., data=train,) 
+print(rf)
+p2 <- predict(rf, test, type='prob')
+#confusionMatrix(p2, test$ sample_text)
+importance(rf)
+varImpPlot(rf,
+           sort = T,
+           n.var = 10,
+           main = "Variable Importance")
+```
+
+Use random forest predicted probabilities to do inverse propensity weighting.
+
+Student attendance, teacher presense, and 1st grade assessment scores seem negatively affected.  Not much else.
+
+```{r}
+
+indicator <- 'presence_rate'
+
+predicted <- predict(rf, pred_df, type='prob')
+
+#add probabilites to data frame
+inv_weight_df <- pred_df %>%
+  mutate(sample_2021=sample_text=="2021") %>%
+  rename(outcome= !!indicator)
+
+inv_weight_df$prob2020 <- predicted[,1]
+inv_weight_df$prob2021 <- predicted[,2]
+
+inv_weight_df <- inv_weight_df %>%
+  filter(prob2021>0 & prob2021<100) %>%
+  mutate(ipw=if_else(sample_2021==TRUE, 1/prob2021, 1/prob2020))
+
+#regress student learning on whether data collected in 2021
+reg_simp <- lm(outcome ~ sample_2021, data= inv_weight_df)
+summary(reg_simp)
+
+#now use propensity weights
+reg_weight <- lm(outcome ~ sample_2021, data= inv_weight_df, weights=ipw)
+summary(reg_weight)
+
+# #Manual method
+# dta_2020 <- inv_weight_df %>%
+#   filter(sample_2021==FALSE) %>%
+#   mutate(ipw=1/prob2020)
+# 
+# mean_2020_wgt <- wtd.mean(dta_2020$student_knowledge, weights=dta_2020$ipw)
+# mean_2020_wgt
+# 
+# dta_2021 <- inv_weight_df %>%
+#   filter(sample_2021==TRUE) %>%
+#   mutate(ipw=1/prob2021)
+# 
+# mean_2021_wgt <- wtd.mean(dta_2021$student_knowledge, weights=dta_2021$ipw)
+# mean_2021_wgt
+# 
+# mean_2021_wgt-mean_2020_wgt
+
+```
+
+```{r}
+
+
+dens <- density(pred_df$dist/1000, from=min(pred_df$dist/1000), to=max(pred_df$dist/1000))
+df <- data.frame(x=dens$x, y=dens$y)
+
+probs <- c(0, 0.25, 0.5, 0.75, 1)
+
+
+quantiles <- quantile(pred_df$dist/1000, prob=probs)
+df$quant <- factor(findInterval(df$x,quantiles))
+ggplot(df, aes(x,y)) + geom_line() + geom_ribbon(aes(ymin=0, ymax=y, fill=quant)) + scale_x_continuous(labels=scales::comma) + scale_fill_brewer(guide="none") +
+  ggtitle('Distance (km) of School from Addis Ababa',
+          subtitle='Shaded by Quartile') +
+  theme_bw()
+
+
+```
+
+
+```{r covidanalysis}
+
+  ## NOTE ####
+
+  # We are trying to compare the schools for which the data collection took place before Covid-19 started with the ones for which data collection was completed in 2021. To do that, we are drawing a random sample of ~ 50-60 schools from the ones that were done at the beginning of 2020. Each school from this first sample is then match with the schools from 2021 based on 1) observable characteristics (GDP + number of students) and 2) geographic location (closest GPS distance)
+
+   ## Shortest path with distance ---- 
+
+      selector_bandwidth="Number" # values: "Distance", "Number".  Set either distance based bandwidth or number of schools to match
+      bandwidth_N = 80 # set bandwidth for number of schools
+      bandwidth_km = 20 # set bandwidth for distance in km
+      
+      
+      schools_2021 <- school_dta_2021 %>% filter(!is.na(lon)|!is.na(lat))
+      schools_2020 <- school_dta_2020
+
+      
+      # create distance matrix
+       mat <- distm(schools_2021[,c('lon','lat')], schools_2020[,c('lon','lat')], fun=distVincentyEllipsoid) 
+      
+       # assign the name to the point in list1 based on shortest distance in the matrix
+      schools_2021$Closest_school_Pre_covid <- schools_2020$school_code[max.col(-mat)]
+      schools_2021$Distance_btw_schools <- apply(mat, 1, min)
+      
+      #shortest <- random_2020
+          
+    
+      
+    ## Drawing the sample from 2021 -----
+
+  comparison_full <- schools_2021 %>% 
+      arrange(Distance_btw_schools)   %>%     #arrange by distance, so the closest schools are on top of df
+       rename_with(~paste0(., "_POST"), school_code:GDP) %>% 
+      rename(school_code=Closest_school_Pre_covid) %>% 
+      left_join(schools_2020, by =c("school_code")) %>% 
+      rename_with(~paste0(., "_PRE"), school_name_preload:GDP) 
+      
+      
+  sample_full <- comparison_full %>%    
+      #filter(row_number()<=bandwidth_N) #take top N number of observations
+      filter(Distance_btw_schools/1000<=bandwidth_km)
+  
+  if (selector_bandwidth=="Distance") {
+      sample_full <- comparison_full %>%    
+        filter(Distance_btw_schools/1000<=bandwidth_km)
+       bandwidth_N=nrow(sample_full)
+  
+  } else if (selector_bandwidth=="Number") {
+      sample_full <- comparison_full %>%    
+        filter(row_number()<=bandwidth_N) #take top N number of observations
+        bandwidth_km=mean(sample_full$Distance_btw_schools)
+  }
+      
+   #get basic summary stats on GDP
+  
+    comp_gdp<-comparison_full$GDP_PRE-comparison_full$GDP_POST
+    samp_gdp<-sample_full$GDP_PRE-sample_full$GDP_POST
+
+    comp_rural<-comparison_full$rural_PRE-comparison_full$rural_POST
+    samp_rural<-sample_full$rural_PRE-sample_full$rural_POST    
+    
+  t_full <- t.test(comp_gdp ) %>% broom::tidy() %>% mutate(indicator="All Schools - GDP")
+  t_sample <-  t.test(samp_gdp) %>% broom::tidy() %>% mutate(indicator=paste0(bandwidth_N, " Nearest Schools - GDP"))
+  
+  t_full_dist <- t.test(comparison_full$Distance_btw_schools/1000 ) %>% broom::tidy() %>% mutate(indicator="All Schools - Distance (km)")
+  t_sample_dist <-  t.test(sample_full$Distance_btw_schools/1000) %>% broom::tidy() %>% mutate(indicator=paste0(bandwidth_N, " Nearest Schools - Distance (km)"))
+  
+     
+  t_full_rural <- t.test(comp_rural ) %>% broom::tidy() %>% mutate(indicator="All Schools - Rural")
+  t_sample_rural <-  t.test(samp_rural) %>% broom::tidy() %>% mutate(indicator=paste0(bandwidth_N, " Nearest Schools - Rural"))
+   
+  means_2020 <- c(mean(sample_full$GDP_PRE), mean(comparison_full$GDP_PRE), as.numeric(NA), as.numeric(NA),mean(sample_full$rural_PRE), mean(comparison_full$rural_PRE))
+  means_2021 <- c(mean(sample_full$GDP_POST), mean(comparison_full$GDP_POST), as.numeric(NA), as.numeric(NA),mean(sample_full$rural_POST), mean(comparison_full$rural_POST))
+
+t_df <- t_sample %>%
+   bind_rows(t_full) %>%
+  bind_rows(t_sample_dist) %>%
+  bind_rows(t_full_dist) %>%
+  bind_rows(t_sample_rural) %>%
+  bind_rows(t_full_rural) %>%  
+  #bind_rows(t1, t2, t3, t4, t5, t6) %>%
+  transmute(
+    Indicator=indicator,
+    `2020` = round(means_2020,1),
+    `2021`=round(means_2021,1),
+    Difference=round(estimate,1),
+    `P-value`=round(p.value,3), 
+    `95% CI`=paste0("[",round(conf.low,1),",",round(conf.high,1),"]")
+  
+  ) 
+
+gt(t_df) %>%
+  tab_header(
+    title="Test of Differences for GDP Estimates between Schools Visited 2020 and 2021"
+  )
+    
+
+```
+
+```{r compmap, echo=FALSE ,eval=F, include=FALSE}
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+  
+  } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+  wbgis <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/General/"
+
+  
+}
+
+
+# load wb polygon data 
+
+## import at district level (adm2 level)
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == "Ethiopia") 
+  #distinct(ADM2_CODE, ADM1_CODE, ADM0_CODE, .keep_all = TRUE)  # remove any possible duplicates
+
+overall_map <- ggplot() +
+  geom_sf(data=wb.poly.2, fill='#d8e2dc') +
+  geom_point(data=comparison_full, aes(x=lon_PRE, y=lat_PRE), color='red') +
+  geom_point(data=comparison_full, aes(x=lon_POST, y=lat_POST), color='blue') +
+  theme_map() +
+  labs(title="Locations of All Schools in 2020 and 2021",
+       caption='Schools in 2020 in red.  Schools in 2021 in blue.'
+       )+
+  theme(panel.background = element_rect(fill='#ece4db')
+  )
+overall_map
+
+
+
+linked_map <- ggplot() +
+  geom_sf(data=wb.poly.2, fill='#d8e2dc') +
+  geom_point(data=sample_full, aes(x=lon_PRE, y=lat_PRE), color='red') +
+  geom_point(data=sample_full, aes(x=lon_POST, y=lat_POST), color='blue') +
+  theme_map() +
+  labs(title=paste0("Locations of ",bandwidth_N," Schools Matched in 2020 and 2021"),
+       caption='Schools in 2020 in red.  Schools in 2021 in blue.'
+       )+
+  theme(panel.background = element_rect(fill='#ece4db')
+  )
+linked_map
+
+
+```
+
+
+
+```{r testing}
+
+ 
+      ## Pivot for graphs --------
+    sample_full_long <- sample_full  %>% 
+          
+        # select(-school_code, -Distance_btw_schools) %>% 
+          
+         mutate(across(where(is.numeric),
+                    
+                    ~ as.character(.)
+                    )) %>% 
+          
+            pivot_longer(
+                    cols = school_code_POST:GDP_PRE,
+                    names_to = c("Indicator", "Covid"),
+                    names_pattern = "(.*)_(PRE|POST)",
+                    values_to = "Value"
+      ) %>% 
+        
+        # get rid off the names and character like variables that are no use for comparison here
+        
+        dplyr::filter(!str_detect(Value, "[A-Za-z]")) %>% 
+        mutate_at(c("Value"),
+                  ~ as.numeric(.)) %>% 
+        
+        mutate_if(is.numeric, ~replace(., is.na(.), 0))  %>%       # group_by(Covid, Indicator) %>%
+        # 
+        # summarise(Value = mean(Value, na.rm = T)) %>%
+        
+        ## Remove indicator not used for comparison
+        
+        dplyr::filter(!str_detect(Indicator, "school_code$")) %>% 
+        
+        dplyr::filter(!str_detect(Indicator, "sch_management_attraction")) %>% 
+        
+        ungroup() %>% 
+        
+        mutate(Covid = as.factor(Covid)) 
+
+ # sample_full_long[sample_full_long$Indicator %in% names(which(table(sample_full_long$Indicator) <2 )), ]
+
+
+      
+      #create subset with just main indicators
+    indicators_list<- c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
+                        #'student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 
+                        'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                
+                "GDP", "rural"
+                # 'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                # 'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                # 'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                # 'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+ 
+main_indicator_labels2<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", 
+                          #"4th Grade Student Proficiency - No Lonely Giraffe","4th Grade Student Proficiency Literacy - No Lonely Giraffe", 
+                          "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
+                        "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
+                        "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
+                        "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
+                        "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
+                        "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                        "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
+                        'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                        'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                        'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                        'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                        'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 'principal_salary',
+                        "School Management Selection & Deployment",
+                        "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                        "GDP", "rural"
+                        # "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        # "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        # "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
+                        # "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+                        )
+
+  ## Create referential dataframe
+  labels_df_2<-data.frame(Indicator=as.character(indicators_list),
+                      indicator_labels=as.character(main_indicator_labels2))
+      
+      
+  ## add labels to sampled schools drawn for comparison
+  main_comparison <- labels_df_2 %>% 
+    left_join(sample_full_long) %>% 
+    select(-Indicator) %>% 
+    group_by(indicator_labels) %>%
+    mutate(row = row_number()) %>%
+    tidyr::pivot_wider(names_from = indicator_labels, values_from = Value) %>%
+    select(-row) %>% 
+    mutate(Group = case_when(
+      
+      Covid == "PRE" ~ 0,
+      Covid == "POST" ~ 1
+      
+    )) %>% select(-Covid) %>% 
+    relocate(Group) %>% 
+    mutate(Group = as.factor(Group)) %>% 
+    distinct() %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+
+      
+  main_comparison %>% select(Group) %>%  map(table)
+  
+  
+  
+      
+    ## Run t test
+  
+#   library(tidyverse)
+#   library(rstatix)
+#   library(ggpubr)
+#   
+#   main_comparison_long <- main_comparison %>% 
+#     pivot_longer(cols = c(3:139), names_to= "variables") %>% 
+#     group_by(variables) %>%
+#     t_test(value ~ Group) %>%
+#     adjust_pvalue(method = "BH") %>%
+#     add_significance()
+  
+  
+  
+  
+  
+  
+      result<- t(sapply(main_comparison[-1], function(x) 
+     unlist(t.test(x~main_comparison$Group)[c("estimate","p.value","statistic","conf.int")])))
+        
+      results <- result %>% as.data.frame(.) %>% 
+          mutate(Indicator = rownames(.)) %>% 
+          filter(!str_detect(Indicator, "TEACH")) %>% 
+          filter(!`estimate.mean in group 0`==0) %>% 
+
+        rename(`Mean School Pre-Covid` = `estimate.mean in group 0`,
+               `Mean Schools Post-Covid` = `estimate.mean in group 1`,
+               `P-Value` = `p.value`,
+               `T-test` = `statistic.t`,
+               `95% CI` = `conf.int1`) %>% 
+        select(-`conf.int2`) %>% 
+        relocate(Indicator)
+  
+    rownames(results) <- c()
+      
+    
+ gt(results) %>%
+  tab_header(
+    title=paste0("Test of Differences for Indicators between Schools Visited 2020 and 2021 for ",bandwidth_N," Matched Schools")
+  ) %>% 
+   fmt_number(columns=c(`Mean School Pre-Covid`, `Mean Schools Post-Covid`, `P-Value`, `T-test`, `95% CI`),
+              decimals=2) %>%
+    tab_style(
+    style = cell_fill(color = "lightgreen"),
+    locations = cells_body(
+      rows = `P-Value` < 0.05)
+  ) 
+
+
+ 
+
+```
+
+
+```{r regression}
+
+
+  ## The numbers from above are showing an unexpected narrative, that is schools where data was collected post covid seems to be doing better than schools from pre covid. To make sense of this, we are running a regression accounting for 1)urban/rural, 2) pre/post, 3)GDP on both 1st grade and 4th grade.
+  library(stargazer)
+  library(sandwich)
+
+  
+  covariates <-main_comparison %>% 
+    select(GDP, rural, Group) %>% 
+    names(.)
+  
+  
+  ##Regression
+  
+  my_formula <- as.formula(paste('`4th Grade Student Knowledge` ~ ', paste(covariates, collapse=" + "), sep=""))
+  my_formula_bis <- as.formula(paste('`1st Grade Assessment Score` ~ ', paste(covariates, collapse=" + "), sep=""))
+
+  fourth_grade_lm<-lm(my_formula, main_comparison) 
+  first_grade_lm<-lm(my_formula_bis, main_comparison)
+  
+  ##GT tables
+  library(gtsummary)
+  tbl_regression(fourth_grade_lm) %>% 
+  modify_header(label = "**Variable**") %>% # update the column header
+  bold_labels() 
+
+  tbl_regression(first_grade_lm) %>% 
+  modify_header(label = "**Variable**") %>% # update the column header
+  bold_labels() 
+
+  
+  ## Regular regression tables
+  cov1_multi         <- vcovHC(fourth_grade_lm, type = "HC1")
+  robust_multi_se    <- sqrt(diag(cov1_multi))
+  
+  
+  cov2_multi         <- vcovHC(first_grade_lm, type = "HC1")
+  robust_multi_se_2    <- sqrt(diag(cov2_multi))
+  
+  
+  fourth_table<- summary(fourth_grade_lm)
+  first_table<- summary(first_grade_lm)
+
+
+  # load package
+  library(sjPlot)
+  
+  tab_model(fourth_table)
+  tab_model(first_table)
+
+  
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+  ## 15 indicators that are most likely to be significant ----------
+  
+  ## Here, we investigate which indicator are most often statistically significant when we vary the sample size from 20 to 100.
+
+  rounds <- seq(from=20, to=100, by=5) %>% 
+  as.data.frame() 
+
+  names(rounds)[1] <-  "Size"
+  
+  rounds <- rounds %>% mutate(Sample = rownames(.))
+
+
+  for (i in 1:17) {
+    
+    
+    ## Keep sample that match the loop
+    bandwidth_n <- rounds %>% 
+      dplyr::filter(Sample == i) %>% 
+      pull(Size)
+    
+    ## Shortest path with distance ----
+      
+      
+      schools_2021 <- school_dta_2021 %>% filter(!is.na(lon)|!is.na(lat))
+      schools_2020 <- school_dta_2020
+
+      
+      # create distance matrix
+       mat <- distm(schools_2021[,c('lon','lat')], schools_2020[,c('lon','lat')], fun=distVincentyEllipsoid) 
+      
+       # assign the name to the point in list1 based on shortest distance in the matrix
+      schools_2021$Closest_school_Pre_covid <- schools_2020$school_code[max.col(-mat)]
+      schools_2021$Distance_btw_schools <- apply(mat, 1, min)
+      
+      #shortest <- random_2020
+          
+    
+      
+    ## Drawing the sample from 2021 -----
+
+  comparison_full <- schools_2021 %>% 
+      arrange(Distance_btw_schools)   %>%     #arrange by distance, so the closest schools are on top of df
+       rename_with(~paste0(., "_POST"), school_code:GDP) %>% 
+      rename(school_code=Closest_school_Pre_covid) %>% 
+      left_join(schools_2020, by =c("school_code")) %>% 
+      rename_with(~paste0(., "_PRE"), school_name_preload:GDP) 
+
+  
+
+  sample_full <- comparison_full %>%    
+        filter(row_number()<=bandwidth_n) #take top N number of observations
+  
+        # bandwidth_km=mean(sample_full$Distance_btw_schools)
+
+
+
+
+      ## Pivot for graphs --------
+    sample_full_long <- sample_full  %>% 
+          
+        # select(-school_code, -Distance_btw_schools) %>% 
+          
+         mutate(across(where(is.numeric),
+                    
+                    ~ as.character(.)
+                    )) %>% 
+          
+            pivot_longer(
+                    cols = school_code_POST:GDP_PRE,
+                    names_to = c("Indicator", "Covid"),
+                    names_pattern = "(.*)_(PRE|POST)",
+                    values_to = "Value"
+      ) %>% 
+        
+        # get rid off the names and character like variables that are no use for comparison here
+        
+        dplyr::filter(!str_detect(Value, "[A-Za-z]")) %>% 
+        mutate_at(c("Value"),
+                  ~ as.numeric(.)) %>% 
+        
+        mutate_if(is.numeric, ~replace(., is.na(.), 0))  %>%      
+        
+        dplyr::filter(!str_detect(Indicator, "school_code$")) %>% 
+        
+        dplyr::filter(!str_detect(Indicator, "sch_management_attraction")) %>% 
+        
+        ungroup() %>% 
+        
+        mutate(Covid = as.factor(Covid)) 
+
+
+
+
+  ## Create referential dataframe
+  labels_df_2<-data.frame(Indicator=as.character(indicators_list),
+                      indicator_labels=as.character(main_indicator_labels2))
+      
+      
+  ## add labels to sampled schools drawn for comparison
+  main_comparison <- labels_df_2 %>% 
+    left_join(sample_full_long) %>% 
+    select(-Indicator) %>% 
+    group_by(indicator_labels) %>%
+    mutate(row = row_number()) %>%
+    tidyr::pivot_wider(names_from = indicator_labels, values_from = Value) %>%
+    select(-row) %>% 
+    mutate(Group = case_when(
+      
+      Covid == "PRE" ~ 0,
+      Covid == "POST" ~ 1
+      
+    )) %>% select(-Covid) %>% 
+    relocate(Group) %>% 
+    mutate(Group = as.factor(Group)) %>% 
+    distinct() %>% 
+    mutate_if(is.numeric, ~replace(., is.na(.), 0))
+
+      
+  main_comparison %>% select(Group) %>%  map(table)
+  
+  
+  
+      
+    ## Run t test
+      result<- t(sapply(main_comparison[-1], function(x) 
+     unlist(t.test(x~main_comparison$Group)[c("estimate","p.value","statistic","conf.int")])))
+        
+      results <- result %>% as.data.frame(.) %>% 
+          mutate(Indicator = rownames(.)) %>% 
+          filter(!str_detect(Indicator, "TEACH")) %>% 
+          filter(!`estimate.mean in group 0`==0) %>% 
+
+        rename(`Mean School Pre-Covid` = `estimate.mean in group 0`,
+               `Mean Schools Post-Covid` = `estimate.mean in group 1`,
+               `P-Value` = `p.value`,
+               `T-test` = `statistic.t`,
+               `95% CI` = `conf.int1`) %>% 
+        select(-`conf.int2`) %>% 
+        relocate(Indicator)
+  
+    rownames(results) <- c()
+
+  ## Keep only indicator with p-value significant
+  
+  indicator_significant <- results %>% 
+  dplyr::filter(`P-Value` < 0.05) %>% 
+  dplyr::mutate(Size = bandwidth_n)
+
+  assign(paste("indicator_significant", i, sep = "_") , indicator_significant)      
+    
+  }
+  
+  library(data.table)
+  ##Bind all dataframe
+  indicator_significant_overall <- rbindlist(mget(ls(pattern = "indicator_significant")), idcol = F)
+  
+  ##Keep the 15 top
+  indicator_significant <- indicator_significant_overall %>% 
+    filter(Indicator != "GDP") %>% 
+    group_by(Indicator) %>% 
+    mutate(Time = n()) %>%
+    distinct(Indicator, .keep_all =T) %>% 
+    arrange(desc(Time)) %>% 
+    ungroup() %>% 
+    top_n(10) %>% 
+    
+    mutate(
+      
+      Indicator = gsub("school_goals_clear", "Clear School Goals", Indicator),
+      Indicator = gsub("school_goals_exist", "Existing School Goals", Indicator),
+      Indicator = gsub("school_goals_relevant", "Relevant School Goals", Indicator),
+      Indicator = gsub("monitoring_infrastructure", "Monitoring of Infrastructure", Indicator)
+
+    )
+  
+  
+  
+        p<-  indicator_significant %>% 
+           select(Indicator, Time) %>% 
+          mutate(Country = "Ethiopia") %>% 
+        ggplot(., aes(x=reorder(Indicator, Time), y= Time, fill=Country)) +
+        geom_bar(stat='identity', position='dodge') +
+        scale_fill_manual(values = c(
+           "#054C70"
+        ))+        geom_text(aes(label=Time), position=position_dodge(width=0.9), vjust=-0.25)+
+        ggtitle("10 indicators that are most likely to be statistically significant out of 17 simulations") +
+        scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+        ylim(0, 20)
+      
+      
+      library(scales)
+      
+      
+      p + bbc_style() + expand_limits(y=c(0,20))
+  
+
+  
+  
+
+  
+    
+
+```
+
+```{r}
+  ## Basic questions ----------
+  
+  ## Here, we investigate the differences in the basic questions whenever the overall indicator shows a statistically significant difference.
+
+  list_indicator_sig <- indicator_significant_overall %>% 
+  distinct(Indicator) %>% 
+  filter(Indicator != "GDP") %>% 
+  mutate(
+      
+      Indicator = gsub("school_goals_clear", "Clear School Goals", Indicator),
+      Indicator = gsub("school_goals_exist", "Existing School Goals", Indicator),
+      Indicator = gsub("school_goals_relevant", "Relevant School Goals", Indicator),
+      Indicator = gsub("monitoring_infrastructure", "Monitoring of Infrastructure", Indicator),
+      Indicator = gsub("pre_service", "Pre service training", Indicator),
+      Indicator = gsub("salary_delays", "Delays in salary", Indicator),
+      Indicator = gsub("school_goals_measured", "Measurement of School Goals", Indicator)
+
+
+
+    ) %>% 
+  pull
+  
+# master <- readxl::read_xlsx(file.choose(), sheet = 2)
+
+ load("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+
+  ## Executive function for ECD
+ 
+ ex_functioning <- ecd_dta_anon %>% 
+   select(hashed_school_code,starts_with("m6s2q14"))
+
+
+ 
+   ## Student literacy profiency 4th frade
+ 
+ literacy_prof <- assess_4th_grade_anon_anon %>% 
+   select(hashed_school_code,m8saq2_id, m8saq3_id , m8saq4_id , m8saq5_story  , m8saq6_story  , m8saq7_word_choice)
+ 
+
+```
+
+
+
+
+
+
+```{r, echo=FALSE ,eval=F, include=FALSE}
+      
+#         main_comparison %>% 
+#     select_if(is.numeric) %>%
+#     map_df(~ broom::tidy(t.test(elect_if(is.numeric) ~ main_comparison$Group)), .id = 'var')
+#       
+#     
+#       
+#       
+#     
+# 
+# # # Compute t-test
+# # library(rstatix)
+# #       
+# # # res.aov <- anova_test(sample_full_long$Value ~ sample_full_long$Covid)
+# # 
+# #       
+# # for(ii in unique(sample_full_long$Indicator)){    
+# #       
+# #       
+# #       
+# #   stat.test <- sample_full_long  %>% 
+# #     
+# #     group_by(ii, Covid) %>%
+# #     
+# #     t_test(Value ~ Covid) %>%
+# #     
+# #     adjust_pvalue(method = "bonferroni") %>%
+# #     
+# #     add_significance("p.adj")
+# # 
+# #   
+# #   stat.test
+# #   
+# # }
+#   
+#       
+#       
+#       
+#       
+# # average_all <- combine_gepd_data %>% 
+# #   
+# #   summarise(across(where(is.numeric),
+# #                          ~ mean(.x, na.rm = T))) %>% 
+# #   pivot_longer(cols=school_code:date,
+# #     names_to = c("Indicator"),
+# #                values_to = "value")
+# 
+# 
+# 
+#       
+# sample_full_wide <- sample_full_long %>% 
+#   pivot_wider(names_from = Indicator, values_from  = Value) %>% 
+#   mutate(across(where(is.numeric),
+#              ~ as.double(.)))
+#   
+# 
+# 
+# 
+# data_test2 <- tibble(measure = c(rnorm(100,30,5),rnorm(100,15,5)),
+#                     group = factor(rep(c("A","B"),c(100,100))))
+# 
+# table(data_test2$group) ##Notice that you have the required two levels
+# t.test(measure~group, data = data_test2,paired = TRUE) ##Test will now run
+# 
+# 
+#       
+# 
+# 
+# 
+# 
+#  test_data <- sample_full  %>% 
+#           
+#         select(-school_code, -Distance_btw_schools) %>% 
+#           
+#          mutate(across(where(is.numeric),
+#                     
+#                     ~ as.character(.)
+#                     )) %>% 
+#           
+#             pivot_longer(
+#                     cols = school_code_POST:GDP_PRE,
+#                     names_to = c("Indicator", "Covid"),
+#                     names_pattern = "(.*)_(PRE|POST)",
+#                     values_to = "value"
+#       )  %>%
+#   
+#   filter(!str_detect(value, "[A-Za-z]")) %>% 
+#   filter(str_detect(value, "[0-9]")) %>% 
+#   pivot_wider(names_from = Indicator, values_from = value) %>% 
+#   group_by(Covid, Indicator) %>% 
+#   summarise(value = list(value)) %>% 
+#   ungroup() %>% 
+#   # group_by(Covid) %>% 
+#   # arrange(Covid, Indicator) %>% 
+#   # mutate(id = row_number()) %>% 
+#   pivot_wider(names_from = Covid, values_from = value) %>% 
+#   filter(!str_detect(Indicator, "school_address_preload|school_code|m1s0q2_name|school_name_preload|_preload")) %>% 
+#   group_by(Indicator) %>% 
+#   mutate(p_value = t.test(unlist(PRE), unlist(POST))$p.value,
+#          t_value = t.test(unlist(PRE), unlist(POST))$statistic)
+# 
+# # boxplots and t-tests for the 4 variables at once
+# for (i in names(sample_full_wide[ ,2:5])) { # variables to compare are variables 1 to 4
+#   boxplot(sample_full_wide[, i] ~ sample_full_wide$Covid, # draw boxplots by group
+#     ylab = names(sample_full_wide[i]), # rename y-axis with variable's name
+#     xlab = "Pre-Post Covid"
+#   )
+#   print(t.test(sample_full_wide[, i] ~ sample_full_wide$Covid)) # print results of t-test
+# }
+#       
+#    
+# 
+# 
+# sample_full_long <- sample_full_long %>% mutate(Group = case_when(
+#   
+#   Covid == "PRE" ~ 0,
+#   Covid == "POST" ~ 1
+#   
+# )) %>% select(-Covid) %>% 
+#   group_by(Indicator) %>%
+#   mutate(row = row_number()) %>%
+#   tidyr::pivot_wider(names_from = Indicator, values_from = Value) %>%
+#   select(-row)
+# 
+# 
+# t(sapply(sample_full_long[-1], function(x) 
+#      unlist(t.test(x~sample_full_long$Group)[c("estimate","p.value","statistic","conf.int")])))
+#   
+#   
+# 
+#   # Create the plot
+# 
+# library(ggpubr)
+# 
+# # Edit from here #
+# x <- which(names(dat) == "COvid") # name of grouping variable
+# y <- which(names(dat) == "student_proficient" # names of variables to test
+# | names(dat) == "ecd_student_knowledge"
+# | names(dat) == "experience_pknw"
+# | names(dat) == "student_attendance")
+# method <- "t.test" # one of "wilcox.test" or "t.test"
+# paired <- FALSE # if paired make sure that in the dataframe you have first all individuals at T1, then all individuals again at T2
+# # Edit until here
+# 
+# 
+# # Edit at your own risk
+# for (i in y) {
+#   for (j in x) {
+#     ifelse(paired == TRUE,
+#       p <- ggpaired(dat,
+#         x = colnames(dat[j]), y = colnames(dat[i]),
+#         color = colnames(dat[j]), line.color = "gray", line.size = 0.4,
+#         palette = "npg",
+#         legend = "none",
+#         xlab = colnames(dat[j]),
+#         ylab = colnames(dat[i]),
+#         add = "jitter"
+#       ),
+#       p <- ggboxplot(dat,
+#         x = colnames(dat[j]), y = colnames(dat[i]),
+#         color = colnames(dat[j]),
+#         palette = "npg",
+#         legend = "none",
+#         add = "jitter"
+#       )
+#     )
+#     #  Add p-value
+#     print(p + stat_compare_means(aes(label = paste0(..method.., ", p-value = ", ..p.format..)),
+#       method = method,
+#       paired = paired,
+#       # group.by = NULL,
+#       ref.group = NULL
+#     ))
+#   }
+# }
+```
+

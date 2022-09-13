@@ -24,10 +24,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
-
-#Country name
-country <-'JOR'
-country_name <- "Jordan"
+#Country name and year of survey
+country <-'MOZ'
+country_name <- "Mozambique"
 year <- '2019'
 
 #########################
@@ -36,23 +35,23 @@ year <- '2019'
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
 
+backup_onedrive="no"
 
-
-if (Sys.getenv("USERNAME") == "wb469649"){
+#Add your UPI here and set the directory paths of your choice.
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD-Confidential/CNT/"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-  backup_onedrive="yes"
+  backup_onedrive="no"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
-
+  
 }
-
 
 
 #########################
@@ -61,8 +60,10 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #move working directory to github main folder
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
+#name of school file
+school_file='EPDash_Moz.dta'
 # #launch file to access data from API
-need_api=1
+need_api=0
 source('02_school_api.R', local=TRUE)
  
 # #launch file to clear data=

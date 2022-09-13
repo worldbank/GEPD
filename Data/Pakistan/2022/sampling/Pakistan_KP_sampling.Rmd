@@ -1,0 +1,375 @@
+---
+title: "Pakistan (KP) Sampling"
+author: "Brian Stacy"
+date: "7/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(here)
+library(readxl)
+library(flextable) 
+library(leaflet)
+#Country name
+country <-'PAK'
+country_name <- "Pakistan"
+year <- '2022'
+province <- "KP"
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"School data.xlsx"
+frame_sheet <- "Complete Data"
+
+
+set.seed(83227)
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+
+## Introduction
+
+This file outlines the sampling strategy for Pakistan (KP).
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+
+
+ 
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions.  New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below.  The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years).  Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+## KP Sampling
+
+175 to 200 schools will be drawn.  The strata are the urban/rural status of the school and the gender of the school (male,female, mixed)
+
+
+
+```{r}
+#read sample frame
+df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet) %>%
+  rename(
+    total_enrollment=`Total Enrollment`,
+    class_nursery=`Class Nursery`,             
+    class_prep=`Class Prep`,                
+    class_1=`Class 1`,                    
+    class_2=`Class 2`,                   
+    class_3=`Class 3`,                    
+    class_4=`Class 4`,                    
+    class_5=`Class 5`,                    
+    class_6=`Class 6`,                    
+    class_7=`Class 7`,                  
+    class_8=`Class 8`,                    
+    class_9=`Class 9`,                    
+    class_10=`Class 10`,                   
+    class_11=`Class 11`,                   
+    class_12=`Class 12`
+  )
+
+NDM_list <- c('BAJAUR','MOHMAND','ORAKZAI',
+              'KHYBER','KURRAM',
+              'NORTH WAZIRISTAN','SOUTH WAZIRISTAN')
+
+```
+
+Basic summary stats of overall frame
+
+```{r}
+#level
+df_raw %>% 
+  group_by(Level) %>% 
+  summarise(n=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_raw %>% 
+  group_by(District) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by District') %>% 
+  autofit()
+
+#Gender
+df_raw %>% 
+  group_by(Gender) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+
+#Urban/rural
+df_raw %>% 
+  group_by(Location) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+#Level
+df_raw %>% 
+  group_by(Level) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Type') %>% 
+  autofit()
+
+
+
+```
+
+```{r}
+
+df_updated_gepd <- df_raw %>%
+  filter(class_1>=3,
+         class_4>=3) 
+
+df_updated_gepd_nmd <- df_raw %>%
+  filter(class_1>=3,
+         class_4>=3) %>%
+  filter(!(District %in% NDM_list))
+
+
+df_updated <- df_raw %>%
+  filter(class_prep>=3,
+         class_1>=3,
+         class_4>=3,
+         class_5>=3)
+```
+
+
+```{r}
+#calcualte largest NDM districts.  
+df_updated_gepd %>%
+  ungroup() %>%
+  mutate(total_students_g4=sum(class_4)) %>%
+  filter((District %in% NDM_list)) %>%
+  group_by(District,total_students_g4) %>%
+  summarise(n=n(),
+            students=sum(class_4)) %>%
+  mutate(share=students/total_students_g4)
+```
+
+<!-- Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible. -->
+
+<!-- However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(class_prep<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(class_5<3))` because of the grade 5 restriction. -->
+
+
+```{r eval=FALSE, include=FALSE}
+df_updated_gepd %>%
+  select(EmisCode, class_prep, class_1, class_2, class_3, class_4, class_5) %>%
+  filter(class_prep+ class_1+ class_2+ class_3+ class_4+ class_5>=3) %>%
+  arrange(desc(class_prep+ class_1+ class_2+ class_3+ class_4+ class_5)) %>%
+  mutate(order=row_number()) %>%
+  pivot_longer(
+    cols = c('class_prep', 'class_1', 'class_2', 'class_3', 'class_4', 'class_5'),
+    names_to='grade',
+    values_to='number'
+  ) %>%
+  mutate(grade_factor=factor(grade,levels=c('class_prep', 'class_1', 'class_2', 'class_3', 'class_4', 'class_5')),
+         zero=number==0) %>%
+  ggplot(aes(x=grade_factor, y=order, color=zero)) +
+    geom_point()
+
+
+class_5_zero_df <- df_updated_gepd %>%
+  mutate(class_5_zero=class_5==0) 
+  
+ggplot(class_5_zero_df, aes(x=total_enrollment, y=Location, color=class_5_zero)) +
+  geom_point()
+
+mod <- glm(class_5_zero ~ log10(total_enrollment), family=binomial, data=class_5_zero_df) 
+
+summary(mod)
+
+outcome <- predict(mod, type = 'response' )
+enroll <- class_5_zero_df$total_enrollment
+
+plot(enroll, outcome,
+     main='Probability of Zero Grade 5 students Given Total Enrollment',
+     xlab='Total Enrollment',
+     ylab="Probability of Zero 5th Graders")
+
+```
+
+
+# Sampling
+
+## 200 schools
+```{r large, echo=TRUE}
+# get numbers to select from each district
+strata_df_200 <- df_updated_gepd %>%
+  group_by(Gender, Location) %>%
+  summarise(nstudents_district=sum(total_enrollment),
+                     total_district=n()
+) %>%
+  ungroup() %>%
+  mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
+         sample_size=case_when(
+           Gender=="Girls" & Location=="Urban" ~ 35,
+           Gender=="Boys" & Location=="Urban" ~ 35,
+           Gender=="Co-Edu" & Location=="Urban" ~ 5,
+
+           Gender=="Girls" & Location=="Rural" ~ 60,
+           Gender=="Boys" & Location=="Rural" ~ 65,
+           Gender=="Co-Edu" & Location=="Rural" ~ 5,
+           TRUE ~ 0
+           
+         ))
+
+strata_df_200 %>%
+  flextable() %>%
+  add_header_lines('Share of Students per Gender and Location')
+
+strata_df_200 %>% group_by(Gender) %>% summarise(sum=sum(sample_size))
+
+
+# set the numbers of schools selected by strata (grade)
+
+sample_df_200 <- df_updated_gepd %>%
+  left_join(strata_df_200) %>%
+  mutate(
+    totalstudents=sum(total_enrollment),
+  ) %>%
+  group_by(Gender, Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = sample_size, weight =total_enrollment) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
+         ipw=1/strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_KP_sample_200_",Sys.Date(),".csv"))
+
+```
+
+```{r country_map, echo=FALSE}
+
+   pal <- colorFactor(
+     palette = c("red", "green", "Yellow"),
+     domain = c("Boys", "Girls", "Co-Edu")
+   )
+   
+leaflet(data=sample_df_200) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~Ycoordinate,  lat=~Xcoordinate, color=~pal(sample_df_200$Gender),
+                      radius=7,
+                popup =  paste("Name: ", sample_df_200$School_Name, " <br>",
+                                  "District: ", sample_df_200$Tehsil, " <br>",
+                                  "Tehsil: ", sample_df_200$District, " <br>",
+                                  "EMIS: ", sample_df_200$EmisCode)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_df_200$Gender, title="Schools to visit")
+```
+
+## 175 schools
+
+```{r small, echo=TRUE}
+# get numbers to select from each district
+strata_df_175 <- df_updated_gepd %>%
+  group_by(Gender, Location) %>%
+  summarise(nstudents_district=sum(total_enrollment),
+                     total_district=n()
+) %>%
+  ungroup() %>%
+  mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
+         sample_size=case_when(
+           Gender=="Girls" & Location=="Urban" ~ 30,
+           Gender=="Boys" & Location=="Urban" ~ 30,
+           Gender=="Co-Edu" & Location=="Urban" ~ 4,
+
+           Gender=="Girls" & Location=="Rural" ~ 55,
+           Gender=="Boys" & Location=="Rural" ~ 55,
+           Gender=="Co-Edu" & Location=="Rural" ~ 5,
+           TRUE ~ 0
+           
+         ))
+
+strata_df_175 %>%
+  flextable() %>%
+  add_header_lines('Share of Students per Gender and Location')
+
+strata_df_175 %>% group_by(Gender) %>% summarise(sum=sum(sample_size))
+
+
+# set the numbers of schools selected by strata (grade)
+#take from original 200
+sample_df_175 <- sample_df_200 %>%
+  select(-nstudents_district, -total_district,-share_district, -sample_size) %>%
+  left_join(strata_df_175) %>%
+  mutate(
+    totalstudents=sum(total_enrollment),
+  ) %>%
+  group_by(Gender, Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = sample_size, weight =total_enrollment) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
+         ipw=1/strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(sample_df_175, file=paste0(sampling_folder, "/GEPD_KP_sample_175_",Sys.Date(),".csv"))
+
+```
+
+```{r country_map2, echo=FALSE}
+
+   pal <- colorFactor(
+     palette = c("red", "green", "Yellow"),
+     domain = c("Boys", "Girls", "Co-Edu")
+   )
+   
+leaflet(data=sample_df_175) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~Ycoordinate,  lat=~Xcoordinate, color=~pal(sample_df_175$Gender),
+                      radius=7,
+                popup =  paste("Name: ", sample_df_175$School_Name, " <br>",
+                                  "District: ", sample_df_175$Tehsil, " <br>",
+                                  "Tehsil: ", sample_df_175$District, " <br>",
+                                  "EMIS: ", sample_df_175$EmisCode)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_df_175$Gender, title="Schools to visit")
+```
+

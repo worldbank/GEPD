@@ -31,7 +31,7 @@ ui <- fluidPage(
                         "Percentile of 4th Grade Overall Score:",
                         min = 1,
                         max = 100,
-                        value = 50)
+                        value = 75)
             # sliderInput("pctl_math",
             #             "Percentile of 4th Grade Math Score:",
             #             min = 1,
@@ -71,7 +71,7 @@ server <- function(input, output) {
         
         
         df<-school_dta_short_anon  %>%
-            select(contains("ecd_student_proficiency"), contains("student_knowledge"), ipw ) 
+            select(contains("ecd_student_proficiency"), contains("student_knowledge"),contains("student_proficient"),contains("content"), ipw ) 
         
         if (input$domain=="Overall") {
         df<- df %>%
@@ -112,7 +112,7 @@ server <- function(input, output) {
             yank("numeric") %>%
             mutate(variable=skim_variable) %>%
             select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) %>%
-            filter(grepl('ecd', variable))
+            filter(grepl('ecd|proficien|student_knowledge|content', variable))
         
         
         DT::datatable(sumstats_df, caption=paste("Summary Statistics of ECD Student Scores for Schools above", input$pctl, "Percentile in Overall 4th Grade Score", sep=" "),

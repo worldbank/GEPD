@@ -27,6 +27,17 @@ df=read.csv("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Cou
 #make column names lower case 
 colnames(df)<-tolower(colnames(df))
 
+samp_cut <- df %>%
+  mutate(rural=(area=="Rural")) %>%
+  mutate(total_4th=x4to.boys+x4to.girls) %>%
+  mutate(total_1st=x1ro.boys+x1ro.girls) %>%
+  filter(total_4th>=1 & total_1st>=1 ) %>%
+  mutate(cut=(total_4th>=3 & total_1st>=3)) %>%
+  group_by(cut) %>%
+  summarise(schools=n(),
+            g4_stud=sum(total_4th),
+            g1_stud=sum(total_1st))
+
 #create variable ID for strata and keep schools with more than 1 4th grade student
 df<-df %>%
   mutate(rural=(area=="Rural")) %>%

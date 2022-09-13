@@ -207,8 +207,8 @@ for (i in data_list ) {
     
       final_school_data<-temp
       print(i)
-      write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
-
+      write_csv(temp, file = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
+      
       
 
   }
