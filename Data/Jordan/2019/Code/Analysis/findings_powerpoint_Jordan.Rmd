@@ -123,7 +123,8 @@ Roadmap:
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
+#work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
+work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_M/Data/"
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))

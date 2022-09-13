@@ -44,8 +44,8 @@ school_dta<-read_dta(file.path(download_folder, school_file))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
-  mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
+  mutate(school_code_preload= school_emis_preload) %>% 
+  mutate(enumerator_name_other= m1s0q1_name_other,          # enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
@@ -60,7 +60,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Data/Madagascar/2021/Code/Analysis/gepd_MDG_app/indicators.md', delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -70,7 +70,7 @@ indicator_names <- indicators$indicator_tag
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info <- c( 'interview__key', 'school_code',
-                   'school_name_preload', 'school_address_preload', 
+                   'school_name_preload', 
                    'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                    'survey_time', 'lat', 'lon' , 'total_enrolled' 
@@ -1077,11 +1077,12 @@ school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
   group_by(school_code) %>%
   summarise(used_ict_pct=mean(m3sbq4_inpt, na.rm=TRUE))
 
+#AC - here replace m1sbq14_inpt with m1sbq13a_inpt_etri
 school_data_INPT <- school_data_INPT %>%
   mutate(used_ict_num=case_when(
     m1sbq12_inpt==0  ~ 0,
-    (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
-    (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
+    (m1sbq12_inpt>=1 ) ~ m1sbq13a_inpt_etri,
+    (is.na(m1sbq12_inpt==0) | is.na(m1sbq13a_inpt_etri)) ~ as.numeric(NA)
   ))
 
 #access to ICT
@@ -1099,7 +1100,7 @@ inpt_list<-c('blackboard_functional', 'pens_etc', 'textbooks', 'share_desk',  'u
 
 final_indicator_data_INPT <- school_data_INPT %>%
   left_join(school_teacher_questionnaire_INPT) %>%
-  mutate(used_ict=if_else((used_ict_pct>=0.5 & used_ict_num>=3), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
+  mutate(used_ict=if_else((used_ict_pct>=0.5 & m1sbq12a_inpt_etri>=3), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
   group_by(school_code) %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -1787,11 +1788,11 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
 #   - 1 Point. Are there standards in place to monitor blackboard and chalk, pens and pencils, basic classroom furniture, computers, textbooks, exercise books, toilets, electricity, drinking water, accessibility for those with disabilities? (partial credit available) 
 
 school_data_ISTD <- school_data_IMON %>%
-  mutate(standards_monitoring_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
+  mutate(stand_mon_input=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                     pattern="m1scq13_imon__")], na.rm=TRUE),
-         standards_monitoring_infrastructure=rowMeans(.[grep(x=colnames(school_data_IMON), 
+         stand_mon_infra=rowMeans(.[grep(x=colnames(school_data_IMON), 
                                                              pattern="m1scq14_imon__")], na.rm=TRUE) ) %>%
-  mutate(standards_monitoring=(standards_monitoring_input*6+standards_monitoring_infrastructure*4)/2)
+  mutate(standards_monitoring=(stand_mon_input*6+stand_mon_infra*4)/2)
 
 
 final_indicator_data_ISTD <- school_data_ISTD %>%
@@ -2011,13 +2012,13 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
 #first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
 #list additional info that will be useful to keep in each indicator dataframe
 drop_info <- c('interview__id', 'interview__key',                    
-               'school_name_preload', 'school_address_preload', 
+               'school_name_preload', 
                'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                'survey_time', 'lat', 'lon' )
 
 keep_info <-       c('school_code',
-                     'school_name_preload', 'school_address_preload', 
+                     'school_name_preload', 
                      'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                      'survey_time', 'lat', 'lon', 'total_enrolled')
@@ -2033,7 +2034,10 @@ school_data_preamble_short<-school_data_preamble %>%
   select(keep_info) %>%
   summarise_all(~first(na.omit(.)))
 
-final_school_data <- school_data_preamble_short
+final_school_data <- school_data_preamble_short 
+
+lookup <- c(stand_mon_infra = "standards_monitoring_infrastructure")
+
 
 
 for (i in indicator_names ) {
@@ -2058,8 +2062,10 @@ for (i in indicator_names ) {
     } else {
       final_school_data<-final_school_data %>%
         left_join(temp, by='school_code') %>%
-        select(-ends_with(".x"), -ends_with(".y"))
+        select(-ends_with(".x"), -ends_with(".y")) %>% 
+        rename(any_of(lookup))
       
+
       write_dta(temp, path = file.path(paste(save_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
       if (backup_onedrive=="yes") {
         write_dta(temp, path = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.dta", sep="")), version = 14)
@@ -2144,7 +2150,7 @@ for (i in ind_list ) {
 
 
 school_dta_short <- final_school_data %>%
-  select(keep_info, ind_list)
+  select(keep_info, ind_list) 
 
 write.csv(school_dta_short, file = file.path(save_folder, "final_indicator_school_data.csv"))
 write_dta(school_dta_short, path = file.path(save_folder, "final_indicator_school_data.dta"), version = 14)

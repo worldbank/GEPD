@@ -51,6 +51,7 @@ school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
+  rename(school_code_preload = school_emis_preload) %>% 
   mutate(enumerator_name_other= m1s0q1_name_other  ,
          enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
@@ -67,7 +68,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Data/Madagascar/2021/Code/Analysis/gepd_MDG_app/indicators.md', delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
@@ -78,8 +79,8 @@ indicator_names <- indicators$indicator_tag
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info <- c( 'interview__key', 'school_code',
-                   'school_name_preload', 'school_address_preload', 
-                   'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                   'school_name_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_code_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                    'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq10'
                    )
@@ -2104,14 +2105,14 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
 #first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
 #list additional info that will be useful to keep in each indicator dataframe
 drop_info <- c('interview__id', 'interview__key',                    
-               'school_name_preload', 'school_address_preload', 
-               'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+               'school_name_preload', 
+               'school_province_preload', 'school_district_preload', 'school_code_preload',
                'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                'survey_time', 'lat', 'lon' )
 
 keep_info <-       c('school_code',
-                     'school_name_preload', 'school_address_preload', 
-                     'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                     'school_name_preload', 
+                     'school_province_preload', 'school_district_preload', 'school_code_preload',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                      'survey_time', 'lat', 'lon', 'total_enrolled')
 
