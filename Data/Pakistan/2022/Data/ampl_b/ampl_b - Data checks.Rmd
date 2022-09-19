@@ -40,11 +40,11 @@ final <- read.csv(paste0(save_folder, "amplb_pak.csv"))
 
 final %>% filter(!is.na(.)) %>%  summarise(
   
-  `Number of schools covered` = n_distinct(`School.EMIS`),
+  `Number of schools covered` = n_distinct(`school_emis_preload`),
   `Total booklets entered` = n(),
   `Number of booklet 1` = sum(type_booklet==1),
   `Number of booklet 2`= sum(type_booklet==2),
-  `Average number of students` = round(mean(Number.of.students.for.which.the.assessment.was.entered), digits = 0),
+  `Average number of students` = round(mean(student_count), digits = 0),
   `Percentage of boys`= round(sum(ST01==2)/nrow(.)*100, digits = 0),
   `Percentage of girls`= round(sum(ST01==1)/nrow(.)*100, digits = 0)
 
@@ -61,11 +61,11 @@ final %>% filter(!is.na(.)) %>%  summarise(
 ```{r per schools,  echo=FALSE}
 
 
-perschool<- final %>% group_by(School.EMIS) %>%  summarise(
+perschool<- final %>% group_by(school_emis_preload) %>%  summarise(
   
   `Number of booklet 1` = sum(type_booklet==1),
   `Number of booklet 2`= sum(type_booklet==2),
-  `Average number of students` = round(mean(Number.of.students.for.which.the.assessment.was.entered), digits = 0),
+  `Average number of students` = round(mean(student_count), digits = 0),
   `Number of boys`= sum(ST01==2),
   `Number of girls`= sum(ST01==1)
 
@@ -87,7 +87,7 @@ perschool%>% flextable::flextable() %>% flextable::autofit()
 ```{r, echo=FALSE}
 assignments <- read.table( "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Survey solutions/GEPD/AMPL-b/amplb_assignment_pak_pilot.txt", sep="\t", header=TRUE)
 
-school_completed <- final %>% filter(`School.EMIS`!= "Blank interview") %>% pull(`School.EMIS`)
+school_completed <- final %>% filter(`school_emis_preload`!= "Blank interview") %>% pull(`school_emis_preload`)
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
@@ -109,7 +109,7 @@ missing_schools %>%
 
 ```{r map,  echo=FALSE}
 
-school_map <- read.csv("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Data/01. Pilot/clean/final_complete_school_data.csv") %>% select(school_name_preload, school_province_preload, school_district_preload, school_emis_preload, lat, lon) %>% right_join(perschool %>% rename(school_emis_preload=`School.EMIS`)) %>% filter(!is.na(.))
+school_map <- read.csv("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Data/01. Pilot/clean/final_complete_school_data.csv") %>% select(school_name_preload, school_province_preload, school_district_preload, school_emis_preload, lat, lon) %>% right_join(perschool %>% rename(school_emis_preload=`school_emis_preload`)) %>% filter(!is.na(.))
 
 
 #create icons
