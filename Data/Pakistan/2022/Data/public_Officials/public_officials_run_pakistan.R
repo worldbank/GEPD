@@ -1,5 +1,5 @@
 # Purpose:  Run file for high frequency and data quality checks for the survey of public officials
-# Author: Brian Stacy
+# Author: Adrien Ciret
 # This file will run four R scripts in order.
 # Each file can be run independently, but you will be prompted for certain paths that may not be specified
 # This file will sequency the R scripts the correct way to produce an
@@ -27,10 +27,11 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
-#Country name
-country <-'Sierra Leone'
-country_name <- "Sierra Leone"
-year <- '2022'
+#Country name and year of survey
+country <-'Pakistan_all'
+country_name <- "Pakistan_all"
+year <- '2021'
+
 
 #########################
 # File paths #
@@ -38,25 +39,26 @@ year <- '2022'
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
 
+backup_onedrive="yes"
+
+#Add your UPI here and set the directory paths of your choice.
 if (Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
-  download_folder <-file.path(paste(project_folder,country,year,"Data/raw/Public_Officials", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,year,"Data/clean/Public_Officials", sep="/"))
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw/public_officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean/public_officials", sep="/"))
   
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/Public_Officials", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/01. Pilot/clean/public_officials", sep="/"))
   
 } else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/"
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw/public_officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean/public_officials", sep="/"))
   
-  download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/Public_Officials", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/Public_Officials", sep="/"))
-  
-  # This is experimental and not currently in use.
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work", country_name,year,"Data/clean/Public_Officials", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/01. Pilot/clean/public_officials", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")

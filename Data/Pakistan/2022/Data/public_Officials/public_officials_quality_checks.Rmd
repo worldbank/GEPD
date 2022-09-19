@@ -1,6 +1,6 @@
 ---
 title: "Data Quality Checks - Survey of Public Officials"
-author: "Brian Stacy"
+author: "Adrien Ciret"
 output: html_document
 
 ---
@@ -24,7 +24,7 @@ library(skimr)
 library(ggthemes)
 #Load the data
 #read in office level file
-load(file=paste(save_folder, "paradata.RData", sep="/"))
+load(file="C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work//Pakistan_all/2021/Data/01. Pilot/clean/public_officials/paradata.RData")
 ```
 
 ## Introduction
@@ -143,14 +143,14 @@ overall_time_avg<-para_df %>%
 overall_time_comb<-bind_rows(overall_time, overall_time_avg) %>%
   spread(indicator, timelength_min) %>%
   ungroup() %>%
-  select( Overall, DEM, NLG, ACM, QB, IDM, ORG ) %>%
+  select( Overall, DEM, NLG, ACM, QB, IDM ) %>%
   my_skim() %>%
            yank("numeric") %>%
            mutate(variable=skim_variable) %>%
            select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)  %>%
-  arrange(factor(variable, levels=c('Overall', 'NLG','ACM' ,'QB', 'IDM','DEM', 'ORG'))) %>%
-  mutate(variable=factor(variable, levels=c('NLG','ACM' ,'QB', 'IDM','DEM', 'ORG', 'Overall'),
-                         labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making', 'Demographics', 'Organizational Characteristics and Capabilities', 'Overall')))
+  arrange(factor(variable, levels=c('Overall', 'NLG','ACM' ,'QB', 'IDM','DEM'))) %>%
+  mutate(variable=factor(variable, levels=c('NLG','ACM' ,'QB', 'IDM','DEM', 'Overall'),
+                         labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making', 'Demographics', 'Overall')))
 ```
 
 
@@ -205,7 +205,7 @@ bscols(widths=c(3,NA),
 To start, the following figures and tables will highlight missing values for a few of our key indicators.  
 
 ```{r missings, error=FALSE, message=FALSE, include=FALSE}
-load(paste(save_folder, "public_officials_survey_data.RData", sep="/"))
+load("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work//Pakistan_all/2021/Data/01. Pilot/clean/public_officials/public_officials_survey_data.RData")
 sumstats<-public_officials_dta_clean %>%
   select(c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making')) 
 ```
@@ -230,7 +230,7 @@ sumstats_df<-my_skim(sumstats) %>%
   mutate(variable=factor(variable, levels=c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making'),
                          labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making')))
 #export Indicators sumstats
-write_excel_csv(sumstats_df, paste(save_folder,'GEPD_Public_Officials_Indicators.csv',sep=""))
+write_excel_csv(sumstats_df, 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work//Pakistan_all/2021/Data/01. Pilot/clean/public_officials/GEPD_Public_Officials_Indicators.csv')
 ```
 
 
@@ -290,7 +290,8 @@ public_officials_map <- public_officials_map %>%
   mutate(missings=(is.na(national_learning_goals) | is.na(mandates_accountability) | is.na(quality_bureaucracy) | 
                      is.na(impartial_decision_making)))%>%
   mutate(total_missing=is.na(national_learning_goals) + is.na(mandates_accountability) + is.na(quality_bureaucracy) + 
-           is.na(impartial_decision_making) ) 
+           is.na(impartial_decision_making) )
+
 #color coded markers for missing values
 getColor <- function(df_input) {
   sapply(df_input$total_missing, function(total_missing) {

@@ -37,9 +37,12 @@ indicator_names <- indicators$indicator_tag
 
 
 #Get a list of enumerator names and IDs
-enumerator_id <- readxl::read_excel(path=file.path(download_folder, "Enumerator_ID_Survey of Public Officials - Sierra_Leone.xlsx")) %>%
-  transmute(m1s0q1_number_other = id ,
-            enumerator_code=text )
+enumerator_id <- readxl::read_excel(path=file.path(download_folder, "pakistan_vtt_users.xlsx")) %>%
+  rename(text=`...9`) %>% 
+  filter(!is.na(text)) %>% 
+  transmute(m1s0q1_number_other = login,
+            enumerator_code=text )%>%
+  mutate(m1s0q1_number_other = as.numeric(str_extract(m1s0q1_number_other, "[0-9]+")))
 
 
 
