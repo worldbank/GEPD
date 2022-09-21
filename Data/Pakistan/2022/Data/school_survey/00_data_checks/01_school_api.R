@@ -26,7 +26,7 @@ if (file.exists(pw_file)) {
 
 #Survey Solutions Server address
 #e.g. server_add<-"https://gepd.mysurvey.solutions"
-server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'https://gepdrwa.mysurvey.solutions')$res
+server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'http://etri.gepd.solutions/gepdpak')$res
 
 #questionnaire version
 #e.g. quest_version<-8
@@ -56,13 +56,13 @@ str(content(q))
 
 
 #pull data from version of our Education Policy Dashboard Questionnaire
-POST(paste(server_add,"/api/v1/export/stata/f5366202a24043d59d85dbf14fb0a32d$",quest_version,"/start", sep=""),
+POST(paste(server_add,"/api/v1/export/stata/feeef8fb-3b30-49db-bf94-5c1768b788f3$",quest_version,"/start", sep=""),
          authenticate(user, password))
 
 #sleep for 10 seconds to wait for stata file to compile
 Sys.sleep(10)
 
-dataDownload <- GET(paste(server_add,"/api/v1/export/stata/f5366202a24043d59d85dbf14fb0a32d$", quest_version,"/",sep=""),
+dataDownload <- GET(paste(server_add,"/api/v1/export/stata/feeef8fb-3b30-49db-bf94-5c1768b788f3$", quest_version,"/",sep=""),
                     authenticate(user, password))
 
 redirectURL <- dataDownload$url 
@@ -75,6 +75,48 @@ filecon <- file(file.path(download_folder, tounzip), "wb")
 writeBin(RawData$content, filecon) 
 #close the connection
 close(filecon)
+
+# 
+# 
+# install.packages("devtools")
+# devtools::install_github("arthur-shaw/susoapi")
+# 
+# set_credentials(
+#   server = "http://etri.gepd.solutions/",
+#   workspace = "gepdpak",
+#   user = "ETRI_DR_ADMIN",
+#   password = "k%/t/H;KaS9n"
+# )
+# 
+# 
+# # STEP1: START AN EXPORT JOB
+# # specifying same same options as in user interface
+# # optionally specifying other options--including some not available in the UI
+# start_export(
+#   qnr_id = "feeef8fb-3b30-49db-bf94-5c1768b788f3$5",
+#   export_type = "STATA",
+#   interview_status = "All",
+#   include_meta = TRUE
+# ) -> started_job_id
+# 
+# # STEP 2: CHECK EXPORT JOB PROGESS, UNTIL COMPLETE
+# # specifying ID of job started in prior step
+# get_export_job_details(job_id = started_job_id)
+# 
+# # STEP 3: DOWNLOAD THE EXPORT FILE, ONCE THE JOB IS COMPLETE
+# # specifying:
+# # - job ID
+# # - where to download the file
+# get_export_file(
+#   job_id = started_job_id,
+#   path = "C:/your/file/path/"
+# )
+# 
+
+
+
+
+
 
 
 if (quest_version==17) {
