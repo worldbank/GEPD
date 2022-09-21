@@ -193,7 +193,7 @@ sample_df <- df_updated_gepd %>%
   sample_n(size = sample_size, weight =Grand_total) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
-         ipw=1/strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob))
 
 
 write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.Date(),".csv"))
@@ -206,6 +206,8 @@ write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.
 20 schools will be randomly selected using the same procedure for the pilot.  The schools selected for the pilot will not overlap with selected sample of 100.
 
 ```{r echo=TRUE}
+
+
 
 #get list of schools already selected
 selected_list <- sample_df$Inst_ID
@@ -255,10 +257,77 @@ pilot_df <- df_updated_gepd %>%
   sample_n(size = sample_size, weight =Grand_total) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
-         ipw=1/strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob))
 
 
 write_excel_csv(pilot_df, file=paste0(sampling_folder, "/GEPD_ICT_pilot_sample_",Sys.Date(),".csv"))
+
+
+
+```
+
+
+## Select Schools for 2nd Pilot
+
+20 additional schools will be randomly selected using the same procedure for the pilot.  The schools selected for the pilot will not overlap with selected sample of 100 or the previous pilot.
+
+```{r echo=TRUE}
+
+picked_df <- read_csv(paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.Date(),".csv")) %>%
+  bind_rows(read_csv(paste0(sampling_folder, "/GEPD_ICT_pilot_sample_",Sys.Date(),".csv")))
+
+#get list of schools already selected
+selected_list <- picked_df$Inst_ID
+
+# get numbers to select from each district
+pilot_strata_df <- df_updated_gepd %>%
+  group_by(Tehsil, Gender) %>%
+  summarise(nstudents_district=sum(Grand_total),
+                     total_district=n()
+) %>%
+  ungroup() %>%
+  mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
+         sample_size=case_when(
+           Gender=="Female" & Tehsil=="Bhara kau" ~ 1,
+           Gender=="Male" & Tehsil=="Bhara kau" ~ 1,
+           Gender=="Mixed" & Tehsil=="Bhara kau" ~ 1,
+
+           Gender=="Female" & Tehsil=="Nilore" ~ 2,
+           Gender=="Male" & Tehsil=="Nilore" ~ 1,
+           Gender=="Mixed" & Tehsil=="Nilore" ~ 1,
+           
+           Gender=="Female" & Tehsil=="Sihala" ~ 1,
+           Gender=="Male" & Tehsil=="Sihala" ~ 1,
+           Gender=="Mixed" & Tehsil=="Sihala" ~ 2,
+           
+           Gender=="Female" & Tehsil=="Tarnol" ~ 1,
+           Gender=="Male" & Tehsil=="Tarnol" ~ 1,
+           Gender=="Mixed" & Tehsil=="Tarnol" ~ 1,
+           
+           Gender=="Female" & Tehsil=="Urban" ~ 1,
+           Gender=="Male" & Tehsil=="Urban" ~ 3,
+           Gender=="Mixed" & Tehsil=="Urban" ~ 5,           
+           
+         ))
+
+#select the 20 schools
+pilot2_df <- df_updated_gepd %>%
+  filter(!(Inst_ID %in% selected_list)) %>%
+  left_join(pilot_strata_df) %>%
+  mutate(
+    totalstudents=sum(Grand_total),
+  ) %>%
+  group_by(Tehsil, Gender ) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(Grand_total),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = sample_size, weight =Grand_total) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(pilot2_df, file=paste0(sampling_folder, "/GEPD_ICT_pilot2_sample_",Sys.Date(),".csv"))
 
 
 
