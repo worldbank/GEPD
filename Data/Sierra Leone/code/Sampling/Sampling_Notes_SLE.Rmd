@@ -49,11 +49,15 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
   sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/Sampling", sep="/"))
+  confidential_folder <- file.path(paste("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  download_folder <- file.path(paste("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
 
   project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
   sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/Sampling", sep="/"))
+  confidential_folder <- file.path(paste("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+    download_folder <- file.path(paste("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -660,46 +664,51 @@ $$ FW_i^j= SW_i^j*CW_i^j*PW_i^j$$
 # The strata are based on the 16 districts 
 
 
-strata_weight_size <- df_updated %>%
+# strata_weight_size <- df_updated %>%
+#   group_by(idregion,iddistrict,sch_owner) %>%
+#   summarise(
+#     n_schools=n(),
+#     n_students=sum(class4_combined),
+#     share_students=n_students/sum(df_updated$class4_combined),
+#     exp_num_schools=300*share_students,
+#     ini_num_schools=round(exp_num_schools,0)
+#   ) %>%
+#   ungroup() %>%
+#   sample_n(nrow(.)) #randomly order the rows
+# 
+# 
+# #pick number of schools in each strata so that total adds to 40
+# # get vector of exp_num_schools
+# num_schools <- strata_weight_size$ini_num_schools
+# 
+# #do a while loop sequentially randomly adding or subtracting a school to the list for a randomly selected strata until total is 40
+# while (sum(num_schools)!=300) {
+#   
+#   if (sum(num_schools)<300) {
+#     
+#     nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+#     extra_schools <- rep(0,16) #create vector of 0s
+#     extra_schools[nr] <- 1 # for one random strata add one.
+#     num_schools <- num_schools + extra_schools #add to list of schools.
+#   } else {
+#     nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
+#     extra_schools <- rep(0,16) #create vector of 0s
+#     extra_schools[nr] <- -1 # for one random strata add one.
+#     num_schools <- num_schools + extra_schools #add to list of schools.
+#   }
+#   
+# }
+# 
+# 
+# sum(num_schools)
+# strata_weight_size$num_schools <- num_schools
+# 
+# sum(strata_weight_size$num_schools)
+
+
+strata_weight_size <- read_csv(file=paste(sampling_folder, '/sample_clean_2022-04-17.csv', sep="")) %>%
   group_by(idregion,iddistrict,sch_owner) %>%
-  summarise(
-    n_schools=n(),
-    n_students=sum(class4_combined),
-    share_students=n_students/sum(df_updated$class4_combined),
-    exp_num_schools=300*share_students,
-    ini_num_schools=round(exp_num_schools,0)
-  ) %>%
-  ungroup() %>%
-  sample_n(nrow(.)) #randomly order the rows
-
-
-#pick number of schools in each strata so that total adds to 40
-# get vector of exp_num_schools
-num_schools <- strata_weight_size$ini_num_schools
-
-#do a while loop sequentially randomly adding or subtracting a school to the list for a randomly selected strata until total is 40
-while (sum(num_schools)!=300) {
-  
-  if (sum(num_schools)<300) {
-    
-    nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
-    extra_schools <- rep(0,16) #create vector of 0s
-    extra_schools[nr] <- 1 # for one random strata add one.
-    num_schools <- num_schools + extra_schools #add to list of schools.
-  } else {
-    nr <- round(runif(n=1,min=1,max=16),0) #randomly choose integer between 0 and 16
-    extra_schools <- rep(0,16) #create vector of 0s
-    extra_schools[nr] <- -1 # for one random strata add one.
-    num_schools <- num_schools + extra_schools #add to list of schools.
-  }
-  
-}
-
-
-sum(num_schools)
-strata_weight_size$num_schools <- num_schools
-
-sum(strata_weight_size$num_schools)
+  summarise(sample_size=n())
 
 
 school_weights_df <- df_frame %>%
@@ -710,7 +719,7 @@ school_weights_df <- df_frame %>%
   mutate(strata_count=n(),
          strata_size=sum(class4_combined),
          strata_school_prob=strata_size/total_students_frame) %>%
-  mutate(strata_prob=(num_schools)*(class4_combined/strata_size),
+  mutate(strata_prob=(sample_size)*(class4_combined/strata_size),
          ipw=1/strata_school_prob*(1/strata_prob)) 
 
 write_excel_csv(school_weights_df, paste(sampling_folder, '/school_weights_', Sys.Date(),  '.csv', sep=""))
@@ -744,9 +753,9 @@ school_sampler <- function(seed) {
   set.seed(seed)
   
   t <- school_weights_df %>%
-    filter(num_schools>0) %>%
+    filter(sample_size>0) %>%
     group_by(idregion,iddistrict,sch_owner) %>%
-    sample_n(size=num_schools, weight=class4_combined) %>%
+    sample_n(size=sample_size, weight=class4_combined) %>%
     ungroup() %>%
     as_survey_design(strata=c('idregion','iddistrict','sch_owner'),
                    weight=ipw) %>%
@@ -783,3 +792,202 @@ linked_sample %>%
 ```
 
 
+# Reconstruct sample weights after field work
+
+Because of issues in field work, the sample weights need to be reconstructed. A number of schools could not be reached during the field work.  A few issues caused the problems reaching the schools.
+
+    Teacher strikes posed a challenge during the survey. The strikes began at the beginning of the third academic term, the week before the survey started. Teacher participation in the strike varied across schools. Enumerators observed that even when teachers were not striking, students (or their parents) were opting to stay home from school because they were unsure whether teachers would be present. Enumerators often documented this in comments. When logistically possible, enumerators tried returning to schools that were closed from strikes (usually not the next day, given that schools were not supposed to anticipate the survey date) – but if returning to the original would cause significant delays, the original schools were instead substituted with one of the two substitution options provided for each school. The strength of the strike fluctuated during the dates of the data collection, with the strike action generally tapering after the initial start of data collection. The Sierra Leone Teachers Union issued a 21-day strike to commence May 27. Enumerators reported an increase in striking teachers following the May 27 announcement. It was largely resolved through negotiations with the MBSSE that resulted in an agreement to increase salaries by 45% starting in 2023, but this agreement was announced on June 14, by which time nearly all schools had been surveyed.
+    
+    Another disruption that occurred during the survey was female genital mutilation (FRM) practices. These were carried out by Sierra Leone “secret societies,” sometime referred to by enumerators in comments as “bondo society.” When enumerators encountered FGM being carried out among schoolgirls, they tried to return on a different date to the school to complete the survey.
+    
+    Other reasons enumerators encountered for low student attendance included: Days of heavy rain; in very-understaffed schools, many students/parents opt not to attend; when a school does not have enough teachers, classes are sometimes combined (e.g. class 3 and class 4 students are taught the same material) leading to students being less interested in school; a community itself was small; children helping their family with farming and economic activities (e.g., giving extra help on market days) instead of attending class. Students also had to delay surveys at schools due to “sports days” (similar to “field days” in a US education context).
+    
+    
+```{r}
+#read in record of replacements
+replacement_schools_df <- read_excel(path=paste0(sampling_folder, "/Record of Replacements.xlsx"), sheet="Schools")
+
+
+#read in sample with cleaned info
+sample_clean <- read_csv(paste0(sampling_folder, "/sample_clean_2022-04-17.csv"))
+
+#read in school data
+visited_schools <- read_csv(file.path(download_folder, "emis_fixes.csv")) %>% select(-m1s0q2_emis) %>%
+  group_by(school_code) %>%
+  summarise(visited=1,
+            replaced=mean(replaced, na.rm=T)) %>%
+  mutate(idemis_code=as.numeric(school_code),
+         replaced=if_else(is.na(replaced),"Sampled School","Replaced School")) %>%
+  filter(!is.na(idemis_code)) %>%
+  left_join(df_selected) 
+
+
+
+```
+
+Get summaries statistics of visited schools
+
+```{r country_map3, echo=FALSE}
+
+   pal <- colorFactor(
+     palette = c("red", "green"),
+     domain = c("Replaced School", "Sampled School")
+   )
+   
+leaflet(data=visited_schools) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~geopointlongitude,  lat=~geopointlatitude, color=~pal(visited_schools$replaced),
+                      radius=7,
+                popup =  paste("Name: ", visited_schools$idschool_name, " <br>",
+                                  "Region: ", visited_schools$idregion, " <br>",
+                                  "District: ", visited_schools$iddistrict, " <br>",
+                                  "EMIS: ", visited_schools$idemis_code)) %>%
+  addLegend(position="bottomright", pal=pal, values=~visited_schools$replaced, title="Schools Visited")
+```
+
+Stats on number of replacements
+
+```{r}
+visited_schools %>% group_by(replaced) %>% summarise(n=n()) %>% flextable()
+```
+
+
+Get number of schools by strata
+```{r}
+sampled_strata <- sample_clean %>%
+  group_by(iddistrict) %>%
+  summarise(`Number Sampled`=n())
+
+visited_strata <- visited_schools %>%
+    group_by(iddistrict) %>%
+  summarise(`Number Visited`=n())
+
+strata_stats <- sampled_strata %>%
+  left_join(visited_strata)
+
+flextable(strata_stats) %>%
+  add_header_lines('Districts Sampled versus Selected')
+```
+
+```{r}
+sampled_strata <- sample_clean %>%
+  group_by(sch_owner) %>%
+  summarise(`Number Sampled`=n())
+
+visited_strata <- visited_schools %>%
+    group_by(sch_owner) %>%
+  summarise(`Number Visited`=n())
+
+strata_stats <- sampled_strata %>%
+  left_join(visited_strata)
+
+flextable(strata_stats) %>%
+  add_header_lines('School Ownership Sampled versus Selected')
+```
+
+```{r}
+sampled_strata <- sample_clean %>%
+  group_by(idregion,iddistrict,sch_owner) %>%
+  summarise(`Number Sampled`=n())
+
+visited_strata <- visited_schools %>%
+    group_by(idregion,iddistrict,sch_owner) %>%
+  summarise(`Number Visited`=n())
+
+strata_stats <- sampled_strata %>%
+  left_join(visited_strata)
+
+flextable(strata_stats) %>%
+  add_header_lines('Full Strata Sampled versus Selected')
+
+```
+# Produce final weights based on visited schools
+
+```{r}
+
+
+
+strata_weight_size <- visited_schools %>%
+  group_by(idregion,iddistrict,sch_owner) %>%
+  summarise(sample_size=n())
+
+
+revised_school_weights_df <- df_frame %>%
+  ungroup() %>%
+  mutate(total_students_frame=sum(class4_combined)) %>%
+  left_join(strata_weight_size) %>%
+  group_by(idregion,iddistrict,sch_owner) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(class4_combined),
+         strata_school_prob=strata_size/total_students_frame) %>%
+  mutate(strata_prob=(sample_size)*(class4_combined/strata_size),
+         ipw=1/strata_school_prob*(1/strata_prob)) 
+
+write_excel_csv(revised_school_weights_df, paste(sampling_folder, '/school_weights_revised_', Sys.Date(),  '.csv', sep=""))
+
+
+# Weights for Ampl-b in 5th grade
+revised_amplb_student_weights <- revised_school_weights_df %>%
+  rename(school_weight=ipw) %>%
+  mutate(class_weight=total_stream_class5/1, # weight is the number of 5th grade streams divided by number selected (1)
+         student_weight=(class5_combined/total_stream_class5)/25,
+         final_weight=school_weight*class_weight*student_weight
+         ) 
+  
+write_excel_csv(revised_amplb_student_weights, paste(sampling_folder, '/amplb_weights_revised_', Sys.Date(),  '.csv', sep=""))
+
+
+```
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+df_frame %>%
+  ungroup() %>%
+  mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+  summarise(electricity=mean(electricity))
+
+school_sampler <- function(seed) {
+  set.seed(seed)
+  
+  t <- revised_school_weights_df %>%
+    filter(sample_size>0) %>%
+    group_by(idregion,iddistrict,sch_owner) %>%
+    sample_n(size=sample_size, weight=class4_combined) %>%
+    ungroup() %>%
+    as_survey_design(strata=c('idregion','iddistrict','sch_owner'),
+                   weight=ipw) %>%
+    mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+    summarise(electricity=survey_mean(electricity))
+  
+  return(t)
+}
+
+bootstrap_df <- bind_rows(lapply(sample(x=c(1:10000),size=100),
+                                 school_sampler))
+
+summary(bootstrap_df$electricity)
+
+linked_sample <- visited_schools %>%
+  filter(!is.na(idemis_code)) %>%
+  select(idemis_code) %>%
+  ungroup() %>%
+  left_join(school_weights_df) 
+
+linked_sample %>%
+  mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+  summarise(electricity=Hmisc::wtd.mean(electricity, weights=ipw))
+
+
+
+linked_sample %>%
+  filter(!is.na(ipw)) %>%
+  ungroup() %>%
+  as_survey_design(strata=c('idregion','iddistrict','sch_owner'),
+                   weight=ipw) %>%
+  mutate(electricity=if_else(electricity=="No Electricity",0,1)) %>%
+  summarise(electricity=survey_mean(electricity))
+```
+    

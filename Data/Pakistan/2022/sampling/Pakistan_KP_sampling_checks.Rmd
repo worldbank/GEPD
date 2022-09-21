@@ -1,0 +1,386 @@
+---
+title: "Power Analysis Pakistan"
+author: "Brian Stacy"
+date: "8/31/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(haven)
+library(psych)
+library(geosphere)
+library(data.table)
+library(flextable)
+library(srvyr)
+library(clusterPower)
+```
+
+Read in sample of schools
+
+```{r sampledata}
+#Country name
+country <-'PAK'
+country_name <- "Pakistan"
+year <- '2022'
+province <- "KP"
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"School data.xlsx"
+frame_sheet <- "Complete Data"
+
+
+set.seed(83227)
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+
+sample_df_200 <- read_csv(file=paste0(sampling_folder, "/GEPD_KP_sample_200_",'2022-08-31',".csv"))
+
+```
+
+Calculate the distances between schools sampled in KP
+
+```{r}
+
+max_fun <- function(x) {
+  dist_mat <- distm(as.matrix(sample_dt[x,.(Xcoordinate,Ycoordinate)], fun=distHaversine)) 
+  dist_mat[dist_mat==0] <- -999
+  max(dist_mat)
+  
+}
+
+min_fun <- function(x) {
+  dist_mat <- distm(as.matrix(sample_dt[x,.(Xcoordinate,Ycoordinate)], fun=distHaversine)) 
+  dist_mat[dist_mat==0] <- 9999999
+  t<- min(dist_mat)
+  t[t==9999999] <- -999
+  t
+}
+
+mean_fun <- function(x) {
+  dist_mat <- distm(as.matrix(sample_dt[x,.(Xcoordinate,Ycoordinate)], fun=distHaversine)) 
+  t<- mean(dist_mat)
+  t[t==0] <- -999
+  t
+}
+
+median_fun <- function(x) {
+  dist_mat <- distm(as.matrix(sample_dt[x,.(Xcoordinate,Ycoordinate)], fun=distHaversine)) 
+  t<- median(dist_mat)
+  t[t==0] <- -999
+  t
+}
+
+sample_dt <- data.table(sample_df_200)
+
+max <- tapply(1:nrow(sample_dt), sample_dt$District, max_fun) %>% stack() %>% rename(max_distance=values)
+
+min <- tapply(1:nrow(sample_dt), sample_dt$District, min_fun) %>% stack() %>% rename(min_distance=values)
+
+mean <- tapply(1:nrow(sample_dt), sample_dt$District, mean_fun) %>% stack() %>% rename(mean_distance=values)
+
+median <- tapply(1:nrow(sample_dt), sample_dt$District, median_fun) %>% stack() %>% rename(median_distance=values)
+
+distance_df <- mean %>%
+  left_join(median) %>%
+  left_join(min) %>%
+  left_join(max) %>%
+  rename(District=ind) %>%
+  mutate(max_distance_km=if_else(max_distance==-999,as.numeric(NA),max_distance/1000),
+         min_distance_km=if_else(min_distance==-999,as.numeric(NA),min_distance/1000),
+         mean_distance_km=if_else(mean_distance==-999,as.numeric(NA),mean_distance/1000),
+         median_distance_km=if_else(median_distance==-999,as.numeric(NA),median_distance/1000)) %>%
+  select(District, mean_distance_km,median_distance_km, max_distance_km, min_distance_km) 
+
+write_excel_csv(distance_df, file=paste0(sampling_folder, "/GEPD_KP_sample_distances_",Sys.Date(),".csv"))
+
+
+```
+
+
+
+
+Read in Saber SD Pakistan data from 2018 in Punjab
+
+```{r punjabdata}
+data_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Pakistan_Punjab/2019/Data/SDI/data/clean/"
+
+student_pjb_df_raw <- read_dta(paste0(data_dir, "1.StudentData_BLvEL.dta"))
+
+student_pjb_df <- student_pjb_df_raw %>%
+  select(District, Tehsil, SchoolName, scode, scode_original,EmisCode, StudentNumber, SchoolType, starts_with("m2_bl_"),m5_bl_AllTest_TestScore, starts_with("m5_bl_"), EL_Strata, EL_Weight, BL_Strata, BL_Weight)
+
+
+school_pjb_df <- student_pjb_df %>%
+  group_by(District, Tehsil, SchoolName, scode, scode_original,EmisCode, SchoolType,m2_bl_school_location, m2_bl_totenrol_g4) %>%
+  summarise(test_score=mean(m5_bl_AllTest_TestScore, na.rm=TRUE)) %>%
+  filter(!is.na(m2_bl_school_location))
+
+
+teacher_pjb_df_raw <- read_dta(paste0(data_dir, "2.TeacherData_BLvEL.dta"))
+
+teacher_pjb_df <- teacher_pjb_df_raw %>%
+  group_by(District, Tehsil, SchoolName, scode, scode_original,EmisCode, SchoolType,m2_bl_school_location, m2_bl_totenrol_g4) %>%
+  summarise(absence=mean(m8_bl_TeacherAbsenteism, na.rm=TRUE)) %>%
+  filter(!is.na(m2_bl_school_location))  
+
+
+school_pjb_df_combined <- school_pjb_df %>%
+  left_join(teacher_pjb_df)
+
+```
+
+```{r}
+library(lme4)
+
+#districts
+fit1 <-lmer(test_score ~ 1 | District, data= school_pjb_df) 
+sjPlot::tab_model(fit1)
+
+#tehsils
+fit0 <- lmer(test_score ~ 1 | Tehsil, data= school_pjb_df) 
+sjPlot::tab_model(fit0)
+#calculate ICC
+0.0007427 / (0.0007427 + 0.0074317 )
+
+
+
+#calculate ICC
+0.0009052  / (0.0009052  + 0.0075255  )
+```
+
+##  Bootstrapping Approach to Calculating Effective Sample Size
+
+
+```{r}
+#simulated sample of 200
+  strata_df <- school_pjb_df_combined %>%
+    group_by(District, SchoolType, m2_bl_school_location) %>%
+    summarise(nstudents_district=sum(m2_bl_totenrol_g4),
+                       total_district=n()
+  ) %>%
+    ungroup() %>%
+    mutate(share_district=180*round(nstudents_district/sum(nstudents_district),4),
+           sample_size=ceiling(share_district))
+
+
+
+
+
+  # set the numbers of schools selected by strata (grade)
+  
+  sample_gepd_df <- school_pjb_df_combined %>%
+    left_join(strata_df) %>%
+    mutate(
+      totalstudents=sum(m2_bl_totenrol_g4),
+    ) %>%
+    group_by(District, SchoolType, m2_bl_school_location) %>%
+    mutate(strata_count=n(),
+           strata_size=sum(m2_bl_totenrol_g4),
+           strata_school_prob=strata_size/totalstudents) %>%
+    sample_n(size = sample_size, weight =m2_bl_totenrol_g4) %>%
+    ungroup() %>%
+    mutate(strata_prob=(sample_size)*(m2_bl_totenrol_g4/strata_size),
+           ipw=1/strata_school_prob*(1/strata_prob))
+
+
+  
+  sample_gepd_df %>%
+  filter(!is.na(ipw)) %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata_count','SchoolType','m2_bl_school_location'),
+                   weight=ipw) %>%
+    summarise(test_score=survey_mean(test_score, na.rm = TRUE),
+              absence=survey_mean(absence),
+              # internet=survey_mean(internet)
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on 200 Randomly Selected Using Typical GEPD Approach")  
+  
+```
+
+```{r clusterpower}
+#use clusterPower package to estimate detectable effect sizes
+#check number of clusters ranging from 10 to 100 clusters,
+# look to detect a 1 std deviation change (sd = ~0.1)
+power <- cps.normal(
+  nsim=10,
+  nclusters=10, nsubjects = 20,
+  mu=0.4,
+  mu2=0.5,
+  ICC=0.09,
+  sigma_sq=0.0007427,
+  ICC2=0.09,
+  sigma_sq2=0.0007427, 
+  seed=1234
+)
+
+```
+
+```{r WebPower}
+library(WebPower)
+#caluclate number of schools needed to reach different effect sizes
+#want to detect change of 0.1 std deviations
+#wp.crt2arm(n=NULL, f = NULL, J = NULL, icc = NULL, power = NULL, alpha =
+# 0.05, alternative = c("two.sided", "one.sided"))
+# • n= sample size (number of individuals per cluster)
+# • f= effect size (either main effect of treatment, or mean difference
+# between treatment clusters and control clusters)
+# • J= number of clusters/sides. It tells how many clusters are considered
+# in the study design. At least two clusters are required
+# • icc= intra-class correlation (degree to which two randomly drawn
+# observations within a cluster are correlated)
+# • alpha= significance level
+# • power= statistical power
+# • alternative= direction of the alternative hypothesis ("two.sided" or
+# "less" or "greater")
+c10_s20 <- wp.crt2arm(n=20, J=10, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+c20_s10 <-wp.crt2arm(n=10, J=20, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+c40_s5 <-wp.crt2arm(n=5, J=40, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+c50_s4 <-wp.crt2arm(n=4, J=50, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+c100_s2 <-wp.crt2arm(n=2, J=100, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+c200_s1 <-wp.crt2arm(n=1, J=200, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+
+print(paste0('Difference in effect size between 200 schools randomly selected and 100 clusters with 2 schools is ', round(c200_s1$f-c100_s2$f,3), ' or ', round(100*(c200_s1$f-c100_s2$f)/c200_s1$f,1),'%'))
+
+print(paste0('Difference in effect size between 200 schools randomly selected and 50 clusters with 4 schools is ', round(c200_s1$f-c50_s4$f,3), ' or ', round(100*(c200_s1$f-c50_s4$f)/c200_s1$f,1),'%'))
+
+print(paste0('Difference in effect size between 200 schools randomly selected and 40 clusters with 5 schools is ', round(c200_s1$f-c40_s5$f,3), ' or ', round(100*(c200_s1$f-c40_s5$f)/c200_s1$f,1),'%'))
+
+
+#check how to get back to same effect size as 200 schools randomly selected
+c_2_same <- wp.crt2arm(f=c200_s1$f, J=111, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+print(paste0('To get same detectable effect with 2 schools per cluster, would need ', round(c_2_same$J), ' clusters, for a total of ', round(c_2_same$J)*2))
+
+c_4_same <- wp.crt2arm(f=c200_s1$f, J=66, icc=0.1, alpha=0.05, power=0.80, alternative="two.sided")
+print(paste0('To get same detectable effect with 4 schools per cluster, would need ', round(c_4_same$J), ' clusters, for a total of ', round(c_4_same$J)*4))
+```
+
+
+
+
+```{r}
+#cluster sample example
+n_tehsils=100
+n_per_tehsil=2
+
+
+#simulated sample of 200
+  cluster_strata_df <- school_pjb_df_combined %>%
+    mutate(total_enrollment=sum(m2_bl_totenrol_g4)) %>%
+    group_by(District, Tehsil, SchoolType, m2_bl_school_location) %>%
+    summarise(nstudents_tehsil=sum(m2_bl_totenrol_g4),
+                       total_tehsil=n()
+      ) %>%
+    group_by(District, SchoolType, m2_bl_school_location) %>%
+    summarise(nstudents_district=sum(nstudents_tehsil),
+                       total_district=n()
+  ) %>%
+    ungroup() %>%
+    mutate(share_district=180*round(nstudents_district/sum(nstudents_district),4),
+           sample_size=ceiling(share_district))
+
+
+  sample_gepd_df <- school_pjb_df_combined %>%
+    left_join(strata_df) %>%
+    mutate(
+      totalstudents=sum(m2_bl_totenrol_g4),
+    ) %>%
+    group_by(District, SchoolType, m2_bl_school_location) %>%
+    mutate(strata_count=n(),
+           strata_size=sum(m2_bl_totenrol_g4),
+           strata_school_prob=strata_size/totalstudents) %>%
+    sample_n(size = sample_size, weight =m2_bl_totenrol_g4) %>%
+    ungroup() %>%
+    mutate(strata_prob=(sample_size)*(m2_bl_totenrol_g4/strata_size),
+           ipw=1/strata_school_prob*(1/strata_prob))
+
+
+  
+```
+
+
+
+```{r}
+#create a function to calculate mean student achievement with alternative sample sizes
+
+sampler_tehsils <- function(variable, n_tehsils, n_per_tehsil) {
+
+#simulated sample of 200
+  cluster_df <- school_pjb_df_combined %>%
+    mutate(total_enrollment=sum(m2_bl_totenrol_g4)) %>%
+    group_by(District, Tehsil, SchoolType, m2_bl_school_location) %>%
+    summarise(nstudents_tehsil=sum(m2_bl_totenrol_g4),
+                       total_tehsil=n()
+      ) %>%
+    group_by(District, SchoolType, m2_bl_school_location) %>%
+    summarise(nstudents_district=sum(nstudents_tehsil),
+                       total_district=n()
+  ) %>%
+    ungroup() %>%
+    mutate(share_district=180*round(nstudents_district/sum(nstudents_district),4),
+           sample_size=ceiling(share_district))
+
+
+}
+
+
+  # set the numbers of schools selected by strata (grade)
+  
+  sample_gepd_df <- school_pjb_df_combined %>%
+    left_join(cluster_df) %>%
+    filter(!is.na(nstudents_tehsil))
+    mutate(
+      totalstudents=sum(m2_bl_totenrol_g4),
+    ) %>%
+    group_by(District, Tehsil, SchoolType, m2_bl_school_location) %>%
+    mutate(strata_count=n(),
+           strata_size=sum(m2_bl_totenrol_g4),
+           strata_school_prob=strata_size/totalstudents) %>%
+    sample_n(size = n_per_tehsil, weight =m2_bl_totenrol_g4) %>%
+    ungroup() %>%
+    mutate(strata_prob=(sample_size)*(m2_bl_totenrol_g4/strata_size),
+           ipw=1/strata_school_prob*(1/strata_prob))
+
+
+  
+  sample_gepd_df %>%
+  filter(!is.na(ipw)) %>%
+  ungroup() %>%
+  as_survey_design(
+    Tehsil
+    strata=c('strata_count','SchoolType','m2_bl_school_location'),
+                   weight=ipw) %>%
+    summarise(test_score=survey_mean(test_score, na.rm = TRUE),
+              absence=survey_mean(absence),
+              # internet=survey_mean(internet)
+              )
+  
+}
+
+```
+
