@@ -430,12 +430,11 @@ school_dta<- school_dta %>%
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_code=if_else(!is.na(school_emis_preload),as.double(school_emis_preload), as.double(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
-         total_enrolled=m1saq7
-  ) %>%
-  mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
-  mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
+         total_enrolled=m1saq7) %>%
+  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
+    left_join((read_csv(file.path(download_folder, "emis_fixes.csv")) %>% select(-m1s0q2_emis))) %>%
+  mutate(school_code=as.numeric(school_code))
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)

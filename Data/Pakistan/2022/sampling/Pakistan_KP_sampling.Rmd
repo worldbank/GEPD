@@ -293,7 +293,8 @@ write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_KP_sample_200
    )
    
 leaflet(data=sample_df_200) %>%
-    addTiles()  %>%
+    addProviderTiles(providers$OpenStreetMap.Mapnik)  %>%
+    addProviderTiles(providers$Stamen.TonerLines)  %>%
     addCircleMarkers( lng=~Ycoordinate,  lat=~Xcoordinate, color=~pal(sample_df_200$Gender),
                       radius=7,
                 popup =  paste("Name: ", sample_df_200$School_Name, " <br>",
