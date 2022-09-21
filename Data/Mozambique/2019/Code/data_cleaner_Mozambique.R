@@ -8,17 +8,17 @@ library(haven)
 
 #Load the data
 #read in school level file
-if(Sys.info()["user"] == "wb577189"){
+
+if(Sys.info()["user"]=="AdrianoCiretto"){
   
-  download_folder<- file.path("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data/SDI 2018/")
+  download_folder <- file.path("/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/MOZ/")
   
   
-} else if (Sys.info()["user"] == "wb469649") {
-  
+} else if(Sys.info()["user"]=="wb469649"){
 
 download_folder <- file.path("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Mozambique/2019/Data")
-}
 
+}
 #load R dataframe
 load(file.path(download_folder, "all_modules.RData"))
 
