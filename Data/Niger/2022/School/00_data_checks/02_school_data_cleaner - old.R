@@ -40,7 +40,10 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, school_file))
+school_dta<-read_dta(file.path(download_folder, school_file)) %>% 
+  mutate(school_name_preload= if_else(school_info_correct == 0, m1s0q2_name, school_name_preload),
+         school_code_preload= if_else(school_info_correct == 0, m1s0q2_code, school_code_preload),
+         school_emis_preload= if_else(school_info_correct == 0, m1s0q2_emis, school_emis_preload))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
