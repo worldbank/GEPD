@@ -147,16 +147,20 @@ tab emis_code
 
 save "$out/aim_ecd/ecd_assessment_master.dta", replace
 
+********************************************************************************
+
+* Create Master AIM Data 
+
+use "$out/aim_ecd/ecd_assessment_master.dta", clear
+
+merge m:1 interview__id using "$out/aim_ecd/AIM_ECD_PAK_master.dta"
 
 
+tab emis_code _merge 
+
+
+save "$out/aim_ecd/aim_ecd_master.dta", replace
 
 
 exit
-
-
-
-
-
-
-* HQ approved datasets:
 
