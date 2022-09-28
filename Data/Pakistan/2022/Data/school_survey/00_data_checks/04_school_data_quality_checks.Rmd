@@ -182,9 +182,9 @@ load(paste(save_folder, "school_survey_data.RData", sep="/"))
 # 
 # load(sample_frame_name)
 
-sample_frame_name <- read.csv("C:/Users/wb577189/OneDrive - WBG/Desktop/Education GP/01. GEPD/02. Country_Work/Sierra Leone/04. Data/Sampling/Cleaning/sample_clean_2022-05-03.csv") %>% 
-  select(-internet) %>% 
-  rename(sch_id = idemis_code)
+# sample_frame_name <- read.csv("C:/Users/wb577189/OneDrive - WBG/Desktop/Education GP/01. GEPD/02. Country_Work/Sierra Leone/04. Data/Sampling/Cleaning/sample_clean_2022-05-03.csv") %>% 
+#   select(-internet) %>% 
+#   rename(sch_id = idemis_code)
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info <- c('interview__id', 'school_code',
@@ -205,7 +205,7 @@ orig_colnames<-colnames(school_dta_short)
 #compare data collected to original sample
 school_dta_short <- school_dta_short %>%
   mutate(sch_id=as.numeric(school_emis_preload)) %>%
-  left_join(sample_frame_name, by="sch_id") %>%
+  #left_join(sample_frame_name, by="sch_id") %>%
   mutate(school_ipw=1)
   
  # school_dta_short %>% data_set
@@ -281,7 +281,7 @@ indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)",
                     )
 
 sumstats<-school_dta_short %>%
-  select(indicator_list) 
+  select(indicator_list) %>% select(-operational_management)
 
 #impute missing weights with median
 school_dta_short <- school_dta_short %>%
