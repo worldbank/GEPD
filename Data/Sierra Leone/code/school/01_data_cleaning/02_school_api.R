@@ -24,7 +24,7 @@ if (need_api==1) {
   
   #Survey Solutions Server address
   #e.g. server_add<-"https://gepd.mysurvey.solutions"
-  server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'http://etri.gepd.solutions/gepdsle')$res
+  server_add<- svDialogs::dlgInput("Please Enter Server http Address:", 'http://etri.gepd.solutions/gepdpak')$res
   
   #questionnaire version
   #e.g. quest_version<-8
@@ -37,7 +37,6 @@ if (need_api==1) {
   
   currentDate<-Sys.Date()
   
-  tounzip <- paste("mydata-",currentDate, ".zip" ,sep="")
   
   
   
@@ -52,8 +51,8 @@ if (need_api==1) {
   #pull data from version of our Education Policy Dashboard Questionnaire
   
   json_body <- jsonlite::toJSON(list(
-    ExportType= "Tabular",
-    QuestionnaireId= "dd0182f21da6488296e4b9a9ba259d67$6",
+    ExportType= "Stata",
+    QuestionnaireId= paste0("feeef8fb3b3049dbbf945c1768b788f3$",quest_version),
     From="",
     To="",
     AccessToken="",
@@ -83,7 +82,7 @@ if (need_api==1) {
                       authenticate(user, password))
   
   #download file
-  redirectURL <- dataDownload$url 
+  redirectURL <- paste0(dataDownload$url,"/file") 
   
   file_name <- paste0("survey_solutions_",Sys.Date(),".zip")
   
@@ -95,7 +94,6 @@ if (need_api==1) {
     content_type_json(),
     write_disk(fs::path(download_folder, file_name), overwrite = TRUE)
   )
-  
   
 }
 
