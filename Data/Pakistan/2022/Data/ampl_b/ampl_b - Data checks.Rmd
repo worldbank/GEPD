@@ -26,7 +26,8 @@ library(kableExtra)
 #read in school level file
 save_folder <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Data/01. Pilot/clean/amplb/'
 
-final <- read.csv(paste0(save_folder, "amplb_pak_pilot2.csv")) %>% rename(student_count = `Number.of.students.for.which.the.assessment.was.entered`)
+final <- read.csv(paste0(save_folder, "amplb_pak_pilot2.csv")) %>%   rename(student_count=Number.of.students.for.which.the.assessment.was.entered) 
+
 ```
 
 
@@ -38,7 +39,9 @@ final <- read.csv(paste0(save_folder, "amplb_pak_pilot2.csv")) %>% rename(studen
 # of booklets (per type)
 # map them
 
-final  %>% filter(!is.na(.)) %>%  summarise(
+final  %>% filter(!is.na(.)) %>% 
+  
+  summarise(
   
   `Number of schools covered` = n_distinct(`school_emis_preload`),
   `Total booklets entered` = n(),
@@ -110,7 +113,7 @@ missing_schools %>%
 ```{r map,  echo=FALSE}
 
 school_map <- read.csv("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Data/01. Pilot/clean/final_complete_school_data.csv") %>% select(school_name_preload, school_province_preload, school_district_preload, school_emis_preload, lat, lon) %>%
-  filter(!str_detect(school_emis_preload, "Blank interview")) %>% mutate(school_emis_preload=as.numeric(school_emis_preload)) %>%  right_join(perschool %>% rename(school_emis_preload=`school_emis_preload`)) %>% filter(!is.na(.))
+  filter(!str_detect(school_emis_preload, "Blank interview")) %>% mutate(school_emis_preload=as.numeric(school_emis_preload)) %>%  right_join(perschool %>% rename(school_emis_preload=`school_emis_preload`)%>% mutate(school_emis_preload=as.numeric(school_emis_preload))) #%>% filter(!is.na(.))
 
 
 #create icons

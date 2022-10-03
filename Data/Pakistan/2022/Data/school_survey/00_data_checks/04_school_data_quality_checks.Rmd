@@ -322,8 +322,9 @@ write_excel_csv(sumstats_df, paste(save_folder,'GEPD_school_Indicators.csv',sep=
 ```{r missings_kable, echo=FALSE}
 
 knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean", "95% Confidence Interval", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "Histogram"), digits = 2 ) %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
-  footnote(general="Weighted Summary Statistics using School Survey Weights")
+  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) 
+# %>%
+#   footnote(general="Weighted Summary Statistics using School Survey Weights")
 
 ```
 

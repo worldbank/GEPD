@@ -267,6 +267,7 @@ para_df_module <- para_df %>%
   summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec))
 
 school_dta_preamble_id <- school_dta %>%
+  mutate( school_emis_preload=if_else(school_info_correct==1,as.double(school_emis_preload), as.double(m1s0q2_emis))) %>% 
   select(interview__id, interview__key, school_emis_preload, school_name_preload, school_province_preload, school_district_preload, lat, lon ) %>% 
   mutate(across(everything(), as.character))
 

@@ -12,11 +12,11 @@
 ######################################
 # Load Required Packages#
 ######################################
+library(tidyverse)
 library(here)
 library(knitr)
 library(markdown)
 library(rmarkdown)
-library(tidyverse)
 ######################################
 # User Inputs for Run File #
 ######################################
@@ -26,9 +26,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
-#Country name
-country <-'SLE'
-country_name <- "Sierra Leone"
+#Country name and year of survey
+country <-'NGR'
+country_name <- "Niger"
 year <- '2022'
 
 #########################
@@ -38,7 +38,8 @@ year <- '2022'
 #The save_folder will be the location of where cleaned data is stored
 
 
-if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+
+if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
@@ -47,15 +48,18 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   backup_onedrive="no"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
   
-} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189") {
-  
+}else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
+  
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
   backup_onedrive="no"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work",country_name,year,"Data/clean/School", sep="/"))
+  # This is experimental and not currently in use.
+  backup_onedrive="yes"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/School_Survey", sep="/"))
+  
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
@@ -72,12 +76,12 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch file to access data from API
 need_api=1
-teach_avail=0
-source('02_school_api.R', local=TRUE)
+school_file<-"EPDash.dta"
+
+ source('02_school_api.R', local=TRUE)
  
 # #launch file to clear data=
-rmarkdown::render("03_school_data_cleaner.Rmd")
-
+source('03_school_data_cleaner.R', local=TRUE)
 
 source('04_school_anonymizer.R', local=TRUE)
 
