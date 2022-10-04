@@ -75,7 +75,7 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch file to access data from API
-need_api=1
+need_api=0
 school_file<-"EPDash.dta"
 
  source('02_school_api.R', local=TRUE)

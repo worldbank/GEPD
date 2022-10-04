@@ -1716,9 +1716,9 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'Sector Office',
-    govt_tier=='Regional office ' ~ 'District Office',
-    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+    govt_tier=='District office ' ~ 'Commune Office',
+    govt_tier=='Regional office ' ~ 'Regional Office',
+    govt_tier=='Ministry of Education '  ~ 'Ministry of Education'
   )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
