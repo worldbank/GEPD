@@ -75,7 +75,7 @@ library(ggpubr)
 #===============
 
 #set directory:
-work_dir<-"C:/Users/wb469649/OneDrive - WBG/4th Grade Assessment - Dashboard - To Share/"
+work_dir<-"C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/NGR/NGR_2022_GEPD/NGR_2022_GEPD_v01_RAW/Data/anonymized/School"
 
 gender=0
 
@@ -102,7 +102,7 @@ makeVlist <- function(dta) {
 
 
 #load data
-load(file=paste(work_dir, 'Data/school_indicators_data_anon_Rwanda.RData', sep=""))
+load(file=paste(work_dir, 'Data/school_indicators_data_anon.RData', sep=""))
 load(file=paste(work_dir, 'Data/dashboard_4th_grade_assessment_data_rwanda.RData', sep=""))
 write_excel_csv(assess_4th_grade_anon, 
                 file = paste(work_dir,'Data/dashboard_4th_grade_assessment_data_rwanda.csv', sep=""))
