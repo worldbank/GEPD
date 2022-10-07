@@ -14,7 +14,7 @@ library(here)
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here::here() #"C:/Users/wb469649/Documents/Github/GEPD"
 if (need_api==1) {
-  pw_file<-here::here("GitHub/GEPD/password.R")
+  pw_file<-here::here("password.R")
   if (file.exists(pw_file)) {
     source(pw_file)
   } else {

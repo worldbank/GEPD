@@ -681,20 +681,30 @@ graded_data <- "no"
     names_to = c("school_clip", "behaviour"),
     names_pattern = "(s[0-9])_(.*)",
     values_to = "count"
-  ) %>% 
+  ) %>% filter(!is.na(count)) %>% distinct(.)  %>% 
 
     mutate(behaviour = paste0("s_", behaviour),
+           school_clip = if_else(school_clip =="s1", "1", "2"),
            id=row_number(),
            count = as.numeric(count)) %>% 
     
-    pivot_wider(id_cols =c(id, school_code, school_clip), names_from = behaviour, values_from = count) %>% select(-id) %>% 
-    distinct(school_code, school_clip, .keep_all=T)
+    pivot_wider(id_cols =c(id, school_code, school_clip), names_from = behaviour, values_from = count) %>% select(-id) 
+
   
-    
+    ## We regroup by school and video segment
+  coalesce_by_column <- function(df) {
+    return(dplyr::coalesce(!!! as.list(df)))
+  }
+  
+  teach_dta <- teach_dta %>% 
+    group_by(school_code, school_clip) %>% 
+    summarise_all(coalesce_by_column) %>% 
+    mutate(across(everything(), as.numeric)) %>% 
+    ungroup()
     
  
   # names(teach_dta) = names(var.labels)
-  label(teach_dta) = as.list(var.labels[match(names(var.labels), names(var.labels))])
+  #label(teach_dta) = as.list(var.labels[match(names(var.labels), names(var.labels))])
 
   #merge on school ids
 
@@ -715,8 +725,8 @@ graded_data <- "no"
     #          ) %>%
     # select(-clip_temp, -video_length, -school_clip, -person, -enum_comments) %>%
     select(school_code, clip, everything()) %>% 
-      mutate(across(where(is.list), as.character))
-
+    mutate(across(everything(), as.numeric))
+  
   #recode scores to be numeric
 
 
@@ -776,35 +786,35 @@ graded_data <- "no"
 
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
     mutate_at(vars(overall),~(if_else(. %in% c('1','2','3','4','5'),as.numeric(.),as.numeric(NA) ))) %>%
-    mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),.,as.character(NA) ))) %>%
-    mutate_at(vars(low_medium_high), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
-    mutate_at(vars(low_medium_high_na), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
-    mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(str_replace_all(.,"[[:punct:]]",""))) %>%
-    mutate_at(vars(low_medium_high), ~case_when(
-      .=="L" ~ 2,
-      .=="M" ~ 3,
-      .=="H" ~ 4,
-      TRUE ~ as.numeric(NA)
-    )) %>%
-    mutate_at(vars(low_medium_high_na), ~case_when(
-      .=="NA" ~ 1,
-      .=="L" ~ 2,
-      .=="M" ~ 3,
-      .=="H" ~ 4,
-      TRUE ~ as.numeric(NA)
-    )) %>%
-    mutate_at(vars(yes_no), ~case_when(
-      .=="N" ~ 0,
-      .=="Y" ~ 1,
-      TRUE ~ as.numeric(NA)
-    )) %>%
+    # mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),.,as.character(NA) ))) %>%
+    # mutate_at(vars(low_medium_high), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
+    # mutate_at(vars(low_medium_high_na), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
+    # mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(str_replace_all(.,"[[:punct:]]",""))) %>%
+    # mutate_at(vars(low_medium_high), ~case_when(
+    #   .=="L" ~ 2,
+    #   .=="M" ~ 3,
+    #   .=="H" ~ 4,
+    #   TRUE ~ as.numeric(NA)
+    # )) %>%
+    # mutate_at(vars(low_medium_high_na), ~case_when(
+    #   .=="NA" ~ 1,
+    #   .=="L" ~ 2,
+    #   .=="M" ~ 3,
+    #   .=="H" ~ 4,
+    #   TRUE ~ as.numeric(NA)
+    # )) %>%
+    # mutate_at(vars(yes_no), ~case_when(
+    #   .=="N" ~ 0,
+    #   .=="Y" ~ 1,
+    #   TRUE ~ as.numeric(NA)
+    # )) %>%
     mutate_at(vars(low_medium_high), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
     mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
     mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"))))
 
 
   #create sub-indicators from TEACH
-  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>% 
     mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
            instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
            socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
@@ -2496,7 +2506,7 @@ graded_data <- "no"
   }
   
 
-extra_info='yes'
+extra_info='no'
 
 
 
@@ -2553,6 +2563,7 @@ school_gdp$GDP <- raster::extract(gdp_raster, school_gdp,
 school_gdp <- as.data.frame(school_gdp) %>%
   mutate(GDP=as.numeric(GDP)) %>%
   select(school_code,total_enrolled, GDP)
+}
 
 ####################################
 # Multiple Imputation of missing values
