@@ -72,8 +72,11 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #read in AMPL-b file
 ############################
 
-teachece<-read_dta(file.path(download_folder, "v1/TEACH_ECE_PAK.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/TEACH_ECE_PAK.dta"))) 
+teachece<-read_dta(file.path(download_folder, "TEACH_ECE_PAK.dta"))
+
+
+# read_dta(file.path(download_folder, "v1/TEACH_ECE_PAK.dta")) %>% 
+#   bind_rows(read_dta(file.path(download_folder, "v2/TEACH_ECE_PAK.dta"))) 
 
 
 ## If blank interview, then we look for the replacing information
