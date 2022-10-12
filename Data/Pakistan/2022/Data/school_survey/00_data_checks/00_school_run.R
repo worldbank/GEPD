@@ -25,7 +25,6 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
-
 #Country name and year of survey
 country <-'Pakistan_all'
 country_name <- "Pakistan_all"
@@ -76,15 +75,17 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 school_file<-"EPDash.dta"
 
 # #launch file to access data from API
-#source('01_school_api.R', local=TRUE)
- 
+# source('C:/Users/wb577189/OneDrive - WBG/Desktop/api_pak.R', local = T)
+
+# source('01_school_api.R', local=TRUE)
+
 # #launch file to clear data=
 source('02_school_data_cleaner.R', local=TRUE)
 
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-# #launch paradata file 
+# #launch paradata file
 source('03_school_paradata.R', local=TRUE)
 
  #create R markdown file with quality checks

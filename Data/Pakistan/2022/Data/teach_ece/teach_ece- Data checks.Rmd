@@ -65,8 +65,7 @@ year <- '2021'
 #read in TEACH ECE file
 ############################
 
-teachece<-read_dta(file.path(download_folder, "v1/TEACH_ECE_PAK.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/TEACH_ECE_PAK.dta")))
+teachece<-read_dta(file.path(download_folder, "TEACH_ECE_PAK.dta"))
 ```
 
 

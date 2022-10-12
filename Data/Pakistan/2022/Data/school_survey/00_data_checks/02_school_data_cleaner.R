@@ -33,16 +33,19 @@ makeVlist <- function(dta) {
 #read in teacher roster file
 ############################
 
-teacher_roster<-read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>%
-  bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta"))) %>% 
+teacher_roster<-read_dta(file.path(download_folder, "school_survey/TEACHERS.dta")) %>% 
+  # 
+  # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>%
+  # bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta"))) %>% 
   mutate(teacher_name=m2saq2,
          teacher_number=TEACHERS__id)
 
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(paste(download_folder, "/v1/" ,school_file, sep = "")) %>% 
-  bind_rows(read_dta(paste(download_folder, "/v2/", school_file, sep = "")))
+school_dta<-read_dta(paste(download_folder,"/school_survey/",school_file, sep = "")) 
+  # read_dta(paste(download_folder, "/v1/" ,school_file, sep = "")) %>% 
+  # bind_rows(read_dta(paste(download_folder, "/v2/", school_file, sep = "")))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
@@ -51,7 +54,9 @@ school_dta<- school_dta %>%
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
+         school_code=if_else(school_info_correct==1,as.double(school_code_preload), as.double(m1s0q2_emis)),
+         school_code_preload=if_else(school_info_correct==1,as.double(school_code_preload), as.double(m1s0q2_emis)),
+         school_name_preload = ifelse(school_info_correct==1, school_name_preload, as.character(m1s0q2_name)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7
   ) %>%
@@ -121,8 +126,10 @@ for (i in indicator_names ) {
 #########################################
 #read in teacher questionnaire level file
 #########################################
-teacher_questionnaire<-read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
+teacher_questionnaire<-read_dta(file.path(download_folder, "school_survey/questionnaire_roster.dta"))
+  
+  # read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
+  # bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 
 
@@ -249,8 +256,10 @@ bin_var_2 <- function(var, val) {
 }
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta")))
+teacher_absence_dta<-read_dta(file.path(download_folder, "school_survey/TEACHERS.dta"))
+
+# read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>% 
+#   bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta")))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
 
 #Add school preamble info
@@ -422,8 +431,10 @@ graded_data <- "no"
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
 if (graded_data!='yes') {
-  teacher_assessment_dta <- read_dta(file.path(download_folder, "v1/teacher_assessment_answers.dta")) %>%
-    bind_rows(read_dta(file.path(download_folder, "v2/teacher_assessment_answers.dta"))) %>% 
+  teacher_assessment_dta <- read_dta(file.path(download_folder, "school_survey/teacher_assessment_answers.dta")) %>% 
+    
+    # read_dta(file.path(download_folder, "v1/teacher_assessment_answers.dta")) %>%
+    # bind_rows(read_dta(file.path(download_folder, "v2/teacher_assessment_answers.dta"))) %>% 
     left_join(school_data_preamble) %>%
     select(preamble_info, everything()) 
   
@@ -686,8 +697,11 @@ write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_scor
 #############################################
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/fourth_grade_assessment.dta")))
+assess_4th_grade_dta<-read_dta(file.path(download_folder, "school_survey/fourth_grade_assessment.dta"))
+  
+  
+  # read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
+  # bind_rows(read_dta(file.path(download_folder, "v2/fourth_grade_assessment.dta")))
 
 #Add school preamble info
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
@@ -835,8 +849,8 @@ assess_4th_grade_anon <- assess_4th_grade_dta %>%
 assess_4th_grade_metadata <- makeVlist(assess_4th_grade_dta)
 
 
-save(assess_4th_grade_anon, assess_4th_grade_metadta, 
-     file = file.path(save_folder, "dashboard_4th_grade_assessment_data.RData"))
+# save(assess_4th_grade_anon, assess_4th_grade_metadta, 
+#      file = file.path(save_folder, "dashboard_4th_grade_assessment_data.RData"))
 
 
 
@@ -876,8 +890,10 @@ final_indicator_data_LERN_F <- assess_4th_grade_anon %>%
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "v1/ecd_assessment.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/ecd_assessment.dta")))
+ecd_dta<-read_dta(file.path(download_folder, "school_survey/ecd_assessment.dta")) 
+
+# read_dta(file.path(download_folder, "v1/ecd_assessment.dta")) %>% 
+#   bind_rows(read_dta(file.path(download_folder, "v2/ecd_assessment.dta")))
 
 ecd_dta_metadata <- makeVlist(ecd_dta)
 
@@ -1089,8 +1105,8 @@ school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
 school_data_INPT <- school_data_INPT %>%
   mutate(used_ict_num=case_when(
     m1sbq12_inpt==0  ~ 0,
-    (m1sbq12_inpt>=1 ) ~ m1sbq13a_inpt_etri,
-    (is.na(m1sbq12_inpt==0) | is.na(m1sbq13a_inpt_etri)) ~ as.numeric(NA)
+    (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
+    (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
   ))
 
 #access to ICT
@@ -1108,7 +1124,7 @@ inpt_list<-c('blackboard_functional', 'pens_etc', 'textbooks', 'share_desk',  'u
 
 final_indicator_data_INPT <- school_data_INPT %>%
   left_join(school_teacher_questionnaire_INPT) %>%
-  mutate(used_ict=if_else((used_ict_pct>=0.5 & m1sbq12a_inpt_etri>=3), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
+  mutate(used_ict=if_else((used_ict_pct>=0.5 & access_ict>0.5), 1,0))     %>%  #Set percentage of teachers to use ICT over 50% and number over 3
   group_by(school_code) %>%
   select(preamble_info, inpt_list, contains('INPT')) %>%
   summarise_all(~first(na.omit(.))) %>%
@@ -2133,6 +2149,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
 
 final_school_data <- final_school_data %>%
   left_join(school_data_preamble_short) %>%
+  mutate(grade = as.character(grade)) %>% 
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   select(keep_info, ind_list, everything())
@@ -2261,3 +2278,4 @@ save(list=c(ind_dta_list,"school_dta_short",  "indicators", 'school_metadta' ), 
 if (backup_onedrive=="yes") {
   save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
 }
+

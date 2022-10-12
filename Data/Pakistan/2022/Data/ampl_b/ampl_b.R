@@ -72,8 +72,11 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 #read in AMPL-b file
 ############################
 
-amplb<-read_dta(file.path(download_folder, "v1/ampl_dash.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/ampl_dash.dta")))%>% 
+amplb<-
+  read_dta(file.path(download_folder, "ampl_dash.dta")) %>% 
+# 
+# read_dta(file.path(download_folder, "v1/ampl_dash.dta")) %>%
+#   bind_rows(read_dta(file.path(download_folder, "v2/ampl_dash.dta")))%>%
   #clean the names and EMIS code
   mutate(
     school_emis_preload = if_else(school_info_correct==0, m1s0q2_emis, school_emis_preload),
@@ -82,8 +85,10 @@ amplb<-read_dta(file.path(download_folder, "v1/ampl_dash.dta")) %>%
   ) %>% filter(m1s0q1_name_other!="adrien")
 
 
-roster <- read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
-  bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
+roster <- read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+  # 
+  # read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>%
+  # bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
 
 
 
@@ -112,7 +117,7 @@ ampl_b <- roster %>%
   left_join(amplb %>% select(interview__key, ends_with("preload"))) %>% 
   mutate(unique_id = as.character(lapply(student_name, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))) %>% 
   relocate(ends_with("preload")) %>% 
-  mutate(unique_id= paste0(unique_id, interview__id))
+  mutate(unique_id= paste0(unique_id, interview__id, student_id))
 
 
 socio_eco <- ampl_b %>%  
@@ -218,7 +223,7 @@ df_list <- mget(ls(pattern = "^item_[A-Z].*"))
 
 final <- df_list %>% reduce(full_join, by = "unique_id")%>%
   select(unique_id, everything()) %>% 
-  left_join(preamble %>% select(-PF449)) %>% 
+  left_join(preamble %>% select(-c(17:21)) %>%  select(-PF449)) %>% 
   ## Add complex MM175
   left_join(MM175) %>% 
   relocate(names(preamble)) %>% 
@@ -272,16 +277,16 @@ n_distinct(final$school_emis_preload)
 
 
 
-# ## Save the data
-# write_dta(final %>% select(-`Please enter student's name`) %>% rename(assessment_y_n=`Was the student present during the assessment?`,
+# # # ## Save the data
+# write_dta(final %>% select(-student_name) %>% rename(assessment_y_n=`Was the student present during the assessment?`,
 #                                                      type_booklet=`Type of booklet`), file.path(save_folder, "amplb_pak.dta"))
-write.csv(final   %>% rename(assessment_y_n=`Was the student present during the assessment?`,
-                                                     type_booklet=`Type of booklet`), file.path(save_folder, "amplb_pak.csv"), row.names = F)
-# 
-# write_dta(final %>% rename(assessment_y_n=`Was the student present during the assessment?`,
-#                            type_booklet=`Type of booklet`), file.path(save_folder, "amplb_key_confidential_pak.dta"))
+write.csv(final %>% select(-`Please enter student's name`)  %>% rename(assessment_y_n=`Was the student present during the assessment?`,
+                                                     type_booklet=`Type of booklet`), file.path(save_folder, "amplb_pak_pilot2.csv"), row.names = F)
+# # 
+# # write_dta(final %>% rename(assessment_y_n=`Was the student present during the assessment?`,
+# #                            type_booklet=`Type of booklet`), file.path(save_folder, "amplb_key_confidential_pak.dta"))
 write.csv(final%>% rename(assessment_y_n=`Was the student present during the assessment?`,
-                          type_booklet=`Type of booklet`), file.path(save_folder, "amplb_key_confidential_pak.csv"), row.names = F)
+                          type_booklet=`Type of booklet`), file.path(save_folder, "amplb_key_confidential_pak2.csv"), row.names = F)
 
 
 
