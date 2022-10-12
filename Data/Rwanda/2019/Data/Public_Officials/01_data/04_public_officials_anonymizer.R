@@ -183,7 +183,7 @@ for (i in data_list ) {
     #do noise addition (10% of std dev) using sdcMicro and addNoise for income
     if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
       
-      public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
+      temp$net_monthly_salary<-addNoise(temp, variables=c('DEM1q14n'), noise=110)$xm
       temp <- temp %>%
         select(-DEM1q14n)
       

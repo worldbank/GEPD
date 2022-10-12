@@ -6,7 +6,7 @@ library(haven)
 library(tidyverse)
 library(here)
 library(digest)
-library(sdcMicro)
+#library(sdcMicro)
 
 ##################
 # Load the data
@@ -80,7 +80,7 @@ for (i in data_list ) {
 
     #Scrub names, geocodes
     temp <- temp %>%
-      select(-starts_with('position'), -starts_with('office'), one_of('location')) %>% # drop position names and address
+      select(-starts_with('position'), -starts_with('office'), contains('location')) %>% # drop position names and address
       select(-one_of('survey_time', 'lat','lon')) %>% #drop geo-codes
       select(-contains('office')) %>%
       select(-contains('ENUMq8')) %>% #drop enumerator notes
@@ -183,7 +183,7 @@ for (i in data_list ) {
     #do noise addition (10% of std dev) using sdcMicro and addNoise for income
     if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
       
-      public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
+      temp$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
       temp <- temp %>%
         select(-DEM1q14n)
       
@@ -197,8 +197,11 @@ for (i in data_list ) {
     print(i)
     
     print(i)
-    write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+    write_excel_csv(temp,  file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
     
+    # temp %>%
+    #   rename_with(~str_trunc(.,32)) %>%
+    #   write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
     
     
   }

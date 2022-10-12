@@ -11,7 +11,7 @@ library(here)
 ######################################
 # Here you need to indicate the path where you replicated the folder structures on your own computer
 here() #"C:/Users/wb469649/Documents/Github/GEPD"
-
+if (need_api==1) {
 #user credentials
 #Check whether password.R file is in Github repo
 pw_file<-here::here("password.R")
@@ -76,7 +76,7 @@ close(filecon)
 
 #unzip
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
-
+}
 
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
@@ -95,19 +95,5 @@ makeVlist <- function(dta) {
 #read in public officials interview file
 
 public_officials_dta<-read_dta(file.path(download_folder, po_file)) 
-
-public_officials_metadata<-makeVlist(public_officials_dta)
-
-#bind version 7
-public_officials_dta_7<-read_dta(file.path(download_folder,'version_7', po_file)) 
-
-public_officials_dta <- public_officials_dta %>%
-  bind_rows(public_officials_dta_7)
-
-
-public_officials_dta <- public_officials_dta %>%
-  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) 
-
-write_dta(public_officials_dta, file.path(download_folder, po_file))
 
 public_officials_metadata<-makeVlist(public_officials_dta)
