@@ -220,7 +220,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
 server <- function(input, output, session) {
 
     #Load the GEPD indicator data
-    load("./school_indicators_data_anon.Rdata")
+    load("./school_indicators_data_anon.RData")
     load("./public_officials_indicators_data_anon.RData")
     
     
