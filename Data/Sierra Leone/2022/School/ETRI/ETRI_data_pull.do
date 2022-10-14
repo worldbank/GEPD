@@ -100,3 +100,22 @@ order school_code
 sort school_code
 
 save "${data_dir}confidential\School\ETRI_teachers.dta" , replace
+
+
+***************
+***************
+* Teacher G5 File
+***************
+***************
+
+frame create teachers_g5
+frame change teachers_g5
+use "${data_dir}raw\School\etri_roster.dta" 
+
+frlink m:1 interview__key interview__id, frame(school)
+frget school_code sch_owner idregion iddistrict accessibility urban_rural ipw, from(school)
+
+order school_code
+sort school_code
+
+save "${data_dir}confidential\School\ETRI_G5_teachers.dta" , replace
