@@ -14,14 +14,17 @@ library(shinycssloaders)
 library(shinyBS)
 library(shinyjs)
 library(plotly)
+library(ggtext)
 library(glue)
 library(DT)
 library(rvg)
 #library(officer)
 library(kableExtra)
 library(ggcorrplot)
-library(stargazer)
-library(sandwich)
+#library(stargazer)
+library(modelsummary)
+library(estimatr)
+library(flextable)
 library(Cairo)
 library(scales)
 library(ggpmisc)
@@ -30,6 +33,7 @@ library(Hmisc)
 library(quantreg)
 library(psych)
 library(tidyverse)
+library(markdown)
 
 #library(wbgcharts)
 
@@ -178,6 +182,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  
+                                 
                                  selectizeInput("control_choices", "Choose X Variables to Include in Regressions", 
                                                 choices=NULL  , 
                                                 selected=NULL,
@@ -192,7 +197,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                              choices=c('No', 'Yes'),
                                              selected='No'),
                                  downloadButton("downloadmultireg", "Download"),
-                                 htmlOutput("multivariate_regs", height=1400)
+                                 htmlOutput("multivariate_regs")
                         ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
                                  p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
@@ -220,13 +225,25 @@ ui <- navbarPage("Global Education Policy Dashboard",
 server <- function(input, output, session) {
 
     #Load the GEPD indicator data
-    load("./school_indicators_data_anon.RData")
-    load("./public_officials_indicators_data_anon.RData")
+    load("school_indicators_data_anon.RData")
+    load("public_officials_indicators_data_anon.RData")
     
     
+    #modelsummary output
+    gm <- tibble::tribble(
+      ~raw,        ~clean,          ~fmt,
+      "nobs",      "N",             0,
+      "r.squared", "R Sq.", 2)
     
-    
-
+    #add equations to plots
+    eq_plot_txt <- function(data, inp, var) {
+      eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+      coef <- round(coef(eq),2)
+      std_err <- round(sqrt(diag(vcov(eq))),2)
+      r_2<- round(summary(eq)$r.squared,2)
+      sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+      
+    }
     
     
     indicators <- indicators %>%
@@ -651,7 +668,7 @@ server <- function(input, output, session) {
         dplyr::filter(Indicator.Name==input$indicators) 
       
       
-      get_meta_df[,'How.is.the.indicator.scored.']
+      get_meta_df[,'Source.Note']
       
     })
     
@@ -1097,9 +1114,10 @@ server <- function(input, output, session) {
         ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices),50)) +
         labs(colour = "Indicator") +
         ylab(input$reg_choices) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+        geom_richtext(
+          aes(x=1,y=5,label = eq_plot_txt(na.omit(df_reg_plot_dta), y, values), hjust=0.2)
+        ) 
+
       
       
       regplots
@@ -1140,7 +1158,7 @@ server <- function(input, output, session) {
     get_tag_mult_cov <- reactive({
       
       labels_gdp <- data.frame(
-        indicators=c("GDP",'rural'),
+        indicators=c("GDP",'urban_rural'),
         indicator_labels=c("Log GDP per Sq km", "Rural")
       )
       
@@ -1216,7 +1234,7 @@ server <- function(input, output, session) {
       
       
       df_mult_reg <- df_mult_reg %>%
-        select(hashed_school_code, as.character(get_tag_outcome()[1]), ipw, province, rural ) %>%
+        select(hashed_school_code, as.character(get_tag_outcome()[1]), ipw, province, urban_rural ) %>%
         rename(y=2) 
       
       if (input$explorer_weights=="No") {
@@ -1247,11 +1265,8 @@ server <- function(input, output, session) {
       
       
         my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), sep=""))
-        multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw)   
-        # Adjust standard errors
-        cov1_multi         <- vcovHC(multi_reg, type = "HC1")
-        robust_multi_se    <- sqrt(diag(cov1_multi))
-        
+        multi_reg<-lm_robust(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw, se_type='HC2')   
+
       } else if (input$province_dummies=="Yes") {
         df_multi_reg <- dat_for_regs() %>%
           left_join(gdp) %>%
@@ -1260,27 +1275,56 @@ server <- function(input, output, session) {
           select(-hashed_school_code, -ipw) 
         
         my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(province)', sep=""))
-        multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw)     
-        # Adjust standard errors
-        cov1_multi         <- vcovHC(multi_reg, type = "HC1")
-        robust_multi_se    <- sqrt(diag(cov1_multi))
+        multi_reg<-lm_robust(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw, se_type='HC2')     
+
       }
       
       
-      
-      stargazer( multi_reg, type = "html",
-                 se        = list(robust_multi_se),
+      modelsummary(multi_reg,
+                 output = "flextable",
+                 stars=TRUE,
+                 coef_rename = c(
+                   "presence_rate"  = "Teacher Presence",
+                   "content_knowledge" = "Teacher Content Knowledge",
+                   "teach_score" = "Teacher Pedagogy",
+                   "inputs" = "Basic Inputs",
+                   "infrastructure" = "Basic Infrastructure",
+                   "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                   "student_attendance"="Student Attendance",
+                   "operational_management" = "Operational Management",
+                   "instructional_leadership" = "Instructional Leadership",
+                   "principal_knowledge_score" = "Principal Knowledge",
+                   "principal_management" = "Principal Management",
+                   "teacher_attraction" = "Teacher Attraction",
+                   "teacher_selection_deployment" = "Teacher Selection & Deployment",
+                   "teacher_support" = "Teacher Support",
+                   "teaching_evaluation" = "Teacher Evaluation",
+                   "teacher_monitoring" = "Teacher Monitoring & Accountability",
+                   "intrinsic_motivation" = "Teacher Intrinsic Motivation",
+                   "standards_monitoring" = "Standards",
+                   "sch_monitoring" = "Monitoring",
+                   "sch_management_clarity" = "Clarity of Functions",
+                   "sch_management_attraction" = "School Management Attraction",
+                   "sch_selection_deployment" = "School Management Selection & Deployment",
+                   "sch_support" = "School Management Support",
+                   "principal_evaluation" = "School Management Evaluation",
+                   "quality_bureaucracy" = "Characteristics of Bureaucracy",
+                   "national_learning_goals" = "National Learning Goals",
+                   "impartial_decision_making" = "Impartial Decision Making",
+                   "mandates_accountability"= "Mandates & Accountability"),
+                 gof_map = gm,
                  title = "Multivariate OLS Regression using School Level GEPD Data",
-                 column.labels = input$multi_reg_choices,
-                 covariate.labels = input$control_choices,
-                 style='aer',
                  notes= c('Observations weighted using sampling weights.',
                           'Heteroskedasticity robust standard errors in parenthesis.', 
                           'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
                           'GDP measures were produced by researchers at the World Bank DECRG.',  
                           'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
-      )
+      ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        htmltools_value()
       
+
     })        
     
     output$multivariate_regs<-renderUI({

@@ -16,7 +16,7 @@ For more information, you can visit our World Bank topic page:
 https://www.worldbank.org/en/topic/education/brief/global-education-policy-dashboard
 
 ## How to use this tool
-In the table below, you will find our primary indicators - the practices, policies, and politics - that we think are driving learning outcomes.  The data below come from our Dashboard survey in the country of Ethiopia in 2020 and 2021. Our survey took place in 300 schools. For a deeper dive, click on the GEPD Data Explorer tab in the top navigation bar of this page.
+In the table below, you will find our primary indicators - the practices, policies, and politics - that we think are driving learning outcomes.  The data below come from our Dashboard survey in the country of Sierra Leone in 2022. Our survey took place in 300 schools. For a deeper dive, click on the GEPD Data Explorer tab in the top navigation bar of this page.
 
 Please consult our project Github repository for more details on how our indicators are constructed and how our sampling is done.  https://github.com/worldbank/GEPD
 

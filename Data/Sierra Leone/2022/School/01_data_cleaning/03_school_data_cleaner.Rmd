@@ -191,8 +191,8 @@ PEDG_rules <- validator(
   class_cult_minmax=in_range(classroom_culture,1,5),
   instruction_minmax=in_range(instruction,1,5),
   socio_emotional_skills_minmax=in_range(socio_emotional_skills,1,5),
-  teach_score_minmax=in_range(teach_score,1,5),
-  teach_sum_check=teach_score==(classroom_culture+instruction + socio_emotional_skills)/3
+  teach_score_minmax=in_range(teach_score,1,5)
+  #teach_sum_check=teach_score==(classroom_culture+instruction + socio_emotional_skills)/3
   
 )
 
@@ -433,8 +433,9 @@ school_dta<- school_dta %>%
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
-    left_join((read_csv(file.path(download_folder, "emis_fixes.csv")) %>% select(-m1s0q2_emis))) %>%
-  mutate(school_code=as.numeric(school_code))
+  left_join((read_csv(file.path(download_folder, "emis_fixes.csv")) %>% select(interview__key, interview__id, school_code))) %>%
+  mutate(school_code=as.numeric(school_code)) %>%
+  filter(!is.na(school_code))
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
@@ -744,45 +745,29 @@ plot(out)
 
 ## Teacher Pedagogy
 
-```{r eval=FALSE, include=FALSE}
+```{r echo=FALSE}
 
 #############################################
 ### Teacher Pedagogy ###
 #############################################
 
   
-  teacher_pedagogy <- read.csv(paste0(confidential_folder,"/teach_raw_data_eth.csv"))
-  
-  score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
-  
-  ## Wrangling
-  
-  teacher_pedagogy <- teacher_pedagogy  %>% 
-    
-    ## Cleaning the scores
-    mutate_all(funs(str_replace(., "Y", "1"))) %>% 
-    mutate_all(funs(str_replace(., "N", "0"))) %>% 
-    mutate_all(funs(str_replace(., "L", "2"))) %>% 
-    mutate_all(funs(str_replace(., "M", "3"))) %>% 
-    mutate_all(funs(str_replace(., "H", "4"))) %>% 
-    mutate_all(funs(str_replace(., "NA", "1")))%>% 
-    rename(school_code = 1) %>% 
-    select(-Enumerator, -starts_with("X"))%>%
-    mutate(across(everything(), as.numeric)) %>% distinct(school_code, Segment, .keep_all=T)
+  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach_scores_Sierra_Leone.csv")) 
 
-  
-  
   # Generate useful variables
   
-  teacher_pedagogy_segments <- teacher_pedagogy
+  teacher_pedagogy_segments <- teacher_pedagogy %>%
+    filter(!is.na(school_code)) %>%
+    #left_join(school_data_preamble_temp) %>%
+    filter(GRADE==4) %>%
+    select(school_code, starts_with("s_"))
   
   #create sub-indicators from TEACH
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
     mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
            instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
            socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
-    ) %>%
-    mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
+    ) 
   
   # Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
   # Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
@@ -817,7 +802,8 @@ plot(out)
   
   
   final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
-    mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+    mutate(teach_score=(classroom_culture+instruction+socio_emotional_skills)/3,
+           teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
            classroom_culture_prof=100*as.numeric(classroom_culture>=3),
            instruction_prof=100*as.numeric(instruction>=3),
            socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
@@ -834,7 +820,10 @@ plot(out)
   
   write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
   
-
+#validate 
+out <- confront(final_indicator_data_PEDG, PEDG_rules)
+summary(out)
+plot(out)
 ```
 
 
@@ -2654,7 +2643,7 @@ summary(out)
   
   school_data_SATT <- school_data_SATT %>%
     mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-           principal_salary=if_else(m7shq2_satt==999, as.numeric(NA),12*m7shq2_satt/1727.11	)) %>%
+           principal_salary=if_else(m7shq2_satt==999, as.numeric(NA),12*m7shq2_satt/5661845	)) %>%
     mutate(
       principal_salary_score=case_when(
         between(principal_salary,0,0.5) ~ 1,
@@ -3054,7 +3043,7 @@ if (backup_onedrive=="yes") {
 }
 
 
-extra_info='no'
+extra_info='yes'
 
 if (extra_info=='yes') {
 #################################
@@ -3121,11 +3110,11 @@ school_gdp <- as.data.frame(school_gdp) %>%
 
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
-impdata<-mice::mice(school_dta_short, m=1,
-           method='rf',
-           maxit = 50, seed = 500)
+# impdata<-mice::mice(school_dta_short, m=1,
+#            method='rf',
+#            maxit = 50, seed = 500)
 
-school_dta_short_imp <- mice::complete(impdata, 1)
+school_dta_short_imp <- school_dta_short
 
 } else {
   school_dta_short_imp <- school_dta_short
