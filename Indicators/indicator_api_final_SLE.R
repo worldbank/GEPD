@@ -135,7 +135,7 @@ finance_df_final <- finance_df_shaped %>%
 source('R/api_data_fun_SLE.R')
 
 #Tags
-practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.LPV.PRIM.BMP|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
 
 #function to create score data for a specified country and year
 api_metadata_fn <- function(cntry, yr) {
@@ -147,9 +147,9 @@ api_metadata_fn <- function(cntry, yr) {
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(
-        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
-        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
-        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
+        grepl("SE.LPV.PRIM.BMP", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM.BMP", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM.BMP", Series) & value <=10 ~ "On Target",               
         value <85 ~ "Needs Improvement",
         value >=85 & value<90 ~ "Caution",
         value >=90 ~ "On Target",
