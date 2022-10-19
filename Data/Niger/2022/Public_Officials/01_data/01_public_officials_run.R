@@ -77,7 +77,7 @@ po_file<-"public_officials.dta"
 
 
 #launch file to access data from API
-need_api=0
+need_api=1
 source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data

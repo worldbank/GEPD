@@ -702,16 +702,17 @@ urban_rural2
 
       #middle
       sumstats_school_dosso <- school_dta_short_anon  %>%
-        filter(region=="DOSSO")
+        filter(region=="DOSSO") 
 
 
       sch_ipw<-sumstats_school_dosso$ipw
 
       sumstats_school_dosso <- sumstats_school_dosso %>%
-        select(one_of(indicators_list))
+        select(one_of(indicators_list))%>% 
+        filter(rowSums(is.na(.)) != ncol(.))
 
 
-      sumstats_school_dosso_df<-my_skim(sumstats_school_dosso) %>%
+      sumstats_school_dosso_df<-my_skim(sumstats_school_dosso) #%>%
         yank("numeric") %>%
         mutate(variable=skim_variable) %>%
         select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
@@ -1713,8 +1714,9 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
 
 ```{r overall, echo=FALSE}
 
-public_officials_dta_clean_anon <- public_officials_dta_clean_anon %>%
-    filter(!is.na(govt_tier)) 
+public_officials_dta_clean_anon_clean <- public_officials_dta_clean_anon %>%
+    filter(!is.na(govt_tier)) %>% 
+  distinct(interview__id, interview__key, .keep_all=T)
 
 
 

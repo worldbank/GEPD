@@ -37,13 +37,22 @@ makeVlist <- function(dta) {
 ############################
 
 teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
+  bind_rows(read_dta(file.path(download_folder, "version_7/TEACHERS.dta"))) %>% 
   mutate(teacher_name=m2saq2,
          teacher_number=TEACHERS__id)
 
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, school_file))
+school_dta<-read_dta(file.path(download_folder, school_file)) %>% 
+  bind_rows(read_dta(paste0(download_folder,"/version_7/" ,school_file)))
+
+## Correct questionnaire based on field feedbacks
+
+
+
+
+  
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
@@ -139,7 +148,9 @@ school_dta_raw <- school_dta
 #########################################
 #read in teacher questionnaire level file
 #########################################
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) %>% 
+  bind_rows(read_dta(file.path(download_folder, "version_7/questionnaire_roster.dta"))) 
+  
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 
 #corrected teacher variable by cross checking names rostered in M2
@@ -273,7 +284,9 @@ bin_var_2 <- function(var, val) {
 }
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>% 
+  bind_rows(read_dta(file.path(download_folder, "version_7/TEACHERS.dta")))
+  
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
 
 #Add school preamble info
@@ -449,6 +462,7 @@ graded_data <- "no"
 
 
   teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>%
+    bind_rows(read_dta(file.path(download_folder, "version_7/teacher_assessment_answers.dta"))) %>% 
     left_join(school_data_preamble) %>%
     select(preamble_info, everything()) 
   
@@ -1087,6 +1101,8 @@ graded_data <- "no"
   
   #read in ecd level file
   ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+  bind_rows(read_dta(file.path(download_folder, "version_7/ecd_assessment.dta"))) 
+    
   
   ecd_dta_metadata <- makeVlist(ecd_dta)
   

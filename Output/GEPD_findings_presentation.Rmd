@@ -56,7 +56,7 @@ options("modelsummary_theme_flextable" = custom_theme)
   } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
 
     dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
-    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+    shared_loc <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
   }
 
 

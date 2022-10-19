@@ -42,20 +42,20 @@ backup_onedrive="yes"
 if (Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
-  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean", sep="/"))
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw/school", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean/school", sep="/"))
   
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/01. Pilot/clean", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/02. Provinces/ICT", sep="/"))
   
 } else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/"
-  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean", sep="/"))
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work"
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/02. Provinces/ICT/raw/school", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/02. Provinces/ICT/clean/school", sep="/"))
   
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/01. Pilot/clean", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/02. Provinces/ICT", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -76,8 +76,8 @@ school_file<-"EPDash.dta"
 
 # #launch file to access data from API
 # source('C:/Users/wb577189/OneDrive - WBG/Desktop/api_pak.R', local = T)
-
-# source('01_school_api.R', local=TRUE)
+need_api=1
+ source('01_school_api.R', local=TRUE)
 
 # #launch file to clear data=
 source('02_school_data_cleaner.R', local=TRUE)
