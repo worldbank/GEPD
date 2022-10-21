@@ -34,7 +34,10 @@ gen school_code=idemis_code
 gen urban_rural="Rural"
 replace urban_rural = "Urban" if accessibility=="Easily accessible"
 
-keep school_code sch_owner idregion iddistrict accessibility urban_rural ipw
+gen private="Private"
+replace private="Public" if sch_owner=="Government" | sch_owner=="Community"
+
+keep school_code sch_owner idregion iddistrict accessibility school_districthq_distance  urban_rural  private ipw
 destring school_code, replace force
 destring ipw, replace force
 duplicates drop school_code, force
@@ -68,7 +71,7 @@ destring school_code, replace
 *******
 
 frlink m:1 school_code, frame(weights)
-frget sch_owner idregion iddistrict accessibility urban_rural ipw, from(weights)
+frget sch_owner idregion iddistrict accessibility school_districthq_distance  urban_rural  private ipw, from(weights)
 
 *******
 * collapse to school level
@@ -94,7 +97,7 @@ frame change teachers
 use "${data_dir}raw\School\questionnaire_roster.dta" 
 
 frlink m:1 interview__key interview__id, frame(school)
-frget school_code sch_owner idregion iddistrict accessibility urban_rural ipw, from(school)
+frget school_code sch_owner idregion iddistrict accessibility school_districthq_distance  urban_rural  private ipw, from(school)
 
 order school_code
 sort school_code
@@ -113,7 +116,7 @@ frame change teachers_g5
 use "${data_dir}raw\School\etri_roster.dta" 
 
 frlink m:1 interview__key interview__id, frame(school)
-frget school_code sch_owner idregion iddistrict accessibility urban_rural ipw, from(school)
+frget school_code sch_owner idregion iddistrict accessibility school_districthq_distance  urban_rural  private ipw, from(school)
 
 order school_code
 sort school_code

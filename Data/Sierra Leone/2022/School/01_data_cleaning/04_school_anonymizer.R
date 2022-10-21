@@ -87,8 +87,9 @@ data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', cu
     ) %>%
   ungroup() %>%
   mutate(school_code=idemis_code,
-         urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural")) %>%
-  select(school_code, sch_owner, idregion, iddistrict, urban_rural,
+         urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural"),
+         private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")) %>%
+  select(school_code, sch_owner, idregion, iddistrict,accessibility,school_districthq_distance, urban_rural,sch_owner,private,
          ipw) 
 
 
