@@ -61,7 +61,7 @@ api_template <- api_template_fun()
 # Example:
 
 #specify path to data
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/SLE/SLE_2022_GEPD/SLE_2022_GEPD_v01_M/Data/"
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/NER/NER_2022_GEPD/NER_2022_GEPD_v01_M/Data/"
 
 
 
@@ -73,30 +73,18 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
 #read in data from wbopendata
 #get WDI metadata infor
 # cache_list<-wbstats::wbcache()
-# wbopendat<-wbstats::wb(country="SLE", 
+# wbopendat<-wbstats::wb(country="NER", 
 #             indicator=ind_list,
 #             startdate=2015,
 #             enddate=2015,
 #             return_wide = T,
 #             removeNA=FALSE)
 
-wbopendat<-WDI(country='SL', indicator=ind_list, start=2000, end=2021, extra=T) %>%
+wbopendat<-WDI(country='NE', indicator=ind_list, start=2000, end=2021, extra=T) %>%
   fill(starts_with("SE.")) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
-  filter(row_number()==n()) %>%
-  #manual fix for SLE because the GEPD survey came with AMPL-b
-  mutate(
-    SE.LPV.PRIM.OOS=100-SE.PRM.TENR,
-    SE.LPV.PRIM.OOS.FE=100-SE.PRM.TENR.FE,
-    SE.LPV.PRIM.OOS.MA=100-SE.PRM.TENR.MA,
-    SE.LPV.PRIM.BMP=100-3.2,
-    SE.LPV.PRIM.BMP.FE=100-2.4,
-    SE.LPV.PRIM.BMP.MA=100-2.1,
-    SE.LPV.PRIM=SE.LPV.PRIM.BMP*SE.PRM.TENR/100,
-    SE.LPV.PRIM.FE=SE.LPV.PRIM.BMP.FE*SE.PRM.TENR.FE/100,
-    SE.LPV.PRIM.MA=SE.LPV.PRIM.BMP.MA*SE.PRM.TENR.MA/100
-  )
+  filter(row_number()==n())
 
 #read in databases for indicators
 
@@ -132,7 +120,7 @@ finance_df_final <- finance_df_shaped %>%
   select(-rowname)
 
 
-source('R/api_data_fun_SLE.R')
+source('R/api_data_fun_NER.R')
 
 #Tags
 practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.LPV.PRIM.BMP|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
@@ -185,13 +173,13 @@ api_metadata_fn <- function(cntry, yr) {
 }
 
 
-SLE_data_2022 <- api_metadata_fn('SLE', 2022)
+NER_data_2022 <- api_metadata_fn('NER', 2022)
 
 
 #export Indicators_metatdata section
-write_excel_csv(SLE_data_2022, paste( 'GEPD_Indicators_API_SLE.csv',sep=""))
+write_excel_csv(NER_data_2022, paste( 'GEPD_Indicators_API_NER.csv',sep=""))
 
-write_excel_csv(SLE_data_2022, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_SLE.csv',sep=""))
+write_excel_csv(NER_data_2022, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_NER.csv',sep=""))
 
 
 

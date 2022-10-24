@@ -28,7 +28,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'NGR'
+country <-'NER'
 country_name <- "Niger"
 year <- '2022'
 #########################
@@ -73,7 +73,7 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #main file name:
-po_file<-"public_officials.dta"
+po_file<-"public_officials_Clean.dta"
 
 
 #launch file to access data from API

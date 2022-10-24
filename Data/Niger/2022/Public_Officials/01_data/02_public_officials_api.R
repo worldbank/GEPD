@@ -96,7 +96,7 @@ if (need_api==1) {
   )
   
   
-}
+
 
 ##Unzing in appropriate folder
 
@@ -111,6 +111,8 @@ if (quest_version==3) {
   unzip(file.path(download_folder, file_name), exdir=download_folder)
 }
 
+  
+}  
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
@@ -131,11 +133,11 @@ public_officials_dta<-read_dta(file.path(download_folder, po_file))
 
 public_officials_metadata<-makeVlist(public_officials_dta)
 
-#bind version 7
-public_officials_dta_2<-read_dta(file.path(download_folder,'version_2', po_file)) 
-
-public_officials_dta <- public_officials_dta %>%
-  bind_rows(public_officials_dta_2)
+# #bind version 7
+# public_officials_dta_2<-read_dta(file.path(download_folder,'version_2', po_file)) 
+# 
+# public_officials_dta <- public_officials_dta %>%
+#   bind_rows(public_officials_dta_2)
 
 
 public_officials_dta <- public_officials_dta %>%

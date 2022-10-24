@@ -98,7 +98,7 @@ if (need_api==1) {
   )
   
   
-}
+
 
 ##Unzing in appropriate folder
 
@@ -113,6 +113,8 @@ if (quest_version==6) {
   unzip(file.path(download_folder, file_name), exdir=download_folder)
 }
 
+}
+  
 #Create function to save metadata for each question in each module
 #The attr function retrieves metadata imported by haven. E.g. attr(school_dta$m1s0q2_code, "label")
 makeVlist <- function(dta) { 
@@ -141,7 +143,7 @@ indicator_names <- sapply(indicator_names, tolower)
 
 
 #read in school level file
-school_dta <- read_dta(file.path(download_folder, "EPDash.dta"))
+school_dta <- read_dta(file.path(download_folder, "EPDash_STATA_Clean.dta"))
 
 
 
@@ -172,7 +174,7 @@ school_metadta<-school_metadta %>%
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment_Clean.dta"))
 #Add in ecd metadata
 ecd_metadta<-makeVlist(ecd_dta) %>%
   mutate(indicator_tag='LCAP' )
@@ -193,7 +195,7 @@ ecd_metadta<-ecd_metadta %>%
 
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment_Clean.dta"))
 
 
 #Add in assessment metadata
@@ -216,7 +218,7 @@ assess_4th_grade_metadta<-assess_4th_grade_metadta %>%
 
 
 #read in teacher questionnaire level file
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster_Clean.dta"))
 #teacher_questionnaire_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_roster.dta"))
 
 #Add in questionnaire metadata
@@ -247,7 +249,7 @@ teacher_questionnaire_metadta<-teacher_questionnaire_metadta %>%
 
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS_Clean.dta"))
 
 #Add in absemce metadata
 teacher_absence_metadta<-makeVlist(teacher_absence_dta) %>%
@@ -275,7 +277,7 @@ teacher_absence_metadta<-teacher_absence_metadta %>%
 
 
 #read in teacher assessment file
-teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers_Clean.dta"))
 
 #Add in assessment metadata
 teacher_assessment_metadta<-makeVlist(teacher_assessment_dta) %>%

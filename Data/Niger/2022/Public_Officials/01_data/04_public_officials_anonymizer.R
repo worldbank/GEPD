@@ -6,9 +6,7 @@ library(haven)
 library(tidyverse)
 library(here)
 library(digest)
-# library(sdcMicro)
-# require(sdcMicro) # loading the sdcMicro package
-
+library(sdcMicro)
 
 ##################
 # Load the data
@@ -30,7 +28,7 @@ indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
 
 ind_dta_list<-c("final_indicator_data_BNLG" , "final_indicator_data_BMAC" , "final_indicator_data_BQBR" ,
                 "final_indicator_data_BIMP" , "final_indicator_data_ORG"  , "public_officials_dta_clean",
-                 "public_officials_dta")
+                "public_officials_dta")
 
 anon_dta_list<-c("public_officials_metadata")
 
@@ -79,10 +77,10 @@ for (i in data_list ) {
     }
     
     
-
+    
     #Scrub names, geocodes
     temp <- temp %>%
-      select(-starts_with('position'), -starts_with('office'), one_of('location')) %>% # drop position names and address
+      select(-starts_with('position'), -starts_with('office'), contains('location')) %>% # drop position names and address
       select(-one_of('survey_time', 'lat','lon')) %>% #drop geo-codes
       select(-contains('office')) %>%
       select(-contains('ENUMq8')) %>% #drop enumerator notes
@@ -92,7 +90,7 @@ for (i in data_list ) {
       select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
       select(-contains('name')) %>%
       select(-starts_with('ORG1'))  #drop ORG1 questions, which could lead to reidentification
-
+    
     #Drop any "other" responses to questions
     temp <- temp %>%
       select(-contains('_other'))
@@ -183,14 +181,14 @@ for (i in data_list ) {
     }
     
     #do noise addition (10% of std dev) using sdcMicro and addNoise for income
-    # if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
-    #   
-    #   public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
-    #   temp <- temp %>%
-    #     select(-DEM1q14n)
-    #   
-    # }
-    # 
+    if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
+      
+      temp$net_monthly_salary<-as.numeric(addNoise(temp, variables=c('DEM1q14n'), noise=110)$xm)
+      temp <- temp %>%
+        select(-DEM1q14n)
+      
+    }
+    
     #add element to list
     anon_dta_list<-c(anon_dta_list, paste(i,"_anon", sep=""))
     
@@ -199,11 +197,11 @@ for (i in data_list ) {
     print(i)
     
     print(i)
-
-    write.csv(temp, file = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")))
+    write_excel_csv(temp,  file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
     
-    # write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 15)
-    
+    # temp %>%
+    #   rename_with(~str_trunc(.,32)) %>%
+    #   write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
     
     
   }

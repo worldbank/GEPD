@@ -27,7 +27,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name and year of survey
-country <-'NGR'
+country <-'NER'
 country_name <- "Niger"
 year <- '2022'
 
@@ -42,7 +42,7 @@ year <- '2022'
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/INFRA", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
   backup_onedrive="no"
@@ -52,7 +52,7 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
   
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/INFRA", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
   backup_onedrive="no"
@@ -76,12 +76,12 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # #launch file to access data from API
 need_api=0
-school_file<-"EPDash.dta"
+school_file<-"EPDash_STATA_Clean.dta"
 
- source('02_school_api.R', local=TRUE)
+source('02_school_api.R', local=TRUE)
  
-# #launch file to clear data=
-source('03_school_data_cleaner.R', local=TRUE)
+# #launch file to clean data=
+rmarkdown::render("03_school_data_cleaner.Rmd")
 
 source('04_school_anonymizer.R', local=TRUE)
 
