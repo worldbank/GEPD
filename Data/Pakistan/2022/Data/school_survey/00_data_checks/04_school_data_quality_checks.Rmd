@@ -24,9 +24,9 @@ library(kableExtra)
 
 #Load the data
 #read in school level file
-save_folder <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Data/01. Pilot/clean'
+save_folder <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Data/02. Provinces/ICT/clean/'
 
-load(file=paste(save_folder, "paradata_light.RData", sep="/"))
+load(file=paste(save_folder, "school/paradata_light.RData", sep="/"))
 ```
 
 ## Introduction
@@ -174,7 +174,7 @@ write_excel_csv(school_modules_complete, path = paste(save_folder, "school_modul
 
 ```{r missings, echo=FALSE, error=FALSE, message=FALSE, fig.width=8,fig.height=13}
 
-load(paste(save_folder, "school_survey_data.RData", sep="/"))
+load(paste(save_folder, "school/school_survey_data.RData", sep="/"))
 
 #Load original sample of schools
 # currentDate<-c("2019-08-30")
@@ -973,23 +973,23 @@ SEVL_rules <- validator(
 ## a) Teacher absence
 ```{r teacher absence, echo=FALSE}
 #validate 
-out <- confront(teacher_absence_dta, EFFT_rules)
-summary(out)
-plot(out)
+# out <- confront(teacher_absence_dta, EFFT_rules)
+# summary(out)
+# plot(out)
 ```
 
 ## b) Student attendance
 ```{r student absence, echo=FALSE}
 #validate
-out <- confront(final_indicator_data_CONT, CONT_rules)
-summary(out)
-plot(out)
+# out <- confront(school_dta_short, CONT_rules)
+# summary(out)
+# plot(out)
 ```
 
 ## c) Content knowledge teachers
 ```{r content knowledge teachers, echo=FALSE}
 #validate
-out <- confront(final_indicator_data_CONT, CONT_rules)
+out <- confront(teacher_assessment_dta, CONT_rules)
 summary(out)
 plot(out)
 ```
@@ -997,17 +997,17 @@ plot(out)
 ## d) Student assessment 4th grade
 ```{r student learning outcomes, echo=FALSE}
 #validate 
-out <- confront(assess_4th_grade_dta, LERN_rules)
-summary(out)
-plot(out)
+# out <- confront(assess_4th_grade_anon, LERN_rules)
+# summary(out)
+# plot(out)
 ```
 
 ## e) ECD assessment 1th grade
 ```{r ECD learning outcomes, echo=FALSE}
 #validate 
-out <- confront(ecd_dta_anon, LCAP_rules)
-summary(out)
-plot(out)
+# out <- confront(ecd_dta_anon, LCAP_rules)
+# summary(out)
+# plot(out)
 ```
 
 

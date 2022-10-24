@@ -55,7 +55,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   save_folder <- file.path(paste(project_folder,country_name,year,"Data/02. Provinces/ICT/clean/school", sep="/"))
   
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/02. Provinces/ICT", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/02. Provinces/ICT/clean/school", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
