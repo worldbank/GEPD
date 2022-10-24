@@ -752,13 +752,14 @@ plot(out)
 #############################################
 
   
-  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach_scores_Sierra_Leone.csv")) 
+  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach scores Sierra Leone Final.csv")) 
 
   # Generate useful variables
   
   teacher_pedagogy_segments <- teacher_pedagogy %>%
     filter(!is.na(school_code)) %>%
-    #left_join(school_data_preamble_temp) %>%
+    left_join(school_data_preamble_temp) %>%
+    filter(!is.na(school_name_preload)) %>%
     filter(GRADE==4) %>%
     select(school_code, starts_with("s_"))
   
@@ -2838,7 +2839,7 @@ summary(out)
 
 # School level database
 
-```{r}
+```{r message=TRUE, warning=TRUE}
 
 #############################################
 ##### School Level Info ###########
