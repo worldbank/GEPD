@@ -123,7 +123,8 @@ Roadmap:
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/"
+
+work_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/SLE/SLE_2022_GEPD/SLE_2022_GEPD_v01_Analysis/Data/anonymized/"
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
@@ -383,9 +384,9 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
            ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
     mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
     mutate(mean_urban=as.numeric(NA),
-           ci_urban=as.numeric(NA),
+           ci_urban=as.character(NA),
            mean_rural=as.numeric(NA),
-           ci_rural=as.numeric(NA)) %>%
+           ci_rural=as.character(NA)) %>%
     select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
   
   
@@ -603,9 +604,9 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
                ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
         mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
         mutate(mean_urban=as.numeric(NA),
-               ci_urban=as.numeric(NA),
+               ci_urban=as.character(NA),
                mean_rural=as.numeric(NA),
-               ci_rural=as.numeric(NA)) %>%
+               ci_rural=as.character(NA)) %>%
         select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
       
      
@@ -654,188 +655,188 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
       
  
       
-      #Now do breakdown by territory
-      #North
-      sumstats_school_north <- school_dta_short_anon %>%
-        filter(region=="North")
-
-
-      sch_ipw<-sumstats_school_north$ipw
-
-      sumstats_school_north <- sumstats_school_north %>%
-        select(one_of(indicators_list))
-
-
-
-      sumstats_school_north_df<-my_skim(sumstats_school_north) %>%
-        yank("numeric") %>%
-        mutate(variable=skim_variable) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
-
-
-      #add variable label
-      sumstats_school_north_df <- sumstats_school_north_df %>%
-        mutate(name=variable,
-               indicators=variable) %>%
-        left_join(labels_df_2) %>%
-        mutate(varlabel=indicator_labels) %>%
-        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-        mutate(mean_urban=mean,
-               ci_urban=ci) %>%
-        select(varlabel, mean_urban, ci_urban)
-
-      #middle
-      sumstats_school_east <- school_dta_short_anon  %>%
-        filter(region=="East")
-
-
-      sch_ipw<-sumstats_school_east$ipw
-
-      sumstats_school_east <- sumstats_school_east %>%
-        select(one_of(indicators_list))
-
-
-      sumstats_school_east_df<-my_skim(sumstats_school_east) %>%
-        yank("numeric") %>%
-        mutate(variable=skim_variable) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
-
-
-      #add variable label
-      sumstats_school_east_df <- sumstats_school_east_df %>%
-        mutate(name=variable,
-               indicators=variable) %>%
-        left_join(labels_df_2) %>%
-        mutate(varlabel=indicator_labels) %>%
-        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-        mutate(mean_rural=mean,
-               ci_rural=ci) %>%
-        select(varlabel, mean_rural, ci_rural)
-
-      #south
-      sumstats_school_south <- school_dta_short_anon  %>%
-        filter(region=="South")
-
-
-      sch_ipw<-sumstats_school_south$ipw
-
-      sumstats_school_south <- sumstats_school_south %>%
-        select(one_of(indicators_list))
-
-
-      sumstats_school_south_df<-my_skim(sumstats_school_south) %>%
-        yank("numeric") %>%
-        mutate(variable=skim_variable) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
-
-
-      #add variable label
-      sumstats_school_south_df <- sumstats_school_south_df %>%
-        mutate(name=variable,
-               indicators=variable) %>%
-        left_join(labels_df_2) %>%
-        mutate(varlabel=indicator_labels) %>%
-        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-        mutate(mean_south=mean,
-               ci_south=ci) %>%
-        select(varlabel, mean_south, ci_south)
-
-#west
-      sumstats_school_west <- school_dta_short_anon  %>%
-        filter(region=="West")
-
-
-      sch_ipw<-sumstats_school_west$ipw
-
-      sumstats_school_west <- sumstats_school_west %>%
-        select(one_of(indicators_list))
-
-
-      sumstats_school_west_df<-my_skim(sumstats_school_west) %>%
-        yank("numeric") %>%
-        mutate(variable=skim_variable) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
-
-
-      #add variable label
-      sumstats_school_west_df <- sumstats_school_west_df %>%
-        mutate(name=variable,
-               indicators=variable) %>%
-        left_join(labels_df_2) %>%
-        mutate(varlabel=indicator_labels) %>%
-        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-        mutate(mean_west=mean,
-               ci_west=ci) %>%
-        select(varlabel, mean_west, ci_west)
-
-      #now bind urban/rural with the main results
-      sumstats_school_df_final <- sumstats_school_df %>%
-        left_join(sumstats_school_north_df) %>%
-        left_join(sumstats_school_east_df) %>%
-        left_join(sumstats_school_south_df) %>%
-        left_join(sumstats_school_west_df)
-
-
-
-
-      #Survey of Public Officials
-      metadata<-public_officials_metadata
-
-      #add function to produce weighted summary stats
-      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
-                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
-                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
-                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
-                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
-                                             complete = ~ sum(!is.na(.))))
-
-
-      sumstats_public_officials <- public_officials_dta_clean_anon %>%
-        select(one_of(indicators_list) )
-
-
-
-      sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
-        yank("numeric") %>%
-        mutate(variable=skim_variable) %>%
-        select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
-
-
-      #add variable label
-      sumstats_public_officials_df <- sumstats_public_officials_df %>%
-        mutate(name=variable,
-               indicators=variable) %>%
-        left_join(labels_df_2) %>%
-        mutate(varlabel=indicator_labels) %>%
-        mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-               ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-        mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-        mutate(mean_urban=as.numeric(NA),
-               ci_urban=as.numeric(NA),
-               mean_rural=as.numeric(NA),
-               ci_rural=as.numeric(NA),
-               mean_south=as.numeric(NA),
-               ci_south=as.numeric(NA),
-               mean_west=as.numeric(NA),
-               ci_west=as.numeric(NA)) %>%
-        select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south,  mean_west, ci_west )
-
-      sumstats_df <- sumstats_school_df_final %>%
-        bind_rows(sumstats_public_officials_df) %>%
-        arrange(factor(varlabel, levels=main_indicator_labels2))
-
-
-      sumstats_df <- sumstats_df %>%
-        select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south, mean_west, ci_west)
-
+#       #Now do breakdown by territory
+#       #North
+#       sumstats_school_north <- school_dta_short_anon %>%
+#         filter(region=="North")
+# 
+# 
+#       sch_ipw<-sumstats_school_north$ipw
+# 
+#       sumstats_school_north <- sumstats_school_north %>%
+#         select(one_of(indicators_list))
+# 
+# 
+# 
+#       sumstats_school_north_df<-my_skim(sumstats_school_north) %>%
+#         yank("numeric") %>%
+#         mutate(variable=skim_variable) %>%
+#         select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
+# 
+# 
+#       #add variable label
+#       sumstats_school_north_df <- sumstats_school_north_df %>%
+#         mutate(name=variable,
+#                indicators=variable) %>%
+#         left_join(labels_df_2) %>%
+#         mutate(varlabel=indicator_labels) %>%
+#         mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+#                ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+#         mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+#         mutate(mean_urban=mean,
+#                ci_urban=ci) %>%
+#         select(varlabel, mean_urban, ci_urban)
+# 
+#       #middle
+#       sumstats_school_east <- school_dta_short_anon  %>%
+#         filter(region=="East")
+# 
+# 
+#       sch_ipw<-sumstats_school_east$ipw
+# 
+#       sumstats_school_east <- sumstats_school_east %>%
+#         select(one_of(indicators_list))
+# 
+# 
+#       sumstats_school_east_df<-my_skim(sumstats_school_east) %>%
+#         yank("numeric") %>%
+#         mutate(variable=skim_variable) %>%
+#         select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
+# 
+# 
+#       #add variable label
+#       sumstats_school_east_df <- sumstats_school_east_df %>%
+#         mutate(name=variable,
+#                indicators=variable) %>%
+#         left_join(labels_df_2) %>%
+#         mutate(varlabel=indicator_labels) %>%
+#         mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+#                ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+#         mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+#         mutate(mean_rural=mean,
+#                ci_rural=ci) %>%
+#         select(varlabel, mean_rural, ci_rural)
+# 
+#       #south
+#       sumstats_school_south <- school_dta_short_anon  %>%
+#         filter(region=="South")
+# 
+# 
+#       sch_ipw<-sumstats_school_south$ipw
+# 
+#       sumstats_school_south <- sumstats_school_south %>%
+#         select(one_of(indicators_list))
+# 
+# 
+#       sumstats_school_south_df<-my_skim(sumstats_school_south) %>%
+#         yank("numeric") %>%
+#         mutate(variable=skim_variable) %>%
+#         select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
+# 
+# 
+#       #add variable label
+#       sumstats_school_south_df <- sumstats_school_south_df %>%
+#         mutate(name=variable,
+#                indicators=variable) %>%
+#         left_join(labels_df_2) %>%
+#         mutate(varlabel=indicator_labels) %>%
+#         mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+#                ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+#         mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+#         mutate(mean_south=mean,
+#                ci_south=ci) %>%
+#         select(varlabel, mean_south, ci_south)
+# 
+# #west
+#       sumstats_school_west <- school_dta_short_anon  %>%
+#         filter(region=="West")
+# 
+# 
+#       sch_ipw<-sumstats_school_west$ipw
+# 
+#       sumstats_school_west <- sumstats_school_west %>%
+#         select(one_of(indicators_list))
+# 
+# 
+#       sumstats_school_west_df<-my_skim(sumstats_school_west) %>%
+#         yank("numeric") %>%
+#         mutate(variable=skim_variable) %>%
+#         select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
+# 
+# 
+#       #add variable label
+#       sumstats_school_west_df <- sumstats_school_west_df %>%
+#         mutate(name=variable,
+#                indicators=variable) %>%
+#         left_join(labels_df_2) %>%
+#         mutate(varlabel=indicator_labels) %>%
+#         mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+#                ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+#         mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+#         mutate(mean_west=mean,
+#                ci_west=ci) %>%
+#         select(varlabel, mean_west, ci_west)
+# 
+#       #now bind urban/rural with the main results
+#       sumstats_school_df_final <- sumstats_school_df %>%
+#         left_join(sumstats_school_north_df) %>%
+#         left_join(sumstats_school_east_df) %>%
+#         left_join(sumstats_school_south_df) %>%
+#         left_join(sumstats_school_west_df)
+# 
+# 
+# 
+# 
+#       #Survey of Public Officials
+#       metadata<-public_officials_metadata
+# 
+#       #add function to produce weighted summary stats
+#       my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
+#                                              sd = ~ sqrt(var(.,   na.rm=TRUE)),
+#                                              p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
+#                                              p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
+#                                              p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
+#                                              complete = ~ sum(!is.na(.))))
+# 
+# 
+#       sumstats_public_officials <- public_officials_dta_clean_anon %>%
+#         select(one_of(indicators_list) )
+# 
+# 
+# 
+#       sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
+#         yank("numeric") %>%
+#         mutate(variable=skim_variable) %>%
+#         select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
+# 
+# 
+#       #add variable label
+#       sumstats_public_officials_df <- sumstats_public_officials_df %>%
+#         mutate(name=variable,
+#                indicators=variable) %>%
+#         left_join(labels_df_2) %>%
+#         mutate(varlabel=indicator_labels) %>%
+#         mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+#                ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+#         mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+#         mutate(mean_urban=as.numeric(NA),
+#                ci_urban=as.numeric(NA),
+#                mean_rural=as.numeric(NA),
+#                ci_rural=as.numeric(NA),
+#                mean_south=as.numeric(NA),
+#                ci_south=as.numeric(NA),
+#                mean_west=as.numeric(NA),
+#                ci_west=as.numeric(NA)) %>%
+#         select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south,  mean_west, ci_west )
+# 
+#       sumstats_df <- sumstats_school_df_final %>%
+#         bind_rows(sumstats_public_officials_df) %>%
+#         arrange(factor(varlabel, levels=main_indicator_labels2))
+# 
+# 
+#       sumstats_df <- sumstats_df %>%
+#         select(varlabel,  mean, ci, mean_urban, ci_urban, mean_rural, ci_rural, mean_south, ci_south, mean_west, ci_west)
+# 
 
   #create table
   sumstats_df %>%
@@ -880,6 +881,7 @@ urban_rural2<- ggplot(data=filter(sumstats_dumbell, !grepl("Pedagogical|Effort|K
 
 
 learning_data_plot <- final_indicator_data_LERN_anon %>%
+  rename(rural = urban_rural) %>% 
   bind_rows(final_indicator_data_LERN_F_anon, .id="Female") %>%
   bind_rows(final_indicator_data_LERN_M_anon, .id="Male") %>%
   mutate(Gender=case_when(
@@ -929,11 +931,10 @@ learning_data_plot2 <- final_indicator_data_LERN_anon %>%
     Male==2 ~ "Male",
     TRUE ~ as.character(NA)
     )) %>%
-  select(-Female, -Male) %>%
-  mutate(Type=if_else(m8_language==1, "Kinyarwanda Tested School", "English Tested School"))
+  select(-Female, -Male) 
 
 
-learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender , Type), MD = round(wtd.mean(literacy_student_knowledge, ipw, na.rm=T),1))
+learning_dataMedian <- summarise(group_by(learning_data_plot2, Gender), MD = round(wtd.mean(literacy_student_knowledge, ipw, na.rm=T),1))
 
   ggplot(learning_data_plot2, aes(x=Type, y=literacy_student_knowledge, fill=Gender)) + #now plot the output in a bar graph
     geom_violin(aes(weight=ipw), position="dodge") +
@@ -1004,13 +1005,13 @@ ggplot(learning_dataMedian, aes(x=Type, y=MD, fill=Gender)) + #now plot the outp
 
 
 urban_rural <- school_dta_short_anon %>%
-  mutate(Type=factor(urban_rural, levels=c("RURAL", "URBAN"), labels = c("Rural", "Urban"))) %>%
+  rename(rural = urban_rural) %>% 
+  mutate(Type=factor(rural, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
   filter(!is.na(rural))
 
 
 
 infr_urban_rural <- urban_rural %>%
-  group_by(Type) %>%
   mutate(weight=ipw/sum(ipw, na.rm=T)) %>%
   ungroup() %>%
   ggplot(aes(x=infrastructure))  +
@@ -1030,7 +1031,8 @@ infr_urban_rural
 
 
 urban_rural_input <- school_dta_short_anon %>%
-  mutate(Type=factor(urban_rural, levels=c("RURAL", "URBAN"), labels = c("Rural", "Urban"))) %>%
+    rename(rural = urban_rural) %>%
+  mutate(Type=factor(rural, levels=c("Rural", "Urban"), labels = c("Rural", "Urban"))) %>%
   filter(!is.na(rural))
 
 
@@ -1177,7 +1179,7 @@ inpt_urban_rural
 ```{r content_knowledge_region, echo=FALSE, warning=FALSE}
 
 region_content <- school_dta_short_anon %>%
-  mutate(Type=region)
+  mutate(Type=urban_rural)
 
 
 
@@ -1283,12 +1285,13 @@ p1
 
 
 textbooks <- final_indicator_data_PKNW_anon %>%
+      rename(rural = urban_rural) %>%
   left_join(final_indicator_data_INPT_anon) %>%
   left_join(school_dta_short_anon, by="hashed_school_code") %>%
   mutate(share_textbook=(m4scq5_inpt)/(m4scq4_inpt)) %>%
   mutate(share_textbook_guess=(m7sfq10_pknw)/(m4scq4_inpt)) %>%
   mutate(gap_textbooks=(m7sfq10_pknw-m4scq5_inpt)) %>%
-  mutate(Type=factor(rural.x, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
+  mutate(Type=factor(rural, levels=c("TRUE", "FALSE"), labels = c("Rural", "Urban"))) %>%
   filter(!is.na(Type)) %>%
   filter(abs(gap_textbooks)<80) #drop some outlier observations that are probably miscodings
 
@@ -1702,9 +1705,8 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'Sector Office',
-    govt_tier=='Regional office ' ~ 'District Office',
-    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+    govt_tier=='District office ' ~ 'District Office',
+    govt_tier=='Ministry of Education '  ~ 'MBSSE'
   )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
@@ -1722,7 +1724,7 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
     scale_x_discrete(labels = str_wrap(c("Impartial Decision Making",
                                          "Mandates & Accountability",
                                          "National Learning Goals",
-                                         "Quality of the Bureaucracy"), width = 25)) + 
+                                         "Characteristics of Bureaucracy"), width = 25)) + 
   xlab(str_wrap("Survey of Public Officials Indicators", width=75))+
   ylab("Scale (1-5)") +
   ggtitle(str_wrap("Boxplot of Overall Indicators for Survey of Public Officials", width=75)) +
