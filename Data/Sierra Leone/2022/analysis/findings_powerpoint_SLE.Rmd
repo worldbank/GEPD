@@ -24,6 +24,9 @@ library(skimr)
 library(flextable)
 library(ggridges)
 library(scales)
+library(ggtext)
+library(estimatr)
+
 #library(spatstat)
 library(Hmisc)
 library(ggpmisc)
@@ -1266,7 +1269,15 @@ inpt_urban_rural
 
       df_reg<-school_dta_short_anon
       
-
+          #add equations to plots
+    eq_plot_txt <- function(data, inp, var) {
+      eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+      coef <- round(coef(eq),2)
+      std_err <- round(sqrt(diag(vcov(eq))),2)
+      r_2<- round(summary(eq)$r.squared,2)
+      sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+      
+    }
       
       
       regplots<- ggplot(data=df_reg, aes(x=ecd_student_knowledge, y=student_knowledge, weight=ipw, color="#0081a8")) +
@@ -1282,9 +1293,9 @@ inpt_urban_rural
         labs(colour = "Indicator") +
         ylab(paste0("4th Grade Score")) +
         xlab(paste0("1st Grade Score")) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+        geom_richtext(
+          aes(x=10,y=10,label = eq_plot_txt(df_reg, student_knowledge, ecd_student_knowledge), hjust=0.2)
+        ) 
       
       
       # regplots2<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#ff0000")) +
@@ -1328,7 +1339,7 @@ inpt_urban_rural
 - One of the best predictors of 4th grade student achievement, along with the 1st grade scores, is the teacher's pedagogical score  
 - The following plots the school level average of the 4th grade assessment scores on the teacher's pedagogical skill based on the Teach scale.  
 
-```{r teach_plot, eval=FALSE, include=FALSE}
+```{r teach_plot, echo=FALSE}
  #############################
     # Create database with just learning outcomes for regressions
     ##############################
@@ -1337,7 +1348,7 @@ inpt_urban_rural
       df_reg<-school_dta_short_anon
       
 
-      
+
       
       regplots<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#0081a8")) +
         geom_point() +
@@ -1353,9 +1364,11 @@ inpt_urban_rural
         labs(colour = "Indicator") +
         ylab(paste0("4th Grade Score")) +
         xlab(paste0("Teach Score")) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+        geom_richtext(
+          aes(x=1,y=5,label = eq_plot_txt(df_reg, student_knowledge, teach_score), hjust=0.2)
+        ) 
+      
+
       
       
       regplots
@@ -1378,7 +1391,7 @@ inpt_urban_rural
 ```{r content_knowledge_region, echo=FALSE, warning=FALSE}
 
 region_content <- school_dta_short_anon %>%
-  mutate(Type=idregion)
+  mutate(Type=urban_rural)
 
 
 
@@ -1450,10 +1463,8 @@ region_content_long <-region_content %>%
 
   p1<-ggplot(contMean, aes(x=Assessment, y= MD, fill=Type)) + #now plot the output in a bar graph
     geom_col( position="dodge") +
-    geom_text(data = contMean, aes(x=Assessment, y=MD, label=MD), 
-              position = position_dodge(width = 0.8), size = 3, hjust = 1) +
-    geom_text(data = contMean, aes(x=Assessment, y=0, label=Type), 
-              position = position_dodge(width = 0.8), size = 3, hjust = -0.25) +
+    geom_text(data = contMean, aes(x=Assessment, y=MD, label=paste(Type,MD,sep=": ")), 
+              position = position_dodge(width = 0.8), size = 4, hjust = -.1) +
   xlab(str_wrap("Subject", width=75))+
   ylab(str_wrap("Teacher Content Knowledge Proficiency",35)) +
   scale_fill_discrete(name="Territory") +
@@ -1461,9 +1472,12 @@ region_content_long <-region_content %>%
   coord_flip() +
   expand_limits(y=0:100) +
     theme_bw() +
-    ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Territory", 50)) +
+    ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Urban/Rural Status", 50)) +
       theme(
-    legend.position="none"
+    legend.position="none",
+    axis.text.x = element_text(size=12),
+    axis.text.y = element_text(size=12)
+    
   ) 
 p1
 
