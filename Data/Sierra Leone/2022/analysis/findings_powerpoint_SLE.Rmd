@@ -150,7 +150,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
-  data_dir <- file.path("C:/Users/wb577189/WBG/GEPD/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),"Data/")
+  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),"Data/")
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
@@ -209,38 +209,32 @@ indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 # read in indicator data
 SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
   mutate(country="Sierra Leone",
-         date='2022') %>%
-  select(-year)
+         date='2022') 
 
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
   mutate(country="Peru",
-         date='2019') %>%
-  select(-year)
+         date='2019')
 
 RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
   mutate(country="Rwanda",
-         date='2020') %>%
-  select(-year)
+         date='2020') 
 
 
 JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
   mutate(country="Jordan",
-         date='2019') %>%
-  select(-year)
+         date='2019') 
 
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021')  %>%
-  select(-year)
+         date='2020-2021')  
 
 # %>%
 #   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
-         date='2021') %>%
-  select(-year)
+         date='2021') 
 
 
 # Indicator names
@@ -1578,7 +1572,7 @@ main_indicator_labels<-c(
     
     #score expert data (this requires a lot of hard coding and transcribing)
 
-    expert_dta_final<-haven::read_dta(paste(data_dir, '/Policy_Survey/expert_dta_final.dta', sep="/")) 
+    expert_dta_final<-haven::read_dta("c:/users/wb577189/OneDrive - WBG/GEPD/CNT/SLE/SLE_2022_GEPD/SLE_2022_GEPD_v01_M/Data/Policy_Survey/expert_dta_final.dta") 
 
     expert_dta_radar <- expert_dta_final %>%
       select(colnames(data_radar))
