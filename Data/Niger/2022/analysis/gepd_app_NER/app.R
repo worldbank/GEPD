@@ -34,7 +34,8 @@ library(quantreg)
 library(psych)
 library(tidyverse)
 library(markdown)
-
+library(estimatr)
+library(srvyr)
 #library(wbgcharts)
 
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -379,10 +380,10 @@ server <- function(input, output, session) {
                        'sch_selection_deployment', 
                        'sch_support',
                        'principal_evaluation',
-                        'national_learning_goals',
-                        'mandates_accountability',
-                        'quality_bureaucracy',
-                        'impartial_decision_making'
+                       'national_learning_goals',
+                       'mandates_accountability',
+                       'quality_bureaucracy',
+                       'impartial_decision_making'
     )
     
     #Create list of key sub-indicators
@@ -1618,170 +1619,127 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 output$indicators_table <- DT::renderDataTable({
   
-# School Survey
-    metadata<-metadta
+  #function for creating these tables
+  svymeantab <- function(data, strata) {
     
-
-    sch_ipw<-school_dta_short_anon$ipw 
+    temp <- get(data) %>%
+      filter(!is.na(ipw)) %>%
+      filter(!is.infinite(ipw)) %>%
+      select(one_of(indicators_list), strata, ipw ) %>%
+      pivot_longer(cols=one_of(indicators_list),
+                   names_to = 'indicators',
+                   values_to='value') 
+    
     
     if (input$table_weights=="Yes") {
-    #add function to produce weighted summary stats
-      my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                                             complete = ~ sum(!is.na(.))))
+      #add function to produce weighted summary stats
+      temp %>%
+        as_survey_design(strata=strata,
+                         weight=ipw) %>%
+        select(-strata, -ipw) %>%
+        group_by(indicators) %>%
+        summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
+        as_tibble() %>%
+        mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        select(varlabel, mean, ci) 
+      
+      
     } else {
-      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
-                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
-                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
-                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
-                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
-                                             complete = ~ sum(!is.na(.))))
+      temp %>%
+        mutate(ipw=1) %>%
+        as_survey_design(strata=strata,
+                         weight=ipw) %>%
+        select(-strata, -ipw) %>%
+        group_by(indicators) %>%
+        summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
+        as_tibble() %>%
+        mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        select(varlabel, mean, ci) 
     }
- 
+  }
   
-    sumstats_school <- school_dta_short_anon %>%
-      mutate(presence_rate=100-sch_absence_rate) %>%
-      select(one_of(indicators_list) ) 
+  svymeantabpo <- function(data) {
     
-    
-    
-    sumstats_school_df<-my_skim(sumstats_school) %>%
-      yank("numeric") %>%
-      mutate(variable=skim_variable) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-    
-    
-    #add variable label
-    sumstats_school_df <- sumstats_school_df %>%
-      mutate(name=variable,
-             indicators=variable) %>%
+    get(data) %>%
+      select(one_of(indicators_list) ) %>%
+      mutate(ipw=1) %>%
+      pivot_longer(cols=one_of(indicators_list),
+                   names_to = 'indicators',
+                   values_to='value') %>%
+      as_survey_design(weight=ipw) %>% #equal weights
+      select(-ipw) %>%
+      group_by(indicators) %>%
+      summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
+      as_tibble() %>%
+      mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
+      mutate(mean_urban=as.numeric(NA),
+             ci_urban=as.character(NA),
+             mean_rural=as.numeric(NA),
+             ci_rural=as.character(NA)) %>%
       left_join(labels_df_2) %>%
       mutate(varlabel=indicator_labels) %>%
-      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-      select(varlabel, mean, ci)
-    
-    #Now do breakdown by Urban/Rural
-    #urban
-    sumstats_school_urban <- school_dta_short_anon %>%
-      filter(urban_rural=="Urban") 
-
-    
-    sch_ipw<-sumstats_school_urban$ipw 
-    
-    sumstats_school_urban <- sumstats_school_urban %>%
-      select(one_of(indicators_list)) 
-    
-    
-    
-    sumstats_school_urban_df<-my_skim(sumstats_school_urban) %>%
-      yank("numeric") %>%
-      mutate(variable=skim_variable) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-    
-    
-    #add variable label
-    sumstats_school_urban_df <- sumstats_school_urban_df %>%
-      mutate(name=variable,
-             indicators=variable) %>%
-      left_join(labels_df_2) %>%
-      mutate(varlabel=indicator_labels) %>%
-      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-      mutate(mean_urban=mean,
-             ci_urban=ci) %>%
-      select(varlabel, mean_urban, ci_urban)
-    
-    #rural
-      sumstats_school_rural <- school_dta_short_anon  %>%
-        filter(urban_rural=="Rural") 
-
-        
-        sch_ipw<-sumstats_school_rural$ipw 
-      
-        sumstats_school_rural <- sumstats_school_rural %>%
-        select(one_of(indicators_list)) 
-      
-
-    sumstats_school_rural_df<-my_skim(sumstats_school_rural) %>%
-      yank("numeric") %>%
-      mutate(variable=skim_variable) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-    
-    
-    #add variable label
-    sumstats_school_rural_df <- sumstats_school_rural_df %>%
-      mutate(name=variable,
-             indicators=variable) %>%
-      left_join(labels_df_2) %>%
-      mutate(varlabel=indicator_labels) %>%
-      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-      mutate(mean_rural=mean,
-             ci_rural=ci) %>%
-      select(varlabel, mean_rural, ci_rural)
-    
-    #now bind urban/rural with the main results
-    sumstats_school_df <- sumstats_school_df %>%
-      left_join(sumstats_school_urban_df) %>%
-      left_join(sumstats_school_rural_df)
-    
-
-
-  #Survey of Public Officials
-    metadata<-public_officials_metadata
-
-    #add function to produce weighted summary stats
-    my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
-                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
-                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
-                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
-                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
-                                           complete = ~ sum(!is.na(.))))
-
-
-  sumstats_public_officials <- public_officials_dta_clean_anon %>%
-    select(one_of(indicators_list) )
-
-
-
-  sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
-    yank("numeric") %>%
-    mutate(variable=skim_variable) %>%
-    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist)
-
-
-  #add variable label
-  sumstats_public_officials_df <- sumstats_public_officials_df %>%
-    mutate(name=variable,
-           indicators=variable) %>%
-    left_join(labels_df_2) %>%
-    mutate(varlabel=indicator_labels) %>%
-    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-    mutate(mean_urban=as.numeric(NA),
-           ci_urban=as.character(NA),
-           mean_rural=as.numeric(NA),
-           ci_rural=as.character(NA)) %>%
-    select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
-
+      select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)  
+  }
   
-  sumstats_df <- sumstats_school_df %>%
+  strat=c('REGION', 'LIRE', 'urban_rural')
+  
+  # School Survey
+  metadata<-metadta
+  
+  
+  sumstats_school <- school_dta_short_anon %>%
+    mutate(presence_rate=100-sch_absence_rate)
+  
+  sumstats_school_df <- svymeantab('sumstats_school', strata=strat)
+  
+  #Now do breakdown by Urban/Rural
+  #urban
+  sumstats_school_urban <- school_dta_short_anon %>%
+    filter(urban_rural=="Urban")  %>%
+    mutate(presence_rate=100-sch_absence_rate)
+  
+  
+  sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=strat)
+  
+  #rural
+  sumstats_school_rural <- school_dta_short_anon  %>%
+    filter(urban_rural=="Rural") %>%
+    mutate(presence_rate=100-sch_absence_rate)
+  
+  
+  sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=strat)
+  
+  
+  #now bind urban/rural with the main results
+  sumstats_school_df_final <- sumstats_school_df %>%
+    left_join((sumstats_school_urban_df %>% rename(mean_urban=mean, ci_urban=ci))) %>%
+    left_join((sumstats_school_rural_df %>% rename(mean_rural=mean, ci_rural=ci)))
+  
+  
+  
+  #public officials
+  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
+  
+  sumstats_df <- sumstats_school_df_final %>%
     bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
-   sumstats_df <- sumstats_df %>%
-     inner_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
-   
-   sumstats_df <- sumstats_df %>%
-     select(varlabel, Value, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+  
+  
+
+  
+  sumstats_df <- sumstats_df %>%
+    inner_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
+  
+  sumstats_df <- sumstats_df %>%
+    select(varlabel, Value, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+  
+  sumstats_df <- sumstats_df %>%
+    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
    
   #add in custom column sub-headers
   sketch = htmltools::withTags(table(
@@ -1803,8 +1761,6 @@ output$indicators_table <- DT::renderDataTable({
   
   # create 19 breaks and 20 rgb color values ranging from white to red
   
-  sumstats_df <- sumstats_df %>%
-    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
   
   brks <- seq(0, max(sumstats_df$ratio, na.rm=T), length.out = 19)
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
@@ -1822,7 +1778,7 @@ output$indicators_table <- DT::renderDataTable({
                   scrollX = TRUE, 
                   paging=FALSE,
                   ordering=F)) %>%
-    formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural', 'ratio' ),
+    formatRound(columns = c('mean', 'mean_urban', 'mean_rural', 'ratio' ),
                 digits=2)  %>% 
     formatStyle('ratio', backgroundColor = styleInterval(brks, clrs))
   
