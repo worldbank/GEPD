@@ -1,0 +1,435 @@
+---
+title: "Sierra Leone AMPL-b/GEPD Assessment Comparison"
+author: "Brian Stacy"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	fig.height=6,
+	fig.width=8
+)
+library(tidyverse)
+library(haven)
+library(estimatr)
+library(ggtext)
+library(here)
+library(vtable)
+library(psych)
+library(flextable)
+```
+
+
+This analysis will compare the school level scores for the AMPL-b assessment conducted for fifth graders in  Sierra Leone in 2022 and the school level scores for the GEPD learning assessment conducted for fourth graders in the same schools.  The analysis will also do a comparison for the 1st grade assessment.
+
+The goals are to understand how related the outcomes are between the assessments.  This will be demonstrated by creating scatter plots of the two measures using data aggregated to the school level.  Because students took either the 1st, 4th, or the 5th grade assessments, but not both of any, the school level is the smallest unit of analysis that can be compared.
+
+For the GEPD assessments, the main outcome variable will be the percentage of items correct on the assessment.  An alternative would be the rates of proficiency at the school level on the assessment, but because the fraction of students reaching the proficient level is low in Sierra Leone, the fraction correct provides more variation at the school level.
+
+For the AMPL-b assessment, the main outcome variable is an average of the plausible values on the AMPL-b scale generated using the AMPL-b scoring approach.  The plausible values are generated using the Item Response Model, and because of imprecision in the estimation of item characteristics, five sets of plausible values are generated for each student.  In order to produce a single score for each student, these five plausible values are averaged.
+
+The analysis will be conducted separately for math and reading scores, as the AMPL-b does not report an overall score that combines reading and math.
+
+
+```{r functions}
+#add equations to plots
+eq_plot_txt <- function(data, inp, var) {
+  eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+  coef <- round(coef(eq),2)
+  std_err <- round(sqrt(diag(vcov(eq))),2)
+  r_2<- round(summary(eq)$r.squared,2)
+  sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+  
+}
+
+#Create a function which will generate new binary variable using case_when, but 
+#if value is misisng it will generate binary variable to be missing
+#This is done a lot so will create function for it.
+#e.g. school_absent=case_when(
+#         m2sbq6_efft==6  ~ 1,
+#         m2sbq6_efft!=6   ~ 0,
+#         is.na(m2sbq6_efft) ~ as.numeric(NA))
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+#create function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+
+```
+
+
+```{r data, message=FALSE, warning=FALSE, include=FALSE}
+
+#Country name
+country <-'SLE'
+country_name <- "Sierra Leone"
+year <- '2022'
+
+
+#set directory to bring in data
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/")
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/", sep="/"))
+  anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189") {
+  
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
+  data_dir <- file.path("C:/Users/wb577189/WBG/GEPD/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),"Data/")
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work",country_name,year,"Data/clean/", sep="/"))
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+}
+
+work_dir<- save_folder
+
+#load school data for comparisons
+load(paste(confidential_folder, "/School/school_indicators_data.RData", sep=""))
+
+
+
+```
+
+```{r ampldat}
+
+ampl_b_df <- read_dta(paste0(download_folder, "/School/SLE_AMPL_DB_(2022.10.26).dta")) 
+
+ampl_b_df <- ampl_b_df %>%
+  mutate(
+    amplb_reading_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PV*_AMPL_m"))], na.rm=TRUE),
+    amplb_math_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PV*_AMPL_r"))], na.rm=TRUE),
+    amplb_reading_raw_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PF*|MR*"))], na.rm=TRUE),
+    amplb_math_raw_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PM*|MM*"))], na.rm=TRUE)
+         ) 
+
+#aggregate to school level for comparison with GEPD data in fourth grade
+ampl_b_school_df <- ampl_b_df %>%
+  rename(school_code=AMPL_SchID) %>%
+  group_by(school_code) %>%
+  summarise(amplb_reading_score=mean(amplb_reading_score, na.rm=T),
+            amplb_math_score=mean(amplb_math_score, na.rm=T),
+            amplb_reading_raw_score=100*mean(amplb_reading_raw_score, na.rm=T),
+            amplb_math_raw_score=100*mean(amplb_math_raw_score, na.rm=T))
+
+
+
+
+```
+
+```{r combine}
+
+#combine the data into one frame
+combined_df <- school_dta_short %>%
+  left_join(ampl_b_school_df)
+
+```
+
+
+# Summary Statistics of AMPL-b Scores
+
+The table below shows the summary statistics for the AMPL-b reading and math scores
+
+```{r}
+
+ampl_b_df %>%
+  select(amplb_reading_score, amplb_math_score) %>%
+  st(title='Summary Statistics of Student Level AMPL-b Math and Reading Scores',
+     var=c('amplb_reading_score', 'amplb_math_score'),
+     labels=c("AMPL-b Reading Scores","AMPL-b Math Scores"),
+     out='return') %>%
+  flextable() %>%
+  add_header_lines('Summary Statistics of Student Level AMPL-b Math and Reading Scores')
+
+hist(ampl_b_df$amplb_reading_score,
+     xlab="Reading Scores",
+     main="Histogram of AMPL-b Reading Scores")
+
+hist(ampl_b_df$amplb_math_score,
+     xlab="Math Scores",
+     main="Histogram of AMPL-b Math Scores")
+
+read.one.way <- aov(amplb_reading_score ~ as.character(AMPL_SchID), data = ampl_b_df)
+
+summary(read.one.way)
+
+math.one.way <- aov(amplb_math_score ~ as.character(AMPL_SchID), data = ampl_b_df)
+
+summary(math.one.way)
+
+```
+## Cross Subject AMPL-b Comparison
+
+The next plot shows the correlation across subjects for the AMPL-b.  To keep consistent with the remainder of the analysis, which takes place at the school level, the figures and statistics cited below are for scores aggregated to the school level.
+
+The correlation between the AMPL-b scores across subjects is `r round(cor(combined_df$amplb_math_score, combined_df$amplb_reading_score, use='pairwise.complete.obs'),2)`.
+
+
+```{r subj}
+
+  subjhplots<- ggplot(data=combined_df, aes(x=amplb_math_score, y=amplb_reading_score, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("Ampl-b Math")) +
+        ylab(paste0("Ampl-b Reading")) +
+        geom_richtext(
+          aes(x=-1,y=1,label = eq_plot_txt(combined_df, amplb_reading_score, amplb_math_score), hjust=0.2)
+        ) +
+  labs(title="Comparison of 5th Grade AMPL-b in Math to Reading")
+      
+subjhplots
+
+
+```
+
+
+# Comparison of AMPL-b scores to GEPD 4th Grade Scores
+
+## Reading Scores
+
+The figure below shows the scatter plot for reading scores between the AMPL-b and GEPD 4th grade assessment.  The figure includes an equation showing regression output from a regression of the AMPL-b reading scores on GEPD 4th grade reading scores.  The correlation between the reading scores is `r round(cor(combined_df$literacy_student_knowledge, combined_df$amplb_reading_score, use='pairwise.complete.obs'),2)`.
+
+
+```{r reading}
+
+  readplots<- ggplot(data=combined_df, aes(x=literacy_student_knowledge, y=amplb_reading_score, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("GEPD 4th Grade Score")) +
+        ylab(paste0("AMPL-b 4th Grade Score")) +
+        geom_richtext(
+          aes(x=10,y=1,label = eq_plot_txt(combined_df, amplb_reading_score, literacy_student_knowledge), hjust=0.2)
+        ) +
+  labs(title="Comparison of 4th grade to 5th Grade AMPL-b: Reading")
+      
+readplots
+
+
+```
+
+## Math Scores
+
+The figure below shows the scatter plot for math scores between the AMPL-b and GEPD 4th grade assessment.  The figure includes an equation showing regression output from a regression of the AMPL-b math scores on GEPD 4th grade math scores.  The correlation between the math scores is `r round(cor(combined_df$math_student_knowledge, combined_df$amplb_math_score, use='pairwise.complete.obs'),2)`.
+
+
+```{r math}
+
+  mathplots<- ggplot(data=combined_df, aes(x=math_student_knowledge, y=amplb_math_score, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("GEPD 4th Grade Score")) +
+        ylab(paste0("AMPL-b 4th Grade Score")) +
+        geom_richtext(
+          aes(x=10,y=1,label = eq_plot_txt(combined_df, amplb_math_score, math_student_knowledge), hjust=0.2)
+        ) +
+  labs(title="Comparison of 4th grade to 5th Grade AMPL-b: Math")
+      
+mathplots
+
+
+```
+
+# 1st Grade Assessment
+
+The section below compares the 5th grade Ampl-b to the 1st grade ECD assessment.  Reading results will be compared, then math scores compared.
+
+## ECD Reading
+
+The correlation between the literacy scores is `r round(cor(combined_df$ecd_literacy_student_knowledge, combined_df$amplb_reading_score, use='pairwise.complete.obs'),2)`.
+
+```{r ecdreading}
+
+  ecdreadplots<- ggplot(data=combined_df, aes(x=ecd_literacy_student_knowledge, y=amplb_reading_score, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("GEPD 1st Grade Score")) +
+        ylab(paste0("AMPL-b 4th Grade Score")) +
+        geom_richtext(
+          aes(x=10,y=1,label = eq_plot_txt(combined_df, amplb_reading_score, ecd_literacy_student_knowledge), hjust=0.2)
+        ) +
+  labs(title="Comparison of 1st grade to 5th Grade AMPL-b: Reading")
+      
+ecdreadplots
+
+
+```
+
+## ECD Math
+
+The correlation between the numeracy  scores is `r round(cor(combined_df$ecd_math_student_knowledge, combined_df$amplb_math_score, use='pairwise.complete.obs'),2)`.
+
+```{r ecdmath}
+
+  ecdmathplots<- ggplot(data=combined_df, aes(x=ecd_math_student_knowledge, y=amplb_math_score, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("GEPD 1st Grade Score")) +
+        ylab(paste0("AMPL-b 4th Grade Score")) +
+        geom_richtext(
+          aes(x=10,y=1,label = eq_plot_txt(combined_df, amplb_math_score, ecd_math_student_knowledge), hjust=0.2)
+        ) +
+  labs(title="Comparison of 1st grade to 5th Grade AMPL-b: Math")
+      
+ecdmathplots
+
+
+```
+
+# Comparison of GEPD 4th Grade Scores to 1st Grade Scores
+
+The section below compares the 4th grade GEPD to the 1st grade ECD assessment.  Reading results will be compared, then math scores compared.
+
+## ECD Reading
+
+The correlation between the literacy scores is `r round(cor(combined_df$ecd_literacy_student_knowledge, combined_df$literacy_student_knowledge, use='pairwise.complete.obs'),2)`.
+
+
+```{r gepdecdreading}
+
+  ecdreadplots<- ggplot(data=combined_df, aes(x=ecd_literacy_student_knowledge, y=literacy_student_knowledge, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("GEPD 1st Grade Score")) +
+        ylab(paste0("GEPD 4th Grade Score")) +
+        geom_richtext(
+          aes(x=10,y=1,label = eq_plot_txt(combined_df, literacy_student_knowledge, ecd_literacy_student_knowledge), hjust=0.2)
+        ) +
+  labs(title="Comparison of 1st grade to 4th Grade GEPD: Reading")
+      
+ecdreadplots
+
+
+```
+
+## ECD Math
+
+The correlation between the numeracy scores is `r round(cor(combined_df$ecd_math_student_knowledge, combined_df$literacy_student_knowledge, use='pairwise.complete.obs'),2)`.
+
+```{r gepdecdmath}
+
+  gepfecdmathplots<- ggplot(data=combined_df, aes(x=ecd_math_student_knowledge, y=literacy_student_knowledge, color="#0081a8")) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+        theme_bw() +
+        theme(
+          text = element_text(size = 14),
+          legend.position='none'
+        ) +
+        expand_limits(x = 0, y = 0) +
+        labs(colour = "Indicator") +
+        xlab(paste0("GEPD 1st Grade Score")) +
+        ylab(paste0("GEPD 4th Grade Score")) +
+        geom_richtext(
+          aes(x=10,y=1,label = eq_plot_txt(combined_df, literacy_student_knowledge, ecd_math_student_knowledge), hjust=0.2)
+        ) +
+  labs(title="Comparison of 1st grade to 4th Grade GEPD: Math")
+      
+gepfecdmathplots
+
+
+```
+
+
+
+
+```{r eval=FALSE, include=FALSE}
+#get IRT scores ourselves
+
+irt_math <- ampl_b_df %>%
+  select(starts_with("PM"),starts_with("MM")) %>%
+  as.matrix()
+
+math_score_irt <- irt.fa(irt_math)
+math_scores <- scoreIrt(math_score_irt,irt_math)
+
+cor(math_scores$theta1, ampl_b_df$amplb_math_score, use='pairwise.complete.obs')
+cor(math_scores$theta1, ampl_b_df$amplb_math_raw_score, use='pairwise.complete.obs')
+
+#reading
+irt_read <- ampl_b_df %>%
+  select(starts_with("PF"),starts_with("MR")) %>%
+  as.matrix()
+
+read_score_irt <- irt.fa(irt_read)
+read_scores <- scoreIrt(read_score_irt,irt_read)
+
+cor(read_scores$theta1, ampl_b_df$amplb_reading_score, use='pairwise.complete.obs')
+cor(read_scores$theta1, ampl_b_df$amplb_reading_raw_score, use='pairwise.complete.obs')
+
+```
+
