@@ -1915,9 +1915,8 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'Sector Office',
-    govt_tier=='Regional office ' ~ 'District Office',
-    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+    govt_tier=='District office ' ~ 'District Office',
+    govt_tier=='Ministry of Education '  ~ 'MBBSE/TSC'
   )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
@@ -1952,6 +1951,63 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
   
 #more motivated question
 
+```
+```{r}
+demo_po_dist <- public_officials_dta_clean_anon %>% 
+  distinct(interview__id, .keep_all = T) %>% 
+  select(govt_tier, age, gender, years_current_position, years_current_org, years_civil_service, num_pub_sector_org, net_monthly_salary) %>% 
+  mutate(gender = case_when(
+    gender ==1 ~ "Male",
+    gender !=1 ~ "Female"
+    
+  )) %>% 
+  filter(govt_tier=="District office (or equivalent)") %>% 
+  rename(
+    
+    Age = age,
+    Gender = gender,
+    `Years in current position` = years_current_position,
+    `Years in current organisation` = years_current_org,
+    `Years in civil service` = years_civil_service,
+    `Number of public organisation worked in`=num_pub_sector_org
+
+  )
+
+demo_po_central <- public_officials_dta_clean_anon %>% 
+  distinct(interview__id, .keep_all = T) %>% 
+  select(govt_tier, age, gender, years_current_position, years_current_org, years_civil_service, num_pub_sector_org, net_monthly_salary) %>% 
+   mutate(gender = case_when(
+    gender ==1 ~ "Male",
+    gender !=1 ~ "Female"
+    
+  )) %>%
+  filter(govt_tier!="District office (or equivalent)")%>% 
+  rename(
+    
+    Age = age,
+    Gender = gender,
+    `Years in current position` = years_current_position,
+    `Years in current organisation` = years_current_org,
+    `Years in civil service` = years_civil_service,
+    `Number of public organisation worked in`=num_pub_sector_org
+
+  )
+
+
+
+library(miscset) # install from CRAN if required
+ggplotGrid(ncol = 2,
+  lapply(c("Age", "Gender", "`Years in current position`", "`Years in current organisation`", "`Years in civil service`", "`Number of public organisation worked in`"),
+    function(col) {
+        ggplot(demo_po_dist, aes_string(col)) + geom_bar() + coord_flip()
+    }))
+
+
+ggplotGrid(ncol = 2,
+  lapply(c("Age", "Gender", "`Years in current position`", "`Years in current organisation`", "`Years in civil service`", "`Number of public organisation worked in`"),
+        function(col) {
+        ggplot(demo_po_central, aes_string(col)) + geom_bar() + coord_flip() 
+    }))
 ```
 
 
