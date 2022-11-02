@@ -752,7 +752,18 @@ plot(out)
 #############################################
 
   
-  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach scores Sierra Leone Final.csv")) 
+  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach scores Sierra Leone Final Final.csv")) 
+
+# missing schools
+teacher_pedagogy_missings <- school_data_preamble_temp %>% mutate(GRADE=4) %>%
+  bind_rows(school_data_preamble_temp %>% mutate(GRADE=2)) %>%
+  left_join(teacher_pedagogy %>% group_by(school_code, GRADE) %>% summarise(number_of_segments=n())) %>%
+  mutate(data_missing=if_else(is.na(number_of_segments),'Yes','No')) %>%
+  select(colnames(school_data_preamble_temp), data_missing, everything()) %>%
+  arrange(school_code, GRADE)
+  
+
+write_excel_csv(teacher_pedagogy_missings,paste0(download_folder,"/Teach_scores_missing_status.csv"))
 
   # Generate useful variables
   
