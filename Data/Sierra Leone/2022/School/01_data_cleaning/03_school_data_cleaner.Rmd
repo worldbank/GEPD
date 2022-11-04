@@ -770,7 +770,11 @@ write_excel_csv(teacher_pedagogy_missings,paste0(download_folder,"/Teach_scores_
   teacher_pedagogy_segments <- teacher_pedagogy %>%
     filter(!is.na(school_code)) %>%
     left_join(school_data_preamble_temp) %>%
-    filter(!is.na(school_name_preload)) %>%
+    filter(!is.na(school_name_preload)) 
+  
+  write_excel_csv(teacher_pedagogy_segments, paste(confidential_folder, "teach_score_raw.csv", sep="/"))
+  
+  teacher_pedagogy_segments <- teacher_pedagogy_segments  %>%
     filter(GRADE==4) %>%
     select(school_code, starts_with("s_"))
   
