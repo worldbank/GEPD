@@ -56,6 +56,7 @@ school_dta<- school_dta %>%
          lon=m1s0q9__Longitude,
          school_code=if_else(school_info_correct==1,as.double(school_code_preload), as.double(m1s0q2_emis)),
          school_code_preload=if_else(school_info_correct==1,as.double(school_code_preload), as.double(m1s0q2_emis)),
+         school_emis_preload=if_else(school_info_correct==1,as.double(school_emis_preload), as.double(m1s0q2_emis)),
          school_name_preload = ifelse(school_info_correct==1, school_name_preload, as.character(m1s0q2_name)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7

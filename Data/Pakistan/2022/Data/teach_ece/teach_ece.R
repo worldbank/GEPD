@@ -48,16 +48,16 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean/teach_ece", sep="/"))
   
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/01. Pilot/clean/teach_ece", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/02. Provinces/ICT", sep="/"))
   
 } else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/"
-  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw/teach_ece", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/01. Pilot/clean/teach_ece", sep="/"))
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work"
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/02. Provinces/ICT/raw/teach_ece", sep="/"))
+  save_folder <- file.path(paste(project_folder,country_name,year,"Data/02. Provinces/ICT/clean/teach_ece", sep="/"))
   
   backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/01. Pilot/clean/teach_ece", sep="/"))
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/02. Provinces/ICT/clean/teach_ece", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -84,8 +84,8 @@ teachece<-read_dta(file.path(download_folder, "TEACH_ECE_PAK.dta"))
 
 teachece <- teachece %>% 
   mutate(
-    school_name_preload = if_else(school_name_preload=="Blank interview" & school_info_correct!=1, m1s0q2_name, school_name_preload),
-    school_emis_preload = if_else(school_emis_preload=="Blank interview" & school_info_correct!=1, m1s0q2_emis, school_name_preload)
+    teach_ece_name_preload = if_else(school_name_preload=="Blank interview" & school_info_correct!=1, m1s0q2_name, school_name_preload),
+    teach_ece_emis_preload = if_else(school_emis_preload=="Blank interview" & school_info_correct!=1, m1s0q2_emis, school_emis_preload)
     
     
   ) %>% 

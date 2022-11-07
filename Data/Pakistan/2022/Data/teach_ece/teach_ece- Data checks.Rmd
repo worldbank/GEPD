@@ -57,7 +57,7 @@ year <- '2021'
 
 
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/"
-  download_folder <-file.path(paste(project_folder,country_name,year,"Data/01. Pilot/raw/teach_ece", sep="/"))
+  download_folder <-file.path(paste(project_folder,country_name,year,"Data/02. Provinces/ICT/raw/teach_ece", sep="/"))
  
 
 
@@ -76,8 +76,8 @@ teachece<-read_dta(file.path(download_folder, "TEACH_ECE_PAK.dta"))
 
 teachece <- teachece %>% 
   mutate(
-    school_name_preload = if_else(school_name_preload=="Blank interview" & school_info_correct!=1, m1s0q2_name, school_name_preload),
-    school_emis_preload = if_else(school_emis_preload=="Blank interview" & school_info_correct!=1, m1s0q2_emis, school_emis_preload)
+    teach_ece_name_preload = if_else(school_name_preload=="Blank interview" & school_info_correct!=1, m1s0q2_name, school_name_preload),
+    teach_ece_emis_preload = if_else(school_emis_preload=="Blank interview" & school_info_correct!=1, m1s0q2_emis, school_emis_preload)
     
     
   ) %>% 
@@ -95,7 +95,8 @@ teachece <- teachece %>%
 # of booklets (per type)
 # map them
 
-assignments <- read.table( "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Survey solutions/TEACH_ECE/teach_assignment_pak_pilot.txt", sep="\t", header=TRUE)
+assignments <- read.table( "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Survey solutions/TEACH_ECE/01.ict/teach_assignment_pak_ict.txt", sep="\t", header=TRUE) %>% mutate(across(everything(), as.character)) %>% 
+  bind_rows(read.table( "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Pakistan_all/2021/Survey solutions/TEACH_ECE/01.ict/teach_assignment_pak_ict_2.txt", sep="\t", header=TRUE) %>% mutate(across(everything(), as.character)))
 
 school_completed <- teachece %>% filter(school_emis_preload!= "Blank interview") %>% pull(school_emis_preload)
 

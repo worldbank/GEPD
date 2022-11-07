@@ -17,6 +17,7 @@ library(ggplot2)
 library(haven)
 library(readr)
 library(here)
+library(expss)
 
 ######################################
 # User Inputs for API #
@@ -131,6 +132,8 @@ library(here)
 
 
 #label variables
+  
+para_df <- apply_labels
 var.labels=c(
             interview__id = "Unique 32-character long identifier of the interview",
             order = "Sequential event number within each interview",

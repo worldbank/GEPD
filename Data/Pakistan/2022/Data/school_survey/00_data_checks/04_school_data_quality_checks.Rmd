@@ -971,43 +971,43 @@ SEVL_rules <- validator(
 ```
 
 ## a) Teacher absence
-```{r teacher absence, echo=FALSE}
+```{r teacher absence}
 #validate 
-# out <- confront(teacher_absence_dta, EFFT_rules)
-# summary(out)
-# plot(out)
+out <- confront(teacher_absence_dta, EFFT_rules)
+summary(out)
+plot(out)
 ```
 
 ## b) Student attendance
-```{r student absence, echo=FALSE}
+```{r student absence}
 #validate
-# out <- confront(school_dta_short, CONT_rules)
-# summary(out)
-# plot(out)
+out <- confront(school_dta_short, CONT_rules)
+summary(out)
+plot(out)
 ```
 
 ## c) Content knowledge teachers
-```{r content knowledge teachers, echo=FALSE}
+```{r content knowledge teachers}
 #validate
-out <- confront(teacher_assessment_dta, CONT_rules)
+out <- confront(final_indicator_data_CONT, CONT_rules)
 summary(out)
 plot(out)
 ```
 
 ## d) Student assessment 4th grade
-```{r student learning outcomes, echo=FALSE}
+```{r student learning outcomes}
 #validate 
-# out <- confront(assess_4th_grade_anon, LERN_rules)
-# summary(out)
-# plot(out)
+out <- confront(assess_4th_grade_anon, LERN_rules)
+summary(out)
+plot(out)
 ```
 
 ## e) ECD assessment 1th grade
-```{r ECD learning outcomes, echo=FALSE}
+```{r ECD learning outcomes}
 #validate 
-# out <- confront(ecd_dta_anon, LCAP_rules)
-# summary(out)
-# plot(out)
+out <- confront(ecd_dta_anon, LCAP_rules)
+summary(out)
+plot(out)
 ```
 
 
