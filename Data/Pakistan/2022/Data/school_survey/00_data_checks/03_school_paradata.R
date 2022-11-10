@@ -133,7 +133,6 @@ library(expss)
 
 #label variables
   
-para_df <- apply_labels
 var.labels=c(
             interview__id = "Unique 32-character long identifier of the interview",
             order = "Sequential event number within each interview",
@@ -145,7 +144,7 @@ var.labels=c(
             parameters = "Event-specific parameters"
             )
 # Label data
-label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
+#label(para_df) = as.list(var.labels[match(names(para_df), names(var.labels))])
 
 
 ######################################
@@ -294,7 +293,7 @@ school_modules_complete <- para_df_module %>%
          responsible3=nth(responsible,3),
          responsible4=nth(responsible,4),
          responsible5=nth(responsible,5)) %>%
-  summarise_all(~first(na.omit(.))) %>%
+  summarise_all(~first(na.omit(school_emis_preload))) %>%
   select(school_emis_preload, M1, M2, M3, M4, M5, M6, M7, M8,  
          responsible1, responsible2, responsible3, responsible4, responsible5,  
          interview__key1, interview__key2, interview__key3, interview__key4, interview__key5,
