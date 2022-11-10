@@ -1,0 +1,155 @@
+---
+title: "Jordan Sampling Notes - 2022"
+format: html
+editor: visual
+---
+
+
+```{r setup}
+library(tidyverse)
+library(haven)
+library(here)
+library(readxl)
+
+#Country name
+country <-'JOR'
+country_name <- "Jordan"
+year <- '2022'
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/"
+
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))
+  
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/CNT/"
+ 
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))
+  
+  
+}else {
+  project_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  sampling_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+
+
+```
+
+
+# Introduction
+
+This document will contain the sampling details for Jordan 2022.  
+
+
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to detect differences by urban/rural location.
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of typically around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff. In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field. A total of 10 teachers will be sampled for absenteeism. Five teachers will be interviewed and given a content knowledge exam. Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random. Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions.
+
+For our Survey of Public Officials, we will sample a total of 200 public officials. Roughly 60 officials are typically surveyed at the federal level, while 140 officials will be surveyed at the regional/district level. For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where roughly 10 regional offices (or whatever the secondary administrative unit is called) are chosen at random from among the regions in which schools were sampled. Then among these 10 regions, we also typically select around 10 districts (tertiary administrative level units) from among the districts in which schools werer sampled. The result of this sampling approach is that for 10 clusters we will have links from the school to the district office to the regional office to the central office. Within the regions/districts, five or six officials will be sampled, including the head of organization, HR director, two division directors from finance and planning, and one or two randomly selected professional employees among the finance, planning, and one other service related department chosen at random. At the federal level, we will interview the HR director, finance director, planning director, and three randomly selected service focused departments. In addition to the directors of each of these departments, a sample of 9 professional employees will be chosen in each department at random on the day of the interview.
+
+## 2019 Sampling
+
+For our school survey, we select only schools that are supervised by the Minsitry or Education or are Private schools. No schools supervised by the Ministry of Defense, Ministry of Endowments, Ministry of Higher Education , or Ministry of Social Development are included. This left us with a sampling frame containing 3,330 schools, with 1297 private schools and 2003 schools managed by the Minsitry of Education. The schools must also have at least 3 grade 1 students, 3 grade 4 students, and 3 teachers.
+
+
+```{r schools2019}
+#read in the sample from 2019
+sample_2019_df <- read_excel(path=paste0(sampling_folder,"/2019/school_sample_2019-10-11.xlsx"),
+                             sheet = 'Sheet1')
+
+df <- read_excel(path=paste0(sampling_folder,"/2019/schools_Jordan.xlsx")) 
+
+#make column names lower case 
+colnames(df)<-tolower(colnames(df))
+
+#remove spaces in column names
+colnames(df)<-gsub(" ","_",colnames(df))
+
+
+#rename one variable
+df <- df %>%
+  rename(district=major_general)
+
+#Trim down data frame:
+frame_vars<-c('directorate',
+              'organization_code',
+              'school_name',
+              'sex_of_the_founder',
+              'supervisory_authority',
+              'territory',
+              'governorate',
+              'district',
+              'elimination',
+              'address',
+              'longitude',
+              'latitude',
+              'education_type',
+              'property_type',
+              'classification_area',
+              'foundation_period',
+              'top_row',
+              'the_lowest_row',
+              'total_number_of_divisions',
+              'total_male_students',
+              'total_female_students',
+              'total_students_grade_1',
+              'total_students_grade_4',
+              'total_teachers',
+              'male_teachers',
+              'female_teachers',
+              'total_grade_1_teachers',
+              'total_primary_teachers'
+)
+
+df_short<-df %>%
+  dplyr::select(frame_vars)
+
+
+frame_2019_df <- df_short %>%
+  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
+  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private")
+```
+
+## 2022 Frame
+
+Frame for sampling comes from the 2022 extract of the EMIS.  File last updated November 2, 2022.
+
+```{r}
+frame_2022_raw_df <- read_excel(path=paste0(sampling_folder,"/finalEMIS 2-11-2022-english.xlsx")) %>%
+  mutate(organization_code=`Enterprise Code`) %>%
+  rename(
+         lat=Latitude,
+         lon=longitude)
+
+
+frame_2022_df <- frame_2022_raw_df %>% 
+  rename(
+         total_students_grade_1=`total of 1st class students`,
+         total_students_grade_4=`Total 4th grade students`,
+         total_teachers=`Total teachers`,
+         supervisory_authority=`honorable authority`) %>%
+  mutate(across(c('total_students_grade_1', 'total_students_grade_4', 'total_teachers'), as.numeric)) %>%
+  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
+  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private")
+```
+
+```{r}
+#number of linkages between new and old frame
+frame_matches <- sample_2019_df %>%
+  left_join(frame_2022_raw_df)
+```
+
+
+
+

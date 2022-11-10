@@ -81,7 +81,7 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 
 175 to 200 schools will be drawn.  The strata are the urban/rural status of the school and the gender of the school (male,female, mixed)
 
-
+No NMDs are included in the frame
 
 ```{r}
 #read sample frame
@@ -238,7 +238,8 @@ plot(enroll, outcome,
 ## 200 schools
 ```{r large, echo=TRUE}
 # get numbers to select from each district
-strata_df_200 <- df_updated_gepd %>%
+strata_df_200 <- df_updated_gepd_nmd %>%
+  filter(!(Location=="NULL")) %>%
   group_by(Gender, Location) %>%
   summarise(nstudents_district=sum(total_enrollment),
                      total_district=n()
@@ -248,7 +249,7 @@ strata_df_200 <- df_updated_gepd %>%
          sample_size=case_when(
            Gender=="Girls" & Location=="Urban" ~ 35,
            Gender=="Boys" & Location=="Urban" ~ 35,
-           Gender=="Co-Edu" & Location=="Urban" ~ 5,
+           Gender=="Co-Edu" & Location=="Urban" ~ 0,
 
            Gender=="Girls" & Location=="Rural" ~ 60,
            Gender=="Boys" & Location=="Rural" ~ 65,
@@ -266,7 +267,8 @@ strata_df_200 %>% group_by(Gender) %>% summarise(sum=sum(sample_size))
 
 # set the numbers of schools selected by strata (grade)
 
-sample_df_200 <- df_updated_gepd %>%
+sample_df_200 <- df_updated_gepd_nmd %>%
+  filter(!(Location=="NULL")) %>%
   left_join(strata_df_200) %>%
   mutate(
     totalstudents=sum(total_enrollment),
@@ -275,10 +277,10 @@ sample_df_200 <- df_updated_gepd %>%
   mutate(strata_count=n(),
          strata_size=sum(total_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = sample_size, weight =total_enrollment) %>%
+  sample_n(size = min(sample_size), weight= total_enrollment) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
-         ipw=1/strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob))
 
 
 write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_KP_sample_200_",Sys.Date(),".csv"))
@@ -308,7 +310,7 @@ leaflet(data=sample_df_200) %>%
 
 ```{r small, echo=TRUE}
 # get numbers to select from each district
-strata_df_175 <- df_updated_gepd %>%
+strata_df_175 <- df_updated_gepd_nmd %>%
   group_by(Gender, Location) %>%
   summarise(nstudents_district=sum(total_enrollment),
                      total_district=n()
@@ -318,7 +320,7 @@ strata_df_175 <- df_updated_gepd %>%
          sample_size=case_when(
            Gender=="Girls" & Location=="Urban" ~ 30,
            Gender=="Boys" & Location=="Urban" ~ 30,
-           Gender=="Co-Edu" & Location=="Urban" ~ 4,
+           Gender=="Co-Edu" & Location=="Urban" ~ 0,
 
            Gender=="Girls" & Location=="Rural" ~ 55,
            Gender=="Boys" & Location=="Rural" ~ 55,
@@ -346,10 +348,10 @@ sample_df_175 <- sample_df_200 %>%
   mutate(strata_count=n(),
          strata_size=sum(total_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = sample_size, weight =total_enrollment) %>%
+  sample_n(size = min(sample_size), weight =total_enrollment) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
-         ipw=1/strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob))
 
 
 write_excel_csv(sample_df_175, file=paste0(sampling_folder, "/GEPD_KP_sample_175_",Sys.Date(),".csv"))
