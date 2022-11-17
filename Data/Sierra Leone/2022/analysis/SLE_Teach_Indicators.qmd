@@ -1,5 +1,5 @@
 ---
-title: "NIGER LEARNING IMPROVEMENT FOR RESULTS IN EDUCATION PROJECT Baseline"
+title: "Sierra Leone Teacher Pedagogy"
 author: "GEPD Team"
 execute:
   echo: false
@@ -35,8 +35,8 @@ library(flextable)
 library(srvyr)
 
 #Country name
-country <-'NER'
-country_name <- "Niger"
+country <-'SLE'
+country_name <- "Sierra Leone"
 year <- '2022'
 
 #########################
@@ -76,35 +76,46 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 ```
 
-The indicator and description of the PDO is below:
+              |
 
-| **Indicator Name**                                                                                                      | **Definition/Description**                                                                                                                                                                                                                                                                                                                                              | **Frequency** | **Datasource**                                                           | **Methodology for Data Collection**                                                                                                                           | **Responsibility for Data Collection** |
-| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Increased percentage of targeted teachers in basic education demonstrating improved teaching practices in the classroom | Proportion of basic education teachers benefiting from new coaching activities who demonstrate improved teaching practices (using classroom observation tool under project). For reporting, a random sample of teachers will be selected and the % of teachers from this sample demonstrating new skills l(via trainings) will be reported. Baseline expected Y2 or Y3. | Annual        | Reports from the application of the teaching practices observation tools | Starting in Y3 of project implementation, yearly reports of teacher classroom practices will be collected from inspectorates and pedagogical units by MEP/MES | PCU                                    |
+In this document, summary statistics will be provided on teacher pedagogical practices using data from the GEPD survey that took place in 2022 in Sierra Leone
 
-In this document, a proposal will be made for the project baseline using data from the GEPD survey that took place in 2022 in Niger.
-
-## Background on the GEPD survey in Niger
+## Background on the GEPD survey in Sierra Leone
 
 New data for the dashboard was collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below. The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years). Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to disaggregate by urban/rural.
 
-School Survey: The School Survey collected data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators. It consists of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments. Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In Niger, this survey was administered in a nationally representative sample of 270 schools, selected through stratified random sampling. 
+School Survey: The School Survey collected data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators. It consists of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments. Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In Sierra Leone, this survey was administered in a nationally representative sample of 270 schools, selected through stratified random sampling. 
 
-Expert Survey: The Expert Survey collected information to feed into the policy indicators. This survey was filled out by key informants in Niger, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years). The survey has 4 modules with each including approximately ten questions.
+Expert Survey: The Expert Survey collected information to feed into the policy indicators. This survey was filled out by key informants in Sierra Leone, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years). The survey has 4 modules with each including approximately ten questions.
 
 Survey of Public Officials: The Survey of Public Officials collected information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey was a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team has collaborated closely with DEC and Governance GP staff to develop this instrument. The survey was administered to a random sample of about 200 staff serving in the central education ministry and district education offices. It includes questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
 ## School Sample
 
-Stratification was done on the basis of region, the urban/rural status of the school, and whether the school was part of the LIRE program. The number of schools per strata is based on the sum of primary students (total_students) in the school. The schools chosen within each strata were done with probability proportional to the total number of primary students in the school.  Only schools with at least 15 students of primary age in the entire school were included in the sampling frame so as to maximize the chance of finding eligible students and teachers for the survey.  In Niger, this survey was administered in a nationally representative sample of 270 schools, selected through stratified random sampling. 
+About the EGRA/EGMA sampling frame:
 
-112 LIRE schools and 158 non-LIRE schools were included in the sample.  The urban/rural breakdown consisted of 195 rural schools and 75 urban schools.  
+> The sampling frame begun with the 2019 Annual School Census (ASC) list of primary schools as provided by UNICEF/MBSSE where the sample of 260 schools for this study were obtained from an initial list of 7,154 primary schools. Only schools that meet a pre-defined selection criteria were eligible for sampling.
+
+> To achieve the recommended sample size of 10 learners per grade, schools that had an enrolment of at least 30 learners in Grade 2 in 2019 were considered. To achieve a high level of confidence in the findings and generate enough data for analysis, the selection criteria only considered schools that:
+•	had an enrolment of at least 30 learners in grade 1; and
+•	had an active grade 4 in 2019 (enrolment not zero)
+
+> The sample was taken from a population of 4,597 primary schools that met the eligibility criteria above, representing 64.3% of all the 7,154 primary schools in Sierra Leone (as per the 2019 school census). Schools with higher numbers of learners were purposefully selected to ensure the sample size could be met in each site.
+
+> As a result, a sample of 260 schools were drawn using proportional to size allocation with simple random sampling without replacement in each stratum. In the population, there were 16 districts and five school ownership categories (community, government, mission/religious, private and others). A total of 63 strata were made by forming combinations of  the 16 districts and school ownership categories. In each stratum, a sample size was computed proportional to the total population and samples were drawn randomly without replacement. Drawing from other EGRA/EGMA studies conducted by Montrose in the past, a backup sample of up to 78 schools (30% of the sample population) with which enumerator teams can replace sample schools was also be drawn. 
+
+> In the distribution of sampled schools by ownership, majority of the sampled schools are owned by mission/religious group (62.7%, n=163) followed by the government owned schools at 18.5% (n=48). Additionally, in school distribution by district, majority of the sampled schools (54%) were found in Bo, Kambia, Kenema, Kono, Port Loko and Kailahun districts. Refer to annex 9. for details on the population and sample distribution by district.
+
+Because of the restriction that at least 30 learners were available in Grade 2, we chose to add an additional 40 schools to the sample from among smaller schools, with between 3 and 30 grade 2 students.  The objective of this supplement was to make the sample more nationally representative, as the restriction reduced the sampling frame for the EGRA/EGMA sample by over 1,500 schools from 7,154 to 4,597.  
+
+The 40 schools were chosen in a manner consistent with the original set of EGRA/EGMA schools. The 16 districts formed the strata. In each stratum, the number of schools selected were proportional to the total population of the statum, and within stratum schools were chosen with probability proportional to size.
 
 ```{r fun}
 
 
 
-#function to attach weights
+
+
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
   snumber<-enquo(snumber)
@@ -112,9 +123,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   
   dataset %>%
     left_join(data_set_updated)  %>%
-    mutate(province=REGION           ) 
+    mutate(province=idregion           ) 
 }
-
 
 
 ```
@@ -126,7 +136,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
 load(file.path(confidential_folder, "school_survey_data.RData"))
 
 #Load original sample of schools
-currentDate<-c("2022-10-24")
+currentDate<-c("2022-10-07")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', currentDate,  '.csv', sep="")
 ) %>%
@@ -134,14 +144,13 @@ data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', cu
     is.na(ipw) ~ median(ipw, na.rm=TRUE),
     is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
     TRUE ~ ipw)
-  ) %>%
+    ) %>%
   ungroup() %>%
-  mutate(school_code=CODE_ETABLISSEMENT
-         #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
-         ) %>%
-  select(school_code, REGION,urban_rural,LIRE,
+  mutate(school_code=idemis_code,
+         urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural"),
+         private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")) %>%
+  select(school_code, sch_owner, idregion, iddistrict,accessibility,school_districthq_distance, urban_rural,sch_owner,private,egra_size,
          ipw) 
-
 
 
 
@@ -153,11 +162,12 @@ data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', cu
 
 ```{r schooldata}
 
-school_analysis_df <- df_weights_function(final_school_data, Code_School, grd4_total, Region)
+school_analysis_df <- df_weights_function(final_school_data, Code_School, grd4_total, Region) %>%
+  filter(!is.na(ipw))
 
 ```
 
-Below is a map of the visited schools, colored by whether the school was a LIRE school.
+Below is a map of the visited schools.
 
 ```{r map}
 #| label: fig-map
@@ -171,36 +181,29 @@ wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/
 # load wb polygon data 
 
 ## import at district level (adm2 level)
-wb.poly.1 <- geojson_sf(
-  file.path(wbgis, "g2015_2014_1.geojson") # where _2 has district level polys
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
   ) %>%
   filter( ADM0_NAME == country_name) %>%
-  distinct(ADM1_CODE, ADM0_CODE, .keep_all = TRUE) 
+  distinct(ADM2_CODE,ADM1_CODE, ADM0_CODE, .keep_all = TRUE) 
 
-LIRE_school <- st_as_sf((school_analysis_df %>% filter(LIRE=='LIRE School' & !is.na(lat)) ),
+school <- st_as_sf((school_analysis_df %>% filter( !is.na(lat)) ),
                    coords = c("lon", "lat"),
                    na.fail = FALSE)
 
 
-Non_LIRE_school <- st_as_sf((school_analysis_df %>% filter(LIRE!='LIRE School' & !is.na(lat))),
-                   coords = c("lon", "lat"),
-                   na.fail = FALSE)
 
 # set the crs of school + po as the same as the world poly crs
-st_crs(Non_LIRE_school) <- st_crs(wb.poly.1)
-st_crs(LIRE_school) <- st_crs(wb.poly.1)
+st_crs(school) <- st_crs(wb.poly.2)
 
 # st_is_longlat(Non_LIRE_school)
 # st_is_longlat(LIRE_school)
 
 school_map <- ggplot() +
-  geom_sf(data=wb.poly.1) +
-  geom_sf(data=LIRE_school, aes(color='LIRE')) +
-  geom_sf(data=Non_LIRE_school, aes(color='Non-LIRE')) +
+  geom_sf(data=wb.poly.2) +
+  geom_sf(data=school, color='#023047') +
   theme_map() +
-  theme(legend.position='top') +
-  labs(caption='Note: 6 schools omitted due to missing lat/lon information'
-         )
+  theme(legend.position='top') 
 
 school_map
 
@@ -210,7 +213,7 @@ school_map
 
 In each school, one classroom was randomly selected for the classroom observation.  
 
-Summary statistics will be presented for all schools in Niger as well as LIRE schools only.
+Summary statistics will be presented for all schools in Sierra Leone as well as by the urban/rural status of the schools.
 
 Two scores will be shown. First, the average score of the teachers on the Teach (1-5) scale.  Second, the percentage of teachers who are rated as proficient on Teach, meaning the teacher scores at least 3 out of 5 points on the Teach (1-5) scale.
 
@@ -218,12 +221,12 @@ Summary statistics are weighted to be nationally representative.
 
 ```{r stats1}
 #| label: tbl-measures
-#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics in Niger for All Schools
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics in Sierra Leone for All Schools
+
 
 temp <- school_analysis_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural','LIRE'),
+  as_survey_design(strata=c('province', 'private', 'urban_rural'),
                    weight=ipw) %>%
     summarise(teachscore=survey_mean(teach_score, na.rm=T),
               teachprof=survey_mean(teach_prof, na.rm=T)) %>%
@@ -248,33 +251,33 @@ stats %>%
 
 ```
 
-Below the statistics are broken down for LIRE/Non-LIRE schools.  LIRE schools have a slightly lower mean Teach score, but a larger variance so the percentage of teachers rated proficient is slightly higher for LIRE schools (4% versus 2.7% for Non-LIRE schools).
+Below the statistics are broken down for urban/rural schools.  Urban and rural schools have similar Teach scores.
 
 ```{r stats2}
 #| label: tbl-measures2
-#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics in Niger for LIRE/Non-LIRE Schools
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics in Sierra Leone for Urban/Rural Schools
+
 
 temp <- school_analysis_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural'),
+  as_survey_design(strata=c('province', 'private'),
                    weight=ipw) %>%
-  group_by(LIRE) %>%
+  group_by(urban_rural) %>%
   summarise(teachscore=survey_mean(teach_score, na.rm=T),
               teachprof=survey_mean(teach_prof, na.rm=T)) %>%
-  mutate(across(!starts_with("LIRE"),round,2)) %>%
+  mutate(across(!starts_with("urban_rural"),round,2)) %>%
   mutate(across(ends_with('_se'), ~paste0('(',.,')'))) %>%
   mutate(across(everything(),as.character))
 
 
 stats <- (temp %>% select(!ends_with('_se')) %>% mutate(value='Mean')) %>%
-  bind_rows(temp %>% select(LIRE, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
-  arrange(LIRE)
+  bind_rows(temp %>% select(urban_rural, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
+  arrange(urban_rural)
 
 stats %>%
   rename(`Teach Score (1-5 scale)`=teachscore,
          `Percentage of Teachers Proficient in Pedagogy`=teachprof,
-         `School Type`= LIRE) %>%
+         `School Type`= urban_rural) %>%
   select(-value) %>%
   flextable() %>%
   merge_v(j=c("School Type"),
@@ -287,17 +290,55 @@ stats %>%
 
 ```{r dens}
 #| label: fig-measures2
-#| fig-cap: Density plots of Teach Scores (1-5 scale) by LIRE/Non-LIRE schools
+#| fig-cap: Density plots of Teach Scores (1-5 scale) by Urban/Rural schools
 #| fig-cap-location: top
 
 ggplot(
-  school_analysis_df, aes(x=teach_score, color=LIRE)
+  school_analysis_df, aes(x=teach_score, color=urban_rural)
 ) +
   geom_density() +
   theme_bw() +
   geom_vline(xintercept = 3) +
   xlab('Teach Score (1-5) scale') +
   expand_limits(x=c(1,5)) 
+
+```
+
+
+Next is a breakdown for the EGRA/non-EGRA schools.  EGRA schools, as described above, were relatively larger in size (at least 30 learners were available in Grade 2).  There do not appear to be large differences between the two groups of schools.
+
+```{r stats52}
+#| label: tbl-measures52
+#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics in Sierra Leone for EGRA/Non-EGRA Schools
+
+
+temp <- school_analysis_df %>%
+  ungroup() %>%
+  as_survey_design(strata=c('province', 'private','urban_rural'),
+                   weight=ipw) %>%
+  group_by(egra_size) %>%
+  summarise(teachscore=survey_mean(teach_score, na.rm=T),
+              teachprof=survey_mean(teach_prof, na.rm=T)) %>%
+  mutate(across(!starts_with("egra_size"),round,2)) %>%
+  mutate(across(ends_with('_se'), ~paste0('(',.,')'))) %>%
+  mutate(across(everything(),as.character))
+
+
+stats <- (temp %>% select(!ends_with('_se')) %>% mutate(value='Mean')) %>%
+  bind_rows(temp %>% select(egra_size, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
+  arrange(egra_size)
+
+stats %>%
+  rename(`Teach Score (1-5 scale)`=teachscore,
+         `Percentage of Teachers Proficient in Pedagogy`=teachprof,
+         `School EGRA`= egra_size) %>%
+  select(-value) %>%
+  flextable() %>%
+  merge_v(j=c("School EGRA"),
+          target=c("School EGRA")) %>%
+  add_footer_lines('Note: 95% confidence interval in parenthesis.  Estimates weighted to be nationally representative.  The EGRA schools were schools that had at least 30 learners were available in Grade 2.') %>%
+  autofit()
+
 
 ```
 
@@ -320,18 +361,18 @@ school_analysis_merged_df <- df_weights_function(school_dta, Code_School, grd4_t
 
 ```{r stats21}
 #| label: tbl-measures21
-#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics by Gender in Niger
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics by Gender in Sierra Leone
+
 
 temp <- school_analysis_merged_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural'),
+  as_survey_design(strata=c('province', 'private'),
                    weight=ipw) %>%
   group_by(gender) %>%
   summarise(teachscore=survey_mean(teach_score, na.rm=T),
               teachprof=survey_mean(teach_prof, na.rm=T),
             N=n()) %>%
-  mutate(across(!matches("LIRE|gender"),round,2)) %>%
+  mutate(across(!matches("urban_rural|gender"),round,2)) %>%
   mutate(across(ends_with('_se'), ~paste0('(',.,')'))) %>%
   mutate(across(everything(),as.character))
 
@@ -355,30 +396,30 @@ stats %>%
 
 ```{r stats3}
 #| label: tbl-measures3
-#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics by Gender in Niger for LIRE/Non-LIRE Schools
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Skill and Proficiency Metrics by Gender in Sierra Leone for Urban/Rural Schools
+
 
 temp <- school_analysis_merged_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural'),
+  as_survey_design(strata=c('province', 'private'),
                    weight=ipw) %>%
-  group_by(LIRE, gender) %>%
+  group_by(urban_rural, gender) %>%
   summarise(teachscore=survey_mean(teach_score, na.rm=T),
               teachprof=survey_mean(teach_prof, na.rm=T),
             N=n()) %>%
-  mutate(across(!matches("LIRE|gender"),round,2)) %>%
+  mutate(across(!matches("urban_rural|gender"),round,2)) %>%
   mutate(across(ends_with('_se'), ~paste0('(',.,')'))) %>%
   mutate(across(everything(),as.character))
 
 
 stats <- (temp %>% select(!ends_with('_se')) %>% mutate(value='Mean')) %>%
-  bind_rows(temp %>% select(LIRE, gender, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
-  arrange(LIRE, gender)
+  bind_rows(temp %>% select(urban_rural, gender, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
+  arrange(urban_rural, gender)
 
 stats %>%
   rename(`Teach Score (1-5 scale)`=teachscore,
          `Percentage of Teachers Proficient in Pedagogy`=teachprof,
-         `School Type`= LIRE) %>%
+         `School Type`= urban_rural) %>%
   select(-value) %>%
   flextable() %>%
   merge_v(j=c("School Type", "gender"),
@@ -397,12 +438,12 @@ The Teach instrument has three sub-scales.
 
 ```{r stats1sub}
 #| label: tbl-measuressib
-#| tbl-cap: Teacher Pedagogical Subscore Metrics in Niger for All Schools
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Subscore Metrics in Sierra Leone for All Schools
+
 
 temp <- school_analysis_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural','LIRE'),
+  as_survey_design(strata=c('province', 'private', 'urban_rural'),
                    weight=ipw) %>%
     summarise(instruction=survey_mean(instruction, na.rm=T),
               instruction_prof=survey_mean(instruction_prof, na.rm=T),
@@ -436,32 +477,32 @@ stats %>%
 
 ```
 
-Below the statistics are broken down for LIRE/Non-LIRE schools.  
+Below the statistics are broken down for urban/rural schools.  
 
 ```{r stats2sub}
 #| label: tbl-measures2sub
-#| tbl-cap: Teacher Pedagogical Subscore Metrics in Niger for LIRE/Non-LIRE Schools
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Subscore Metrics in Sierra Leone for Urban/Rural Schools
+
 
 temp <- school_analysis_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural'),
+  as_survey_design(strata=c('province', 'private'),
                    weight=ipw) %>%
-  group_by(LIRE) %>%
+  group_by(urban_rural) %>%
   summarise(instruction=survey_mean(instruction, na.rm=T),
               instruction_prof=survey_mean(instruction_prof, na.rm=T),
               classroom_culture=survey_mean(classroom_culture, na.rm=T),
               classroom_culture_prof=survey_mean(classroom_culture_prof, na.rm=T),
               socio_emotional_skills=survey_mean(socio_emotional_skills, na.rm=T),
               socio_emotional_skills_prof=survey_mean(socio_emotional_skills_prof, na.rm=T)) %>%
-  mutate(across(!starts_with("LIRE"),round,2)) %>%
+  mutate(across(!starts_with("urban_rural"),round,2)) %>%
   mutate(across(ends_with('_se'), ~paste0('(',.,')'))) %>%
   mutate(across(everything(),as.character))
 
 
 stats <- (temp %>% select(!ends_with('_se')) %>% mutate(value='Mean')) %>%
-  bind_rows(temp %>% select(LIRE, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
-  arrange(LIRE)
+  bind_rows(temp %>% select(urban_rural, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
+  arrange(urban_rural)
 
 stats %>%
   rename(
@@ -473,7 +514,7 @@ stats %>%
          
          `Teach Socio-emotional Skills Score (1-5 scale)`=socio_emotional_skills,
          `Percentage of Teachers Proficient in Socio-emotional Skills`=socio_emotional_skills_prof,
-         `School Type`= LIRE) %>%
+         `School Type`= urban_rural) %>%
   select(-value) %>%
   flextable() %>%
   merge_v(j=c("School Type"),
@@ -487,12 +528,12 @@ stats %>%
 
 ```{r stats3sub}
 #| label: tbl-measures23sub
-#| tbl-cap: Teacher Pedagogical Subscore Metrics by Gender in Niger
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Subscore Metrics by Gender in Sierra Leone
+
 
 temp <- school_analysis_merged_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural'),
+  as_survey_design(strata=c('province', 'private', 'urban_rural'),
                    weight=ipw) %>%
   group_by(gender) %>%
   summarise(instruction=survey_mean(instruction, na.rm=T),
@@ -534,14 +575,13 @@ stats %>%
 
 ```{r stats3sub}
 #| label: tbl-measures3sub
-#| tbl-cap: Teacher Pedagogical Subscore Metrics by Gender in Niger for LIRE/Non-LIRE Schools
-#| tbl-cap-location: top
+#| tbl-cap: Teacher Pedagogical Subscore Metrics by Gender in Sierra Leone for Urban/Rural Schools
 
 temp <- school_analysis_merged_df %>%
   ungroup() %>%
-  as_survey_design(strata=c('REGION','urban_rural'),
+  as_survey_design(strata=c('province', 'private'),
                    weight=ipw) %>%
-  group_by(LIRE, gender) %>%
+  group_by(urban_rural, gender) %>%
   summarise(instruction=survey_mean(instruction, na.rm=T),
               instruction_prof=survey_mean(instruction_prof, na.rm=T),
               classroom_culture=survey_mean(classroom_culture, na.rm=T),
@@ -549,14 +589,14 @@ temp <- school_analysis_merged_df %>%
               socio_emotional_skills=survey_mean(socio_emotional_skills, na.rm=T),
               socio_emotional_skills_prof=survey_mean(socio_emotional_skills_prof, na.rm=T),
             N=n()) %>%
-  mutate(across(!matches("LIRE|gender"),round,2)) %>%
+  mutate(across(!matches("urban_rural|gender"),round,2)) %>%
   mutate(across(ends_with('_se'), ~paste0('(',.,')'))) %>%
   mutate(across(everything(),as.character))
 
 
 stats <- (temp %>% select(!ends_with('_se')) %>% mutate(value='Mean')) %>%
-  bind_rows(temp %>% select(LIRE, gender, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
-  arrange(LIRE, gender)
+  bind_rows(temp %>% select(urban_rural, gender, ends_with('_se'))  %>% rename_all(str_remove,"_se") %>% mutate(value='SE')) %>%
+  arrange(urban_rural, gender)
 
 stats %>%
   rename(`Teach Instruction Score (1-5 scale)`=instruction,
@@ -567,7 +607,7 @@ stats %>%
          
          `Teach Socio-emotional Skills Score (1-5 scale)`=socio_emotional_skills,
          `Percentage of Teachers Proficient in Socio-emotional Skills`=socio_emotional_skills_prof,
-         `School Type`= LIRE) %>%
+         `School Type`= urban_rural) %>%
   select(-value) %>%
   flextable() %>%
   merge_v(j=c("School Type", "gender"),
@@ -578,9 +618,3 @@ stats %>%
 
 ```
 
-
-## Simulations
-
-A relevant question is how much improvement on the Teach scale will be needed to get from current percentage of teachers who are proficient (around 2.8% of teachers) to  more than 7.8%, which is consistent with a targeted improvement of 5 percentage points.  
-
-Using a simulation, it is possible to see what would happen to proficiency rates if all teachers have a uniform improvement due to the project.  **Assuming we want a 5 p.p improvement in proficiency for all teachers, every teacher would need to improve around 0.2 points on the Teach scale.  This is would be an improvement of around 0.7 standard deviations on the Teach scale.**
