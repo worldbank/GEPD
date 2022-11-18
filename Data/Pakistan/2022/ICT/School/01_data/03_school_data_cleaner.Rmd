@@ -1923,7 +1923,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
            m7scq2_opmn==4 ~ .25,
            (m7scq2_opmn==5 |m7scq2_opmn==98) ~ 0)) %>%
   mutate(vignette_2=vignette_2_resp+vignette_2_finance+vignette_2_address) %>%          #sum all components for overall score
-  mutate(operational_management=1+vignette_1+vignette_2 )
+  mutate(operational_management=1+rowMeans(select(.,vignette_1, vignette_2), na.rm=TRUE) )
 
 
 final_indicator_data_OPMN <- final_indicator_data_OPMN %>%
@@ -2855,6 +2855,7 @@ call_yr <- as.numeric(year)-1
   
   school_data_SATT <- school_data_SATT %>%
     mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
+           m7shq2_satt=if_else(m7shq2_satt<100,m7shq2_satt*10000,m7shq2_satt),
            principal_salary=if_else(m7shq2_satt==999, as.numeric(NA),12*m7shq2_satt/sal_denom	)) %>%
     mutate(
       principal_salary_score=case_when(

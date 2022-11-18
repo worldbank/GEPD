@@ -357,28 +357,6 @@ school_analysis_merged_df <- df_weights_function(school_dta, Code_School, grd4_t
   mutate(gender=if_else(m2saq3==1, "Male", "Female")) %>%
   filter(gender=="Male" | gender=="Female")
 
-#read in teach labels
-teach_labels <- read_csv(paste0(here(),'/Data/Sierra Leone/2022/analysis/Teach_labels.csv' ))
-
-subind <- final_indicator_data_PEDG %>%
-  select(school_code, starts_with("s_"))
-
-labels=c('School Code',teach_labels$label)
-names(labels) <- c('school_code', teach_labels$variable)
-
-labelled::var_label(subind) <- labels
-
-#data to share
-school_analysis_merged_df %>%
-  left_join(subind) %>%
-  select(colnames(data_set_updated),gender,colnames(subind ), starts_with('teach_'),
-         starts_with('classroom_culture'),starts_with('instruction_'),starts_with('socio_emotional_skills')) %>%
-  write_dta(path=paste0(save_folder, "/teach_analytical_file.dta"))
-
-
-
-
-
 ```
 
 ```{r stats21}

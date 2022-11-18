@@ -54,13 +54,46 @@ api_template <- api_template_fun()
 #use api_data function to pull in data collected
 ##########################
 
-###########
-# Sierra Leone
-###########
+#specify path to data
+#Country name and year of survey
+country <-'PAK'
+country_name <- "Pakistan"
+province <- "ICT"
+year <- '2022'
 
-# Example:
+strata <- c('Tehsil', 'Gender')
 
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/NER/NER_2022_GEPD/NER_2022_GEPD_v01_M/Data/"
+#set directory to bring in data
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),paste0("Data/",province))
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/", sep="/"))
+  anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189") {
+  
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
+  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),paste0("Data/",province))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work",country_name,year,"Data/clean/", sep="/"))
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+}
+
+
+
+
 
 
 
@@ -79,16 +112,15 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
 #             return_wide = T,
 #             removeNA=FALSE)
 
-wbopendat<-WDI(country='NE', indicator=ind_list, start=2000, end=2021, extra=T) %>%
+wbopendat<-WDI(country='PK', indicator=ind_list, start=2000, end=2021, extra=T) %>%
   fill(starts_with("SE.")) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n())
-
 #read in databases for indicators
 
 load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
-load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
+#load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
 # 
 # 
 expert_df <- read_stata(paste(data_dir, 'Policy_Survey/expert_dta_final.dta', sep="/" ))
@@ -100,11 +132,11 @@ defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFa
 colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
 
 #create indicators
-defacto_dta_learners_final <- defacto_dta_learners_shaped %>%
-  rownames_to_column() %>%
-  filter(rowname=='Scoring') %>%
-  select(-rowname)
-# 
+ defacto_dta_learners_final <- defacto_dta_learners_shaped %>%
+   rownames_to_column() %>%
+   filter(rowname=='Scoring') %>%
+   select(-rowname)
+#
 # 
 # 
 # #financing
@@ -119,7 +151,7 @@ finance_df_final <- finance_df_shaped %>%
   select(-rowname)
 
 
-source('R/api_data_fun_NER.R')
+source('R/api_data_fun_PAK.R')
 
 #Tags
 practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.LPV.PRIM.BMP|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
@@ -172,13 +204,13 @@ api_metadata_fn <- function(cntry, yr) {
 }
 
 
-NER_data_2022 <- api_metadata_fn('NER', 2022)
+PAK_ICT_data_2022 <- api_metadata_fn('PAK-ICT', 2022)
 
 
 #export Indicators_metatdata section
-write_excel_csv(NER_data_2022, paste( 'GEPD_Indicators_API_NER.csv',sep=""))
+write_excel_csv(PAK_ICT_data_2022, paste( 'GEPD_Indicators_API_PAK_ICT.csv',sep=""))
 
-write_excel_csv(NER_data_2022, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_NER.csv',sep=""))
+write_excel_csv(PAK_ICT_data_2022, paste(data_dir,'/Indicators/', 'GEPD_Indicators_API_PAK_ICT.csv',sep=""))
 
 
 

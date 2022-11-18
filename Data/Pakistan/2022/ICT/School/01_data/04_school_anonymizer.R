@@ -71,8 +71,9 @@ currentDate<-c("2022-09-21")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
 ) %>%
-  mutate(school_code=Inst_ID) %>%
-  select(school_code, District, Tehsil,Location,
+  mutate(school_code=Inst_ID,
+         urban_rural=Location) %>%
+  select(school_code, District, Tehsil,urban_rural,Gender,
          ipw) 
 
 
