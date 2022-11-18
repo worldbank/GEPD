@@ -13,15 +13,6 @@ library(digest)
 
 load(file = file.path(confidential_folder, "school_survey_data.RData"))
 
-#add some disability questions
-school_dis <- school_dta %>%
-  group_by(school_code) %>%
-  summarise(across(starts_with('m4scq'),mean, na.rm=TRUE))
-
-
-final_school_data <- final_school_data %>%
-  left_join(school_dis, by='school_code',suffix=c("",".y")) %>%
-  select(-ends_with(".y"))
 
 #generate list of datasets to anonnymize
 #Read in list of indicators
@@ -65,11 +56,13 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-currentDate<-c("2022-10-03")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-sample_frame_name <- paste(sample_folder,"/sample_schools_",currentDate,".csv", sep="")
+#Load original sample of schools
+currentDate<-c("2022-09-21")
 
-sample_frame <- readxl::read_xlsx(sample_frame_name)
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
+) %>%
+  mutate(school_code=Inst_ID)
 
 #load some auxiliary data to help do sampling weights, because we lacked total enrollment for the districts
 # auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
@@ -82,9 +75,10 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   snumber<-enquo(snumber)
   prov<-enquo(prov)
 
-  data_set_updated <- school_weights %>% left_join(sample_frame %>% select(1:8) %>% rename(school_code= code_etablissement,
-                                                                                           district = commune,
-                                                                                           province = departement) %>% 
+  data_set_updated <- school_weights %>% left_join(sample_frame %>% select(1:8) %>% rename(school_code= Inst_ID,
+                                                                                           district = District,
+                                                                                           province = province,
+                                                                                           urban_rural=Location) %>% 
                                                      mutate(school_code=as.numeric(school_code))) %>% filter(!is.na(school_code)) %>% 
     
     group_by(district, urban_rural) %>%
@@ -109,7 +103,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(rural=urban_rural=="Rural") %>%
     mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province"
-                                                      | names(data_set_updated) == "total_students" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
+                                                      | names(data_set_updated) == "totalstudents" | names(data_set_updated) == "Tehsil" | names(data_set_updated) == "weights"  )])))
 }
 
 
