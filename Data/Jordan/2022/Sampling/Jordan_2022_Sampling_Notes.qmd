@@ -1,15 +1,19 @@
 ---
 title: "Jordan Sampling Notes - 2022"
 format: html
-editor: visual
+execute:
+  echo: false
+  warning: false
 ---
-
 
 ```{r setup}
 library(tidyverse)
 library(haven)
 library(here)
 library(readxl)
+#use table 1 package
+library(vtable)
+library(leaflet)
 
 #Country name
 country <-'JOR'
@@ -28,6 +32,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/"
 
   sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))
+  folder_2019 <- 'C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/School/'
   
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
@@ -46,22 +51,19 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 ```
 
-
 # Introduction
 
-This document will contain the sampling details for Jordan 2022.  
-
+This document will contain the sampling details for Jordan 2022.
 
 The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to detect differences by urban/rural location.
 
-For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of typically around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff. In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field. A total of 10 teachers will be sampled for absenteeism. Five teachers will be interviewed and given a content knowledge exam. Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random. Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions.
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of typically around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff. In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field. A total of 10 teachers will be sampled for absenteeism. Five teachers will be interviewed and given a content knowledge exam. Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random. Stratification will be based on the school's urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions.
 
 For our Survey of Public Officials, we will sample a total of 200 public officials. Roughly 60 officials are typically surveyed at the federal level, while 140 officials will be surveyed at the regional/district level. For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where roughly 10 regional offices (or whatever the secondary administrative unit is called) are chosen at random from among the regions in which schools were sampled. Then among these 10 regions, we also typically select around 10 districts (tertiary administrative level units) from among the districts in which schools werer sampled. The result of this sampling approach is that for 10 clusters we will have links from the school to the district office to the regional office to the central office. Within the regions/districts, five or six officials will be sampled, including the head of organization, HR director, two division directors from finance and planning, and one or two randomly selected professional employees among the finance, planning, and one other service related department chosen at random. At the federal level, we will interview the HR director, finance director, planning director, and three randomly selected service focused departments. In addition to the directors of each of these departments, a sample of 9 professional employees will be chosen in each department at random on the day of the interview.
 
 ## 2019 Sampling
 
 For our school survey, we select only schools that are supervised by the Minsitry or Education or are Private schools. No schools supervised by the Ministry of Defense, Ministry of Endowments, Ministry of Higher Education , or Ministry of Social Development are included. This left us with a sampling frame containing 3,330 schools, with 1297 private schools and 2003 schools managed by the Minsitry of Education. The schools must also have at least 3 grade 1 students, 3 grade 4 students, and 3 teachers.
-
 
 ```{r schools2019}
 #read in the sample from 2019
@@ -123,33 +125,156 @@ frame_2019_df <- df_short %>%
 
 ## 2022 Frame
 
-Frame for sampling comes from the 2022 extract of the EMIS.  File last updated November 2, 2022.
+Frame for sampling comes from the 2022 extract of the EMIS. File last updated November 2, 2022.
 
 ```{r}
-frame_2022_raw_df <- read_excel(path=paste0(sampling_folder,"/finalEMIS 2-11-2022-english.xlsx")) %>%
-  mutate(organization_code=`Enterprise Code`) %>%
+frame_2022_raw_df <- read_excel(path=paste0(sampling_folder,"/Updated_EMIS_2022.xlsx")) %>%
+  mutate(organization_code=school_code) %>%
   rename(
-         lat=Latitude,
+         lat=latitude,
          lon=longitude)
 
 
+#read in directorates from Jordan
+
 frame_2022_df <- frame_2022_raw_df %>% 
   rename(
-         total_students_grade_1=`total of 1st class students`,
-         total_students_grade_4=`Total 4th grade students`,
-         total_teachers=`Total teachers`,
-         supervisory_authority=`honorable authority`) %>%
+         total_students_grade_1=`Total students of class 1`,
+         total_students_grade_4=`Total students of class 4`,
+         total_teachers=`Total teachers`) %>%
   mutate(across(c('total_students_grade_1', 'total_students_grade_4', 'total_teachers'), as.numeric)) %>%
   filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
-  filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private")
+  mutate(supervisory_authority=case_when(  
+    `supervisory authority`=="وزارة التربية و التعليم"  ~ "Ministry of Education",
+    `supervisory authority`=="وكالة الغوث الدولية"      ~ "International Relief Agency",
+    `supervisory authority`=="وزارة الدفاع"           ~ "inistry of Defense",
+    `supervisory authority`=="التعليم الخاص"           ~ "Private",
+    `supervisory authority`=="وزارة التنمية الاجتماعية"   ~ 'Ministry of Social Development',
+    `supervisory authority`=="وزارة التعليم العالي"      ~ "Ministry of Higher Education",
+    `supervisory authority`=="وزارة الأوقاف"     ~ "Ministry of Endowments"
+  )) %>%
+  mutate(school_status=case_when(
+    `School status`=="مدمجين"        ~ "integrated" , 
+    `School status`=="لا يوجد سوريين"~ "No Syrians", 
+    `School status`=="مسائي سوري"    ~ "Syrian 2nd Shift", 
+    `School status`=="مريجيب الفهود"~ "Marijeeb Al-Fhood refugee camp", 
+    `School status`=="مخيزن"         ~ "Mukhaizen refugee camp",  
+    `School status`=="مخيم الزعتري"  ~ "Zatari refugee camp"
+  )) %>%
+  mutate(
+    territory=case_when(
+      Territory=="الوسط" ~ "Middle",
+      Territory=="الشمال" ~ "North",
+      Territory=="الجنوب" ~ "South"
+    )
+  ) %>%
+  left_join(read_csv(paste0(sampling_folder,"/governorates.csv"))) %>% #read in translations of governorates
+  filter(supervisory_authority=="Ministry of Education" | supervisory_authority=="Private" 
+         | supervisory_authority=="International Relief Agency") %>%
+  select(organization_code, supervisory_authority, school_status, governorate_eng, everything())
 ```
 
 ```{r}
 #number of linkages between new and old frame
 frame_matches <- sample_2019_df %>%
-  left_join(frame_2022_raw_df)
+  select(organization_code, sample, governorate, supervisory_authority) %>%
+  rename(
+    governorate_2019=governorate,
+    supervisory_authority_2019=supervisory_authority
+  ) %>%
+  left_join(frame_2022_df) %>%
+  mutate(matched=if_else(is.na(school_status), "Not matched", "Matched"))
+
+no_match <-  frame_matches %>% filter(is.na(school_status))
 ```
 
+## Comparison of Unmatched Schools
 
+Next we will link to the 2019 GEPD data to see if there are any differences between the group of schools that we could not revisit and those we can match.  Student learning and other outcomes will be compared between the two sets of schools.
+
+```{r}
+#read in dashboard school level data
+load(paste0(folder_2019,"school_survey_data.RData"))
+
+sample_comparison <- school_dta_short %>%
+  left_join(frame_matches %>% select(-c('lon','lat'))) %>%
+  mutate(matched=if_else(is.na(governorate_eng), "Not matched", "Matched")) 
+
+```
+
+There are no statistically significant differences between the schools that can be matched and those that cannot.
+
+```{r}
+#use table 1 package for summary statistics by group
+sample_comparison %>%
+  select(matched,student_knowledge, sch_absence_rate, content_knowledge, teach_score, ecd_student_knowledge, inputs, infrastructure, operational_management, instructional_leadership, principal_management, principal_knowledge_score) %>%
+  sumtable( group= 'matched', group.test = TRUE)
+
+```
+
+# Select Sample
+
+There are 223 schools (out of 250) that can be revisited, as they show up in the 2022 sampling frame.  These schools will be revisited and an additional 37 schools will be selected for a total of 260.  
+
+The strata will be on the basis of the school supervisory authority (Ministry, Private, Refugee) and the Governorate.
+
+```{r}
+frame_2022_df %>% select(territory, school_status, governorate_eng, supervisory_authority) %>% sumtable(title = "Summary Statistics of Sampling Frame")
+```
+
+Below are the characteristics of the 223 schools that can be matched.
+
+```{r}
+sample_comparison %>% 
+  filter(matched=="Matched") %>%
+  select(territory, school_status, governorate_eng, supervisory_authority) %>% 
+  sumtable(title = "Summary Statistics of Revisited 223 Schools")
+```
+
+```{r country_map, echo=FALSE}
+
+   pal <- colorFactor(
+     palette = c("red", "green", "Yellow"),
+     domain = c("Ministry of Education", "International Relief Agency", "Private")
+   )
+
+sample_orig_df <- sample_comparison %>%
+   filter(matched=="Matched") 
+
+
+leaflet(data=sample_orig_df) %>%
+    addProviderTiles(providers$OpenStreetMap.Mapnik)  %>%
+    addProviderTiles(providers$Stamen.TonerLines)  %>%
+    addCircleMarkers( lng=~lon,  lat=~lat, color=~pal(sample_orig_df$supervisory_authority),
+                      radius=7,
+                popup =  paste("Name: ", sample_orig_df$school_name, " <br>",
+                                  "Region: ", sample_orig_df$territory, " <br>",
+                                  "Governorate: ", sample_orig_df$governorate_eng, " <br>",
+                                  "EMIS: ", sample_orig_df$organization_code)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_orig_df$supervisory_authority, title="Schools to visit")
+```
+
+In the 223 revisited schools, 50 have no Syrian students, 24 schools have a 2nd shift with Syrian students, and the remainder are integrated.
+
+An additional 10 schools will be chosen from the Refugee Camps to visit.  These will come from the Zaatari camp, which includes 15 schools.
+
+
+```{r}
+#| eval: false
+sample_df_175 <- sample_df_200 %>%
+  select(-nstudents_district, -total_district,-share_district, -sample_size) %>%
+  left_join(strata_df_175) %>%
+  mutate(
+    totalstudents=sum(total_enrollment),
+  ) %>%
+  group_by(Gender, Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = min(sample_size), weight =total_enrollment) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+```
 
 

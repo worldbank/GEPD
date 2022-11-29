@@ -752,7 +752,18 @@ plot(out)
 #############################################
 
   
-  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach scores Sierra Leone Final Final.csv")) 
+  teacher_pedagogy <- read_csv(paste0(download_folder,"/Teach scores Sierra Leone Final Final Final.csv")) %>%
+  mutate(school_code=case_when(
+    school_code==130101201  ~ 139103238,
+    school_code==130501208   ~ 131301231, 
+    school_code==220701216    ~ 220701211,  
+    school_code==250401207    ~ 250401206,  
+    school_code==410403466    ~ 420302687,  
+    school_code==420505211     ~ 420505210, 
+    school_code==420512204    ~ 420512209, 
+    school_code==1110403201   ~ 110403201, 
+    TRUE ~ school_code
+  ))
 
 # missing schools
 teacher_pedagogy_missings <- school_data_preamble_temp %>% mutate(GRADE=4) %>%
@@ -769,7 +780,12 @@ write_excel_csv(teacher_pedagogy_missings,paste0(download_folder,"/Teach_scores_
   
   teacher_pedagogy_segments <- teacher_pedagogy %>%
     filter(!is.na(school_code)) %>%
-    left_join(school_data_preamble_temp) %>%
+    left_join(school_data_preamble_temp) 
+  
+no_match <- teacher_pedagogy_segments %>%
+  filter(is.na(school_name_preload)) 
+  
+teacher_pedagogy_segments <- teacher_pedagogy_segments %>%  
     filter(!is.na(school_name_preload)) 
   
   write_excel_csv(teacher_pedagogy_segments, paste(confidential_folder, "teach_score_raw.csv", sep="/"))
