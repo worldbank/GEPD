@@ -1592,6 +1592,7 @@ m <- feols(baseline_pract , data=anova_df)
 baseline_pract_df <- anova_df %>%
   add_predictions(m)
 
+
 ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
   geom_point() +
   geom_smooth(method='lm',color='black') +
@@ -1600,7 +1601,7 @@ ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
                 y=c(10,100)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
-  ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using just School Practices (Service Delivery)',70)) +
+  ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices') +
   theme_bw() 
 ```
 ## PP
@@ -1621,7 +1622,7 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
                 y=c(10,100)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
-    ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies',70)) +
+    ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies') +
   theme_bw() 
 ```
 ## PPP
@@ -1645,7 +1646,7 @@ ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country
                 y=c(10,100)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
-  ggtitle(str_wrap('Explaining 4th-grade Student Outcomes using School Practices + Policies + Politics',70)) +
+  ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies + Politics') +
   theme_bw() 
 ```
 
