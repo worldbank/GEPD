@@ -75,7 +75,7 @@ if (Sys.getenv("USERNAME") == "wb469649"){
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
-#source('public_officials_api.R', local=TRUE)
+source('public_officials_api.R', local=TRUE)
 
 #setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
