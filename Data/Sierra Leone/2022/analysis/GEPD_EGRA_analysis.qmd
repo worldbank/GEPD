@@ -1,0 +1,635 @@
+---
+title: "GEPD & EGRA/EGMA Analysis"
+format: html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	fig.height = 5,
+	fig.width = 7,
+  message=FALSE
+)
+library(tidyverse)
+library(haven)
+library(vtable)
+library(here)
+library(readxl)
+library(stringr)
+library(Hmisc)
+library(naniar)
+library(lubridate)
+library(skimr)
+library(digest)
+library(validate)
+library(GGally)
+library(sf)
+sf::sf_use_s2(FALSE)
+library(ggthemes)
+library(patchwork)
+library(geojsonsf)
+library(flextable)
+library(srvyr)
+library(estimatr)
+library(ggtext)
+library(fixest)
+library(modelsummary)
+library(fuzzyjoin)
+
+#Country name
+country <-'SLE'
+country_name <- "Sierra Leone"
+year <- '2022'
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+    download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+    egra_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/UNICEF SL Raw data/", sep="/"))
+
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/INFRA", sep="/"))
+      egra_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/UNICEF SL Raw data/", sep="/"))
+      sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+}else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+
+```
+
+In this document, summary statistics will be compared between data from the GEPD survey that took place in 2022 in Sierra Leone and the EGRA/EGMA survey that took place in the summer of 2021.
+
+## Background on the GEPD survey in Sierra Leone
+
+New data for the dashboard was collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below. The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years). Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey collected data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators. It consists of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments. Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In Sierra Leone, this survey was administered in a nationally representative sample of 270 schools, selected through stratified random sampling. 
+
+Expert Survey: The Expert Survey collected information to feed into the policy indicators. This survey was filled out by key informants in Sierra Leone, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years). The survey has 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials collected information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey was a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team has collaborated closely with DEC and Governance GP staff to develop this instrument. The survey was administered to a random sample of about 200 staff serving in the central education ministry and district education offices. It includes questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+## School Sample
+
+About the EGRA/EGMA sampling frame:
+
+> The sampling frame begun with the 2019 Annual School Census (ASC) list of primary schools as provided by UNICEF/MBSSE where the sample of 260 schools for this study were obtained from an initial list of 7,154 primary schools. Only schools that meet a pre-defined selection criteria were eligible for sampling.
+
+> To achieve the recommended sample size of 10 learners per grade, schools that had an enrolment of at least 30 learners in Grade 2 in 2019 were considered. To achieve a high level of confidence in the findings and generate enough data for analysis, the selection criteria only considered schools that:
+•	had an enrolment of at least 30 learners in grade 1; and
+•	had an active grade 4 in 2019 (enrolment not zero)
+
+> The sample was taken from a population of 4,597 primary schools that met the eligibility criteria above, representing 64.3% of all the 7,154 primary schools in Sierra Leone (as per the 2019 school census). Schools with higher numbers of learners were purposefully selected to ensure the sample size could be met in each site.
+
+> As a result, a sample of 260 schools were drawn using proportional to size allocation with simple random sampling without replacement in each stratum. In the population, there were 16 districts and five school ownership categories (community, government, mission/religious, private and others). A total of 63 strata were made by forming combinations of  the 16 districts and school ownership categories. In each stratum, a sample size was computed proportional to the total population and samples were drawn randomly without replacement. Drawing from other EGRA/EGMA studies conducted by Montrose in the past, a backup sample of up to 78 schools (30% of the sample population) with which enumerator teams can replace sample schools was also be drawn. 
+
+> In the distribution of sampled schools by ownership, majority of the sampled schools are owned by mission/religious group (62.7%, n=163) followed by the government owned schools at 18.5% (n=48). Additionally, in school distribution by district, majority of the sampled schools (54%) were found in Bo, Kambia, Kenema, Kono, Port Loko and Kailahun districts. Refer to annex 9. for details on the population and sample distribution by district.
+
+Because of the restriction that at least 30 learners were available in Grade 2, we chose to add an additional 40 schools to the sample from among smaller schools, with between 3 and 30 grade 2 students.  The objective of this supplement was to make the sample more nationally representative, as the restriction reduced the sampling frame for the EGRA/EGMA sample by over 1,500 schools from 7,154 to 4,597.  
+
+The 40 schools were chosen in a manner consistent with the original set of EGRA/EGMA schools. The 16 districts formed the strata. In each stratum, the number of schools selected were proportional to the total population of the statum, and within stratum schools were chosen with probability proportional to size.
+
+
+```{r fun}
+#add equations to plots
+eq_plot_txt <- function(data, inp, var) {
+  eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+  coef <- round(coef(eq),2)
+  std_err <- round(sqrt(diag(vcov(eq))),2)
+  r_2<- round(summary(eq)$r.squared,2)
+  sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+  
+}
+
+
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+bin_var_2 <- function(var, val) {
+  if_else(var==val, 
+          as.numeric(1),
+          as.numeric(var))
+}
+
+bin_var_3 <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    TRUE   ~ 0
+  )
+}
+
+df_weights_function <- function(dataset,scode, snumber, prov) {
+  scode<-enquo(scode)  
+  snumber<-enquo(snumber)
+  prov<-enquo(prov)
+  
+  dataset %>%
+    left_join(data_set_updated)  %>%
+    mutate(province=idregion           ) 
+}
+
+
+```
+
+
+```{r load}
+
+#load the data
+load(file.path(confidential_folder, "school_survey_data.RData"))
+
+#Load original sample of schools
+currentDate<-c("2022-10-07")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', currentDate,  '.csv', sep="")
+) %>%
+  mutate(ipw=case_when(
+    is.na(ipw) ~ median(ipw, na.rm=TRUE),
+    is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
+    TRUE ~ ipw)
+    ) %>%
+  ungroup() %>%
+  mutate(school_code=idemis_code,
+         urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural"),
+         private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")) %>%
+  select(school_code, sch_owner, idregion, iddistrict,idsection,idtown ,accessibility,school_districthq_distance, urban_rural,sch_owner,private,egra_size,
+         ipw) 
+
+
+
+
+
+
+
+```
+
+```{r egra}
+#read in school file
+egra_school_df <- read_excel(path=paste0(egra_folder, '/3. Sierra Leone Baseline - School Observation dataset.xlsx'))
+
+#read in egra reading and numeracy lesson observation
+egra_teacher_read_df <- read_excel(path=paste0(egra_folder, '/2. Sierra Leone Baseline - Literacy Observation v2.xlsx'))
+egma_teacher_math_df <- read_excel(path=paste0(egra_folder, '/2. Sierra Leone Baseline - Numeracy Observation v2.xlsx'))
+
+#read in the child scores
+egra_child_scores_df <- read_excel(path=paste0(egra_folder, '/4. Sierra Leone Baseline - EGRA_EGMA dataset.xlsx'))
+
+child_col_labels <- egra_child_scores_df %>% filter(row_number()==1) %>% as.character()
+
+#drop first row which is just labels
+egra_child_scores_df <- egra_child_scores_df %>%
+  filter(row_number()!=1) %>%
+  mutate(
+    #literacy
+    letter_sound_score=as.numeric(letter_sound_score), #number of letter sounds correct
+    familiar_words_score=as.numeric(fam_word_score), #number of familiar words correct
+    oral_reading_score1=as.numeric(oral_read1_score), #number of oral reading items correct
+    oral_reading_score2=as.numeric(oral_read2_score), #number of oral reading items correct
+    read_comp_score1=as.numeric(read1_comp_score), #number of reading comprehension items correct
+    read_comp_score2=as.numeric(read2_comp_score), #number of reading comprehension items correct
+    listening_comp_score=as.numeric(list_comp_score), #listening comp items correct
+    total_literacy_score=letter_sound_score+familiar_words_score+oral_reading_score1+oral_reading_score2 +read_comp_score1+read_comp_score2+listening_comp_score,
+    
+    #numeracy
+    number_ident_score=as.numeric(num_id_score), #number identification total correct
+    quantity_discrim_score=as.numeric(quant_comp_score), #Quantity discrimination total correct
+    miss_number_score=as.numeric(miss_num_score), # missing number total correct
+    add_score1=as.numeric(add1_score), #adding 1 total correct
+    add_score2=as.numeric(add2_score), #adding 2 total correct
+    sub_score1=as.numeric(sub1_score), #subtraction 1 total correct
+    sub_score2=as.numeric(sub2_score), #subtraction 2 total correct
+    word_prob_score1=as.numeric(word_prob1_score), #word problem 1 total correct
+    word_prob_score2=as.numeric(word_prob2_score), #word problem 2 total correct
+    total_numeracy_score=number_ident_score+quantity_discrim_score+add_score1+add_score2+sub_score1+sub_score2+word_prob_score1+word_prob_score2
+    )
+
+```
+
+Pairwise correlations between literacy and numeracy scores
+
+```{r}
+#| fig.width=14,
+#| fig.height=14
+
+#literacy
+ggpairs(
+  egra_child_scores_df,
+  columns=c(
+     'total_literacy_score',
+     'letter_sound_score',
+     'familiar_words_score',
+     'oral_reading_score1',
+     'oral_reading_score2' ,
+     'read_comp_score1',
+     'read_comp_score2',
+     'listening_comp_score'
+  )
+) +
+  ggtitle('Pairwise plot matrix for EGRA Literacy Items')
+```
+
+Numeracy pairwise plot
+
+```{r}
+#| fig.width=15,
+#| fig.height=15
+
+#numeracy
+ggpairs(
+  egra_child_scores_df,
+  columns=c(
+     'total_numeracy_score',
+     'number_ident_score',
+     'quantity_discrim_score',
+     'add_score1',
+     'add_score2',
+     'sub_score1',
+     'sub_score2',
+     'word_prob_score1',
+     'word_prob_score2'
+  )
+) +
+  ggtitle('Pairwise plot matrix for EGMA Numeracy Items')
+```
+
+Correlation between Numeracy and Literacy Total Scores.
+
+```{r}
+ggplot(egra_child_scores_df, aes(x=total_literacy_score, y=total_numeracy_score)) +
+  facet_wrap(~grade) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw() +
+  theme(
+    text = element_text(size = 14),
+    legend.position='none'
+  ) +
+  expand_limits(x = 0, y = 0) +
+  ylab(paste0("EGMA Math Total Score")) +
+  xlab(paste0("EGRA Literacy Total Score")) +
+  ggpmisc::stat_poly_eq()
+
+
+
+
+```
+
+Correlates of overall scores with student/school characteristics
+
+```{r}
+
+options(modelsummary_factory_word = 'flextable')
+custom_theme <- function(x, ...) {
+    x %>% set_table_properties(layout = "autofit")
+}
+options("modelsummary_theme_flextable" = custom_theme)
+
+
+#use modelsumary to predict
+#modelsummary output
+gm <- tibble::tribble(
+  ~raw,        ~clean,          ~fmt,
+  "nobs",      "N",             0)
+
+
+models <- list(
+  'EGMA Numeracy Score' = lm_robust(total_numeracy_score ~ grade + female  + breakfast_at_home, data=egra_child_scores_df, se_type='HC2'),
+  'EGRA Literacy Score' = lm_robust(total_literacy_score ~ grade + female  + breakfast_at_home, data=egra_child_scores_df, se_type='HC2')
+)
+
+modelsummary(models,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_rename = c('grade'='Grade: ' ,
+                              'female'='Student Gender: ',
+                              'age'='Student Age: ',
+                              'breakfast_at_home'='Ate Breakfast at home: ' ),
+              gof_map = gm,
+              notes="Robust Standard errors in parenthesis.
+              ***=0.001 level
+              **=0.01 level
+              *=0.05 level
+              +=0.1 level",
+              escape = FALSE
+              )
+```
+
+
+
+
+```{r}
+#Aggregate to school level
+egra_scores_school_df <- egra_child_scores_df %>%
+  filter(grade=="P4") %>%
+  group_by(schoolname, locationschoolname_id, district,section, town) %>%
+  summarise(across(
+    c(
+     'total_literacy_score',
+     'letter_sound_score',
+     'familiar_words_score',
+     'oral_reading_score1',
+     'oral_reading_score2' ,
+     'read_comp_score1',
+     'read_comp_score2',
+     'listening_comp_score',
+     'total_numeracy_score',
+     'number_ident_score',
+     'quantity_discrim_score',
+     'add_score1',
+     'add_score2',
+     'sub_score1',
+     'sub_score2',
+     'word_prob_score1',
+     'word_prob_score2'
+  ), mean, na.rm=T
+  )) %>%
+  ungroup() %>%
+  mutate(iddistrict=str_to_upper(district),
+         idsection=str_to_upper(section),
+         idtown=str_to_upper(town),
+         school_name_preload=str_to_upper(schoolname)) %>%
+  #left_join(egra_school_df %>%) %>%
+  arrange(district, schoolname)
+
+#merge in match file to have the school codes
+egra_match_df <- read_csv(paste0(sampling_folder, "/egra_matches.csv")) %>%
+  filter(matched==1) %>%
+  select(school_code, school_name, locationschoolname_id, district, idtown.x, idsection.x) %>%
+  rename(school_name_preload=school_name,
+         iddistrict=district,
+         idtown=idtown.x,
+         idsection=idsection.x) %>%
+  distinct(school_code, school_name_preload, locationschoolname_id, iddistrict, idtown, idsection)
+
+egra_scores_school_clean_df <- egra_scores_school_df %>%
+  left_join(egra_match_df) %>%
+  filter(!is.na(school_code)) %>%
+  mutate(random_order=rnorm(nrow(.))) %>%
+  group_by(school_code) %>%
+  slice_min(order_by=random_order, n=1, with_ties = FALSE) %>% #make sure no duplicates
+  select(school_code, c(
+     'total_literacy_score',
+     'letter_sound_score',
+     'familiar_words_score',
+     'oral_reading_score1',
+     'oral_reading_score2' ,
+     'read_comp_score1',
+     'read_comp_score2',
+     'listening_comp_score',
+     'total_numeracy_score',
+     'number_ident_score',
+     'quantity_discrim_score',
+     'add_score1',
+     'add_score2',
+     'sub_score1',
+     'sub_score2',
+     'word_prob_score1',
+     'word_prob_score2'
+  ))
+
+```
+
+
+
+
+# Comparison to Dashboard Data
+
+
+
+```{r schooldata}
+
+school_analysis_df <- df_weights_function(final_school_data, Code_School, grd4_total, Region) %>%
+  filter(!is.na(ipw))
+
+```
+
+```{r ampldat}
+
+ampl_b_df <- read_dta(paste0(download_folder, "/SLE_AMPL_DB_(2022.10.26).dta")) 
+
+ampl_b_df <- ampl_b_df %>%
+  mutate(
+    amplb_reading_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PV*_AMPL_m"))], na.rm=TRUE),
+    amplb_math_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PV*_AMPL_r"))], na.rm=TRUE),
+    amplb_reading_raw_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PF*|MR*"))], na.rm=TRUE),
+    amplb_math_raw_score=rowMeans(.[grep(x=colnames(ampl_b_df), pattern=glob2rx("PM*|MM*"))], na.rm=TRUE)
+         ) 
+
+#aggregate to school level for comparison with GEPD data in fourth grade
+ampl_b_school_df <- ampl_b_df %>%
+  rename(school_code=AMPL_SchID) %>%
+  group_by(school_code) %>%
+  summarise(amplb_reading_score=mean(amplb_reading_score, na.rm=T),
+            amplb_math_score=mean(amplb_math_score, na.rm=T),
+            amplb_reading_raw_score=100*mean(amplb_reading_raw_score, na.rm=T),
+            amplb_math_raw_score=100*mean(amplb_math_raw_score, na.rm=T))
+
+
+
+
+```
+
+```{r combine}
+
+#combine the data into one frame
+combined_df <- school_analysis_df %>%
+  left_join(ampl_b_school_df) %>%
+  left_join(egra_scores_school_clean_df)
+
+t <- combined_df %>%
+  filter(!is.na(literacy_student_knowledge)) %>%
+  select(school_name_preload, literacy_student_knowledge, total_literacy_score, amplb_reading_score, math_student_knowledge, total_numeracy_score, amplb_math_score)
+
+```
+
+
+Scatterplot of EGRA/EGMA 4th grade assessment on GEPD 4th Grade Assessment
+```{r}
+ggplot(combined_df, aes(x=literacy_student_knowledge, y=total_literacy_score)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw() +
+  theme(
+    text = element_text(size = 14),
+    legend.position='none'
+  ) +
+  expand_limits(x = 0, y = 0) +
+  xlab(paste0("GEPD Literacy Total Score")) +
+  ylab(paste0("EGRA Literacy Total Score")) +
+  ggpmisc::stat_poly_eq()
+
+
+ggplot(combined_df, aes(x=math_student_knowledge, y=total_numeracy_score)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  theme_bw() +
+  theme(
+    text = element_text(size = 14),
+    legend.position='none'
+  ) +
+  expand_limits(x = 0, y = 0) +
+  xlab(paste0("GEPD Math Total Score")) +
+  ylab(paste0("EGMA Math Total Score")) +
+  ggpmisc::stat_poly_eq()
+
+
+```
+Pairwise correlations between literacy and numeracy scores
+
+```{r}
+#| fig.width=14,
+#| fig.height=14
+
+#literacy
+ggpairs(
+  combined_df,
+  columns=c(
+     'literacy_student_knowledge', 'total_literacy_score', 'amplb_reading_score'
+  )
+) +
+  ggtitle('Pairwise plot matrix for Literacy Items Across Assessments')
+
+ggpairs(
+  combined_df,
+  columns=c(
+     'math_student_knowledge', 'total_numeracy_score', 'amplb_math_score'
+  )
+) +
+  ggtitle('Pairwise plot matrix for Numeracy Items Across Assessments')
+```
+
+```{r}
+#| include: false
+# 
+# #combine with egra data
+# library(stringdist)
+# 
+# combined_egra_df <- egra_scores_school_df  %>%
+#   stringdist_join( (combined_df %>% filter(egra_size=="30 or Greater students")), 
+#   by = c("school_name_preload", "iddistrict", "idtown", "idsection" ), 
+#                    mode='left',
+#                    method="jw",
+#                    max_dist=99,
+#                    distance_col="dist") %>%
+#   group_by(iddistrict.x, school_name_preload.x) %>%
+#   mutate(dist_total=sqrt(school_name_preload.dist^2 + iddistrict.dist^2 + idsection.dist^2 +  idtown.dist^2)) %>%
+#   slice_min(order_by=dist_total, n=1, with_ties = FALSE)
+# 
+# t <- combined_egra_df %>%
+#   mutate(matched=as.numeric(dist_total<0.3)) %>%
+#   select(matched, dist_total, school_code, locationschoolname_id, starts_with('school_name_preload'), starts_with('iddistrict'),starts_with('idtown'),starts_with('idsection')) 
+# 
+# write_excel_csv(t, 'C:\\Users\\wb469649\\OneDrive - WBG\\GEAK\\Education Policy Dashboard\\gepd_sle_egra_matches.csv')
+```
+
+```{r}
+#| include: false
+
+
+# 
+# # Load packages
+# library(tidyverse)
+# library(sp)
+# library(sf)
+# 
+# # Create ID for my_df_1 and my_df_2 based on row id
+# # This step is not required, just help me to better distinguish each point
+# combined_df <- combined_df %>% mutate(ID1 = row.names(.))
+# egra_scores_school_df <- egra_scores_school_df %>% mutate(ID2 = row.names(.))
+# 
+# # Create spatial point data frame
+# combined_df_sp <- combined_df %>% filter(!is.na(lat))
+# coordinates(combined_df_sp) <- ~lon + lat
+# 
+# egra_scores_school_df_sp <- egra_scores_school_df %>% filter(!is.na(gpsinformationlatitude)) %>% mutate(lon=as.numeric(gpsinformationlongitude), lat=as.numeric(gpsinformationlatitude))
+# coordinates(egra_scores_school_df_sp) <- ~lon   + lat
+# 
+# # Convert to simple feature
+# my_df_1_sf <- st_as_sf(combined_df_sp)
+# my_df_2_sf <- st_as_sf(egra_scores_school_df_sp)
+# 
+# # Set projection based on the epsg code
+# st_crs(my_df_1_sf) <- 4326
+# st_crs(my_df_2_sf) <- 4326
+# 
+# # Calculate the distance
+# m_dist <- st_distance(my_df_1_sf, my_df_2_sf)
+# 
+# # Filter for the nearest
+# near_index <- apply(m_dist, 1, order)[1, ]
+# 
+# # Based on the index in near_index to select the rows in my_df_2
+# # Combine with my_df_1
+# my_df_final <- cbind(combined_df_sp, egra_scores_school_df[near_index, ]) %>% as_tibble()
+```
+
+
+## Appendix
+
+Below is a map of the visited schools.
+
+```{r map}
+#| label: fig-map
+#| fig-cap: Locations of Interviews for School Survey
+#| fig-cap-location: top
+
+wbgis <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/"
+
+
+
+# load wb polygon data 
+
+## import at district level (adm2 level)
+wb.poly.2 <- geojson_sf(
+  file.path(wbgis, "g2015_2014_2.geojson") # where _2 has district level polys
+  ) %>%
+  filter( ADM0_NAME == country_name) %>%
+  distinct(ADM2_CODE,ADM1_CODE, ADM0_CODE, .keep_all = TRUE) 
+
+school <- st_as_sf((school_analysis_df %>% filter( !is.na(lat)) ),
+                   coords = c("lon", "lat"),
+                   na.fail = FALSE)
+
+
+
+# set the crs of school + po as the same as the world poly crs
+st_crs(school) <- st_crs(wb.poly.2)
+
+# st_is_longlat(Non_LIRE_school)
+# st_is_longlat(LIRE_school)
+
+school_map <- ggplot() +
+  geom_sf(data=wb.poly.2) +
+  geom_sf(data=school, color='#023047') +
+  theme_map() +
+  theme(legend.position='top') 
+
+school_map
+
+```

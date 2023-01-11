@@ -140,7 +140,7 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, Code_School, grd4_total, Region)
+      temp <- df_weights_function(temp, school_code, class4_combined, idregion)
     }
     
     #Scrub names, geocodes

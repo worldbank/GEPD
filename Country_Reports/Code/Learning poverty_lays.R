@@ -47,7 +47,7 @@ lp_figure <-   hci_lp_final %>%
         legend.position = "none",
         plot.margin=unit(c(0,0,0,0), "mm"))
 
-ggsave(here("LP_LAYS_figures", paste("lp_figure_", country_file_name, ".png", sep = '')), height = 1.5, width = 5)
+ggsave(here("Country_Reports/LP_LAYS_figures", paste("lp_figure_", country_file_name, ".png", sep = '')), height = 1.5, width = 5)
 
 #ggsave(paste0(dir,"//LP_LAYS_figures/lp_figure_", country_file_name, ".png", sep = ''), height = 1.5, width = 5)
 
@@ -101,8 +101,7 @@ lays_figure <-   hci_lp_final %>%
         axis.text = element_blank(),
         legend.position = "none",
         plot.margin=unit(c(0,0,0,0), "mm"))
-
- ggsave(here("LP_LAYS_figures", paste("lays_figure_", country_file_name, ".png", sep = '')), height = 1.5, width = 5)
+ ggsave(here("Country_Reports/LLP_LAYS_figures", paste("lays_figure_", country_file_name, ".png", sep = '')), height = 1.5, width = 5)
 
 #ggsave(paste0(dir, "//LP_LAYS_figures/lp_figure_", country_file_name, ".png", sep = ''), height = 1.5, width = 5)
 

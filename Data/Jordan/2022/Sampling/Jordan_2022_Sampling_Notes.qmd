@@ -14,11 +14,13 @@ library(readxl)
 #use table 1 package
 library(vtable)
 library(leaflet)
-
+library(flextable)
 #Country name
 country <-'JOR'
 country_name <- "Jordan"
 year <- '2022'
+set.seed(2435345)
+
 #########################
 # File paths #
 #########################
@@ -159,14 +161,16 @@ frame_2022_df <- frame_2022_raw_df %>%
     `School status`=="مسائي سوري"    ~ "Syrian 2nd Shift", 
     `School status`=="مريجيب الفهود"~ "Marijeeb Al-Fhood refugee camp", 
     `School status`=="مخيزن"         ~ "Mukhaizen refugee camp",  
-    `School status`=="مخيم الزعتري"  ~ "Zatari refugee camp"
+    `School status`=="مخيم الزعتري"  ~ "Zaatari refugee camp"
   )) %>%
   mutate(
     territory=case_when(
       Territory=="الوسط" ~ "Middle",
       Territory=="الشمال" ~ "North",
       Territory=="الجنوب" ~ "South"
-    )
+    ),
+    lat=as.numeric(lat),
+    lon=as.numeric(lon)
   ) %>%
   left_join(read_csv(paste0(sampling_folder,"/governorates.csv"))) %>% #read in translations of governorates
   filter(supervisory_authority=="Ministry of Education" | supervisory_authority=="Private" 
@@ -187,6 +191,15 @@ frame_matches <- sample_2019_df %>%
 
 no_match <-  frame_matches %>% filter(is.na(school_status))
 ```
+
+Summary Statistics of 2022 Frame
+
+```{r}
+frame_2022_df %>% 
+  select(territory, school_status, governorate_eng, supervisory_authority) %>% 
+  sumtable(title = "Summary Statistics of 2022 Sampling Frame")
+```
+
 
 ## Comparison of Unmatched Schools
 
@@ -212,23 +225,85 @@ sample_comparison %>%
 
 ```
 
-# Select Sample
 
-There are 223 schools (out of 250) that can be revisited, as they show up in the 2022 sampling frame.  These schools will be revisited and an additional 37 schools will be selected for a total of 260.  
+# Select the Sample
 
-The strata will be on the basis of the school supervisory authority (Ministry, Private, Refugee) and the Governorate.
+Game plan:
+
+  - Choose 200 of the originally sampled 250 schools (223 of which are available)   
+    - 150 public schools and 50 private   
+    - Randomly selected
+    - Will choose 200 instead of a maximum of 223, so that we can compare the outcomes between booster schools and originally sampled schools to see if there are any differences   
+  - Choose 30 public and 20 private schools from schools no originally selected   
+  - Choose 10 schools randomly from Zataari   
+  
+
+
+
 
 ```{r}
-frame_2022_df %>% select(territory, school_status, governorate_eng, supervisory_authority) %>% sumtable(title = "Summary Statistics of Sampling Frame")
-```
 
-Below are the characteristics of the 223 schools that can be matched.
+#original sample of schools
+list_2019 <- sample_comparison$organization_code
 
-```{r}
-sample_comparison %>% 
-  filter(matched=="Matched") %>%
-  select(territory, school_status, governorate_eng, supervisory_authority) %>% 
-  sumtable(title = "Summary Statistics of Revisited 223 Schools")
+weights_df <- frame_2022_df %>%
+  ungroup() %>%
+  mutate(
+    totalstudents=sum(total_students_grade_4),
+  ) %>%  
+  mutate(
+    sample_status=case_when(
+      (organization_code %in% list_2019) ~ '2019 Sample',
+      TRUE ~ 'Booster Sample'
+    ),
+    sample_size = case_when(
+      school_status=='Zaatari refugee camp' &  sample_status=='Booster Sample' ~ 10,
+      supervisory_authority=='Ministry of Education' & territory=="North" & sample_status=='2019 Sample'~ 55,
+      supervisory_authority=='Ministry of Education' & territory=="Middle" & sample_status=='2019 Sample' ~ 60,
+      supervisory_authority=='Ministry of Education' & territory=="South" & sample_status=='2019 Sample' ~ 35,
+      supervisory_authority=='Private' & territory=="North" & sample_status=='2019 Sample' ~ 15,
+      supervisory_authority=='Private' & territory=="Middle" & sample_status=='2019 Sample' ~ 25,
+      supervisory_authority=='Private' & territory=="South" & sample_status=='2019 Sample' ~ 10,
+      supervisory_authority=='Ministry of Education' & territory=="North" & sample_status=='Booster Sample'~ 12,
+      supervisory_authority=='Ministry of Education' & territory=="Middle" & sample_status=='Booster Sample' ~ 12,
+      supervisory_authority=='Ministry of Education' & territory=="South" & sample_status=='Booster Sample' ~ 6,
+      supervisory_authority=='Private' & territory=="North" & sample_status=='Booster Sample' ~ 5,
+      supervisory_authority=='Private' & territory=="Middle" & sample_status=='Booster Sample' ~ 10,
+      supervisory_authority=='Private' & territory=="South" & sample_status=='Booster Sample' ~ 5
+      
+    ),
+    strata = case_when(
+      school_status=='Zaatari refugee camp' &  sample_status=='Booster Sample' ~ "Zaatari refugee camp, Booster Sample",
+      supervisory_authority=='Ministry of Education' & territory=="North" & sample_status=='2019 Sample'~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Ministry of Education' & territory=="Middle" & sample_status=='2019 Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Ministry of Education' & territory=="South" & sample_status=='2019 Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Private' & territory=="North" & sample_status=='2019 Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Private' & territory=="Middle" & sample_status=='2019 Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Private' & territory=="South" & sample_status=='2019 Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Ministry of Education' & territory=="North" & sample_status=='Booster Sample'~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Ministry of Education' & territory=="Middle" & sample_status=='Booster Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Ministry of Education' & territory=="South" & sample_status=='Booster Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Private' & territory=="North" & sample_status=='Booster Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Private' & territory=="Middle" & sample_status=='Booster Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", "),
+      supervisory_authority=='Private' & territory=="South" & sample_status=='Booster Sample' ~ paste(supervisory_authority, territory, sample_status, sep=", ")
+      
+    )
+  ) %>%
+  filter(!is.na(sample_size)) %>%
+  group_by(strata) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_students_grade_4),
+         strata_school_prob=strata_size/totalstudents) %>%
+  mutate(strata_prob=(sample_size)*(total_students_grade_4/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+sample_df <- weights_df %>%
+  sample_n(size = min(sample_size), weight =total_students_grade_4) %>%
+  ungroup()
+
+write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_JOR_sample_",Sys.Date(),".csv"))
+write_excel_csv(weights_df, file=paste0(sampling_folder, "/GEPD_JOR_weights_",Sys.Date(),".csv"))
+
 ```
 
 ```{r country_map, echo=FALSE}
@@ -237,44 +312,113 @@ sample_comparison %>%
      palette = c("red", "green", "Yellow"),
      domain = c("Ministry of Education", "International Relief Agency", "Private")
    )
+  
 
-sample_orig_df <- sample_comparison %>%
-   filter(matched=="Matched") 
-
-
-leaflet(data=sample_orig_df) %>%
+leaflet(data=sample_df) %>%
     addProviderTiles(providers$OpenStreetMap.Mapnik)  %>%
     addProviderTiles(providers$Stamen.TonerLines)  %>%
-    addCircleMarkers( lng=~lon,  lat=~lat, color=~pal(sample_orig_df$supervisory_authority),
+    addCircleMarkers( lng=~lon,  lat=~lat, color=~pal(sample_df$supervisory_authority),
                       radius=7,
-                popup =  paste("Name: ", sample_orig_df$school_name, " <br>",
-                                  "Region: ", sample_orig_df$territory, " <br>",
-                                  "Governorate: ", sample_orig_df$governorate_eng, " <br>",
-                                  "EMIS: ", sample_orig_df$organization_code)) %>%
-  addLegend(position="bottomright", pal=pal, values=~sample_orig_df$supervisory_authority, title="Schools to visit")
+                popup =  paste("Name: ", sample_df$school_name, " <br>",
+                                  "Region: ", sample_df$territory, " <br>",
+                                  "Governorate: ", sample_df$governorate_eng, " <br>",
+                                  "EMIS: ", sample_df$organization_code)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_df$supervisory_authority, title="Schools to visit")
 ```
 
-In the 223 revisited schools, 50 have no Syrian students, 24 schools have a 2nd shift with Syrian students, and the remainder are integrated.
 
-An additional 10 schools will be chosen from the Refugee Camps to visit.  These will come from the Zaatari camp, which includes 15 schools.
+
+Summary Statistics of 2022 Sample
+
+```{r}
+sample_df %>%
+  group_by(strata) %>% 
+  summarise(n=n()) %>%
+  flextable() %>%
+  add_header_lines('Counts by Sampliing Strata') %>%
+  autofit()
+```
+
 
 
 ```{r}
-#| eval: false
-sample_df_175 <- sample_df_200 %>%
-  select(-nstudents_district, -total_district,-share_district, -sample_size) %>%
-  left_join(strata_df_175) %>%
-  mutate(
-    totalstudents=sum(total_enrollment),
-  ) %>%
-  group_by(Gender, Location) %>%
-  mutate(strata_count=n(),
-         strata_size=sum(total_enrollment),
-         strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = min(sample_size), weight =total_enrollment) %>%
-  ungroup() %>%
-  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
-         ipw=strata_school_prob*(1/strata_prob))
+sample_df %>% 
+  select(territory, school_status, governorate_eng, supervisory_authority, sample_status) %>% 
+  sumtable(title = "Summary Statistics of 2022 Sample")
 ```
 
 
+## Replacements
+
+
+```{r update_dataset_public, echo=FALSE, message=FALSE, warning=FALSE}
+#define sampled schools in sample dataset
+sample_chosen <- sample_df %>%
+  mutate(sample="Sampled School") 
+
+#add sample schools back to original database
+data_set_updated_chosen <- weights_df %>%
+  left_join(sample_chosen) 
+
+
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  filter(!(school_status %in% c("Marijeeb Al-Fhood refugee camp", "Mukhaizen refugee camp"))) %>% #dont replace from other refugee camps as access is difficult
+    mutate(sampled_districts = case_when(
+      school_status=='Zaatari refugee camp'  ~ 2.5,
+      supervisory_authority=='Ministry of Education' & territory=="North" ~ 67,
+      supervisory_authority=='Ministry of Education' & territory=="Middle"  ~ 72,
+      supervisory_authority=='Ministry of Education' & territory=="South"  ~ 41,
+      supervisory_authority=='Private' & territory=="North" ~ 20,
+      supervisory_authority=='Private' & territory=="Middle"  ~ 35,
+      supervisory_authority=='Private' & territory=="South"  ~ 15
+
+    ),
+    strata_replace=case_when(
+      school_status=='Zaatari refugee camp'  ~ 1,
+      supervisory_authority=='Ministry of Education' & territory=="North" ~ 2,
+      supervisory_authority=='Ministry of Education' & territory=="Middle"  ~ 3,
+      supervisory_authority=='Ministry of Education' & territory=="South"  ~ 4,
+      supervisory_authority=='Private' & territory=="North" ~ 5,
+      supervisory_authority=='Private' & territory=="Middle"  ~ 6,
+      supervisory_authority=='Private' & territory=="South"  ~ 7
+    )
+      ) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(strata_replace) %>% 
+  mutate(total_students=if_else(is.na(total_students_grade_4), mean(total_students_grade_4, na.rm=TRUE),total_students_grade_4)) %>% #if missing total number of students, then impute with mean of the strata
+  sample_n(min(2*sampled_districts), weight=total_students) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(strata, organization_code) %>%
+  ungroup() %>%
+  select(-strata_replace)
+
+sample_replace2 <- sample_chosen %>% filter(school_status!='Zaatari refugee camp') %>%
+    bind_rows(sample_chosen %>% filter(school_status!='Zaatari refugee camp')) %>% #add a duplicate observation for matching to two replacement schools
+    bind_rows(sample_chosen %>% filter(school_status=='Zaatari refugee camp') %>% sample_n(5)) %>%
+    arrange(strata, organization_code ) 
+    
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_organization_code=sample_replace2$organization_code
+sample_replace$replaced_organization_code=sample_replace2$organization_code
+sample_replace$replaced_strata=sample_replace2$strata
+sample_replace$replaced_governorate=sample_replace2$governorate_eng
+
+
+
+sample_replace %>%
+  select(organization_code, supervisory_authority, school_status, governorate_eng, strata, replaced_organization_code, replaced_governorate, replaced_strata) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(organization_code, supervisory_authority, school_status, governorate_eng, strata, replaced_organization_code, replaced_governorate, replaced_strata, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```

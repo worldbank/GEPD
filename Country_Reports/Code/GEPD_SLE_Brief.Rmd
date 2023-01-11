@@ -34,24 +34,24 @@ dir <- here()
 #setwd(here())
 # setwd(dir = "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Country_Reports/")
 #Set year to pull data for LAYS and LP from WB APIs
-year <- "2019"
+year <- "2022"
 
 
 
 #Set the country name here
-country_file_name <- "MDG"
-country <- "Madagascar"
-country_year <- "2019 - 2021"
+country_file_name <- "SLE"
+country <- "Sierra Leone"
+country_year <- "2022"
 
 
 
 takeaway <- "
-- Learning outcomes are low, and children in public school are lagging far behind in terms of learning. No difference however between gender.
-- Practices related to Input and Infrastructure has the most room for improvement.
-- Teacher presence and content knowledge is very low. It coincides with weak de facto and de jure Teacher Support and Monitoring.
-- Of all practice indicators, children’s capacity for learning at primary entry, teacher’s motivation & infrastructure explain low learning the best. 
-- Policy frameworks are not comprehensive and falls short on number of policy points – e.g., school management support.
-- Improving learning outcomes in Madagascar will require a whole-of- government approach since capacity for learning depends on multiple sectors."
+- Learning proficiency at the end of primary school is extremely low. GEPD assessment confirms this.
+- Teachers’ content knowledge, readiness for learning, and basic infrastructure show most room for improvement.
+- Student and teacher attendance is extremely low overall, and worse in urban settings than in rural ones. Whilst some may be due to the context of the data collection, the teacher monitoring system could be improved.
+- Contrary to most countries, there does not seem to be a significant difference between rural and urban schools.
+- At the policy level, teacher monitoring and teachers’ evaluation systems show the most room for improvement and enforcement. 
+- At the bureaucratic level, public officials would benefit from having clearer targets and incentives aligned toward achieving them."
 
 
 #########################
@@ -216,21 +216,22 @@ source(paste0(dir, '/Country_Reports/Code/HCI_LP_fileload.R'))
 source(paste0(dir, '/Country_Reports/Code/Learning poverty_lays.R'))
 ```
 
-### **INTRODUCTION** ###  
+### **INTRODUCTION** 
 **The Global Education Policy Dashboard (GEPD): An innovative tool to measure drivers of learning outcomes in basic education**  
 GEPD uses 3 data collection instruments to report on nearly 40 indicators that operationalize the World Development Report 2018 framework to track 3 areas for progress in education- Practices, Policies, and Politics. Using these indicators, the dashboard highlights areas where countries need to act to improve learning outcomes and allows a way for governments to track progress as they act to close gaps in these areas. For more information on GEPD, please visit **[www.worldbank.org/global-education-policy-dashboard](https://www.worldbank.org/en/topic/education/brief/global-education-policy-dashboard)**  
 
-#### Figure 1. GEPD framework (practices, policies and politics), expanding on WDR 2018 framework ####
+#### Figure 1. GEPD framework (practices, policies and politics), expanding on WDR 2018 framework 
 ```{r out.width = "40%", fig.align = "left", echo=FALSE}
 figure1a <- paste(dir, "/Country_Reports/Data/full_circle.png", sep="")
 knitr::include_graphics(figure1a)
 ```
-### **INSTRUMENTS OF DATA** ###  
+### **Survey Instruments** 
+
 The **School Survey** consists of 8 modules to collect data across 200-300 schools on practices (the quality of service delivery in schools) and de facto policy indicators. It consists of streamlined versions of existing instruments together with new questions to fill gaps in those instruments.  
-The **Policy Survey** collects information via interviews with ~200 officials per country at federal and regional level to feed into the policy de jure indicators and identify key elements of the policy framework.  
-The **Survey of public officials** collects information about the capacity and orientation of the bureaucracy and political factors affecting education outcomes. This survey is an education-focused version of the civil-servant surveys from the Bureaucracy Lab, WBG. 
+The **Policy Survey** collects information on de jure policy indicators and identify key elements of the policy framework.  
+The **Survey of public officials** collects information about the capacity and orientation of the bureaucracy and political factors affecting education outcomes. This survey is an education-focused version of the civil-servant surveys from the Bureaucracy Lab, WBG  with ~200 officials per country. 
   
-### **KEY TAKEAWAYS, `r country`, `r country_year`** ###  
+### **KEY TAKEAWAYS, `r country`, `r country_year`** 
 `r takeaway`
 
 ```{r, code = readLines(paste0(dir, '/Country_Reports/Code/Learning poverty_lays.R')), include=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
@@ -293,7 +294,7 @@ lays_lp_choice <- if_else(marker ==0, lays, lp)
 ```
 
 
-#### Table 1. GEPD Indicators, `r country`, `r year` ####
+#### Table 1. GEPD Indicators, `r country`, `r year` 
 
 ```{r tab1, echo=FALSE, message=FALSE, warning=FALSE}
 ####
@@ -351,7 +352,7 @@ FitFlextableToPage(ovr_table) %>%
 
 ```
 
-#### Table 2. GEPD Indicators by gender, `r country`, `r country_year` ####
+#### Table 2. GEPD Indicators by gender, `r country`, `r country_year`
 
 ```{r tab_gender, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -416,7 +417,7 @@ FitFlextableToPage(gend_table) %>%
 
 
 
-#### Table 3. GEPD Indicators by region, `r country`, `r country_year` ####
+#### Table 3. GEPD Indicators by region, `r country`, `r country_year` 
 
 ```{r tab_region, echo=FALSE, message=FALSE, warning=FALSE}
 
@@ -477,16 +478,16 @@ FitFlextableToPage(reg_table) %>%
 
 
 ```
-### **`r lern_section_headline`** ###  
+### **`r lern_section_headline`** 
 
 `r lern_para`
 
-#### `r figure_headline` ####
+#### `r figure_headline` 
 ```{r lp_lays_fig, out.width= "100%", fig.width=5, fig.height=2, message=FALSE, echo=FALSE, warning=FALSE}
 lays_figure_name <- paste("lays_figure_", country_file_name, ".png", sep = '')
 lp_figure_name <- paste("lp_figure_", country_file_name, ".png", sep = '')
 figure <- if_else(marker == 0, lays_figure_name, lp_figure_name)
-figure2 <- paste0(dir, "//LP_LAYS_figures/", figure, sep="")
+figure2 <- paste0(dir, "/Country_Reports/LLP_LAYS_figures/", figure, sep="")
 knitr::include_graphics(figure2)
 ```
 
@@ -513,7 +514,7 @@ lern_subject_text <- if_else(grade4_lit>grade4_num, glue("{diff_lern_subject} po
 **GEPD grade 4 proficiency of `r grade4_overall`%** means `r grade4_overall`% students score greater than 80\% in GEPD assessment. Student proficiency is `r lern_subject_text` in language compared to numeracy, `r lern_gender_text` for boys compared to girls, and `r lern_rururb_text` in urban areas compared to rural areas. 
 \vfill\null
 
-#### Figure 3. Grade 4 proficiency, `r country` ####
+#### Figure 3. Grade 4 proficiency, `r country` 
 ```{r lern_teach, fig.width=5, fig.height=1.5, message=FALSE, echo=FALSE, warning=FALSE}
   input_lern <- input %>%
     filter(!is.na(lern_label)) %>%
@@ -552,10 +553,10 @@ cont_policy_lowest_varval <- round(input$value[input$Series==cont_policy_lowest_
 cont_policy_lowest_name <- input$label[input$Series == cont_policy_lowest_var]
 ```
 
-### **COMPARING DE-FACTO PRACTICES AND POLICY LEVERS** ###  
+### **COMPARING DE-FACTO PRACTICES AND POLICY LEVERS**  
 Practice indicators measure quality of service delivery in schools such as teacher and student attendance, teacher knowledge, principal management skills, etc. Policy lever indicators measure how well school, personnel and student policies governing these practices are implemented. For instance, teacher content knowledge(practice) is influenced by implementation of teacher hiring policies, teacher training and monitoring and accountability systems. Comparing de-facto practice and policy lever indicators allows identification of low-scoring policy levers that affect observed practice indicators.  
 
-#### **Teacher effectiveness** ####  
+#### **Teacher effectiveness** 
 Teacher effectiveness is determined by a teacher's own knowledge level, pedagogical skills and presence. These practices are impacted by quality of teaching support, teacher recruitment and deployment, level of teaching attraction (incentives/job satisfaction), teacher motivation and monitoring systems. Teacher content knowledge `r cont_text`. Teacher proficiency in language (`r teach_cont_lit`%) is `r cont_subject_text` than mathematics proficiency (`r teach_cont_math`%). Teacher pedagogical skills score `r pedg_text`, and teacher attendance `r efft_text`. `r cont_policy_lowest_name` is the weakest policy lever(`r cont_policy_lowest_varval`/5).
 
 ```{r teach_tab, echo=FALSE, message=FALSE, warning=FALSE}
@@ -640,7 +641,7 @@ lcap_policy_lowest_varval <- round(input$value[input$Series==lcap_policy_lowest_
 lcap_policy_lowest_name <- input$label[input$Series == lcap_policy_lowest_var]
 ```
 
-#### **Capacity for learning in Grade 1** ####  
+#### **Capacity for learning in Grade 1** 
 Early learning is affected by quality of implementation of health and nutrition programs, enrolment in early childhood education, quality of skills of educators and financial support provided to programs enabling early learning. Proficiency in Grade 1 `r lcap_text`. `r lcap_lowest_var_name`(`r lcap_lowest_varval`)% is the lowest knowledge sub-score. Student attendance`r attd_text`. `r lcap_policy_lowest_name` is the weakest policy lever(`r lcap_policy_lowest_varval`/5).
 
 
@@ -728,7 +729,7 @@ inpt_policy_lowest_name <- input$label[input$Series == inpt_policy_lowest_var]
 inpt_policy_lowest_varval <- round(input$value[input$Series==inpt_policy_lowest_var], digits = 1)
 ```
 
-#### **Inputs & Infrastructure** ####  
+#### **Inputs & Infrastructure**  
 Quality of school inputs and infrastrucutre is affected by physical infrastructure standards set in policies, and strength of school monitoring systems. Basic inputs `r inpt_text`. `r inpt_lowest_var_name`(`r inpt_lowest_varval`)% is the lowest score. Basic infrastructure `r infr_text`. `r infr_lowest_var_name`(`r infr_lowest_varval`)%  is the lowest score. `r inpt_policy_lowest_name` is the weakest policy lever(`r inpt_policy_lowest_varval`/5).
 
 ```{r input_tab, echo=FALSE, message=FALSE, warning=FALSE}
@@ -811,7 +812,7 @@ manage_policy_lowest_name <- input$label[input$Series == manage_policy_lowest_va
 
 ```
 
-#### **School Management by principals** ####  
+#### **School Management by principals**  
 School management practices of principals are impacted by clarity in assignment of responsibilities and quality of support systems for school leaders, principal recruitment and deployment, incentives and evaluation systems. In school management, the lowest score is for principal's `r manage_lowest_var_name``r manage_lcomponent_text`, whereas the highest score is obtained for `r manage_highest_var_name``r manage_hcomponent_text`. School `r manage_policy_lowest_name` is the weakest policy lever(`r manage_policy_lowest_varval`/5).
 
 ```{r man_tab, echo=FALSE, message=FALSE, warning=FALSE}
@@ -922,12 +923,12 @@ lowest_diff_var_text <-   paste(defacto_diff[11,1],"(", defacto_diff[11,5], " po
 seclow_diff_var_text <-   paste(defacto_diff[10,1],"(", defacto_diff[10,5], " points", ")", sep = "")
 thirdlow_diff_var_text <- paste(defacto_diff[9,1] ,"(", defacto_diff[9,5] , " points", ")", sep = "")
 ```
-### **GAPS BETWEEN DE-FACTO POLICY LEVERS AND DE-JURE POLICIES IN TEACHING AND SCHOOL MANAGEMENT** ###    
+### **GAPS BETWEEN DE-FACTO POLICY LEVERS AND DE-JURE POLICIES IN TEACHING AND SCHOOL MANAGEMENT**    
 De-facto policy levers measure how well school, teacher and student policies are being implemented in the school system. GEPD also measures de-jure policy indicators which measure the strength and quality of the underlying student, teacher and school management policies. Analysis of the difference in these indicators shows gaps in implementation of education policies in schools.  
 
 A ~**`r average_diff` point average gap** exists between the de-facto policy levers and de-jure policies in `r country` across teaching and school management, suggesting there are `r average_diff_text` gaps in policy implementation in teaching and school management. Smallest gaps suggesting good level of implementation are observed for `r lowest_diff_var_text`, `r seclow_diff_var_text` and `r thirdlow_diff_var_text`.
 
-#### Figure 4. De-facto and de-jure indicators for policy levers, `r country` ####
+#### Figure 4. De-facto and de-jure indicators for policy levers, `r country` 
 ```{r defacto_graphs, fig.width=5, fig.height=5, echo=FALSE, message=FALSE, warning=FALSE}
 #Main De-facto De-jure graph
 defacto_master_tbl %>%
@@ -1127,11 +1128,11 @@ plot2_note <- eval(parse(text=paste(sechighest_diff_var,"_note",sep="")))
 plot3_note <- eval(parse(text=paste(thirdhighest_diff_var,"_note",sep="")))
 ```
 
-### **AREAS IN TEACHING AND SCHOOL MANAGEMENT WITH HIGHEST GAPS IN DE-FACTO POLICY LEVERS AND DE-JURE POLICIES** ###  
+### **AREAS IN TEACHING AND SCHOOL MANAGEMENT WITH HIGHEST GAPS IN DE-FACTO POLICY LEVERS AND DE-JURE POLICIES**   
 Largest gaps indicating a mismatch in policy design and policy implementation in schools are observed for `r high_diff_var_text`, `r sechigh_diff_var_text`, `r thirdhigh_diff_var_text`. The breakdown of sub-indicators within these de-facto policy levers show the specific areas where scores are the lowest, contributing to the gap observed in policy implementation.
 \vfill\null
 
-#### Figure 5: Sub-indicators of `r defacto_diff[1,1]` ####
+#### Figure 5: Sub-indicators of `r defacto_diff[1,1]` 
 
 ```{r defacto_sub_graphs_1, fig.width=5, fig.height=2.5, echo=FALSE, message=FALSE, warning=FALSE}
 plot1
@@ -1139,7 +1140,7 @@ plot1
 
 \greynote{`r plot1_note`}
 
-#### Figure 6: Sub-indicators of `r defacto_diff[2,1]` ####
+#### Figure 6: Sub-indicators of `r defacto_diff[2,1]` 
 
 ```{r defacto_sub_graphs_2, fig.width=5, fig.height=2.5, echo=FALSE, message=FALSE, warning=FALSE}
 plot2
@@ -1147,7 +1148,7 @@ plot2
 
 \greynote{`r plot2_note`}
 
-#### Figure 7: Sub-indicators of `r defacto_diff[3,1]` ####
+#### Figure 7: Sub-indicators of `r defacto_diff[3,1]` 
 
 ```{r defacto_sub_graphs_3, fig.width=5, fig.height=2.5, echo=FALSE, message=FALSE, warning=FALSE}
 plot3
@@ -1198,12 +1199,12 @@ politics_lowest_varval <- round(input$value[input$Series==politics_lowest_var], 
 politics_lowest_text <- glue("({politics_lowest_varval}/5)")
 ```
 
-### **POLITICS & BUREAUCRATIC CAPACITY INDICATORS** ###  
+### **POLITICS & BUREAUCRATIC CAPACITY INDICATORS** 
 
 Politics and bureaucratic capacity indicators measure the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. The highest score in politics and bureaucratic capacity is noted for `r politics_highest_var_name` `r politics_highest_text`, and the lowest score is noted for `r politics_lowest_var_name` `r politics_lowest_text`.
 
 
-#### Figure 8. Politics and bureaucratic capacity indicators, `r country` ####
+#### Figure 8. Politics and bureaucratic capacity indicators, `r country` 
 ```{r politics_graph,  fig.width=5, fig.height=3, echo= FALSE, message=FALSE, warning=FALSE}
 
  politics %>%
@@ -1222,7 +1223,7 @@ Politics and bureaucratic capacity indicators measure the capacity and orientati
           axis.text.y = element_text(size = 10))
 ```
 
-### Table 4. Politics and bureaucratic capacity sub-indicators, `r country`###
+### Table 4. Politics and bureaucratic capacity sub-indicators, `r country`
 ```{r pol_tab, echo=FALSE, message=FALSE, warning=FALSE}
 #linkages
 pol_link <- read_csv(paste(here(),"/Country_Reports/Data/pol_link.csv",sep=""),
