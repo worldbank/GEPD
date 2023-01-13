@@ -871,50 +871,50 @@ api_template <- api_template %>%
   # #######################################
   # # Politics & Bureaucratic Capacity - Quality of Bureaucracy 	(BQBR)
   # #######################################
-  # indicator_values_transpose <- indicator_values_transpose %>%
-  #   mutate(
-  #     SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy
-  #     SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
-  #     SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills
-  #     SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment
-  #     SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit
-  #     SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes
-  #   )
-  # #######################################
-  # # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
-  # #######################################
-  # indicator_values_transpose <- indicator_values_transpose %>%
-  #   mutate(
-  #     SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making
-  #     SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-  #     SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management
-  #     SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making
-  #     SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation
-  #     SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators
-  #   )
-  # #######################################
-  # # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
-  # #######################################
-  # indicator_values_transpose <- indicator_values_transpose %>%
-  #   mutate(
-  #     SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability
-  #     SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
-  #     SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence
-  #     SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency
-  #     SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials
-  #   )
-  # #######################################
-  # # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
-  # #######################################
-  # indicator_values_transpose <- indicator_values_transpose %>%
-  #   mutate(
-  #     SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals
-  #     SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
-  #     SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting
-  #     SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring
-  #     SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives
-  #     SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement
-  #   )
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.BQBR   =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Politics & Bureaucratic Capacity - Quality of Bureaucracy
+      SE.PRM.BQBR.1 =  indicator_means(quality_bureaucracy		, "public_officials", "BQBR",  "All"),#Average score for Quality of Bureaucracy; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness
+      SE.PRM.BQBR.2 =  indicator_means(knowledge_skills		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for knowledge and skills
+      SE.PRM.BQBR.3 =  indicator_means(work_environment		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for work environment
+      SE.PRM.BQBR.4 =  indicator_means(merit		, "public_officials", "BQBR",  "All"),#(Quality of Bureaucracy) average score for merit
+      SE.PRM.BQBR.5=  indicator_means(motivation_attitudes		, "public_officials", "BQBR",  "All")#Quality of Bureaucracy) average score for motivation and attitudes
+    )
+  #######################################
+  # Politics & Bureaucratic Capacity - Impartial Decision-Making 	(BIMP)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.BIMP  =  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Politics & Bureaucratic Capacity - Impartial Decision-Making
+      SE.PRM.BIMP.1=  indicator_means(impartial_decision_making		, "public_officials", "BIMP",  "All"), #Average score for Impartial Decision-Making; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+      SE.PRM.BIMP.2=  indicator_means(politicized_personnel_management		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized personnel management
+      SE.PRM.BIMP.3=  indicator_means(politicized_policy_making		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy-making
+      SE.PRM.BIMP.4=  indicator_means(politicized_policy_implementation		, "public_officials", "BIMP",  "All"), #(Impartial Decision-Making) average score for politicized policy implementation
+      SE.PRM.BIMP.5=  indicator_means(employee_unions_as_facilitators		, "public_officials", "BIMP",  "All") #(Impartial Decision-Making) average score for employee unions as facilitators
+    )
+  #######################################
+  # Politics & Bureaucratic Capacity - Mandates & Accountability 	(BMAC)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.BMAC   =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Politics & Bureaucratic Capacity - Mandates & Accountability
+      SE.PRM.BMAC.1 =  indicator_means(mandates_accountability		, "public_officials", "BMAC",  "All"),#Average score for Mandates & Accountability; where a score of 1 indicates low effectiveness and 5 indicates high effective~
+      SE.PRM.BMAC.2 =  indicator_means(coherence		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for coherence
+      SE.PRM.BMAC.3 =  indicator_means(transparency		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for transparency
+      SE.PRM.BMAC.4 =  indicator_means(accountability		, "public_officials", "BMAC",  "All"),#(Mandates & Accountability) Average score for accountability of public officials
+    )
+  #######################################
+  # Politics & Bureaucratic Capacity - National Learning Goals 	(BNLG)
+  #######################################
+  indicator_values_transpose <- indicator_values_transpose %>%
+    mutate(
+      SE.PRM.BNLG   =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Politics & Bureaucratic Capacity - National Learning Goals
+      SE.PRM.BNLG.1 =  indicator_means(national_learning_goals		, "public_officials", "BNLG",  "All"),#Average score for National Learning Goals; where a score of 1 indicates low effectiveness and 5 indicates high effectivene~
+      SE.PRM.BNLG.2 =  indicator_means(targeting		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for targeting
+      SE.PRM.BNLG.3 =  indicator_means(monitoring		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for monitoring
+      SE.PRM.BNLG.4 =  indicator_means(incentives		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for incentives
+      SE.PRM.BNLG.5 =  indicator_means(community_engagement		, "public_officials", "BNLG",  "All"),#(National Learning Goals) Average score for community engagement
+    )
   #######################################
   # Politics & Bureaucratic Capacity - Financing 	(BFIN)
   #######################################

@@ -170,7 +170,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 work_dir<- save_folder
 
 #load public official data
-#load(paste(work_dir, "/Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
+load(paste(work_dir, "/Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
 
 #load school data for comparisons
 load(paste(work_dir, "/School/school_indicators_data_anon.RData", sep=""))
@@ -584,10 +584,10 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 
   #public officials
-  #sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
+  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
   
   sumstats_df <- sumstats_school_df_final %>%
-    #bind_rows(sumstats_public_officials_df) %>%
+    bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
 
@@ -1374,7 +1374,7 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
 
 
 
-```{r overall, eval=FALSE, include=FALSE}
+```{r overall, echo=FALSE}
 
 public_officials_dta_clean_anon <- public_officials_dta_clean_anon %>%
     filter(!is.na(govt_tier)) 
@@ -1425,7 +1425,7 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
 ```
 
 
-```{r eval=FALSE, include=FALSE}
+```{r echo=FALSE}
 demo_po_dist <- public_officials_dta_clean_anon %>% 
   distinct(interview__id, .keep_all = T) %>% 
   select(govt_tier, age, gender, years_current_position, years_current_org, years_civil_service, num_pub_sector_org, net_monthly_salary) %>% 
@@ -1598,10 +1598,10 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 
   #public officials
-  #sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
+  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
   
   sumstats_df <- sumstats_school_df_final %>%
-    #bind_rows(sumstats_public_officials_df) %>%
+    bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
 

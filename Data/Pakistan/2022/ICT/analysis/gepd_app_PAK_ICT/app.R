@@ -228,7 +228,7 @@ server <- function(input, output, session) {
 
     #Load the GEPD indicator data
     load("school_indicators_data_anon.RData")
-    #load("public_officials_indicators_data_anon.RData")
+    load("public_officials_indicators_data_anon.RData")
     
     
     #modelsummary output
@@ -1564,8 +1564,8 @@ output$downloadfa <- downloadHandler(
 school_dta_collapsed <- school_dta_short_anon %>%
   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 # 
-# public_officials_dta_collapsed <- public_officials_dta_clean_anon %>%
-#   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+public_officials_dta_collapsed <- public_officials_dta_clean_anon %>%
+   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 
@@ -1723,10 +1723,10 @@ output$indicators_table <- DT::renderDataTable({
   
   
   #public officials
-  #sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
+  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
   
   sumstats_df <- sumstats_school_df_final %>%
-    #bind_rows(sumstats_public_officials_df) %>%
+    bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
   

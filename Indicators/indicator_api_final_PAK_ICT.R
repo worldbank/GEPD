@@ -120,7 +120,7 @@ wbopendat<-WDI(country='PK', indicator=ind_list, start=2000, end=2021, extra=T) 
 #read in databases for indicators
 
 load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))
-#load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
+load(paste(data_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep="/"))
 # 
 # 
 expert_df <- read_stata(paste(data_dir, 'Policy_Survey/expert_dta_final.dta', sep="/" ))

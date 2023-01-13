@@ -27,10 +27,12 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
-#Country name
-country <-'RWA'
-country_name <- "Rwanda"
-year <- '2020'
+#Country name and year of survey
+country <-'PAK'
+country_name <- "Pakistan"
+province <- "ICT"
+year <- '2022'
+
 #########################
 # File paths #
 #########################
@@ -40,10 +42,11 @@ year <- '2020'
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/Public_Officials", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/Public_Officials/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/Public_Officials", sep="/"))
   
+
   backup_onedrive="no"
   
 } else if (Sys.getenv("USERNAME") == "wb550666"){
@@ -72,7 +75,8 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #main file name:
-po_file<-"public_officials_RWA.dta"
+po_file<-"public_officials.dta"
+need_api=0
 
 
 #launch file to access data from API
