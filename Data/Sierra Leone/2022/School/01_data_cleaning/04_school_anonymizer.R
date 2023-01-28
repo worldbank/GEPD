@@ -115,7 +115,7 @@ school_dta_short$hashed_school_district <-as.character(lapply(school_dta_short$s
 
 #save a hashed version of the dataset, to produce a link file
 key<-school_dta_short %>%
-  select(school_code, school_province_preload, school_district_preload, hashed_school_code, hashed_school_province, hashed_school_district) 
+  select(school_code, hashed_school_code, hashed_school_province, hashed_school_district) 
 
 write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 

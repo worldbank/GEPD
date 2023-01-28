@@ -1,4 +1,4 @@
-# TBPME - Madagascar 2021
+# GEPD - Madagascar 2021
 
 ![gepd_logo](gepd_logo.png)
 

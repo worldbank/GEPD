@@ -1414,7 +1414,7 @@ teacher_assessment_dta_graded<- teacher_assessment_dta_ungraded %>%
   
   cont_var <- c("content_knowledge", "content_proficiency", "literacy_content_knowledge", "literacy_content_proficiency", "math_content_knowledge", "math_content_proficiency")
   
-  skim(final_indicator_data_CONT, one_of(cont_var)) %>% select(skim_variable, numeric.mean, numeric.p50) %>% rename(variable = skim_variable, mean = numeric.mean, median = numeric.p50) 
+  #skim(final_indicator_data_CONT, one_of(cont_var)) %>% select(skim_variable, numeric.mean, numeric.p50) %>% rename(variable = skim_variable, mean = numeric.mean, median = numeric.p50) 
 
 
 
