@@ -86,7 +86,7 @@ out_dir <- paste(dir, 'Output', sep="/")
 # }
 
 #list countries
-countries <- c("PER", "JOR", "MDG", "ETH")
+countries <- c("PER", "JOR", "MDG", "ETH", "SLE")
 
 ```
 
@@ -142,6 +142,11 @@ JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".cs
          date='2019') %>%
   select(-year)
 
+SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
+  mutate(country="Sierra Leone",
+         date='2022') %>%
+  select(-year)
+
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
@@ -161,7 +166,7 @@ MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".cs
 indicator_names_df <- PER_data %>%
   select(Series, `Indicator Name`)
 
-combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data,  MDG_data)
+combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data,  MDG_data, SLE_data)
 
 
   
@@ -233,7 +238,7 @@ ovr_table <- flextable(tab_df) %>%
 
 #colors
 ovr_table <- ovr_table %>%
-  color(j=c('Peru','Jordan','Ethiopia','Rwanda','Madagascar'),
+  color(j=c('Peru','Jordan','Ethiopia','Rwanda','Madagascar', "Sierra Leone"),
         color='black') %>%
   bg(j = c('Peru'),
      bg = Peru_col) %>%
@@ -242,7 +247,9 @@ ovr_table <- ovr_table %>%
   bg(j = c('Ethiopia'),
      bg = Ethiopia_col) %>%
   bg(j = c('Madagascar'),
-     bg = Madagascar_col)   
+     bg = Madagascar_col) %>%
+  bg(j = c('Sierra Leone'),
+     bg = Madagascar_col)    
 
 
 FitFlextableToPage(ovr_table) %>%
@@ -278,7 +285,8 @@ cols <- c(
   'Peru'='#fb5607',
   'Jordan'='#ff006e',
   'Ethiopia'='#8338ec',
-  'Madagascar'='#3a86ff'
+  'Madagascar'='#3a86ff', 
+  'Sierra Leone'='#ffbe0b'
 )
 
 plot_df <- combined_df %>%
@@ -348,7 +356,7 @@ ggplot() +
   labs(
     color='Country',
     title='Students and Teachers Often Struggled',
-    subtitle = 'GEPD Student and Teacher Practice Outcomes in Peru, Jordan, Ethiopia, and Madagascar',
+    subtitle = 'GEPD Student and Teacher Practice Outcomes in Peru, Jordan, Ethiopia, Sierra Leone, and Madagascar',
     caption='Red shading indicates needs improvement for indicator.  Yellow indicates caution.  Green indicates on target.'
   ) +
   theme_tufte() +
@@ -517,7 +525,7 @@ infra_df <- combined_df %>%
     values_from=value
   ) %>%
   mutate(Indicator=str_wrap(Indicator,20),
-         country=factor(country, levels=c("Madagascar", "Ethiopia", "Rwanda", "Jordan", "Peru")))
+         country=factor(country, levels=c("Madagascar", "Ethiopia", "Rwanda", "Jordan", "Peru", "Sierra Leone")))
 
 ggplot(infra_df, aes(x=country)) +
   facet_wrap(~Indicator, nrow=1) +
@@ -792,7 +800,53 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   ungroup() 
 
-
+########
+########
+## Sierra Leone
+########
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+SLE_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+SLE_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+SLE_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+SLE_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+SLE_school_office_link_df <- SLE_school_anon_df %>%
+  left_join(SLE_school_gdp) %>%
+  left_join(SLE_school_office_linkages) %>%
+  left_join(SLE_school_size) %>%
+  mutate(country="Sierra Leone") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
+         GDP=gdp,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() %>%
+  filter(!is.na(national_learning_goals))
 
 ###########
 # Combined
@@ -800,7 +854,7 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
 
 
 
-combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df,  SLE_school_office_link_df) 
 
 
 
