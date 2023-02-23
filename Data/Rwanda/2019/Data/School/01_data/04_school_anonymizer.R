@@ -56,55 +56,42 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-#Load original sample of schools
-currentDate<-c("2022-09-21")
+currentDate<-c("2019-08-30")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
-) %>%
-  mutate(school_code=Inst_ID)
+load(sample_frame_name)
 
 #load some auxiliary data to help do sampling weights, because we lacked total enrollment for the districts
-# auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
-#   mutate(district=str_to_upper(district))
+auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
+  mutate(district=str_to_upper(district))
 
 
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
-  scode<-enquo(scode)
+  scode<-enquo(scode)  
   snumber<-enquo(snumber)
   prov<-enquo(prov)
-
-  data_set_updated <- school_weights %>% left_join(sample_frame %>% select(1:8) %>% rename(school_code= Inst_ID,
-                                                                                           district = District,
-                                                                                           province = province,
-                                                                                           urban_rural=Location) %>% 
-                                                     mutate(school_code=as.numeric(school_code))) %>% filter(!is.na(school_code)) %>% 
-    
-    group_by(district, urban_rural) %>%
-    mutate(total_students=if_else(is.na(total_students), as.numeric(median(total_students, na.rm=T)), as.numeric(total_students))) %>%
-    mutate(weights=n()/total_students) %>%
+  
+  data_set_updated <- data_set_updated %>%
+    left_join(auxillary_frame_info) %>%
+    mutate(province=district) %>%
+    group_by(district_code, urban_rural) %>%
+    mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
+    mutate(weights=n()/allocate) %>%
     mutate(unity=1) %>%
-    ungroup()
-
-    # data_set_updated %>%
-    # left_join(auxillary_frame_info) %>%
-    # mutate(province=district) %>%
-    # group_by(district_code, urban_rural) %>%
-    # mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
-    # mutate(weights=n()/allocate) %>%
-    # mutate(unity=1) %>%
-    # ungroup()
-
-
+    ungroup() 
+  
+  
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
-    mutate(rural=urban_rural=="Rural") %>%
+    mutate(rural=urban_rural=="RURAL") %>%
     mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province"
-                                                      | names(data_set_updated) == "totalstudents" | names(data_set_updated) == "Tehsil" | names(data_set_updated) == "weights"  )])))
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
+                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
 }
+
 
 
 ####################

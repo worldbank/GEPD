@@ -1,11 +1,11 @@
 ---
-title: "NER Teacher Linkages"
+title: "PER Teacher Linkages"
 format: html
 ---
 
 # Introduction
 
-This analysis will link the teacher modulese using teacher IDs and names and then do some basic analysis.
+This analysis will link the teacher modules  using teacher IDs and names and then do some basic analysis.
 
 Teachers can be linked by a common ID.  The following are the column names in the various files
 
@@ -37,10 +37,10 @@ library(validate)
 library(GGally)
 library(Hmisc)
 #Country name
-country <-'NER'
-country_name <- "Niger"
-year <- '2022'
-school_file <-'EPDash_STATA_Clean.dta'
+country <-'PER'
+country_name <- "Peru"
+year <- '2019'
+school_file <-'EPDash.dta'
 #########################
 # File paths #
 #########################
@@ -52,7 +52,7 @@ school_file <-'EPDash_STATA_Clean.dta'
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
-  download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/INFRA/", sep="/"))
+  download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
   sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
   confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
@@ -61,7 +61,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/INFRA", sep="/"))
+  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
   confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
@@ -82,16 +82,20 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 #function to attach weights
 
+
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
   snumber<-enquo(snumber)
   prov<-enquo(prov)
   
   dataset %>%
-    left_join(data_set_updated)  %>%
-    mutate(province=REGION           ) 
+    mutate(!! scode := as.numeric(.data$school_code)) %>%
+    left_join(data_set_updated) %>%
+    mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
+    mutate(province=departamento) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) %in% c("rural","STRATUM", "STRATUM", 
+                                                                                     "province"))])))
 }
-
 
 df_add_weights<- function(dataset) {
   temp<-get(dataset) 
@@ -106,8 +110,9 @@ df_add_weights<- function(dataset) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, Code_School, grd4_total, Region)
+      temp <- df_weights_function(temp, codigo.modular, total_4th, departamento)
     }
+    
 }
 
 ```
@@ -160,20 +165,11 @@ attach(paste0(confidential_folder,"/school_survey_data.RData"))
 ```{r}
 #read in the file on school weights
 #Load original sample of schools
-sample_date<-c("2022-10-24")
-data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', sample_date,  '.csv', sep="")
-) %>%
-  mutate(ipw=case_when(
-    is.na(ipw) ~ median(ipw, na.rm=TRUE),
-    is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
-    TRUE ~ ipw)
-  ) %>%
-  ungroup() %>%
-  mutate(school_code=CODE_ETABLISSEMENT
-         #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
-         ) %>%
-  select(school_code, REGION,urban_rural,LIRE,
-         ipw) 
+currentDate<-c("2019-07-22")
+sample_frame_name <- paste(sampling_folder,"/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
 
 
 
@@ -187,24 +183,23 @@ key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash_STATA_Clean.dta")) %>%
+school_dta<-read_dta(file.path(download_folder, "EPDash.dta")) %>%
   select(-starts_with("ENUM"))
 
 #vtable(school_dta)
 #rename a few key variables up front
+#rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=m1s0q1_name ,
+         enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
+         school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
-  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
-  mutate(school_code=as.numeric(school_code)) %>%
-  filter(!is.na(school_code))
-
-
+  mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
+  mutate(school_code=if_else(school_code==62181, 558163, school_code))
 
 school_micro_raw <- school_dta %>%
   group_by(school_code) %>%
@@ -221,6 +216,12 @@ var.labels= unlist(var.list)
 school_micro_comb <- school_micro_raw %>%
   left_join(
     school_dta_short %>%
+      rename(
+        sch_goals_exist=school_goals_exist,
+        sch_goals_clear=school_goals_clear,
+        sch_goals_relevant=school_goals_relevant,
+        sch_goals_measured=school_goals_measured
+      ) %>%
       select(school_code, ind_list)
   ) %>%
   select(colnames(school_data_preamble), ind_list, everything())
@@ -241,7 +242,7 @@ preamble_info <- c( 'interview__key', 'school_code',
                    'school_name_preload', 
                    'school_province_preload', 'school_district_preload', 'school_emis_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq10'
+                   'survey_time', 'lat', 'lon' , 'total_enrolled' 
                    )
 
 drop_school_info <- c(
@@ -267,14 +268,17 @@ school_data_preamble <- school_dta %>%
 
 ```{r}
 
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster_Clean.dta")) %>%
-  select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code"))
-
+teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) 
 
 #Add school preamble info
 teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
-  select(preamble_info, everything())
+  select(preamble_info, everything()) %>%
+  group_by(school_code,m3sb_tnumber) %>%
+  fill(everything(), .direction='downup') %>%
+  slice(1) %>% 
+  ungroup()
+
 
 
 
@@ -292,9 +296,7 @@ teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
 #read in teacher roster file
 ############################
 
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS_Clean.dta")) %>%
-  select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code"))
-
+teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta")) 
 
 #Add school preamble info
 teacher_absence_dta <- teacher_absence_dta %>%
@@ -305,9 +307,10 @@ teacher_absence_dta <- teacher_absence_dta %>%
 teacher_absence_dta_comb <- teacher_absence_dta %>%
   left_join(
     teacher_absence_final %>%
-      select(school_code, TEACHERS__id, contains(ind_list))
+      select(school_code, teacher_number, contains(ind_list))
   ) %>%
-  distinct(school_code, TEACHERS__id, .keep_all = TRUE)
+  distinct(school_code, teacher_number, .keep_all = TRUE) %>%
+  rename(TEACHERS__id=questionnaire_selected__id)
 
 #add weights and anonymize
 teacher_absence_micro <- df_add_weights('teacher_absence_dta_comb')       %>%
@@ -321,8 +324,7 @@ teacher_absence_micro <- df_add_weights('teacher_absence_dta_comb')       %>%
 
 ```{r teacherassess}
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
-teacher_assessment_dta_raw <- read_dta(file.path(download_folder, "teacher_assessment_answers_Clean.dta")) %>%
-  select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code")) %>%
+teacher_assessment_dta_raw <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
 
@@ -350,17 +352,18 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 
-
-teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
-
+  
+teacher_pedagogy <- read_csv(paste0(confidential_folder,"/Indicators/PEDG_final_indicator_data.csv")) %>%
+     select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis"))
   
 #add weights and anonymize
 teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') %>%
-  select(-starts_with('interview__')) 
+  select(-starts_with('interview__'), -survey_time) 
 
 
 ```
+
+
 
 
 
@@ -436,7 +439,7 @@ teacher_absence_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
 
-teacher_pedagogy_micro %>%
+teacher_pedagogy_combined %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta"))
 
