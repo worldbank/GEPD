@@ -51,25 +51,23 @@ school_file <-'EPDash.dta'
 
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
-  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-  backup_onedrive="no"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
-  
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+  download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/output_data"))
+
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
-  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-  backup_onedrive="no"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
-  
-}else {
+  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/output_data"))
+
+} else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
 
@@ -163,9 +161,8 @@ attach(paste0(confidential_folder,"/school_survey_data.RData"))
 ```{r}
 #read in the file on school weights
 #Load original sample of schools
-currentDate<-c("2022-10-07")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', currentDate,  '.csv', sep="")
+sample_date<-c("2022-10-07")
+data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', sample_date,  '.csv', sep="")
 ) %>%
   mutate(ipw=case_when(
     is.na(ipw) ~ median(ipw, na.rm=TRUE),
@@ -624,57 +621,36 @@ matches <- teacher_combined_df %>%
 ```
 
 ```{r}
-#save
 
 teacher_combined_df %>%
-  select(-...4) %>%
-  write_dta(path=paste0(confidential_folder,"/teacher_combined_modules.dta"))
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.dta"))
+
 
 matches %>%
-  write_dta(path=paste0(confidential_folder,"/teacher_modules_key.dta"))
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_modules_key.dta"))
 
+#save input files
 school_micro %>%
-  write_dta(path=paste0(confidential_folder,"/school_modules.dta"))
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.dta"))
+
+teacher_absence_micro %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
+
+teacher_pedagogy_combined %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta"))
+
+teacher_assessment_micro %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_assessment.dta"))
+
+teacher_questionnaire_micro %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))
 ```
 
 
-
-# Comparison of teachers
-
-Start with teacher pedagogy
-
-```{r}
-frame_matches <- matches %>%
-  filter(!is.na(m2saq2))
-
-pedagogy_matches <- teacher_pedagogy_micro %>%
-  left_join(frame_matches ) %>%
-  mutate(matched=if_else(is.na(m2saq2), "Not matched", "Matched")) %>%
-  select(school_code, TEACHERS__id, m2saq2,m4saq1_number, m4saq1, matched)
-
-```
-
-
-```{r}
-#g2
-
-
-pedagogy_matches_g2 <- teacher_pedagogy_micro_g2 %>%
-  left_join(frame_matches ) %>%
-  mutate(matched=if_else(is.na(m2saq2), "Not matched", "Matched")) %>%
-  select(school_code, TEACHERS__id, m2saq2,m4saq1_number_g2, m4saq1_g2, matched)
-
-```
-
-There are no statistically significant differences between the schools that can be matched and those that cannot.
-
-```{r}
-#| include: false
-#| eval: false
-
-#use table 1 package for summary statistics by group
-sample_comparison %>%
-  select(matched,student_knowledge, sch_absence_rate, content_knowledge, teach_score, ecd_student_knowledge, inputs, infrastructure, operational_management, instructional_leadership, principal_management, principal_knowledge_score) %>%
-  sumtable( group= 'matched', group.test = TRUE)
-
-```

@@ -94,7 +94,7 @@ out_dir <- paste(dir, 'Output', sep="/")
 # }
 
 #list countries
-countries <- c("PER", "JOR", "RWA", "MDG", "ETH")
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE", "NER")
 
 ```
 
@@ -150,6 +150,16 @@ JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".cs
          date='2019') %>%
   select(-year)
 
+SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
+  mutate(country="Sierra Leone",
+         date='2022') %>%
+  select(-year)
+
+NER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'NER', ".csv")) %>%
+  mutate(country="Niger",
+         date='2022') %>%
+  select(-year)
+
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
@@ -169,7 +179,8 @@ MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".cs
 indicator_names_df <- PER_data %>%
   select(Series, `Indicator Name`)
 
-combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
+combined_df_raw <- bind_rows(PER_data,JOR_data, RWA_data, ETH_data,  MDG_data, SLE_data, NER_data)
+
 
 
   
@@ -203,7 +214,7 @@ combined_wide_color <- combined_df %>%
   left_join(indicator_names_df)
 
 combined_wide_df %>%
-  rename(Indicator_Name=`Indicator Name`) %>%
+  janitor::clean_names() %>%
   haven::write_dta(  paste0(confidential_dir, "General/combined_indicators.dta")) %>%
   haven::write_dta( paste0(shared_loc, "/Data/combined_indicators.dta"))
 
@@ -312,11 +323,13 @@ Jordan_col <- tab_color_df$Jordan
 Rwanda_col <- tab_color_df$Rwanda
 Ethiopia_col <- tab_color_df$Ethiopia
 Madagascar_col <- tab_color_df$Madagascar
+SLE_col <- tab_color_df$`Sierra Leone`
+Niger_col <- tab_color_df$Niger
 
 
 #build table
 tab_df <- tab_df  %>%
-  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar)
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`, Niger)
 
 
 ovr_table <- flextable(tab_df) %>%
@@ -336,7 +349,11 @@ ovr_table <- ovr_table %>%
   bg(j = c('Rwanda'),
      bg = Rwanda_col) %>%
   bg(j = c('Madagascar'),
-     bg = Madagascar_col)   
+     bg = Madagascar_col)   %>%
+  bg(j = c('Sierra Leone'),
+     bg = SLE_col)  %>%
+  bg(j = c('Niger'),
+     bg = Madagascar_col)  
 
 
 FitFlextableToPage(ovr_table) %>%
@@ -366,7 +383,7 @@ The countries in which data has been collected for the Global Education Policy D
 #pull data on other outcomes, GNI per capita, Population, HCI, poverty, stunting
 
 dev_out_df <- WDI::WDI(
-    country=c('ET','RW','PE','JO','MG'),
+    country=c('ET','RW','PE','JO','MG', 'SL', 'NE'),
     indicator=c("SP.POP.TOTL","SP.POP.0014.TO", "NY.GNP.PCAP.PP.KD","SI.POV.DDAY", "HD.HCI.LAYS", "SH.STA.STNT.ZS"  ),
     start=2010,
     end=2020,
@@ -398,7 +415,7 @@ rownames(dev_out_tab) <- names$Variables[-1]
 
 dev_out_tab %>%
   rownames_to_column(var = 'Outcome') %>%
-  select("Outcome", "Peru", "Jordan", "Rwanda", "Ethiopia", "Madagascar") %>%
+  select("Outcome", "Peru", "Jordan", "Rwanda", "Ethiopia", "Madagascar", "Sierra Leone", "Niger") %>%
   flextable() %>%
   colformat_int(j=2:6,big.mark = ",") %>%
   add_header_lines('Development Context for GEPD Countries.') %>%
@@ -491,16 +508,20 @@ Jordan_col_R <- tab_color_df_R$Jordan
 Rwanda_col_R <- tab_color_df_R$Rwanda
 Ethiopia_col_R <- tab_color_df_R$Ethiopia
 Madagascar_col_R <- tab_color_df_R$Madagascar
+SLE_col_R <- tab_color_df_R$`Sierra Leone`
+Niger_col_R <- tab_color_df_R$Niger
 
 
 #build table
 tab_df_R <- tab_df_R  %>%
-  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar) %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`, Niger) %>%
   rename(Peru_R=Peru, 
          Jordan_R=Jordan, 
          Rwanda_R=Rwanda,
          Ethiopia_R=Ethiopia, 
-         Madagascar_R=Madagascar)
+         Madagascar_R=Madagascar,
+         SLE_R=`Sierra Leone`,
+         Niger_R=Niger)
 
 tab_df_R$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
 tab_df_R$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
@@ -537,16 +558,19 @@ Jordan_col_U <- tab_color_df_U$Jordan
 Rwanda_col_U <- tab_color_df_U$Rwanda
 Ethiopia_col_U <- tab_color_df_U$Ethiopia
 Madagascar_col_U <- tab_color_df_U$Madagascar
-
+SLE_col_U <- tab_color_df_U$`Sierra Leone`
+Niger_col_U <- tab_color_df_U$Niger
 
 #build table
 tab_df_U <- tab_df_U  %>%
-  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar) %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`, Niger) %>%
   rename(Peru_U=Peru, 
          Jordan_U=Jordan, 
          Rwanda_U=Rwanda,
          Ethiopia_U=Ethiopia, 
-         Madagascar_U=Madagascar)
+         Madagascar_U=Madagascar,
+         SLE_U=`Sierra Leone`,
+         Niger_U=Niger)
 
 tab_df_U$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
 tab_df_U$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
@@ -556,7 +580,7 @@ tab_df_U$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
 #combined
 tab_df_comb <- tab_df_R %>%
   left_join(tab_df_U) %>%
-  select(`Indicator Name`, Peru_R, Peru_U, Jordan_R, Jordan_U, Rwanda_R, Rwanda_U, Ethiopia_R, Ethiopia_U, Madagascar_R, Madagascar_U)
+  select(`Indicator Name`, Peru_R, Peru_U, Jordan_R, Jordan_U, Rwanda_R, Rwanda_U, Ethiopia_R, Ethiopia_U, Madagascar_R, Madagascar_U, SLE_R, SLE_U, Niger_R, Niger_U)
 
 ovr_table <- flextable(tab_df_comb) %>%
   bg(j = c('Peru_R'),
@@ -569,6 +593,10 @@ ovr_table <- flextable(tab_df_comb) %>%
      bg = Rwanda_col_R) %>%
   bg(j = c('Madagascar_R'),
      bg = Madagascar_col_R) %>%
+  bg(j = c('SLE_R'),
+     bg = SLE_col_R)   %>%
+  bg(j = c('Niger_R'),
+     bg = Niger_col_R)   %>% 
   bg(j = c('Peru_U'),
      bg = Peru_col_U) %>%
   bg(j = c('Jordan_U'),
@@ -579,17 +607,26 @@ ovr_table <- flextable(tab_df_comb) %>%
      bg = Rwanda_col_U) %>%
   bg(j = c('Madagascar_U'),
      bg = Madagascar_col_U)   %>%
+  bg(j = c('SLE_U'),
+     bg = SLE_col_U)   %>%
+  bg(j = c('Niger_U'),
+     bg = Niger_col_U)   %>%  
   set_header_labels(
          Peru_U='Urban', 
          Jordan_U='Urban', 
          Rwanda_U='Urban',
          Ethiopia_U='Urban', 
          Madagascar_U='Urban',
+         SLE_U="Urban",
+         Niger_U="Urban",
          Peru_R='Rural', 
          Jordan_R='Rural', 
          Rwanda_R='Rural',
          Ethiopia_R='Rural', 
-         Madagascar_R='Rural' 
+         Madagascar_R='Rural', 
+         SLE_R='Rural' ,
+         Niger_R='Rural' 
+
   ) %>%
   add_header(
          Peru_U='Peru', 
@@ -597,11 +634,15 @@ ovr_table <- flextable(tab_df_comb) %>%
          Rwanda_U='Rwanda',
          Ethiopia_U='Ethiopia', 
          Madagascar_U='Madagascar',
+         SLE_U='Sierra Leone' ,
+         Niger_U='Niger' ,
          Peru_R='Peru', 
          Jordan_R='Jordan', 
          Rwanda_R='Rwanda',
          Ethiopia_R='Ethiopia', 
-         Madagascar_R='Madagascar'         
+         Madagascar_R='Madagascar',
+         SLE_R='Sierra Leone' ,
+         Niger_R='Niger' 
   ) %>%
   merge_h( part = "header") %>%
   add_header_lines(title) %>%
@@ -613,11 +654,12 @@ ovr_table <- flextable(tab_df_comb) %>%
   vline(j=3) %>%
   vline(j=5) %>%
   vline(j=7)%>%
-  vline(j=9) 
+  vline(j=9) %>%
+  vline(j=11) %>%
+  vline(j=13)
 
 
-
-
+ovr_table
 ```
 
 
@@ -674,6 +716,10 @@ gg_df <- tab_df_comb %>%
          Ethiopia_U_gg_100=map(Ethiopia_U,value_plotter_100),
          Madagascar_R_gg_100=map(Madagascar_R,value_plotter_100),
          Madagascar_U_gg_100=map(Madagascar_U,value_plotter_100),
+         SLE_R_gg_100=map(SLE_R,value_plotter_100),
+         SLE_U_gg_100=map(SLE_U,value_plotter_100),
+         Niger_R_gg_100=map(Niger_R,value_plotter_100),
+         Niger_U_gg_100=map(Niger_U,value_plotter_100),
          
          Peru_R_gg_5=map(Peru_R,value_plotter_5),
          Peru_U_gg_5=map(Peru_U,value_plotter_5),
@@ -684,7 +730,11 @@ gg_df <- tab_df_comb %>%
          Ethiopia_R_gg_5=map(Ethiopia_R,value_plotter_5),
          Ethiopia_U_gg_5=map(Ethiopia_U,value_plotter_5),
          Madagascar_R_gg_5=map(Madagascar_R,value_plotter_5),
-         Madagascar_U_gg_5=map(Madagascar_U,value_plotter_5)) %>%
+         Madagascar_U_gg_5=map(Madagascar_U,value_plotter_5),
+         SLE_R_gg_5=map(SLE_R,value_plotter_5),
+         SLE_U_gg_5=map(SLE_U,value_plotter_5),
+         Niger_R_gg_5=map(Niger_R,value_plotter_5),
+         Niger_U_gg_5=map(Niger_U,value_plotter_5)) %>%
   ungroup() %>%
   mutate(
     Peru_R=if_else(`Indicator Name` %in% list_100, Peru_R_gg_100, Peru_R_gg_5),
@@ -696,7 +746,11 @@ gg_df <- tab_df_comb %>%
     Ethiopia_R=if_else(`Indicator Name` %in% list_100, Ethiopia_R_gg_100, Ethiopia_R_gg_5),
     Ethiopia_U=if_else(`Indicator Name` %in% list_100, Ethiopia_U_gg_100, Ethiopia_U_gg_5),
     Madagascar_R=if_else(`Indicator Name` %in% list_100, Madagascar_R_gg_100, Madagascar_R_gg_5),
-    Madagascar_U=if_else(`Indicator Name` %in% list_100, Madagascar_U_gg_100, Madagascar_U_gg_5)
+    Madagascar_U=if_else(`Indicator Name` %in% list_100, Madagascar_U_gg_100, Madagascar_U_gg_5),
+    SLE_R=if_else(`Indicator Name` %in% list_100,SLE_R_gg_100, SLE_R_gg_5),
+    SLE_U=if_else(`Indicator Name` %in% list_100, SLE_U_gg_100, SLE_U_gg_5) ,   
+    Niger_R=if_else(`Indicator Name` %in% list_100,Niger_R_gg_100, Niger_R_gg_5),
+    Niger_U=if_else(`Indicator Name` %in% list_100, Niger_U_gg_100, Niger_U_gg_5)
   ) %>%
   select(-contains("_gg_"))
   # mutate(Peru_R=map(Peru_R, .f=if_else(`Indicator Name` %in% c(
@@ -710,7 +764,7 @@ gg_df <- tab_df_comb %>%
 # gg_df[] <- lapply(gg_df, function(x) value_plotter_100(x))
 
 flextable(gg_df) %>%
-  compose(j=c("Peru_R", "Peru_U", "Jordan_R", "Jordan_U", "Rwanda_R", "Rwanda_U", "Ethiopia_R", "Ethiopia_U", "Madagascar_R", "Madagascar_U"),
+  compose(j=c("Peru_R", "Peru_U", "Jordan_R", "Jordan_U", "Rwanda_R", "Rwanda_U", "Ethiopia_R", "Ethiopia_U", "Madagascar_R", "Madagascar_U", "SLE_R", "SLE_U", "Niger_R", "Niger_U"),
           value = as_paragraph(gg_chunk(value = ., height = .3, width = .5)),
               use_dot = TRUE) %>%
   set_header_labels(
@@ -719,11 +773,16 @@ flextable(gg_df) %>%
          Rwanda_U='Urban',
          Ethiopia_U='Urban', 
          Madagascar_U='Urban',
+         SLE_U="Urban",
+         Niger_U="Urban",
          Peru_R='Rural', 
          Jordan_R='Rural', 
          Rwanda_R='Rural',
          Ethiopia_R='Rural', 
-         Madagascar_R='Rural' 
+         Madagascar_R='Rural', 
+         SLE_R='Rural' ,
+         Niger_R='Rural' 
+
   ) %>%
   add_header(
          Peru_U='Peru', 
@@ -731,11 +790,15 @@ flextable(gg_df) %>%
          Rwanda_U='Rwanda',
          Ethiopia_U='Ethiopia', 
          Madagascar_U='Madagascar',
+         SLE_U='Sierra Leone' ,
+         Niger_U='Niger' ,
          Peru_R='Peru', 
          Jordan_R='Jordan', 
          Rwanda_R='Rwanda',
          Ethiopia_R='Ethiopia', 
-         Madagascar_R='Madagascar'         
+         Madagascar_R='Madagascar',
+         SLE_R='Sierra Leone' ,
+         Niger_R='Niger' 
   ) %>%
   merge_h( part = "header") %>%
   add_header_lines(title) %>%
@@ -746,8 +809,11 @@ flextable(gg_df) %>%
   vline(j=1) %>%
   vline(j=3) %>%
   vline(j=5) %>%
-  vline(j=7)%>%
-  vline(j=9) 
+  vline(j=7) %>%
+  vline(j=9) %>%
+  vline(j=11) %>%
+  vline(j=13)
+
 
 
 
@@ -763,7 +829,9 @@ ur_diff_df <- data.frame(
   Jordan=tab_df_R$Jordan_R-tab_df_U$Jordan_U,
   Rwanda=tab_df_R$Rwanda_R-tab_df_U$Rwanda_U,
   Ethiopia=tab_df_R$Ethiopia_R-tab_df_U$Ethiopia_U,
-  Madagascar=tab_df_R$Madagascar_R-tab_df_U$Madagascar_U
+  Madagascar=tab_df_R$Madagascar_R-tab_df_U$Madagascar_U,
+  `Sierra Leone`=tab_df_R$SLE_R-tab_df_U$SLE_U,
+  Niger=tab_df_R$Niger_R-tab_df_U$Niger_U
 )
 
 ur_diff_df$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
@@ -804,7 +872,7 @@ list_1_5 <- c(
 
 spider_df <- tab_df_comb %>%
   pivot_longer(
-    cols=2:11,
+    cols=2:15,
     names_to=c("Country", "Type"),
     names_pattern="(.*)_(.)",
     values_to="value"
@@ -856,7 +924,7 @@ p1 <- p1 %>%
           )
                                  )) %>%
   ggplot(aes(x=`Indicator Name`, y=value, color=Type, group=`Indicator Name`)) +
-  facet_wrap(~Country, ncol=5) +
+  facet_wrap(~Country, ncol=7) +
   geom_point(size=3) +
   geom_line(color='black') +
   theme_bw() +
@@ -980,7 +1048,7 @@ For each of the GEPD policy indicators, two scores are reported: one for *de jur
 defact_df <- combined_wide_df %>%
   filter(grepl(".DF",Series)) %>%
   mutate(`Indicator Name`=str_remove_all(`Indicator Name`, "\\(De Facto\\) ")) %>%
-  pivot_longer(cols=c("Peru", "Jordan", "Ethiopia", "Rwanda", "Madagascar"),
+  pivot_longer(cols=c("Peru", "Jordan", "Ethiopia", "Rwanda", "Madagascar", "Sierra Leone", "Niger"),
                names_to='country',
                values_to='defacto') %>%
   select(-Series)
@@ -988,7 +1056,7 @@ defact_df <- combined_wide_df %>%
 dejur_df <-combined_wide_df %>%
   filter(grepl(".DJ",Series)) %>%
   mutate(`Indicator Name`=str_remove_all(`Indicator Name`, "\\(De Jure\\) ")) %>%
-    pivot_longer(cols=c("Peru", "Jordan", "Ethiopia", "Rwanda", "Madagascar"),
+    pivot_longer(cols=c("Peru", "Jordan", "Ethiopia", "Rwanda", "Madagascar", "Sierra Leone", "Niger"),
                names_to='country',
                values_to='dejure') %>%
   select(-Series)
@@ -1042,7 +1110,7 @@ means_dfdj %>%
 
 
 ggplot(defact_dejure_df, aes(y=`Indicator Name`, x=defacto)) +
-  facet_wrap(~country, ncol=5) +
+  facet_wrap(~country, ncol=7) +
   geom_point(aes(color='De Facto'), size=4) +
   geom_point(aes(x=dejure, color="De Jure"), size=4) +
   geom_segment(aes( yend=`Indicator Name`, xend=dejure)) +
@@ -1128,8 +1196,26 @@ country <- "PER"
 year <- "2019"
 PER_bur_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.dta", sep="/")) %>%
   mutate(iso3c=country) %>%
-  select(iso3c,govt_tier, bur_indicators) %>%
-  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+  select(iso3c,govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         
+         )
 
 ########
 # Jordan
@@ -1139,8 +1225,25 @@ country <- "JOR"
 year <- "2019"
 JOR_bur_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", paste0(country,"-19"),paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.dta", sep="/")) %>%
   mutate(iso3c=country) %>%
-  select(iso3c,govt_tier, bur_indicators) %>%
-  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+  select(iso3c,govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         )
 ########
 # Rwanda
 #######
@@ -1149,8 +1252,25 @@ country <- "RWA"
 year <- "2020"
 RWA_bur_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.dta", sep="/")) %>%
   mutate(iso3c=country) %>%
-  select(iso3c,govt_tier, bur_indicators) %>%
-  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+  select(iso3c,govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         )
 ########
 # Ethiopia
 #######
@@ -1159,8 +1279,25 @@ country <- "ETH"
 year <- "2020_2021"
 ETH_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
-  select(iso3c, govt_tier, bur_indicators) %>%
-  mutate(govt_tier=factor(govt_tier,  levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+  select(iso3c, govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier,  levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         )
 
 ########
 # Madagascar
@@ -1170,17 +1307,97 @@ country <- "MDG"
 year <- "2021"
 MDG_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
-  select(iso3c,govt_tier, bur_indicators) %>%
-  mutate(govt_tier=factor(govt_tier, levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )))
+  select(iso3c,govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         )
+
+
+########
+# Madagascar
+#######
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+SLE_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c,govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         )
+
+
+########
+# Madagascar
+#######
+#read in anonymized school data
+country <- "NER"
+year <- "2022"
+NER_bur_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/Public_Officials/data/public_officials_dta_clean_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(iso3c,govt_tier, bur_indicators, everything()) %>%
+  select(-starts_with("ENUM")) %>%
+  mutate(govt_tier=factor(govt_tier, levels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" )),
+         education=factor(DEM1q11, levels=c(1,2,3,4,5,6,7, 97, 900, 998), labels=c('Primary school',
+                                                                                   'Middle school',
+                                                                                   'Secondary school',
+                                                                                   'Diploma / Other post-high-school certificate',
+                                                                                   'Undergraduate degree',
+                                                                                   'Masters degree',
+                                                                                   'PhD',
+                                                                                   'Other (dont specify)',
+                                                                                   'Dont know',
+                                                                                   'Refused to answer' )),
+         age=as.numeric(age),
+         years_current_position=as.numeric(years_current_position),
+         years_current_org=as.numeric(years_current_org),
+         years_civil_service=as.numeric(years_civil_service),
+         num_pub_sector_org=as.numeric(num_pub_sector_org)
+         
+         )
 ########
 #combined
 ########
-combined_bur_df <- bind_rows(PER_bur_df, JOR_bur_df, RWA_bur_df, ETH_bur_df, MDG_bur_df) %>%
-  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
+combined_bur_df <- bind_rows(PER_bur_df, JOR_bur_df, RWA_bur_df, ETH_bur_df, MDG_bur_df,SLE_bur_df,NER_bur_df) %>%
+  mutate(iso3c=factor(iso3c, levels=c("NER","SLE","MDG", "ETH", "RWA", "JOR", "PER")))
 
 
 combined_bur_df %>%
-  rename(pol_policy_implementation=politicized_policy_implementation) %>%
+  rename(pol_policy_implementation=politicized_policy_implementation,
+         res_monitoring_perform=responsible_monitoring_performance,
+         prop_reported_underperform=proportion_reported_underperformance
+         ) %>%
+  janitor::clean_names() %>%
   haven::write_dta(  paste0(confidential_dir, "General/combined_public_officials.dta")) %>%
   haven::write_dta(  paste0(shared_loc, "/Data/combined_public_officials.dta"))
 ```
@@ -1469,6 +1686,96 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
   ungroup() 
 
 
+########
+########
+## Sierra Leone
+########
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+SLE_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+SLE_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+SLE_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+SLE_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+SLE_school_office_link_df <- SLE_school_anon_df %>%
+  left_join(SLE_school_gdp) %>%
+  left_join(SLE_school_office_linkages) %>%
+  left_join(SLE_school_size) %>%
+  mutate(country="Sierra Leone") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+
+
+########
+########
+## Niger
+########
+#read in anonymized school data
+country <- "NER"
+year <- "2022"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+NER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+NER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+NER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+NER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+NER_school_office_link_df <- NER_school_anon_df %>%
+  left_join(NER_school_gdp) %>%
+  left_join(NER_school_office_linkages) %>%
+  left_join(NER_school_size) %>%
+  mutate(country="Niger") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
 
 ###########
 # Combined
@@ -1476,7 +1783,7 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
 
 
 
-combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df) 
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df, SLE_school_office_link_df, NER_school_office_link_df) 
 
 
 combined_school_office_df %>%

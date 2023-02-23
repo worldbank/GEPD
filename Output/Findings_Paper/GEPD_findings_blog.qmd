@@ -86,7 +86,7 @@ out_dir <- paste(dir, 'Output', sep="/")
 # }
 
 #list countries
-countries <- c("PER", "JOR", "MDG", "ETH", "SLE")
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE")
 
 ```
 
@@ -166,7 +166,7 @@ MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".cs
 indicator_names_df <- PER_data %>%
   select(Series, `Indicator Name`)
 
-combined_df_raw <- bind_rows(PER_data,JOR_data, ETH_data,  MDG_data, SLE_data)
+combined_df_raw <- bind_rows(PER_data,JOR_data, RWA_data, ETH_data,  MDG_data, SLE_data)
 
 
   
@@ -221,13 +221,15 @@ tab_color_df <- combined_wide_color %>%
 
 Peru_col <- tab_color_df$Peru
 Jordan_col <- tab_color_df$Jordan
+Rwanda_col <- tab_color_df$Rwanda
 Ethiopia_col <- tab_color_df$Ethiopia
 Madagascar_col <- tab_color_df$Madagascar
+SLE_col <- tab_color_df$`Sierra Leone`
 
 
 #build table
 tab_df <- tab_df  %>%
-  select(`Indicator Name`, Peru, Jordan, Ethiopia, Madagascar)
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`)
 
 
 ovr_table <- flextable(tab_df) %>%
@@ -244,12 +246,14 @@ ovr_table <- ovr_table %>%
      bg = Peru_col) %>%
   bg(j = c('Jordan'),
      bg = Jordan_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
   bg(j = c('Ethiopia'),
      bg = Ethiopia_col) %>%
   bg(j = c('Madagascar'),
      bg = Madagascar_col) %>%
   bg(j = c('Sierra Leone'),
-     bg = Madagascar_col)    
+     bg = SLE_col)    
 
 
 FitFlextableToPage(ovr_table) %>%
@@ -282,11 +286,12 @@ ind <- c(  'SE.PRM.LERN',
   'SE.PRM.ATTD')
 
 cols <- c(
-  'Peru'='#fb5607',
-  'Jordan'='#ff006e',
-  'Ethiopia'='#8338ec',
-  'Madagascar'='#3a86ff', 
-  'Sierra Leone'='#ffbe0b'
+  'Peru'='#0015ff',
+  'Jordan'='#ff00a1',
+  'Rwanda'='#90fe00',
+  'Ethiopia'='#8400ff',
+  'Madagascar'='#00fff7', 
+  'Sierra Leone'='#ff7300'
 )
 
 plot_df <- combined_df %>%
@@ -854,7 +859,7 @@ SLE_school_office_link_df <- SLE_school_anon_df %>%
 
 
 
-combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df,  SLE_school_office_link_df) 
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df,RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df,  SLE_school_office_link_df) 
 
 
 
