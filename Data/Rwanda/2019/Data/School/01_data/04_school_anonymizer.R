@@ -57,13 +57,12 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 
 #Load original sample of schools
 #Load original sample of schools
-currentDate<-c("2022-09-21")
+currentDate<-c("2019-08-30")
 
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
-) %>%
-  mutate(school_code=Inst_ID)
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
+load(sample_frame_name)
 #load some auxiliary data to help do sampling weights, because we lacked total enrollment for the districts
 # auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
 #   mutate(district=str_to_upper(district))
