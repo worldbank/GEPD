@@ -130,12 +130,12 @@ api_template <- api_template %>%
     mutate(
       SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
       SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
-      SE.PRM.TENR	 =-999,
-      SE.PRM.TENR.1	 =-999
+      SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
+      SE.PRM.TENR.1	 =wbopendat$SE.PRM.TENR
     )
   
   
@@ -538,11 +538,11 @@ api_template <- api_template %>%
     #(De Facto) Average quality of applicants accepted into initial education programs
     SE.PRM.TSDP.3  = expert_df$criteria_become,
     #(De Jure) Requirements to become a primary school teacher                        
-    SE.PRM.TSDP.4  = indicator_means(teacher_selection		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.4  = 1+2*indicator_means(teacher_selection		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to become a primary school teacher                       
     SE.PRM.TSDP.5 =expert_df$criteria_transfer,
     #(De Jure) Requirements to fulfill a transfer request                             
-    SE.PRM.TSDP.6  = indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.6  = 1+2*indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to fulfill a transfer request                            
     SE.PRM.TSDP.7  = -999,
     #(De Jure) Selectivity of teacher hiring process                                  
@@ -923,16 +923,18 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.BFIN.2 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #(Financing) - Adequacy expressed by the per child spending
+      SE.PRM.BFIN.6 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #(Financing) - Adequacy expressed by the per child spending
       SE.PRM.BFIN.3 =4*as.numeric(finance_df_final$`Efficiency by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest`)+1,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
       SE.PRM.BFIN.4 =4*as.numeric(finance_df_final$`Efficiency by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest`)+1,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
       SE.PRM.BFIN.5 =-999,#(Financing) - Equity
+      SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Government expenditure per school age person, primary (% of GDP per capita)`), #(Financing) - Adequacy expressed by the per child spending
     ) %>%
     mutate(
       SE.PRM.BFIN   = as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2), #Politics & Bureaucratic Capacity - Financing
       SE.PRM.BFIN.1 = as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2),#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
       
     )
+  
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
     rownames_to_column(var='Series') 

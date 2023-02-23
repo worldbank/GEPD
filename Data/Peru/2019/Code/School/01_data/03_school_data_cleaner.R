@@ -805,7 +805,7 @@ final_indicator_data_LERN_F <- assess_4th_grade_dta %>%
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment_combined.dta"))
 
 ecd_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "ecd_assessment.dta"))
 
@@ -1194,7 +1194,7 @@ var.labels = c(route="Route ID",
                s_c8_2 = "8.2 The teacher has a positive attitude towards studens' challenges",
                s_c8_3 = "8.3 The teacher encourages goal-setting",
                s_c9 = "SOCIAL AND COLLABORATIVE SKILLS: Segment 1",
-               s_c9_1 = "9.1 The teacher promotes students,Äô collaboration through peer interaction",
+               s_c9_1 = "9.1 The teacher promotes students,?? collaboration through peer interaction",
                s_c9_2 = "9.2 The teacher promotes students' interpersonal skills",
                s_c9_3 = "9.3 Students collaborate with one another through peer interaction",
                enum_comments = "Additional comments by enumerator:"
@@ -1295,7 +1295,7 @@ teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
           .=="Y" ~ 1,
           TRUE ~ as.numeric(NA)
         )) %>%
-          mutate_at(vars(low_medium_high), ~(factor(., levels=c(2,3,4), labels=c("NA","Low", "Medium", "High"), ordered=T))) %>%
+          mutate_at(vars(low_medium_high), ~(factor(., levels=c(2,3,4), labels=c("Low", "Medium", "High"), ordered=T))) %>%
           mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High"), ordered=T))) %>%
           mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"), ordered=T)))
 
@@ -1624,8 +1624,8 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
     problem_solving_info_collect=(m7seq2_pman__1+m7seq2_pman__2 + m7seq2_pman__3 + m7seq2_pman__4)/4,
     problem_solving_stomach=case_when(
                               (m7seq3_pman==4 ) ~ 1,
-                              (m7seq1_pman==3 ) ~ 0.5,
-                              (m7seq1_pman==1 | m7seq1_pman==2 | m7seq1_pman==98 ) ~ 0.25,
+                              (m7seq3_pman==3 ) ~ 0.5,
+                              (m7seq3_pman==1 | m7seq3_pman==2 | m7seq3_pman==98 ) ~ 0.25,
                               TRUE ~ 0)
                                  
     ) %>%
@@ -2406,12 +2406,12 @@ final_school_data <- final_school_data %>%
 
 
 write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
-write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+#write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
 write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
-write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+#write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
 if (backup_onedrive=="yes") {
   write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
-  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+  #write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
 
@@ -2431,11 +2431,11 @@ school_dta_short <- final_school_data %>%
   select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
 
 write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
-write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
+#write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
   write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
-  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+  #write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
 
@@ -2601,7 +2601,9 @@ names(dta_list) <- dta_list
 names(dta_list) <- dta_list
 for(i in names(dta_list)){
   print( i)
-  write_dta(get(dta_list[[i]]), file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list[[i]]), '.dta')))
+  write_csv(get(dta_list[[i]]), file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list[[i]]), '.csv')))
+  
+  #write_dta(get(dta_list[[i]]), file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list[[i]]), '.dta')))
 }
 
 
@@ -2610,7 +2612,9 @@ if (backup_onedrive=="yes") {
   names(dta_list) <- dta_list
   for(i in names(dta_list)){
     print( i)
-    write_dta(get(dta_list[[i]]), file.path(paste(confidential_folder_onedrive,"data", sep="/"), paste0(dta_list[[i]], '.dta')))
+    write_csv(get(dta_list[[i]]), file.path(paste(confidential_folder,"data", sep="/"), paste0(names(dta_list[[i]]), '.csv')))
+    
+    #write_dta(get(dta_list[[i]]), file.path(paste(confidential_folder_onedrive,"data", sep="/"), paste0(dta_list[[i]], '.dta')))
   }
   
   

@@ -1,0 +1,408 @@
+---
+title: "Sampling Weights - Niger"
+author: "Brian Stacy"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+library(knitr)
+library(tidyverse)
+library(readxl)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(flextable)
+library(DT)
+library(skimr)
+#Load the data
+#Country name
+country <-'NER'
+country_name <- "Niger"
+year <- '2022'
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"Year_Book_2021_final.xlsx"
+frame_sheet <- "Feuil1"
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  download_folder <- file.path(paste("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/sampling", sep="/"))  
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+## Introduction
+
+This file outlines the sampling strategy for Niger.
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+For our Survey of Public Officials, we will sample a total of 200 public officials.  Roughly 40 officials will be surveyed at the federal level, while 160 officials will be surveyed at the reginoal/district level.  For selection of officials at the regional and district level, we will employ a cluster sampling strategy, where 12 Governorate offices are chosen at random from among the regions in which schools were sampled.  Then among these 12 Governorates, we also select at random 12 Directorates from among the Directorates in which schools werer sampled.  The result of this sampling approach is that for 12 clusters we will have links from the school to the Directorates office to the Governorate office to the central office.  Within the Governorates/Directorates five or six officials will be sampled, including the head of organization, HR director, two division directors from finance and planning, and one or two randomly selected professional employees among the finance, planning, and one other service related department chosen at random.  At the federal level, we will interview the HR director, finance director, planning director, and three randomly selected service focused departments.  In addition to the directors of each of these departments, a sample of 9 professional employees will be chosen in each department at random on the day of the interview.
+
+ 
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions.  New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below.  The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years).  Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+
+
+
+```{r include=FALSE}
+#read sample frame
+df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet)
+
+write_excel_csv(df_raw, paste(sampling_folder, 'Year_Book_2021_final.csv', sep="/"))
+
+#############################################################
+# May want to use CI for CP (kindergarten instead of 1st grade) as the cohorts will graduate
+# Same for G3 and G4 (CE2 and CE2).
+################################################################
+
+# create some columns
+df <- df_raw %>%
+  mutate(
+    urban_rural=case_when(
+      LIBELLE_TYPE_SOCIOLOGIQUE=="Rurale" ~ "Rural",
+      LIBELLE_TYPE_SOCIOLOGIQUE=="Urbaine" ~ "Urban"),
+    ownership = case_when(
+      LIBELLE_TYPE_STATUT_ETABLISSEMENT=="Public" ~ "Public",
+      LIBELLE_TYPE_STATUT_ETABLISSEMENT=="Privé" ~ "Private",
+      LIBELLE_TYPE_STATUT_ETABLISSEMENT=="Communautaire" ~ "Community"
+    ),
+    school_type = case_when(
+      LIBELLE_TYPE_SYSTEME_ENSEIGNEMENT=="Education de Base" ~ "Basic Education",
+      LIBELLE_TYPE_SYSTEME_ENSEIGNEMENT=="Enseignement Préscolaire" ~ "Preschool Education"
+    ),
+    religious_status=LIBELLE_TYPE_ETABLISSEMENT,
+    rural=as.numeric(urban_rural=="Rural"),
+    public=as.numeric(ownership=="Public"),
+    basic_education=as.numeric(school_type=="Basic Education"),
+    total_students_grade_4=as.numeric(NB_G_CE2) + as.numeric(NB_F_CE2),
+    total_students_grade_4_female= as.numeric(NB_F_CE2),
+    total_students_grade_4_male=as.numeric(NB_G_CE2),
+    total_students_grade_1=as.numeric(NB_G_CI) + as.numeric(NB_F_CI),
+    total_students_grade_1_female= as.numeric(NB_F_CI),
+    total_students_grade_1_male=as.numeric(NB_G_CI)    
+    ) 
+
+#calculate total number of students
+df <- df %>%
+  mutate(
+    across(starts_with("NB_F"),as.numeric),
+    across(starts_with("NB_G"),as.numeric)
+  ) %>%
+  mutate(    
+    total_students_female=rowSums(.[grep(x=colnames(df), pattern="NB_F")], na.rm=TRUE),
+    total_students_male=rowSums(.[grep(x=colnames(df), pattern="NB_G")], na.rm=TRUE),
+    total_students=total_students_female+total_students_male
+  )
+
+
+
+#create list of indicators for 
+  indicator_list2<-c('total_students_male',
+                    'total_students_female',
+                    'total_students',
+                    'total_students_grade_4_male',
+                    'total_students_grade_4_female',
+                    'total_students_grade_4',
+                    'total_students_grade_1_male',
+                    'total_students_grade_1_female',
+                    'total_students_grade_1',                    
+                    'public',
+                    'rural',
+                    'basic_education'                  )
+
+indicator_labels2<-c('Total Male Students',
+                    'Total Female Students',
+                    'Total Students',
+                    'Total 4th Grade Male Students',
+                    'Total 4th Grade Female Students',
+                    'Total 4th Grade Students',
+                    'Total 1st Grade Male Students',
+                    'Total 1st Grade Female Students',
+                    'Total 1st Grade Students',                    
+                    'Public Schools',
+                    'Rural Schools',
+                    'Basic Education School'
+                    )
+
+sumstats<-df %>%
+  dplyr::select(indicator_list2) 
+
+frame_size=nrow(df)
+
+sumstats_df<-skim(sumstats) %>%
+  rename(variable=skim_variable) %>%
+  rename_with(~str_replace(.,"numeric.","")) %>%
+  mutate(N=frame_size) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100,N, n_missing, complete_rate) %>%
+  mutate(variable=factor(variable, levels=indicator_list2,
+                         labels=indicator_labels2)) %>%
+  arrange(match(variable, indicator_labels2))
+
+
+```
+
+## Summary Statistics for Niger Schools Overall in Sampling Frame
+
+```{r stats_kable, echo=FALSE}
+
+sumstats_df %>%
+  mutate(across(where(is.numeric), round,2)) %>%
+  flextable() %>%
+  add_header_lines("Summary Statistics for Sampling Frame") %>%
+  theme_booktabs() 
+```
+
+
+## Sampling Frame
+
+```{r setframe}
+#restrict to schools of at least 15 students
+df_filtered <- df %>%
+  filter(total_students>=15) %>%
+  filter(basic_education==1)
+
+# merge LIRE database
+
+lire_df <- read_excel(path = paste0(sampling_folder,"/Liste_Ecoles_Primaires_Projet_LIRE_GEPD.xlsx"),
+                      sheet = "3000_ecoles_primaires_effsup50") %>%
+  transmute(REGION=Drep,
+         DEPARTEMENT=Departement,
+         COMMUNE=commune,
+         NOM_ETABLISSEMENT=NOM_ETABLISSEMENT) %>%
+  mutate(LIRE="LIRE School")
+
+lire_matchable <- lire_df %>%
+  left_join(df_filtered %>% select(REGION, DEPARTEMENT, COMMUNE, village, NOM_ETABLISSEMENT, CODE_ADMINISTRATIF,CODE_ETABLISSEMENT, total_students, urban_rural ))
+
+df_updated <- df_filtered %>%
+  left_join(lire_df) %>%
+  distinct(CODE_ETABLISSEMENT, .keep_all = TRUE)
+
+#only able to match 2408 of the 3000 lire schools.
+df_updated %>% group_by(LIRE) %>% summarise(n=n())
+
+```
+
+From the `r nrow(df_raw)` schools in the original frame, we will restrict to schools with at least 15 students of primary age, and schools classified as "basic education" schools, as opposed to "Preschool Education" schools.  This restriction eliminates `r nrow(df_raw)-nrow(df_updated)` schools.
+
+
+```{r framestats}
+
+df_updated %>%
+  dplyr::select(indicator_list2) %>%
+  skim() %>%
+  rename(variable=skim_variable) %>%
+  rename_with(~str_replace(.,"numeric.","")) %>%
+  mutate(N=frame_size) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100,N, n_missing, complete_rate) %>%
+  mutate(variable=factor(variable, levels=indicator_list2,
+                         labels=indicator_labels2)) %>%
+  arrange(match(variable, indicator_labels2)) %>%
+  mutate(across(where(is.numeric), round,2)) %>%
+  flextable() %>%
+  add_header_lines("Summary Statistics for Sampling Frame") %>%
+  theme_booktabs() 
+
+
+ggplot(df_updated, aes(x=REGION, group=urban_rural, fill=urban_rural)) +
+  geom_bar(color='black',
+           position='dodge') +
+  theme_classic() +
+  scale_y_continuous(labels=scales::comma) +
+  scale_fill_manual(
+    values=c(
+      'Rural'='#bb3e03',
+      'Urban'='#005f73'
+    )
+  ) +
+  labs(fill="Urban/Rural Status") +
+  coord_flip() +
+  ggtitle('Number of Schools per Region in Sampling Frame')
+
+ggplot(df_updated, aes(x=REGION, y=total_students)) +
+  geom_col(fill="#0a9396") +
+  theme_classic() +
+  scale_y_continuous(labels=scales::comma) +
+  ylab('Total Primary Students') +
+  coord_flip() +
+  ggtitle('Number of Primary Students per Region in Sampling Frame')
+
+```
+
+# Produce final weights based on visited schools
+
+```{r}
+
+###########################
+#read in school level file
+###########################
+school_dta<-read_dta(file.path(download_folder, "INFRA/EPDash_STATA_Clean.dta"))
+
+
+#rename a few key variables up front
+school_dta<- school_dta %>%
+  mutate(enumerator_name_other= m1s0q1_name_other  ,
+         enumerator_number=m1s0q1_name ,
+         survey_time=m1s0q8,
+         lat=m1s0q9__Latitude,
+         lon=m1s0q9__Longitude,
+         school_code=if_else(!is.na(school_code_preload),as.double(school_code_preload), as.double(m1s0q2_code)),
+         m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
+         total_enrolled=m1saq7) %>%
+  ## Get names and code for all the blank interviews
+  mutate(
+    
+    school_code= if_else(school_info_correct==1, as.double(school_code), as.double(m1s0q2_code)),
+    school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name))
+    
+  ) %>%
+  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
+  mutate(school_code=as.numeric(school_code)) %>%
+  filter(!is.na(school_code))
+
+
+
+#list additional info that will be useful to keep in each indicator dataframe
+preamble_info <- c( 'interview__key', 'school_code',
+                   'school_name_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_emis_preload', 'school_emis_preload',
+                   'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                   'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq10'
+                   )
+
+drop_school_info <- c(
+
+)
+
+
+#create school database with just preamble info.  This will be useful for merging on school level info to some databases
+school_data_preamble_temp <- school_dta %>%
+  group_by(school_code) %>%
+  select( preamble_info) %>%
+  select(-interview__key) %>%
+  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+#read in school data
+visited_schools <- school_data_preamble_temp %>%
+  select(-m1s0q2_emis) %>%
+  group_by(school_code) %>%
+  summarise(visited=1
+            #replaced=mean(replaced, na.rm=T)
+            ) %>%
+  mutate(CODE_ETABLISSEMENT=as.numeric(school_code)
+         #replaced=if_else(is.na(replaced),"Sampled School","Replaced School")
+         ) %>%
+  filter(!is.na(CODE_ETABLISSEMENT)) %>%
+  left_join(df_updated) %>%
+  mutate(LIRE=if_else(LIRE=="LIRE School","LIRE School", "Non-LIRE School", "Non-LIRE School"))
+
+
+
+```
+
+
+```{r echo=TRUE}
+
+
+
+strata_weight_size <- visited_schools %>%
+  group_by(REGION,urban_rural,LIRE) %>%
+  summarise(sample_size=n())
+
+
+revised_school_weights_df <- df_updated %>%
+  mutate(LIRE=if_else(LIRE=="LIRE School","LIRE School", "Non-LIRE School", "Non-LIRE School")) %>%
+  ungroup() %>%
+  mutate(total_students_frame=sum(total_students)) %>%
+  left_join(strata_weight_size) %>%
+  group_by(REGION,urban_rural,LIRE) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_students),
+         strata_school_prob=strata_size/total_students_frame) %>%
+  mutate(strata_prob=(sample_size)*(total_students/strata_size),
+         ipw=strata_school_prob*(1/strata_prob)) 
+
+write_excel_csv(revised_school_weights_df, paste(sampling_folder, '/school_weights_revised_', Sys.Date(),  '.csv', sep=""))
+
+```
+
+
+# Sanity Checks
+
+Below I will use the survey weights to estimate aspects of the school that are available in the sampling frame. These are electricity rates, school feeding rates, and internet connectivity rates.  These data were collected as part of the school EMIS in Sierra Leone.  The population mean from the full sampling frame is compared to the estimated mean from the school sample using the sampling weights.  Estimated means very far from the population mean can indicate there is something wrong with the weights or that the school sample is biased.
+
+The estimates based on the school weights are similar and within the confidence interval of those produced using the sampling frame.
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+df_updated %>%
+  ungroup() %>%
+        mutate(latrine=if_else(PRESENCE_LATRINES=="0",0,1),
+           ) %>%
+  summarise(latrine=Hmisc::wtd.mean(latrine, weights=total_students)) %>%
+  flextable() %>%
+  add_header_lines("Population estimate")
+
+
+
+
+linked_sample <- visited_schools %>%
+  filter(!is.na(CODE_ETABLISSEMENT)) %>%
+  select(CODE_ETABLISSEMENT) %>%
+  ungroup() %>%
+  left_join(revised_school_weights_df) 
+
+
+linked_sample %>%
+  filter(!is.na(ipw)) %>%
+  filter(!is.infinite(ipw)) %>%
+  mutate(latrine=if_else(PRESENCE_LATRINES=="0",0,1),
+           )   %>%
+  ungroup() %>%
+  as_survey_design(strata=c('REGION','urban_rural','LIRE'),
+                   weight=ipw) %>%
+    summarise(latrine=survey_mean(latrine)
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on Schools Visited and Sampling Weights")
+```

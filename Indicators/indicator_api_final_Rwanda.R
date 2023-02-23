@@ -46,138 +46,8 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # PER_data_2019 <- api_data(data_dir1, data_dir2, data_dir3, 'PER', 2019)
 
 
-
-############################
-#Read in indicators.md file
-###########################
-#Read in list of indicators
-indicators <- read_csv(here::here('Indicators','indicators.csv'))
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-
-indicators <- indicators %>%
-  select(-c('X1', 'X8'))
-
-indicator_names <-  indicators$indicator_tag
-indicator_names <- sapply(indicator_names, tolower)
-
-names(indicators)<-make.names(names(indicators), unique=TRUE)
-
-
-#get metadata on indicators
-#Read in list of indicators
-indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
-indicator_choices <- indicator_choices %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-
-indicator_choices <- indicator_choices %>%
-  select(-c('X1', 'X6')) %>%
-  rename("Source Note"="How is the indicator scored?" ) 
-
-
-names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
-
-
-#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- indicators$indicator_tag
-
-
-
-#Read in Sergio's excel with subquestions to include
-subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
-
-df<-indicators %>%
-  left_join(subquestions) %>%
-  select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
-
-
-
-df_overall <- df %>%
-  select(Series, Indicator.Name, indicator_tag ) 
-  
-
-df_defacto_dejure <- df %>%
-  filter(grepl("Policy Lever", Indicator.Name )) %>%
-  select(Series, Indicator.Name ) %>%
-  mutate('De Facto' = "DF",
-         'De Jure' = "DJ") %>%
-  pivot_longer(cols=c('De Facto', 'De Jure'),
-               names_to="type",
-               values_to="type_val") %>%
-  mutate(Series=paste(Series, type_val, sep="."),
-         Indicator.Name=paste("(",type,") ",Indicator.Name, sep="")) %>%
-  select(Series, Indicator.Name)
-  
-# Prepare a data frame, on which we can add values
-
-##########################
-# Now create database for upload with correct format for EdStats
-###########################
-#Pivot longer
-df_longer<-df %>%
-  pivot_longer(cols=c(
-    'Subquestion_1', 'Subquestion_2', 'Subquestion_3',
-    'Subquestion_4', 'Subquestion_5', 'Subquestion_6',
-    'Subquestion_7', 'Subquestion_8','Subquestion_9',
-    'Subquestion_10', 'Subquestion_11', 'Subquestion_12',
-    'Subquestion_13', 'Subquestion_14', 'Subquestion_15',
-    'Subquestion_16', 'Subquestion_17', 'Subquestion_18',
-    'Subquestion_19', 'Subquestion_20'),
-    values_to='short_desc') %>%
-  filter(short_desc!="") %>%
-  filter(short_desc!="Overall") %>%
-  pivot_longer(cols=c(    "Column_2", "Column_3", "Column_4","Column_5", "Column_6"),
-               values_to='urban_rural_gender',
-               names_to = 'urban_rural_gender_name')  %>%
-  select(-urban_rural_gender_name) %>%
-  filter(urban_rural_gender!="") 
-
-#break up name into two components
-# (type=="Column" & num!="1") ~ paste(Series, substr(short_desc,1,1), sep="."),
-# (type=="Column" & num!="1") ~ paste(Indicator.Name, short_desc, sep=" - "),
-
-#now modify API IDs
-df_sub<-df_longer %>%
-  separate(name, c("type", "num"), "_") %>%
-  mutate(Series=paste(Series, num, sep="."))  %>% #add tag for subindicators
-  mutate(Series=case_when( #add tag for urban/rural gender
-    ( urban_rural_gender=="Overall") ~ Series,
-    ( urban_rural_gender!="Overall") ~ paste(Series, substr(urban_rural_gender,1,1), sep="."),
-    TRUE ~ Series  )) %>%
-  mutate(Indicator.Name= short_desc) %>%
-  mutate(Indicator.Name=case_when( #add tag for urban/rural gender for indicator name
-    (urban_rural_gender=="Overall") ~ Indicator.Name,
-    (urban_rural_gender!="Overall") ~ paste(Indicator.Name, urban_rural_gender, sep=" - "),
-    TRUE ~ Indicator.Name  )) %>%
-  select(-Column_1, -type, -num, -urban_rural_gender) 
-
-api_template  <- df_overall %>%
-  bind_rows(df_defacto_dejure) %>%
-  bind_rows(df_sub) %>%
-  arrange(Series) %>%
-  select(Series, Indicator.Name)
-
-indicator_match  <- df_overall %>%
-  bind_rows(df_defacto_dejure) %>%
-  bind_rows(df_sub) %>%
-  arrange(Series) %>%
-  select(Series, Indicator.Name, indicator_tag)
-
-#add extra metadata
-api_template <- api_template %>%
-  mutate(Source="Global Education Policy Dashboard",
-         'Source Organization'="World Bank") %>%
-  left_join(indicator_choices) %>%
-  mutate(Source.Note = gsub("(\n|<br/>)"," ",Source.Note)) %>%
-  mutate(Source.Note = str_replace(Source.Note, "-", ",")) %>%
-  rename('Source Note'=Source.Note,
-         'Indicator Name'=Indicator.Name) %>%
-  select(-c(indicator_tag, Value))
-
+source('R/api_template_fun.R', echo=TRUE)
+api_template <- api_template_fun()
 
 
 ##########################
@@ -202,13 +72,13 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
                "SE.LPV.PRIM.BMP", "SE.LPV.PRIM.BMP.FE", "SE.LPV.PRIM.BMP.MA", "SE.PRM.TENR", "SE.PRM.TENR.FE", "SE.PRM.TENR.MA")
 #read in data from wbopendata
 #get WDI metadata infor
-cache_list<-wbstats::wbcache()
-wbopendat<-wbstats::wb(country="RWA", 
-            indicator=ind_list,
-            startdate=2000,
-            enddate=2020,
-            return_wide = T,
-            removeNA=FALSE)
+# cache_list<-wbstats::wbcache()
+# wbopendat<-wbstats::wb(country="RWA", 
+#             indicator=ind_list,
+#             startdate=2000,
+#             enddate=2020,
+#             return_wide = T,
+#             removeNA=FALSE)
 
 wbopendat<-WDI(country="RW", indicator=ind_list, start=2000, end=2020, extra=T) %>%
   filter(!is.na(SE.PRM.TENR) &!is.na(country)) %>%
@@ -226,7 +96,7 @@ expert_df <- read_stata(paste(data_dir, 'Expert_Survey/expert_dta_final.dta', se
 
 #score expert data (this requires a lot of hard coding and transcribing)
 #read in data
-defacto_dta_learners <- readxl::read_xlsx(path=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.xlsx', sep="/"),  .name_repair = 'universal') %>%
+defacto_dta_learners <- read_csv(file=paste(data_dir, 'Other_Indicators/Learners_defacto_indicators.csv', sep="/")) %>%
   filter(!is.na(indicator))
 defacto_dta_learners_shaped<-data.frame(t(defacto_dta_learners[-1]), stringsAsFactors = FALSE)
 colnames(defacto_dta_learners_shaped) <- defacto_dta_learners$Question
@@ -253,13 +123,64 @@ finance_df_final <- finance_df_shaped %>%
 
 source('R/api_data_fun_RWA.R', echo=TRUE)
 
-RWA_data_2019 <- api_final
+
+
+#Tags
+practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
+
+#function to create score data for a specified country and year
+api_metadata_fn <- function(cntry, yr) {
+  api_metadata_fn_p <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value >15 ~ "Needs Improvement",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=15 & value>10 ~ "Caution",
+        grepl("SE.LPV.PRIM$|SE.LPV.PRIM.1", Series) & value <=10 ~ "On Target",               
+        value <85 ~ "Needs Improvement",
+        value >=85 & value<90 ~ "Caution",
+        value >=90 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  
+  api_metadata_fn_c <- api_final %>%
+    rename(Indicator.Name='Indicator Name') %>%
+    filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
+    rename(  'Indicator Name'=Indicator.Name) %>%
+    select(Series, `Indicator Name`, value) %>%
+    mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
+    mutate(
+      value_metadata=case_when(
+        value <3 ~ "Needs Improvement",
+        value >=3 & value<4 ~ "Caution",
+        value >=4 ~ "On Target",
+        TRUE ~ "N/A"
+      ))
+  
+  api_metadata_fn_p %>%
+    bind_rows(api_metadata_fn_c) %>%
+    arrange(Series) %>%
+    mutate(year=yr,
+           cty_or_agg="cty",
+           countrycode=cntry,
+           value=round(value,1),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+}
+
+
+
+RWA_data_2020 <- api_metadata_fn('RWA', 2020)
 
 
 #export Indicators_metatdata section
-write_excel_csv(api_final, 'GEPD_Indicators_API_RWA.csv')
+write_excel_csv(RWA_data_2020, 'GEPD_Indicators_API_RWA.csv')
 
-write_excel_csv(api_final, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_RWA.csv',sep=""))
+write_excel_csv(RWA_data_2020, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_RWA.csv',sep=""))
 
 
 

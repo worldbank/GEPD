@@ -1,0 +1,981 @@
+---
+title: "What is Driving the Learning Crisis? Clues from the Initial Rollout of the Global Education Policy Dashboard"
+format: docx
+execute:
+  echo: false
+  warning: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(foreign)
+library(here)
+library(vtable)
+library(flextable)
+library(ggthemes)
+library(Hmisc)
+library(httr)
+library(patchwork)
+library(ggrepel)
+library(lubridate)
+library(haven)
+library(zoo)
+library(readxl)
+library(ggbeeswarm)
+library(estimatr)
+library(ggpmisc)
+library(ggthemes)
+library(ggtext)
+library(gtsummary)
+library(geosphere)
+library(fixest)
+library(modelr)
+library(modelsummary)
+
+options(modelsummary_factory_word = 'flextable')
+custom_theme <- function(x, ...) {
+    x %>% set_table_properties(layout = "autofit")
+}
+options("modelsummary_theme_flextable" = custom_theme)
+
+#directories
+
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+      
+    dir <- here()
+    shared_loc <- 'C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+
+    dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
+    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  }
+
+
+indicators_dir <- paste(dir, 'Indicators', sep="/")
+out_dir <- paste(dir, 'Output', sep="/")
+
+#path to confidential directory
+
+  if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+    #directories
+    confidential_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
+
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+    #directories
+    confidential_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+
+  }
+
+
+
+# change_here <- function(new_path){
+#   new_root <- here:::.root_env
+#   
+#   new_root$f <- function(...){file.path(new_path, ...)}
+#   
+#   assignInNamespace(".root_env", new_root, ns = "here")
+# }
+
+#list countries
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE")
+
+```
+
+```{r functions}
+#functions
+FitFlextableToPage <- function(ft, pgwidth = 5){
+
+  ft_out <- ft %>% autofit()
+
+  ft_out <- width(ft_out, width = dim(ft_out)$widths*pgwidth /(flextable_dim(ft_out)$widths))
+  return(ft_out)
+}
+
+#add equations to plots
+eq_plot_txt <- function(y,x,data) {
+  
+  f <- as.formula(paste(y,x, sep="~"))
+  
+  eq <- lm_robust(f, data=data, se_type='HC2')
+  coef <- coef(eq)
+  std_err <- sqrt(diag(vcov(eq)))
+  r_2<- summary(eq)$r.squared
+  glue::glue("y = {round(coef[1],3)} + {round(coef[2],3)} x, R<sup>2</sup> = {round(r_2[1],3)} <br> &nbsp;   &nbsp;  	&nbsp; 	&nbsp;   ({round(std_err[1],3)}) &nbsp;   &nbsp;  ({round(std_err[2],3)})" )
+}
+
+#modelsummary output
+gm <- tibble::tribble(
+  ~raw,        ~clean,          ~fmt,
+  "nobs",      "N",             0,
+  "r.squared", "R Sq.", 2)
+```
+
+
+```{r load}
+
+#read in indicator metadata
+indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
+
+# read in indicator data
+PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
+  mutate(country="Peru",
+         date='2019') %>%
+  select(-year)
+
+RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
+  mutate(country="Rwanda",
+         date='2020') %>%
+  select(-year)
+
+
+JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
+  mutate(country="Jordan",
+         date='2019') %>%
+  select(-year)
+
+SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
+  mutate(country="Sierra Leone",
+         date='2022') %>%
+  select(-year)
+
+
+ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
+  mutate(country="Ethiopia",
+         date='2020-2021')  %>%
+  select(-year)
+
+# %>%
+#   rename(value=value_pooled)
+
+MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
+  mutate(country="Madagascar",
+         date='2021') %>%
+  select(-year)
+
+
+# Indicator names
+indicator_names_df <- PER_data %>%
+  select(Series, `Indicator Name`)
+
+combined_df_raw <- bind_rows(PER_data,JOR_data, RWA_data, ETH_data,  MDG_data, SLE_data)
+
+
+  
+  combined_df <- combined_df_raw %>%
+    arrange(Series) %>%
+    mutate(
+           value=round(value,1),
+           value_color=case_when(
+             value_metadata=="Needs Improvement" ~ "#FF4747",
+             value_metadata=="Caution" ~ "#FCD606",
+             value_metadata=="On Target" ~ "#85C546",
+             TRUE ~ "#808080"
+           ),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+
+
+combined_wide_df <- combined_df %>%
+  select(Series, country, value) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_color <- combined_df %>%
+  select(Series, country, value_color) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value_color
+  ) %>%
+  left_join(indicator_names_df)
+
+
+
+
+```
+
+
+```{r countrytabfn}
+#create function for creating country comparison tables
+country_tab_fn <- function(variables, title) {
+  
+  
+tab_df <- combined_wide_df %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+#set colors
+tab_color_df <- combined_wide_color %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+Peru_col <- tab_color_df$Peru
+Jordan_col <- tab_color_df$Jordan
+Rwanda_col <- tab_color_df$Rwanda
+Ethiopia_col <- tab_color_df$Ethiopia
+Madagascar_col <- tab_color_df$Madagascar
+SLE_col <- tab_color_df$`Sierra Leone`
+
+
+#build table
+tab_df <- tab_df  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`)
+
+
+ovr_table <- flextable(tab_df) %>%
+  add_header_lines(title) %>%
+  add_footer_lines('Source: UIS, GLAD, GEPD, World Bank. 
+ Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' ) %>%
+  theme_vanilla()
+
+#colors
+ovr_table <- ovr_table %>%
+  color(j=c('Peru','Jordan','Ethiopia','Rwanda','Madagascar', "Sierra Leone"),
+        color='black') %>%
+  bg(j = c('Peru'),
+     bg = Peru_col) %>%
+  bg(j = c('Jordan'),
+     bg = Jordan_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
+  bg(j = c('Ethiopia'),
+     bg = Ethiopia_col) %>%
+  bg(j = c('Madagascar'),
+     bg = Madagascar_col) %>%
+  bg(j = c('Sierra Leone'),
+     bg = SLE_col)    
+
+
+FitFlextableToPage(ovr_table) %>%
+  set_table_properties(layout = "autofit")
+
+  
+}
+```
+
+
+With [70% of 10-year-olds](https://www.worldbank.org/en/news/press-release/2022/06/23/70-of-10-year-olds-now-in-learning-poverty-unable-to-read-and-understand-a-simple-text) unable to read a simple text, education systems are in a learning crisis.  What should countries do to solve it?  Should they invest in training teachers?  Increase spending on early childhood education?  Reform the bureaucracy?  The policy environment?  Perhaps the answer is all of the above and more, but with limited education budgets focusing on all areas is not possible.  Additionally, COVID-19 has further strained budgets, with [41 percent of lower income countries](https://thedocs.worldbank.org/en/doc/e52f55322528903b27f1b7e61238e416-0200022022/related/WB-EFW-06-28-22.pdf) reducing spending on education after COVID-19.
+
+Without data on the key drivers of learning, deciding where to invest scarce resources is difficult.  This is where the [Global Education Policy Dashboard](https://www.educationpolicydashboard.org/) (GEPD) steps in.  The GEPD is a low-cost, nimble, and comprehensive tool for measuring the drivers of learning covering the three P's: the practices (or service delivery) taking place in the school, the policies guiding the education system, and politics and bureaucratic capacity of those managing the system.
+
+The GEPD has so far been implemented in four countries typically [for less than $150k per country](https://blogs.worldbank.org/education/are-investments-basic-education-geared-towards-learning-how-find-out-under-150k).   The four countries are Peru (2019), Jordan (2019), Ethiopia (2020 & 2021), and Madagascar (2021).  Each implementation involves a school survey of between 200-300 schools, interviews with teachers and principals, student assessments in 1st and 4th grade, a teacher content knowledge and pedagogical assessment.  It also includes a policy survey to capture the laws and regulations affecting education, and a survey of around 200 public officials managing the education sector. After data for the Dashboard is collected for a country, detailed and comprehensive data is available to help policy makers in that country make decisions.  To learn how the dashboard has been applied in Ethiopia see our previous post [Link to 2nd blog].
+
+While the GEPD provides a detailed look at each country where it is implemented, and the specific challenges will be unique to each country, by looking across countries it is possible to highlight some general patterns.  First, is that students and teachers are struggling in all the places we have visited.
+
+In Peru, only around 33% of students reached the proficiency level (around 80% of the items correct) on the 4th grade student assessment.  Shockingly this was the best performance of any country visited.  in Ethiopia, only 3.2% of students were proficient.  For teacher pedagogical skills, as measured by the [Teach instrument](https://www.worldbank.org/en/topic/education/brief/teach-helping-countries-track-and-improve-teaching-quality), scores ranged from 19% in Ethiopia to 68% in Jordan.  On student readiness, as measured by a 1st grade assessment given to 3 randomly selected students per school. The percent who could get 80% of the items correct ranged from 2.4% in Madagascar to 53% in Peru. 
+
+```{r studteach}
+#| fig.width=6,
+#| fig.height=5,
+#| dpi=350
+ind <- c(  'SE.PRM.LERN',
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD')
+
+cols <- c(
+  'Peru'='#0015ff',
+  'Jordan'='#ff00a1',
+  'Rwanda'='#90fe00',
+  'Ethiopia'='#8400ff',
+  'Madagascar'='#00fff7', 
+  'Sierra Leone'='#ff7300'
+)
+
+plot_df <- combined_df %>%
+  filter(Series %in% ind) %>%
+  mutate(Series=factor(Series, levels=c(  
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD',
+  'SE.PRM.LERN')))
+
+seg_df <- plot_df %>%
+  group_by(Series, `Indicator Name`) %>%
+  summarise(min=min(value, na.rm=TRUE),
+            max=max(value, na.rm=TRUE)) %>%
+  mutate(mid=min+(max-min)/2) %>%
+  mutate(Series=factor(Series, levels=c(  
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD',
+  'SE.PRM.LERN')))  
+
+dat_rect <- data.frame(
+                    xmin = 0,
+                    xmax = 85,
+                    ymin = -Inf,
+                    ymax = Inf
+)
+dat_rect2 <- data.frame(
+                    xmin = 85,
+                    xmax = 90,
+                    ymin = -Inf,
+                    ymax = Inf
+)
+dat_rect3 <- data.frame(
+                    xmin = 90,
+                    xmax = 100,
+                    ymin = -Inf,
+                    ymax = Inf
+)
+
+ggplot() +
+  geom_rect(data=dat_rect,
+    aes(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax),
+    fill='#ef476f', alpha=0.2, show.legend = FALSE) +  
+  geom_rect(data=dat_rect2,
+    aes(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax),
+    fill='#ffd166', alpha=0.2, show.legend = FALSE) +  
+  geom_rect(data=dat_rect3,
+    aes(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax),
+    fill='#06d6a0', alpha=0.2, show.legend = FALSE) +  
+  geom_segment(data=seg_df,
+    aes(x=min,xend=max, yend=Series, y=Series), color='white', size=2, show.legend = FALSE
+  ) +
+  geom_text(data=seg_df,
+            aes(label=`Indicator Name`, x=mid, y=Series), color='black', nudge_y = -0.2) +
+  geom_point(data=plot_df, aes(x=value, y=Series, color=country),
+             size=3) +
+  geom_text(data=plot_df, aes(x=value, y=Series, color=country,label=value),
+             nudge_y = 0.25, check_overlap = TRUE, show.legend = FALSE) +
+  scale_color_manual(
+    values=cols
+  ) +
+  labs(
+    color='Country',
+    title='Students and Teachers Often Struggled',
+    subtitle = 'GEPD Student and Teacher Practice Outcomes in Peru, Jordan, Ethiopia, Sierra Leone, and Madagascar',
+    caption='Red shading indicates needs improvement for indicator.  Yellow indicates caution.  Green indicates on target.'
+  ) +
+  theme_tufte() +
+  xlab("Indicator value") +
+  theme(
+    axis.text.y = element_blank(),
+    axis.title.y=element_blank(),
+    legend.position = 'top',
+    axis.ticks.y = element_blank()
+  ) + 
+  guides(
+    fill='none',
+    size='none',
+    alpha='none'
+  ) 
+
+```
+
+
+
+```{r}
+practice_indicators <- c(
+  'SE.PRM.LERN',
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.INPT',
+  'SE.PRM.INFR',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD',
+  'SE.PRM.OPMN',
+  'SE.PRM.ILDR',
+  'SE.PRM.PKNW',
+  'SE.PRM.PMAN'
+)
+
+tab_df_ovrl <- combined_wide_df %>%
+  filter(Series %in% practice_indicators) %>%
+  arrange(factor(Series, levels=practice_indicators))
+
+#urban rural split
+practice_indicators_R <- c(
+  'SE.PRM.LERN.1.R',
+  'SE.PRM.EFFT.2.R',
+  'SE.PRM.CONT.1.R',
+  'SE.PRM.PEDG.1.R',
+  'SE.PRM.INPT.1.R',
+  'SE.PRM.INFR.1.R',
+  'SE.PRM.LCAP.1.R',
+  'SE.PRM.ATTD.1.R',
+  'SE.PRM.OPMN.1.R',
+  'SE.PRM.ILDR.1.R',
+  'SE.PRM.PKNW.1.R',
+  'SE.PRM.PMAN.1.R'
+)
+
+title <- 'GEPD Practice Indicators Urban/Rural'
+  
+tab_df_R <- combined_wide_df %>%
+  filter(Series %in% practice_indicators_R) %>%
+  arrange(factor(Series, levels=practice_indicators_R))
+
+#set colors
+tab_color_df_R <- combined_wide_color %>%
+  filter(Series %in% practice_indicators_R) %>%
+  arrange(factor(Series, levels=practice_indicators_R))
+
+Peru_col_R <- tab_color_df_R$Peru
+Jordan_col_R <- tab_color_df_R$Jordan
+Ethiopia_col_R <- tab_color_df_R$Ethiopia
+Madagascar_col_R <- tab_color_df_R$Madagascar
+
+
+#build table
+tab_df_R <- tab_df_R  %>%
+  select(`Indicator Name`, Peru, Jordan, Ethiopia, Madagascar) %>%
+  rename(Peru_R=Peru, 
+         Jordan_R=Jordan, 
+         Ethiopia_R=Ethiopia, 
+         Madagascar_R=Madagascar)
+
+tab_df_R$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+tab_df_R$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+
+# urban 
+practice_indicators_U <- c(
+  'SE.PRM.LERN.1.U',
+  'SE.PRM.EFFT.2.U',
+  'SE.PRM.CONT.1.U',
+  'SE.PRM.PEDG.1.U',
+  'SE.PRM.INPT.1.U',
+  'SE.PRM.INFR.1.U',
+  'SE.PRM.LCAP.1.U',
+  'SE.PRM.ATTD.1.U',
+  'SE.PRM.OPMN.1.U',
+  'SE.PRM.ILDR.1.U',
+  'SE.PRM.PKNW.1.U',
+  'SE.PRM.PMAN.1.U'
+)
+
+
+tab_df_U <- combined_wide_df %>%
+  filter(Series %in% practice_indicators_U) %>%
+  arrange(factor(Series, levels=practice_indicators_U))
+
+#set colors
+tab_color_df_U <- combined_wide_color %>%
+  filter(Series %in% practice_indicators_U) %>%
+  arrange(factor(Series, levels=practice_indicators_U))
+
+Peru_col_U <- tab_color_df_U$Peru
+Jordan_col_U <- tab_color_df_U$Jordan
+Ethiopia_col_U <- tab_color_df_U$Ethiopia
+Madagascar_col_U <- tab_color_df_U$Madagascar
+
+
+#build table
+tab_df_U <- tab_df_U  %>%
+  select(`Indicator Name`, Peru, Jordan, Ethiopia, Madagascar) %>%
+  rename(Peru_U=Peru, 
+         Jordan_U=Jordan, 
+         Ethiopia_U=Ethiopia, 
+         Madagascar_U=Madagascar)
+
+tab_df_U$`Indicator Name` <- tab_df_ovrl$`Indicator Name`
+tab_df_U$`Indicator Name`[7] <- "Student Readiness (percentage correct)"
+
+
+
+#combined
+tab_df_comb <- tab_df_R %>%
+  left_join(tab_df_U) %>%
+  select(`Indicator Name`, Peru_R, Peru_U, Jordan_R, Jordan_U, Ethiopia_R, Ethiopia_U, Madagascar_R, Madagascar_U)
+
+
+
+
+
+```
+
+Further, a consistent finding is that rural areas tend to struggle even more than the national totals suggest.  In most cases, teachers and students in rural areas perform worse than those from urban areas.  The disparities extend to other areas of the education system as well.  In school inputs and infrastructure, typically rural areas are worse off than urban areas.  For example, in Peru while around 65% of urban schools have a working internet connection, only around 8% of rural schools have one. While around 63% of children in urban schools in Ethiopia have access to a working tablet or computer, only around 14% have access in rural areas.  In Madagascar, 27% of children in urban schools have access to pens, pencils, textbooks, and exercise books, a low rate, but in rural areas it is even worse with only around 10% having access to these learning materials.
+```{r}
+#| , fig.width = 7, fig.height = 5, dpi=350
+series_list <- c('SE.PRM.INPT.5.U', 'SE.PRM.INPT.5.R', #(De Facto) Percent of schools with access to EdTech
+                 'SE.PRM.INPT.3.U','SE.PRM.INPT.3.R', # (De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books 
+                 'SE.PRM.INFR.3.U','SE.PRM.INFR.3.R', # (De Facto) Percent of schools with functioning toilets
+                 'SE.PRM.INFR.5.U', 'SE.PRM.INFR.5.R', # Percent of schools with access to internet
+                 'SE.PRM.INFR.6.U', 'SE.PRM.INFR.6.R' # Percent of schools accessible to children with special needs
+
+                 ) 
+
+infra_df <- combined_df %>%
+  filter(Series %in% series_list) %>%
+  mutate(Rural=if_else(grepl("\\.R",Series),"Rural","Urban"),
+         Indicator=case_when(
+           grepl("SE.PRM.INPT.5",Series) ~ 'Working tablet/computer',
+           grepl("SE.PRM.INPT.3",Series) ~ 'Equipped with pens/pencils, textbooks, and exercise books ',
+           grepl("SE.PRM.INFR.3",Series) ~ 'Functioning toilets',
+           grepl("SE.PRM.INFR.5",Series) ~ 'Working internet connection',
+           grepl("SE.PRM.INFR.6",Series) ~ 'Accessible to children with special needs',
+         )) %>%
+  select(country, Indicator, Rural, value) %>%
+  pivot_wider(
+    names_from=Rural,
+    values_from=value
+  ) %>%
+  mutate(Indicator=str_wrap(Indicator,20),
+         country=factor(country, levels=c("Madagascar", "Ethiopia", "Rwanda", "Jordan", "Peru", "Sierra Leone")))
+
+ggplot(infra_df, aes(x=country)) +
+  facet_wrap(~Indicator, nrow=1) +
+  geom_point(aes(y=Rural, color='Rural'), size=4) +
+  geom_text_repel(aes(y=Rural, color='Rural', label=paste0(Rural,"%")), size=4, nudge_x=-0.25) +
+  geom_point(aes(y=Urban, color='Urban'), size=4) +
+  geom_text_repel(aes(y=Urban, color='Urban', label=paste0(Urban,"%")), size=4, nudge_x=0.25) +
+  geom_segment(aes(y=Rural, yend=Urban, xend=country)) +
+  scale_color_manual(
+    values=c(
+      'Rural'='red',
+      'Urban'='blue'
+    )
+  ) +
+  labs(color="Legend") +
+  ggtitle('Percent of Schools with Inputs or Infrastructure') +
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position = 'top',
+        axis.title = element_blank())
+
+```
+
+The policy environment is another area that can be examined using the GEPD.  The GEPD measures policies in two ways.  First, the legal environment, or de jure policy environment.  Second, is how the policies are implemented and experienced by the teachers and principals in schools, or the de facto policy environment.  It turns out that the de facto and de jure policy environments often differ. To illustrate, in the figure below are the de jure policy scores for Jordan in yellow, and the de facto policy scores are in red.  Both sets of scores are on the same 1-5 scale, with 5 the highest score and 1 the lowest score. Generally speaking, the de jure scores are higher than the de facto scores, meaning that although laws are on the books that are supporting learning, the implementation in the schools is less consistent.   For example in Jordan, while there is a policy on the books encouraging professional development, only 28% of teachers, when asked in the GEPD school survey, reported participating in a professional development program in the past 12 months. 
+
+![Jordan De Facto Versus De Jure Policy Environment](./plots/DF_DJ_JOR.png)
+
+
+As shown in Ethiopia, there are some cases where a country has an incomplete de jure policy environment, but teachers and principals have created informal systems to fill in the gaps in de jure policy.  In these cases, a country might score better on the de facto measure than the de jure.  For instance, despite no legislation assigning responsibility for monitoring teacher performance in Ethiopia, nearly 80% of teachers report receiving evaluations in the past 12 months.
+
+![Ethiopia De Facto Versus De Jure Policy Environment](./plots/DF_DJ_ETH.png)
+
+Using the data collected at the school level and the interviews of public officials, it is possible to see how well the GEPD indicators predict student learning in 4th grade.  For a subset of around 400 schools, it is possible to link the 4th grade student level outcomes to the other school outcomes and results from the survey of public officials.  Using this data, it is possible to see how much variation in learning outcomes can be explained by the GEPD indicators. 
+
+One novelty of the GEPD is that it provides data not just on the school indicators, but the policies and politics as well.  This value can be shown by looking at how much additional explanatory power is gained by including the policy and politics indicators.  In a linear regression with school average 4th grade student achievement as the outcome variable, the school level practice indicators explain around 34% of the variation in student learning.  When adding the de facto policy indicators, this rises to 46% of the variation explained.  Finally, when adding the indicators captured by the survey of public officials for public officials who oversee the schools, the percentage explained rises to more than 50%.
+
+![Variation in 4th Grade Student Achievement Explained by School Practices, Policies, and Politics Indicators](./plots/cor_gif.gif)
+
+
+The GEPD is meant to provide countries a way to prioritize investment and better understand problem areas in their education systems.  Any policy making strategy will need to be tailored to the individual country context.  However, some general patterns across multiple countries have emerged including that teachers and students are struggling to perform, that rural areas tend to lag behind, that the policy environments exists, and that looking at the entire system can be helpful for understanding what is driving differences in learning.  
+
+To undo the damage caused by COVID-19 to education systems and end learning poverty, countries will need to be deliberate and careful about how scare education resources are spent to improve education systems.  The Global Education Policy Dashboard is a low-cost, nimble, and comprehensive tool to help do this.
+
+
+## Annex
+
+
+
+## Variation
+
+
+```{r}
+
+
+#specify some key indicators to be imputed with mean value when necessary
+practices <- c('presence_rate', 'content_knowledge', 'teach_score', 'inputs', 'infrastructure', 'ecd_student_knowledge', 'student_attendance', 'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management')
+policies <- c('teacher_attraction', 'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring', 'intrinsic_motivation', 'standards_monitoring', 'sch_monitoring', 'sch_management_clarity', 'sch_management_attraction', 'sch_selection_deployment', 'sch_support', 'principal_evaluation')
+politics <- c('quality_bureaucracy', 'national_learning_goals', 'impartial_decision_making', 'mandates_accountability')
+
+
+# read in the microdata
+########
+## Peru
+########
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+PER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+PER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+PER_school_office_link_df <- PER_school_anon_df %>%
+  left_join(PER_school_gdp) %>%
+  left_join(PER_school_office_linkages) %>%
+  left_join(PER_school_size) %>%
+  mutate(country="Peru") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Jordan
+########
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+JOR_school_anon_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/"))
+JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+JOR_school_gdp <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.dta", sep="/")) %>%
+  select(hashed_school_code, GDP)
+#load school size info
+JOR_school_size <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")),
+         students_enrolled=as.character(students_enrolled)) %>%
+  filter(!is.na(students_enrolled))
+JOR_school_office_link_df <- JOR_school_anon_df %>%
+  left_join(JOR_school_gdp) %>%
+  left_join(JOR_school_office_linkages) %>%
+  left_join(JOR_school_size) %>%
+  mutate(country="Jordan") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         rural=if_else(rural==1, TRUE,FALSE),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Rwanda
+########
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+RWA_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+RWA_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+RWA_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+RWA_school_office_link_df <- RWA_school_anon_df %>%
+  left_join(RWA_school_gdp) %>%
+  left_join(RWA_school_office_linkages) %>%
+  left_join(RWA_school_size) %>%
+  mutate(country="Rwanda") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+########
+## Ethiopia
+########
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+ETH_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+ETH_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+ETH_school_office_link_df <- ETH_school_anon_df %>%
+  left_join(ETH_school_gdp) %>%
+  left_join(ETH_school_office_linkages) %>%
+  left_join(ETH_school_size) %>%
+  mutate(country="Ethiopia")  %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Madagascar
+########
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv")) %>%
+  select(hashed_school_code, national_learning_goals, targeting,monitoring, incentives, community_engagement, mandates_accountability, coherence, transparency, accountability, quality_bureaucracy, knowledge_skills, work_environment, merit, motivation_attitudes, motivation_relative_start, impartial_decision_making, politicized_policy_implementation, employee_unions_as_facilitators, school_lat, school_lon, office_lat, office_lon)
+#load gdp info
+
+MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+MDG_school_office_link_df <- MDG_school_anon_df %>%
+  left_join(MDG_school_gdp) %>%
+  left_join(MDG_school_office_linkages) %>%  
+  select(-district) %>%
+  mutate(country="Madagascar") %>%
+  mutate(
+    teach_score=3,
+    student_attendance=80,
+    presence_rate=100-absence_rate,
+    dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE)
+  ) %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(c('presence_rate', 'content_knowledge', 'inputs', 'infrastructure', 'ecd_student_knowledge',  'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management'), ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+
+########
+########
+## Sierra Leone
+########
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+SLE_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+SLE_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+SLE_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+SLE_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+SLE_school_office_link_df <- SLE_school_anon_df %>%
+  left_join(SLE_school_gdp) %>%
+  left_join(SLE_school_office_linkages) %>%
+  left_join(SLE_school_size) %>%
+  mutate(country="Sierra Leone") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
+         GDP=gdp,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+#impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() %>%
+  filter(!is.na(national_learning_goals))
+
+###########
+# Combined
+##########
+
+
+
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df,RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df,  SLE_school_office_link_df) 
+
+
+
+```
+
+```{r anova}
+#set controls
+controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
+practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
+policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
+politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+
+#create formulas for regression
+baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
+baseline_pract_pol <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies))
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+baseline_pract_pol_bur_cntl <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics," + ", controls))
+
+#get a constant sample
+
+anova_df <- combined_school_office_df %>%
+  select(student_knowledge, GDP, rural, students_enrolled, country,
+         presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
+         teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
+         quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+  na.omit
+
+
+
+models <- list(
+  
+
+'Practices' = feols(baseline_pract, data=anova_df,vcov='hetero'),
+
+'Practices + Policies' = feols(baseline_pract_pol, data=anova_df,vcov='hetero'),
+
+'Practices + Policies + Politics' = feols(baseline_pract_pol_bur, data=anova_df,vcov='hetero'),
+
+'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df,vcov='hetero')
+)
+
+
+
+```
+
+## P
+
+```{r, fig.height=6, fig.width=8}
+controls <- 'log(GDP) + rural + students_enrolled'
+practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
+policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
+politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+
+
+# baseline
+baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
+
+m <- feols(baseline_pract , data=anova_df)
+
+baseline_pract_df <- anova_df %>%
+  add_predictions(m)
+
+
+ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+  ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices') +
+  theme_bw() 
+```
+## PP
+
+```{r, fig.height=6, fig.width=8}
+# baseline
+baseline_pract_pol <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies))
+m <- feols(baseline_pract_pol , data=anova_df)
+
+baseline_pract_pol_df <- anova_df %>%
+  add_predictions(m)
+
+ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+    ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies') +
+  theme_bw() 
+```
+## PPP
+
+```{r, fig.height=6, fig.width=8}
+
+
+
+baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
+
+m <- feols(baseline_pract_pol_bur , data=anova_df)
+
+baseline_pract_pol_bur_df <- anova_df %>%
+  add_predictions(m)
+
+ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country)) +
+  geom_point() +
+  geom_smooth(method='lm',color='black') +
+  stat_poly_eq(color='black', size=8) +
+  expand_limits(x=c(10,80),
+                y=c(10,100)) +
+  xlab('Fitted value from regression') +
+  ylab('4th-grade student knowledge') +
+  ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies + Politics') +
+  theme_bw() 
+```

@@ -1,0 +1,175 @@
+---
+title: "Pakistan (Punjab) Sampling"
+author: "Brian Stacy"
+date: "7/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(here)
+library(readxl)
+library(haven)
+library(flextable) 
+
+#Country name
+country <-'PAK'
+country_name <- "Pakistan"
+year <- '2022'
+province <- "Punjab"
+#specify name of sampling frame file.  This needs to be a csv file
+public_file_frame<-"Punjab Public School Sampling Frame.dta"
+private_file_frame<-"PSC Sampling Frame.dta"
+
+
+set.seed(8473227)
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+## Introduction
+
+This file outlines the sampling strategy for Pakistan (Punjab).
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+
+
+ 
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions.  New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below.  The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years).  Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+
+## Punjab Sampling
+
+200 schools will be drawn.  The strata
+
+
+
+```{r}
+
+
+
+
+#read sample frame
+public_df=read_stata(paste(sampling_folder, public_file_frame, sep="/"))
+private_df=read_stata(paste(sampling_folder, private_file_frame, sep="/"))
+
+df_raw<-public_df %>%
+    mutate(num_teachers=Teachers,
+            total_enrollment=enrollment,
+            total_katchi_enrollment=if_else(is.na(total_katchi_enrollment),0,total_katchi_enrollment),
+            total_katchi_enrollment_boys=if_else(is.na(eng_kachi_b),0,eng_kachi_b),
+            total_katchi_enrollment_girls=if_else(is.na(eng_kachi_g),0,eng_kachi_g),
+            total_ece_enrollment=if_else(is.na(total_ece_enrollment),0,total_ece_enrollment),
+            total_ece_enrollment_boys=if_else(is.na(ECEBoys),0,ECEBoys),
+            total_ece_enrollment_gils=if_else(is.na(ECEGirls),0,ECEGirls),
+            total_1st_enrollment=total_cls1_enrollment,
+            total_1st_enrollment_boys=eng_cls1_b,
+            total_1st_enrollment_girls=eng_cls1_g,       
+            total_4th_enrollment_boys=eng_cls3_b, # 4th grade boys variable is missing for some reason, so impute using grade 3
+            total_4th_enrollment_girls=eng_cls4_g,      
+            total_4th_enrollment=total_4th_enrollment_boys+total_4th_enrollment_girls,
+            total_5th_enrollment_boys=eng_cls5_b, 
+            total_5th_enrollment_girls=eng_cls5_g,      
+            total_5th_enrollment=total_5th_enrollment_boys+total_5th_enrollment_girls,      
+            rural=if_else(school_location=="Rural", 1,0))
+
+```
+
+Basic summary stats of overall frame
+
+```{r}
+#level
+df_raw %>% 
+  group_by(school_level) %>% 
+  summarise(n=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_raw %>% 
+  group_by(district) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by District') %>% 
+  autofit()
+
+#Gender
+df_raw %>% 
+  group_by(school_gender) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+
+#Urban/rural
+df_raw %>% 
+  group_by(rural) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+
+
+
+```
+
+
+```{r}
+
+df_updated_gepd <- df_raw %>%
+  filter(total_1st_enrollment>=3,
+         total_4th_enrollment>=3) 
+
+df_updated <- df_raw %>%
+  filter(total_ece_enrollment+total_katchi_enrollment>=3,
+         total_1st_enrollment>=3,
+         total_4th_enrollment>=3,
+         total_5th_enrollment>=3)
+```
+
+Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
+
+However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(total_ece_enrollment+total_katchi_enrollment<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(total_5th_enrollment<3))` because of the grade 5 restriction.
+

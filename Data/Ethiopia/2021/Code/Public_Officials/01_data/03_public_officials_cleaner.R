@@ -356,7 +356,7 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
 
 if (backup_onedrive=="yes") {
   write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))
-  write_dta(public_officials_dta_short, path = file.path(confidential_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+  #write_dta(public_officials_dta_short, path = file.path(confidential_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
 }
 
 
@@ -367,7 +367,8 @@ public_officials_dta_clean2 <- public_officials_dta_clean %>%
   mutate(pol_personnel_management=politicized_personnel_management ,
          pol_policy_making=politicized_policy_making ,
          pol_policy_implementation=politicized_policy_implementation)
-write_dta(public_officials_dta_clean2, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
+
+write.csv(public_officials_dta_clean2, file = file.path(confidential_folder, "public_officials_survey_data.csv"))
 
 
 keep_info <- c('interview__id', 'office_preload', 'govt_tier',

@@ -129,8 +129,16 @@ bbc_style <- function() {
 ```{r data, include=FALSE}
 
 #set directory to bring in data
+ if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+    work_dir  <- "C:/Users/wb577189/OneDrive - WBG/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+    
+ } else {
+    
+   work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+
+   
+  }
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))

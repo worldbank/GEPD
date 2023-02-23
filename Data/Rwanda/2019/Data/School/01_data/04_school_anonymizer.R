@@ -13,15 +13,6 @@ library(digest)
 
 load(file = file.path(confidential_folder, "school_survey_data.RData"))
 
-#add some disability questions
-school_dis <- school_dta %>%
-  group_by(school_code) %>%
-  summarise(across(starts_with('m4scq'),mean, na.rm=TRUE))
-
-
-final_school_data <- final_school_data %>%
-  left_join(school_dis, by='school_code',suffix=c("",".y")) %>%
-  select(-ends_with(".y"))
 
 #generate list of datasets to anonnymize
 #Read in list of indicators
@@ -65,40 +56,54 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #define function to create weights for summary statistics
 
 #Load original sample of schools
-currentDate<-c("2019-08-30")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+#Load original sample of schools
+currentDate<-c("2022-09-21")
 
-load(sample_frame_name)
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
+) %>%
+  mutate(school_code=Inst_ID)
 
 #load some auxiliary data to help do sampling weights, because we lacked total enrollment for the districts
-auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
-  mutate(district=str_to_upper(district))
+# auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
+#   mutate(district=str_to_upper(district))
 
 
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
-  scode<-enquo(scode)  
+  scode<-enquo(scode)
   snumber<-enquo(snumber)
   prov<-enquo(prov)
-  
-  data_set_updated <- data_set_updated %>%
-    left_join(auxillary_frame_info) %>%
-    mutate(province=district) %>%
-    group_by(district_code, urban_rural) %>%
-    mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
-    mutate(weights=n()/allocate) %>%
-    mutate(unity=1) %>%
-    ungroup() 
+
+  data_set_updated <- school_weights %>% left_join(sample_frame %>% select(1:8) %>% rename(school_code= Inst_ID,
+                                                                                           district = District,
+                                                                                           province = province,
+                                                                                           urban_rural=Location) %>% 
+                                                     mutate(school_code=as.numeric(school_code))) %>% filter(!is.na(school_code)) %>% 
     
-  
+    group_by(district, urban_rural) %>%
+    mutate(total_students=if_else(is.na(total_students), as.numeric(median(total_students, na.rm=T)), as.numeric(total_students))) %>%
+    mutate(weights=n()/total_students) %>%
+    mutate(unity=1) %>%
+    ungroup()
+
+    # data_set_updated %>%
+    # left_join(auxillary_frame_info) %>%
+    # mutate(province=district) %>%
+    # group_by(district_code, urban_rural) %>%
+    # mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
+    # mutate(weights=n()/allocate) %>%
+    # mutate(unity=1) %>%
+    # ungroup()
+
+
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
-    mutate(rural=urban_rural=="RURAL") %>%
+    mutate(rural=urban_rural=="Rural") %>%
     mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
-                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province"
+                                                      | names(data_set_updated) == "totalstudents" | names(data_set_updated) == "Tehsil" | names(data_set_updated) == "weights"  )])))
 }
 
 
@@ -142,22 +147,22 @@ for (i in data_list ) {
       # G4 students
       if (i %in% c("final_indicator_data_LERN","final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
                   "final_indicator_data_ATTD",  "final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F")) {
-        temp <- df_weights_function(temp, sch_id, g4_stud_weight_component, district)
+        temp <- df_weights_function(temp, school_code, g4_stud_weight_component, district)
       # Teacher Questionnaire and content knowledge  
       } else if (i %in% c("final_indicator_data_TATT",   "final_indicator_data_TSDP", "final_indicator_data_TSUP",
                           "final_indicator_data_TEVL",   "final_indicator_data_TMNA",   "final_indicator_data_TINM",
                           "final_indicator_data_CONT","final_indicator_data_CONT_M","final_indicator_data_CONT_F")) {
-        temp <- df_weights_function(temp, sch_id, teacher_weight_component, district)
+        temp <- df_weights_function(temp, school_code, teacher_weight_component, district)
       # Teacher Absence  
       } 
         else if (i %in% c("final_indicator_data_EFFT","final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F" )) {
-        temp <- df_weights_function(temp, sch_id, abs_weight_component, district)
+        temp <- df_weights_function(temp, school_code, abs_weight_component, district)
       # G1 Assessment  
       } else if (i %in% c("final_indicator_data_LCAP","final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F" )) {
-        temp <- df_weights_function(temp, sch_id, g1_stud_weight_component, district)
+        temp <- df_weights_function(temp, school_code, g1_stud_weight_component, district)
       # school level  
       } else {
-        temp <- df_weights_function(temp, sch_id, unity, district)
+        temp <- df_weights_function(temp, school_code, unity, district)
       }
     }
     
@@ -226,7 +231,7 @@ for (i in data_list ) {
     
       #final_school_data<-temp
       print(i)
-      write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+      write_csv(temp, file = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
 
       
 
@@ -234,3 +239,4 @@ for (i in data_list ) {
 }
 
 save(list=c(anon_dta_list, 'metadta', 'indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+

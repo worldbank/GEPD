@@ -168,7 +168,7 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.EFFT     = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
+      SE.PRM.EFFT     = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "All"),
       SE.PRM.EFFT.1   = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
       SE.PRM.EFFT.1.F = 100-indicator_means(absence_rate, "school", "EFFT",  "Female"),
       SE.PRM.EFFT.1.M = 100-indicator_means(absence_rate, "school", "EFFT",  "Male"),
@@ -535,11 +535,11 @@ api_template <- api_template %>%
     #(De Facto) Average quality of applicants accepted into initial education programs
     SE.PRM.TSDP.3  = expert_df$criteria_become,
     #(De Jure) Requirements to become a primary school teacher                        
-    SE.PRM.TSDP.4  = indicator_means(teacher_selection		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.4  = 1+2*indicator_means(teacher_selection		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to become a primary school teacher                       
     SE.PRM.TSDP.5 =expert_df$criteria_transfer,
     #(De Jure) Requirements to fulfill a transfer request                             
-    SE.PRM.TSDP.6  = indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.6  = 1+2*indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
     #(De Facto) Requirements to fulfill a transfer request                            
     SE.PRM.TSDP.7  = -999,
     #(De Jure) Selectivity of teacher hiring process                                  
@@ -706,7 +706,7 @@ api_template <- api_template %>%
   SE.PRM.LHTH.1 =expert_df$immunization, #(De Jure) Are young children required to receive a complete course of childhood immunizations?
   SE.PRM.LHTH.2 = 100*as.numeric(defacto_dta_learners_final[,5]), #(De Facto) Percent of children who at age 24-35 months had received all vaccinations recommended in the national immuniz~
   SE.PRM.LHTH.3 =expert_df$healthcare_young_children, #(De Jure) Is there a policy that assures access to healthcare for young children? Either by offering these services free~
-  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of  children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance
+  SE.PRM.LHTH.4 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children under 5 covered by health insurance`), #(De Facto) Percent of  children under 5 covered by health insurance
   SE.PRM.LHTH.5 =expert_df$deworming, #(De Jure) Are deworming pills funded and distributed by the government?
   SE.PRM.LHTH.6 =100*as.numeric(defacto_dta_learners_final$`MICS/Other - Percentage of children age 6-59 months who received deworming medication.`), #(De Facto) Percent of children age 6-59 months who received deworming medication
   SE.PRM.LHTH.7 =expert_df$antenatal_skilled_delivery, #(De Jure) Is there a policy that guarantees pregnant women free antenatal visits and skilled delivery?
@@ -920,22 +920,26 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.BFIN.2 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #(Financing) - Adequacy expressed by the per child spending
+      SE.PRM.BFIN.6 = 4*as.numeric(finance_df_final$`Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?`)+1, #(Financing) - Adequacy expressed by the per child spending
       SE.PRM.BFIN.3 =4*as.numeric(finance_df_final$`Efficiency by the relationship between financing and outcomes; where 0 is the lowest possible efficiency and 1 is the highest`)+1,#(Financing) Efficiency - Expressed by the score from the Public Expenditure and Financial Accountability (PEFA) assessment~
       SE.PRM.BFIN.4 =4*as.numeric(finance_df_final$`Efficiency by the score from the Public Expenditure and Financial Accountability (PEFA) assessment; where 0 is the lowest possible efficiency and 1 is the highest`)+1,#(Financing) Efficiency - Expressed by the relationship between financing and outcomes; where 0 is the lowest possible effi~
       SE.PRM.BFIN.5 =-999,#(Financing) - Equity
+      SE.PRM.BFIN.2 = as.numeric(finance_df_final$`Government expenditure per school age person, primary (% of GDP per capita)`), #(Financing) - Adequacy expressed by the per child spending
     ) %>%
     mutate(
       SE.PRM.BFIN   = as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2), #Politics & Bureaucratic Capacity - Financing
       SE.PRM.BFIN.1 = as.numeric(0.5*SE.PRM.BFIN.2+0.5*(SE.PRM.BFIN.3+SE.PRM.BFIN.4)/2),#Financing score; where a score of 1 indicates low effectiveness and 5 indicates high effectiveness in terms of adequacy, e~
       
     )
+  
   #reshape dataframe back
   indicator_values_back <- as.data.frame(t(as.matrix(indicator_values_transpose))) %>%
-    rownames_to_column(var='Series') %>%
-    rename(value = V1  )
+    rownames_to_column(var='Series')
+  # %>%
+  #   rename(value = V1  )
   
-api_final<-api_template %>%
+  api_final<-api_template %>%
     dplyr::select(-value) %>%
     left_join(indicator_values_back)
+  
   

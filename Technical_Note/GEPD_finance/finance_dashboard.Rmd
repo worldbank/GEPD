@@ -1,0 +1,629 @@
+---
+title: "GEPD Finance Dashboard"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(flextable)
+library(Hmisc)
+library(zoo)
+library(highcharter)
+library(broom)
+
+#setwd(paste0(dir,"/Technical_Note/GEPD_finance"))
+
+#read in some data
+finance_df <- read_csv('finance_df.csv') %>% arrange(country)
+pefa_df <- read_csv('pefa_final_data_2022-04-18.csv')
+sfa_df <- read_csv('stochastic_frontier.csv')
+combined_df_raw <- read_csv('combined_df_raw.csv')
+combined_wide_df <- read_csv('combined_wide_df.csv')
+combined_wide_color <- read_csv('combined_wide_color_df.csv')
+gni_df <- read_csv('gni_df.csv')
+
+
+```
+
+    ```{css}
+    .chart-shim {
+      overflow: auto;
+    }
+    ```
+
+Controls {.sidebar data-width=400}
+==============================
+
+### Choose Options for constructing finance indicator
+
+```{r}
+
+
+sliderInput("bins",
+  "Number of comparison countries for local averaging:",
+  min = 1,
+  max = 50,
+  value = 25)
+
+selectInput('ind',
+            'Select an indicator as basis of scoring',
+            choices=c(
+                  "Government expenditure per student, primary (% of GDP per capita)",
+                  "Government expenditure per school age person, primary (% of GDP per capita)",
+                  "Government expenditure per student, primary (PPP adjusted)",
+                  "Government expenditure per school age person, primary (PPP adjusted)"
+            ),
+            selected = "Government expenditure per school age person, primary (% of GDP per capita)")
+
+selectizeInput('countries',
+               multiple=TRUE,
+            'Select countries to compare',
+            choices=unique(finance_df$country),
+            selected = c("Peru", "Jordan", "Rwanda", "Madagascar", "Ethiopia", "Niger", "Sierra Leone", "Pakistan", "Chad", "Mozambique"))
+
+```
+
+
+
+
+GDP Per Capita Scatterplots 
+==============================
+
+In the case when an indicator is selected based on % of GDP per capita, a shaded chart is shown showing preliminary scoring.  In this scoring, a country scores:
+
+
+1 point. Spends less than 8% of GDP per capita per school age child/student in primary
+
+2 point. 8-12% of GDP per capita per school age child/student in primary
+
+3 point. 12-17% of GDP per capita per school age child/student in primary
+
+4 point. 17-20% of GDP per capita per school age child/student in primary
+
+5 point. More than 20% of GDP per capita per school age child/student in primary
+
+These bands roughly correspond to bottom 20%, 20-40th percentile, 40-60th percentile, 60-80th percentile, and top 20th percentile.
+
+
+```{r scatter}
+
+
+renderHighchart({
+  
+  
+
+    
+    income_df <- finance_df %>%
+  group_by(income_level) %>%
+  summarise(spending_per_sap=wtd.mean(spending_per_sap, w=`SAP_1`),
+            spending_per_pupil=wtd.mean(spending_per_pupil, w=`SAP_1`),
+            SE.XPD.PRIM.PC.ZS=wtd.mean(SE.XPD.PRIM.PC.ZS, w=`SAP_1`),
+            spender_per_sap_gdp=wtd.mean(spender_per_sap_gdp, w=`SAP_1`)
+            )   %>%
+  rename(
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+    rename(income_avg= !!input$ind) %>%
+    select(income_level, income_avg)
+  
+ hcht_dat <- finance_df %>%
+  left_join(gni_df) %>%
+  ungroup() %>%
+  select(country, income_level, date, SE.XPD.PRIM.PC.ZS, spender_per_sap_gdp,spending_per_pupil, spending_per_sap, NY.GDP.PCAP.PP.CD) %>%
+  rename(
+    Country=country,
+    Year=date,
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+  mutate(Year=as.character(Year),
+         colors=if_else(Country %in% input$countries, "#e63946", "#060707")) %>%
+    rename(base_ind= !!input$ind) %>%
+   filter(!is.na(base_ind)) %>%
+    arrange(NY.GDP.PCAP.PP.CD) 
+
+ 
+     #set log or not log
+  if (grepl('% of GDP',input$ind)) {
+    axs <- 'linear' 
+    scores <- c(0,8,12,17,20,50)
+
+  } else {
+    axs <- 'logarithmic'
+    scores <- c(0,0,0,0,0,0,0,0)
+  }
+ 
+     model <- lm(base_ind ~ NY.GDP.PCAP.PP.CD, data = hcht_dat)
+     fit <- augment(model) %>% arrange(NY.GDP.PCAP.PP.CD)
+     
+     qtiles <- quantile(hcht_dat$base_ind, na.rm=T)
+
+hchart(hcht_dat, 'scatter',
+       hcaes(x=NY.GDP.PCAP.PP.CD,y=base_ind, group=Country, color=colors),
+       tooltip=list(pointFormat='<b>Country:</b> {point.Country} <br>
+                                     <b>GDP per capita, PPP (current international $):</b> {point.x:.2f} <br>
+                                     <b>Finance indicator value:</b> {point.y:.2f}
+                        '),
+       marker=list(
+       radius=6)
+        ) %>%
+  hc_add_series(
+    fit, type = "line", hcaes(x = NY.GDP.PCAP.PP.CD, y = .fitted),
+    name = "Line of Best Fit", id = "fit"
+    ) %>%
+  hc_xAxis(
+    title=list(text="GDP per capita, PPP (current international $)",
+               style=list(fontSize=18)),
+    type='logarithmic',
+    labels=list(
+      style=list(fontSize=14)
+    )
+  ) %>%
+  hc_yAxis(
+    title=list(text=input$ind,
+               style=list(fontSize=18)),
+    plotBands=list(
+      list(
+        label = list(text = "Score=1"),
+        color='#FDB0B1', #Color value
+        opacity=0.9,
+                   from=scores[1], # Start of the plot band
+                   to=scores[2]), # End of the plot band
+        list(
+        label = list(text = "Score=2"),
+        color='#FBCBB2', #Color value
+        opacity=0.9,
+        from=scores[2], # Start of the plot band
+                   to=scores[3]), # End of the plot band
+      list(
+        label = list(text = "Score=3"),
+        color='#FCE5B0', #Color value
+        opacity=0.9,
+        from=scores[3], # Start of the plot band
+                   to=scores[4]), # End of the plot band
+      list(
+        label = list(text = "Score=4"),
+        color='#D4E6C7', #Color value
+        opacity=0.9,
+        from=scores[4], # Start of the plot band
+                   to=scores[5]), # End of the plot band
+      list(
+        label = list(text = "Score=5"),
+        color='#C5E8DD', #Color value
+        opacity=0.9,
+        from=scores[5], # Start of the plot band
+                   to=scores[6])), # End of the plot band
+    type=axs
+  ) %>%
+  hc_title(
+    text='GEPD Finance Indicator',
+    style=list(
+      fontSize=24
+    )
+  ) %>%
+  hc_legend(enabled = FALSE) %>%
+  hc_add_theme(
+    hc_theme_538()
+  ) %>% 
+  hc_tooltip(
+    style=list(
+      fontSize=14
+    )
+  )
+})
+
+
+```
+
+
+HLO  Scatterplots 
+==============================
+
+HLO data is for the latest year available for a country.
+
+```{r hloscat}
+
+
+renderHighchart({
+  
+  
+
+    
+    income_df <- finance_df %>%
+  group_by(income_level) %>%
+  summarise(spending_per_sap=wtd.mean(spending_per_sap, w=`SAP_1`),
+            spending_per_pupil=wtd.mean(spending_per_pupil, w=`SAP_1`),
+            SE.XPD.PRIM.PC.ZS=wtd.mean(SE.XPD.PRIM.PC.ZS, w=`SAP_1`),
+            spender_per_sap_gdp=wtd.mean(spender_per_sap_gdp, w=`SAP_1`)
+            )   %>%
+  rename(
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+    rename(income_avg= !!input$ind) %>%
+    select(income_level, income_avg)
+  
+ hcht_dat <- finance_df %>%
+  left_join(gni_df) %>%
+  ungroup() %>%
+  select(country, income_level, date, SE.XPD.PRIM.PC.ZS, spender_per_sap_gdp,spending_per_pupil, spending_per_sap, HD.HCI.HLOS) %>%
+  rename(
+    Country=country,
+    Year=date,
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+  mutate(Year=as.character(Year),
+         colors=if_else(Country %in% input$countries, "#e63946", "#060707")) %>%
+    rename(base_ind= !!input$ind) %>%
+   filter(!is.na(base_ind)) %>%
+    arrange(HD.HCI.HLOS) 
+
+ 
+     #set log or not log
+  if (grepl('% of GDP',input$ind)) {
+    axs <- 'linear' 
+    scores <- c(0,8,12,17,20,50)
+
+  } else {
+    axs <- 'logarithmic'
+    scores <- c(0,0,0,0,0,0,0,0)
+  }
+ 
+     model <- lm(base_ind ~ HD.HCI.HLOS, data = hcht_dat)
+     fit <- augment(model) %>% arrange(HD.HCI.HLOS)
+     
+     qtiles <- quantile(hcht_dat$base_ind, na.rm=T)
+
+hchart(hcht_dat, 'scatter',
+       hcaes(y=HD.HCI.HLOS,x=base_ind, group=Country, color=colors),
+       tooltip=list(pointFormat='<b>Country:</b> {point.Country} <br>
+                                     <b>HLO Score:</b> {point.y:.2f} <br>
+                                     <b>Finance indicator value:</b> {point.x:.2f}
+                        '),
+       marker=list(
+       radius=6)
+        ) %>%
+  hc_add_series(
+    fit, type = "line", hcaes(y = HD.HCI.HLOS, x = .fitted),
+    name = "Line of Best Fit", id = "fit"
+    ) %>%
+  hc_yAxis(
+    title=list(text="Harmonized Test Scores",
+               style=list(fontSize=18)),
+    type='linear',
+    labels=list(
+      style=list(fontSize=14)
+    )
+  ) %>%
+  hc_xAxis(
+    title=list(text=input$ind,
+               style=list(fontSize=18)),
+    plotBands=list(
+      list(
+        label = list(text = "Score=1"),
+        color='#FDB0B1', #Color value
+        opacity=0.9,
+                   from=scores[1], # Start of the plot band
+                   to=scores[2]), # End of the plot band
+        list(
+        label = list(text = "Score=2"),
+        color='#FBCBB2', #Color value
+        opacity=0.9,
+        from=scores[2], # Start of the plot band
+                   to=scores[3]), # End of the plot band
+      list(
+        label = list(text = "Score=3"),
+        color='#FCE5B0', #Color value
+        opacity=0.9,
+        from=scores[3], # Start of the plot band
+                   to=scores[4]), # End of the plot band
+      list(
+        label = list(text = "Score=4"),
+        color='#D4E6C7', #Color value
+        opacity=0.9,
+        from=scores[4], # Start of the plot band
+                   to=scores[5]), # End of the plot band
+      list(
+        label = list(text = "Score=5"),
+        color='#C5E8DD', #Color value
+        opacity=0.9,
+        from=scores[5], # Start of the plot band
+                   to=scores[6])), # End of the plot band
+    type=axs
+  ) %>%
+  hc_title(
+    text='Relationship of Finance Indicator to HLO Scores',
+    style=list(
+      fontSize=24
+    )
+  ) %>%
+  hc_legend(enabled = FALSE) %>%
+  hc_add_theme(
+    hc_theme_538()
+  ) %>% 
+  hc_tooltip(
+    style=list(
+      fontSize=14
+    )
+  )
+})
+
+
+```
+
+Local Averaging Indicator Scoring
+==============================
+
+In this section, a rolling average is computed based on the nearest set of countries based on the GDP per capita, PPP (current international $) level of the country.  A local average of the indicator selected as the basis of scoring (e.g. Government expenditure per school age person, primary (% of GDP per capita)) is calculated based on the nearest neighbors average in GNI per capita.  
+
+The following points are awarded:
+
+1 point. <70% of local average    
+
+2 points. 70-80% of local average   
+
+3 points. 80-90% of local average   
+
+4 points. 90-110% of local average    
+
+5 points. >110% of local average    
+
+
+```{r adequacy}
+
+adequacy_dat <- reactive({
+  
+  
+  income_df <- finance_df %>%
+  group_by(income_level) %>%
+  summarise(spending_per_sap=wtd.mean(spending_per_sap, w=`SAP_1`),
+            spending_per_pupil=wtd.mean(spending_per_pupil, w=`SAP_1`),
+            SE.XPD.PRIM.PC.ZS=wtd.mean(SE.XPD.PRIM.PC.ZS, w=`SAP_1`),
+            spender_per_sap_gdp=wtd.mean(spender_per_sap_gdp, w=`SAP_1`)
+            )   %>%
+  rename(
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+    rename(income_avg= !!input$ind) %>%
+    select(income_level, income_avg)
+  
+ temp <- finance_df %>%
+  left_join(gni_df) %>%
+  ungroup() %>%
+  select(country, income_level, date, SE.XPD.PRIM.PC.ZS, spender_per_sap_gdp,spending_per_pupil, spending_per_sap, NY.GDP.PCAP.PP.CD) %>%
+  rename(
+    Country=country,
+    Year=date,
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+  mutate(Year=as.character(Year)) %>%
+    rename(base_ind= !!input$ind) %>%
+   filter(!is.na(base_ind)) %>%
+    arrange(NY.GDP.PCAP.PP.CD) 
+  
+  q1 <- temp %>% filter(row_number()<=input$bins)
+  q1_val<- mean(q1$base_ind, na.rm=T)
+
+  q3 <- temp %>% filter(row_number()>=(nrow(finance_df)-input$bins))
+  q3_val<- mean(q1$base_ind, na.rm=T)
+    
+  temp %>%
+    mutate(local_avg=rollmean(base_ind, k=input$bins, fill=c(q1_val, mean(base_ind, na.rm=T), q3_val))) %>%
+    filter(Country %in% input$countries) %>%#keep just the countries we want to show
+    mutate(Score=case_when(
+      base_ind/local_avg<=0.7 ~ 1,
+      between(base_ind/local_avg,.7,.8) ~ 2,
+      between(base_ind/local_avg,.8,.9) ~ 3,
+      between(base_ind/local_avg,.9,1.1) ~ 4,
+      base_ind/local_avg>1.1 ~ 5,
+    )) %>%
+    left_join(income_df) %>%
+    rename(`Indicator Value`=base_ind,
+           `Local Average`=local_avg,
+           `Income Group Average`=income_avg) 
+  
+  
+})
+
+renderUI({
+  flextable(adequacy_dat() %>% select(Country,`Indicator Value`,`Local Average`,`Income Group Average`,Score )) %>%
+    add_header_lines('Finance Adequacy Scoring') %>%
+    add_footer_lines('Source: UIS, GEPD, World Bank. ') %>%
+    theme_vanilla() %>%
+    colformat_double(j=2:4,
+                     digits=2) %>%
+        htmltools_value()
+})
+
+
+```
+
+
+
+Alternative Indicators
+==============================
+
+```{r thresh}
+
+thresh_dat <- reactive({ 
+  
+  income_df <- finance_df %>%
+  group_by(income_level) %>%
+  summarise(spending_per_sap=wtd.mean(spending_per_sap, w=`SAP_1`),
+            spending_per_pupil=wtd.mean(spending_per_pupil, w=`SAP_1`),
+            SE.XPD.PRIM.PC.ZS=wtd.mean(SE.XPD.PRIM.PC.ZS, w=`SAP_1`),
+            spender_per_sap_gdp=wtd.mean(spender_per_sap_gdp, w=`SAP_1`)
+            ) %>%
+  ungroup() %>%
+  rename(country=income_level) %>%
+  mutate(order=case_when(
+    country=="Low income" ~ 1,
+    country == "Lower middle income"~ 2,
+    country == "Upper middle income"~ 3,
+    country=="High income"~ 4
+  )) %>%
+  arrange(order) %>%
+  select(-order)
+
+ finance_df %>%
+  filter(country %in% input$countries) %>%
+  ungroup() %>%
+  select(country, date, SE.XPD.PRIM.PC.ZS, spender_per_sap_gdp,spending_per_pupil, spending_per_sap) %>%
+  bind_rows(income_df) %>%
+  rename(
+    Country=country,
+    Year=date,
+    `Government expenditure per student, primary (% of GDP per capita)`= SE.XPD.PRIM.PC.ZS,
+    `Government expenditure per school age person, primary (% of GDP per capita)`= spender_per_sap_gdp,
+    `Government expenditure per student, primary (PPP adjusted)`=spending_per_pupil,
+    `Government expenditure per school age person, primary (PPP adjusted)`=spending_per_sap
+  ) %>%
+  mutate(Year=as.character(Year))
+
+})
+
+renderUI({
+  flextable(thresh_dat()) %>%
+    add_header_lines('Alternative Finance Indicators') %>%
+    add_footer_lines('Source: UIS, GEPD, World Bank. ') %>%
+    theme_vanilla() %>%
+    colformat_double(j=3:6,
+                     digits=2) %>%
+        htmltools_value()
+})
+
+```
+
+
+
+
+Original Data
+==============================
+
+
+```{r load, include=FALSE}
+
+
+
+  
+  # combined_df <- combined_df_raw %>%
+  #   arrange(Series) %>%
+  #   mutate(
+  #          value=round(value,1),
+  #          value_color=case_when(
+  #            value_metadata=="Needs Improvement" ~ "#FF0000",
+  #            value_metadata=="Caution" ~ "#FCD606",
+  #            value_metadata=="On Target" ~ "#85C546",
+  #            TRUE ~ "#808080"
+  #          ),
+  #          Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+
+
+# combined_wide_df <- combined_df %>%
+#   select(Series, country, value) %>%
+#   pivot_wider(
+#     names_from=country, 
+#     values_from=value
+#   ) %>%
+#   left_join(indicator_names_df)
+# 
+# combined_wide_color <- combined_df %>%
+#   select(Series, country, value_color) %>%
+#   pivot_wider(
+#     names_from=country, 
+#     values_from=value_color
+#   ) %>%
+#   left_join(indicator_names_df)
+
+
+# write_excel_csv(combined_wide_df, file=paste0(dir, '/Technical_Note/GEPD_finance/combined_wide_df.csv'))
+# write_excel_csv(combined_wide_color, file=paste0(dir, '/Technical_Note/GEPD_finance/combined_wide_color_df.csv'))
+
+```
+
+```{r countrytabfn}
+#create function for creating country comparison tables
+country_tab_fn <- function(variables, title) {
+  
+  
+tab_df <- combined_wide_df %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+#set colors
+tab_color_df <- combined_wide_color %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+Peru_col <- tab_color_df$Peru
+Jordan_col <- tab_color_df$Jordan
+Rwanda_col <- tab_color_df$Rwanda
+Ethiopia_col <- tab_color_df$Ethiopia
+Madagascar_col <- tab_color_df$Madagascar
+
+
+#build table
+tab_df <- tab_df  %>%
+  select(`Indicator Name`, Peru, Jordan, Rwanda, Ethiopia, Madagascar)
+
+
+ovr_table <- flextable(tab_df) %>%
+  add_header_lines(title) %>%
+  add_footer_lines('Source: UIS, GEPD, World Bank. 
+ Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' ) %>%
+  theme_vanilla()
+
+#colors
+ovr_table <- ovr_table %>%
+  bg(j = c('Peru'),
+     bg = Peru_col) %>%
+  bg(j = c('Jordan'),
+     bg = Jordan_col) %>%
+  bg(j = c('Ethiopia'),
+     bg = Ethiopia_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
+  bg(j = c('Madagascar'),
+     bg = Madagascar_col)   
+
+
+ovr_table %>%
+  set_table_properties(layout = "autofit")
+
+  
+}
+```
+
+
+
+```{r outtab}
+# Produce a table showing means by country for select practice indicators
+outcome_indicators <- c(
+  'SE.PRM.BFIN',
+  'SE.PRM.BFIN.2',
+  'SE.PRM.BFIN.3',
+  'SE.PRM.BFIN.4'
+
+)
+country_tab_fn(outcome_indicators, 'GEPD Finance Indicators') 
+```

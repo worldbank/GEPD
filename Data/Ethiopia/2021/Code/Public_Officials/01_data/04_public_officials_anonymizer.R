@@ -197,8 +197,7 @@ for (i in data_list ) {
     
     print(i)
     
-    print(i)
-    write_dta(temp, path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+    write.csv(temp, file = file.path(paste0(save_folder,"/data"), paste0(i,"_anon.csv")))
     
     
     

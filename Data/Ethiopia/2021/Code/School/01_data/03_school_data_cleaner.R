@@ -597,23 +597,31 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
 ### Teacher Pedagogy ###
 #############################################
 if (teach_avail==1) {
-  teacher_pedagogy <- school_dta %>%
-    select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+  
+  teacher_pedagogy <- read.csv(paste0(confidential_folder,"/teach_raw_data_eth.csv"))
+  
+  score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
+  
+  ## Wrangling
+  
+  teacher_pedagogy <- teacher_pedagogy  %>% 
+    
+    ## Cleaning the scores
+    mutate_all(funs(str_replace(., "Y", "1"))) %>% 
+    mutate_all(funs(str_replace(., "N", "0"))) %>% 
+    mutate_all(funs(str_replace(., "L", "2"))) %>% 
+    mutate_all(funs(str_replace(., "M", "3"))) %>% 
+    mutate_all(funs(str_replace(., "H", "4"))) %>% 
+    mutate_all(funs(str_replace(., "NA", "1")))%>% 
+    rename(school_code = 1) %>% 
+    select(-Enumerator, -starts_with("X"))%>%
+    mutate(across(everything(), as.numeric)) %>% distinct(school_code, Segment, .keep_all=T)
+
+  
   
   # Generate useful variables
   
-  # One observation per segment
-  
-  segment2 <- teacher_pedagogy %>%
-    select(-starts_with('s1'))
-  
-  segment1 <- teacher_pedagogy %>%
-    select(-starts_with('s2'))
-  
-  names(segment1) <- str_replace(names(segment1), "s1", "s")
-  names(segment2) <- str_replace(names(segment2), "s2", "s")
-  
-  teacher_pedagogy_segments <- bind_rows(segment1, segment2)
+  teacher_pedagogy_segments <- teacher_pedagogy
   
   #create sub-indicators from TEACH
   teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
@@ -661,7 +669,7 @@ if (teach_avail==1) {
            instruction_prof=100*as.numeric(instruction>=3),
            socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
     filter(!is.na(teach_score)) %>%
-    write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    #write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
     group_by(school_code) %>%
     mutate(number_segments=  sum(!is.na(teach_score))) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
@@ -672,7 +680,10 @@ if (teach_avail==1) {
   
   
   write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+  
 }
+  
+  #############################################
 #############################################
 ##### 4th Grade Assessment ###########
 #############################################
@@ -1358,7 +1369,7 @@ pknw_actual_cont <- final_indicator_data_CONT %>%
 
 pknw_actual_exper <- teacher_questionnaire %>%
   select(school_code, m3sb_tnumber, m3sb_troster,m3saq5, m3saq6 ) %>%
-  mutate(experience=(2019-m3saq5)) %>%
+  mutate(experience=(2021-m3saq5)) %>%
   filter(experience <3) %>% 
   group_by(school_code) %>%
   summarise(teacher_count_experience_less3=n())
@@ -1465,8 +1476,8 @@ final_indicator_data_PMAN <- school_data_PMAN %>%
     problem_solving_info_collect=(m7seq2_pman__1+m7seq2_pman__2 + m7seq2_pman__3 + m7seq2_pman__4)/4,
     problem_solving_stomach=case_when(
       (m7seq3_pman==4 ) ~ 1,
-      (m7seq1_pman==3 ) ~ 0.5,
-      (m7seq1_pman==1 | m7seq1_pman==2 | m7seq1_pman==98 ) ~ 0.25,
+      (m7seq3_pman==3 ) ~ 0.5,
+      (m7seq3_pman==1 | m7seq3_pman==2 | m7seq3_pman==98 ) ~ 0.25,
       TRUE ~ 0)
     
   ) %>%
@@ -1838,7 +1849,7 @@ final_indicator_data_TINM <- teacher_questionnaire_TINM %>%
     SE_PRM_TINM_7 = 100*if_else(m3scq7_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
     SE_PRM_TINM_8 = 100*if_else(m3scq10_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
     SE_PRM_TINM_9 = 100*if_else(m3scq11_tinm>=3,1,0),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
-    SE_PRM_TINM_10 = 100*if_else(m3scq14_tinm>=3,1,0) #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+    SE_PRM_TINM_10 = 100*if_else(m3scq14_tinm>=3,1,0) #(De Facto) Percent of teachers that agree or strongly agrees with /"Students can change even their basic intelligence l~
   ) %>%
   mutate_at(intrinsic_motiv_q_rev, attitude_fun_rev ) %>%
   mutate_at(intrinsic_motiv_q, attitude_fun ) %>%
@@ -1948,18 +1959,18 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 # 
 # Scoring: 
 #   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
-# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=JO.  
+# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=ET.  
 
 school_data_SATT <- school_data_SATT %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=12*m7shq2_satt/3011.67	) %>%
+         principal_salary=12*m7shq2_satt/29351.46	) %>%
   mutate(
     principal_salary_score=case_when(
       between(principal_salary,0,0.5) ~ 1,
       between(principal_salary,0.5,0.75) ~ 2,
       between(principal_salary,0.75,1) ~ 3,
       between(principal_salary,1,1.5) ~ 4,
-      between(principal_salary,1.5,5) ~ 5)) %>%
+      between(principal_salary,1.5,15) ~ 5)) %>%
   mutate(sch_management_attraction=(principal_satisfaction+principal_salary_score)/2)
 
 final_indicator_data_SATT <- school_data_SATT %>%
@@ -2152,7 +2163,11 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
-                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
+                                "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
+                                "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
+                                "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
 
 
 #Create list of key indicators
@@ -2247,12 +2262,12 @@ final_school_data <- final_school_data %>%
 
 
 write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
-write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+#write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
 write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
-write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+#write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
 if (backup_onedrive=="yes") {
   write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
-  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+  #write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
 
@@ -2272,11 +2287,11 @@ school_dta_short <- final_school_data %>%
   select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
 
 write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
-write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
+#write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
   write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
-  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+  #write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
 

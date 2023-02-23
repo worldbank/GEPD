@@ -2,11 +2,12 @@
 library(tidyverse)
 library(estimatr)
 library(modelr)
+library(questionr)
 
 #Country name and year of survey
-country <-'RWA'
-country_name <- "Rwanda"
-year <- '2020'
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2020_2021'
 
 #########################
 # File paths #
@@ -16,8 +17,19 @@ year <- '2020'
 
 backup_onedrive="no"
 
-project_folder<-"//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD/CNT/"
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  
+project_folder<-"C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT"
 data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data", sep="/"))
+
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
+  
+  project_folder<-"C:/Users/wb577189/OneDrive - WBG/CNT/"
+  data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential", sep="/"))
+  
+  
+}
 
 load(paste(data_folder, "School/school_indicators_data_anon.RData", sep="/"))
 
@@ -30,11 +42,12 @@ anova <- aov(student_knowledge~factor(hashed_school_code), data=assess_4th_grade
 
 summary(anova)
 print(anova)
-#10336371815/(10336371815+14063203040)
-#[1] 0.4236292
+4892418   /(4892418 +5388570    )
+#[1] 0.4758704
 
-# fit = lm(student_knowledge ~ factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
-# anova(fit)
+
+fit = lm(student_knowledge ~ factor(hashed_school_code), data=assess_4th_grade_anon_anon, weights = ipw)
+ anova(fit)
 
 
 wtd.mean(school_dta_short_anon$student_knowledge, weights =school_dta_short_anon$ipw )
@@ -61,7 +74,11 @@ school_dta_short_merge <- school_dta_short_anon %>%
 
 covariates<-c( 'presence_rate',
                'content_knowledge',
-               'teach_score',
+<<<<<<< HEAD
+               # 'teach_score',
+=======
+               #'teach_score',
+>>>>>>> 0b7c1fefae1d93a47efccbca650726c82ee7aad6
                'student_attendance',
                'ecd_student_knowledge',
                'inputs',
@@ -83,6 +100,7 @@ covariates<-c( 'presence_rate',
                'sch_selection_deployment', 
                'sch_support', 
                'principal_evaluation')
+
 
 my_formula <- as.formula(paste('student_knowledge ~ ', paste(covariates, collapse=" + "), sep=""))
 multi_reg_school<-lm(my_formula, school_dta_short_anon)   

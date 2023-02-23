@@ -1,0 +1,314 @@
+---
+title: "GEPD Madagascar Survey of Public Official Sampling"
+author: "Brian Stacy"
+date: "10/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(haven)
+library(vtable)
+library(here)
+library(readxl)
+library(stringr)
+library(Hmisc)
+library(naniar)
+library(lubridate)
+library(skimr)
+library(digest)
+library(flextable)
+#Country name
+country <-'MDG'
+country_name <- "Madagascar"
+year <- '2021'
+
+set.seed(54351324)
+
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+```
+
+This code and document is for choosing a sample of 10 regions and 20 districts in which to interview public officals.  Regions and Districts will be selected among the regions and districts chosen for the school survey. 
+
+The Survey of Public Officials collects information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey is a streamlined and education-focused version of the civil-servant surveys that the Bureaucracy Lab (a joint initiative of the Governance Global Practice and the Development Impact Evaluation unit of the World Bank) has implemented recently in several countries. The survey includes questions about technical and leadership skills, work environment, stakeholder engagement, impartial decision-making, and attitudes and behaviors. 
+
+The aim of the GEPD surveys is to produce nationally representative estimates with enough precision to allow detection of changes over time at a minimum power of 80% and at a 0.05 significance level. The GEPD also sets aims to detect differences by urban/rural location and by gender on relevant indicators.  In some cases, we can provide statistics by region, but this will depend on the geography of the country and the number of regions making up that country.  
+
+For the GEPD School Survey, a two-stage random sample design is used.  In the first stage, Bank staff select a random sample of around 200 schools.  The sample is stratified based on urban/rural classification and the region in which schools are located. When stratifying by region, the GEPD team works with partners within the country to make sure all relevant geographical divisions are included. In the second stage, a random sample of teachers and students is selected to answer questions from the survey modules; this sampling is done by enumerators in the field at each school. Ten teachers per school are sampled for attendance checks, and five teachers are interviewed and given a teacher assessment. Three randomly selected 1st grade students are assessed, as is a randomly selected classroom of 4th grade students.  We could only interview three 1st grade students, compared to an entire 4th grade classroom, because the 1st grade assessment is done face to face by our enumerators and takes a considerable amount of time per student (~15-20 minutes).  The 4th grade assessment can be given to an entire class simultaneously.
+
+For the GEPD Survey of Public Officials, 200 public education officials in each country are randomly selected for interviews.  These public officials are typically professional staff at the Ministry of Education central office, as well as from the regional or district offices. Roughly 40 officials are surveyed at the federal (or central-government) level, while 160 officials are surveyed at the regional/district level.  To select officials at the regional and district level, the team employs a cluster sampling strategy, where 10 regional offices are chosen at random from among the regions in which schools were sampled. Among these 10 regions, 20 districts are selected (two in each region) from among the districts in which schools are sampled. The result of this sampling approach is that for 10 clusters, the GEPD captures the links from the school to the district office, to the regional office, and then to the central office. In each regional office, 6 officials are sampled: the head of the office, the HR director, and 4 officials working in finance and planning chosen at random.  In the district office, 5 officials are sampled: the head of the office, the HR director, and 3 officials working in finance and planning chosen at random.
+
+At the federal level, the GEPD team works with the Ministry of Education to identify the offices that should be included in the sample according to the functions they serve. In each office, the director of the office is interviewed along with a randomly selected number of public officials. The team aims to maintain roughly the same sampling strategy for the Survey of Public Officials for all countries, with some adaptation to country characteristics. For instance, in countries with smaller district offices, a larger number of district offices will be sampled, with fewer public officials interviewed at each of them. In countries with smaller offices at the federal level, fewer public officials will be interviewed at the federal level and more will be interviewed at the decentralized level. Ultimately, these adaptations are the result of extensive dialogue with the country counterparts. 
+
+
+
+# Background
+
+In Madagascar, the sample for the GEPD school survey was drawn to be representative of primary schools at the national and regional levels, using EMIS data of 2019. The sampling frame consisted of  33,120 public and private primary schools – 25,869 public and 7,251 private schools - across the 1,567 communes covered by EMIS data in Madagascar’s 22 regions.  200 schools were selected for the GEPD survey, where the strata are regions and urban/rural status of schools.
+
+# Select the sample
+
+
+```{r load}
+
+## 2. Calling in datasets ----  
+# load sampling frame
+
+sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'))
+sampling_strata_info <- read_csv(paste0(sampling_folder,'/school_strata_sampling.csv'))
+
+#load all school data
+
+## 1st grade assessment ----
+first_grade_raw <- read_dta(file.path(download_folder, "/21-M5.dta")) %>%
+  #mutate(school_code=s_ecole_code) %>%
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+## 4th grade assessment ----
+fourth_grade_raw <- read_dta(file.path(download_folder, "/20-M5_liste.dta")) %>%
+  #mutate(school_code=s_ecole_code) %>%  
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+## School level data ----
+school_dta<-read_dta(file.path(download_folder, "/01-SECABD24DE.dta")) %>%
+ # mutate(school_code=s_ecole_code) %>%  
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+## Infrastructure school ----
+infrastructure_dta <- read_dta(file.path(download_folder, "/06-M1SECC.dta")) %>%
+  #mutate(school_code=s_ecole_code) %>%  
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+## Infrastructure school : blackboard, light, cholk ----
+#input_dta <- read_dta(file.path(download_folder, "/astata/17-M4BC..dta"))
+input_dta<-read_dta(file.path(download_folder, "/17-M4BC.dta")) %>%
+ # mutate(school_code=s_ecole_code) %>%  
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+
+## Management school  ----
+management_dta <- read_dta(file.path(download_folder, "/11-M3A.dta")) %>%
+  #mutate(school_code=s_ecole_code) %>%  
+  filter(s_type_ecole==3) #just keep dashboard schools
+
+
+
+#rename a few key variables up front
+school_dta<- school_dta %>%
+  mutate(
+         enumerator_number=s_enqueteur_code ,
+         survey_time=s_date_heure_fin	,
+         school_code=s_ecole_code
+         # lat=s_latitude,
+         # lon=s_longitude,
+  ) %>%
+  mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
+  mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
+
+
+
+#------------------------------------------------------------------------------#
+## 3. Lists of variables ----  
+
+#list additional info that will be useful to keep in each indicator dataframe
+preamble_info <- c( "school_code", "s_ecole_code", 
+                   "s_region_code", "s_cisco_code", "s_commune_name",   
+                   "s_commune_code", "s_ecole_name", "s_zap_name", "s_zap_code",
+                   "s_urbain", "s_date_visite", "s_enqueteur_code", "s_type_ecole", "s_public", "s_etab_code",
+                   "lat","lon"
+                   )
+
+school_dta_preamble <- input_dta %>%
+  right_join(school_dta) %>%
+  mutate(
+    lat=s_latitude,
+    lon=s_longitude
+  ) %>%
+  select(preamble_info)
+
+
+names <- names(attr(school_dta_preamble$s_cisco_code, "labels"))
+values <-attr(school_dta_preamble$s_cisco_code, "labels")
+
+district_labels <- data.frame(s_cisco_name=names,s_cisco_code= values)
+
+school_dta_preamble <- school_dta_preamble %>%
+  left_join(district_labels)
+
+```
+
+```{r sample_file}
+
+#Now rearrange
+
+#create straturm weights
+sampling_strata_df <- sampling_strata_info %>%
+  select(id, urban_sample, rural_sample, urban_4th, rural_4th) %>%
+  pivot_longer(
+    cols=c('urban_sample', 'rural_sample', 'urban_4th', 'rural_4th'),
+    names_to='group',
+    values_to='size'
+  ) %>%
+  mutate(sample=if_else(grepl('sample',group),'Sample_Size','Total_Size'),
+         urban_rural=if_else(grepl('urban',group),'Urban','Rural')) %>%
+  select(-group) %>%
+  pivot_wider(
+    names_from=sample,
+    values_from=size
+  ) %>%
+  mutate(strata_prob= Total_Size/sum(Total_Size) )
+
+sampling_strata_merge <- sampling_strata_info %>%
+  select(id, commune, total_4th) %>%
+  rename(s_region_code=id,
+         Region=commune)
+
+# merge on the sampling info.  This dataframe contains probabilities each school was selected in a stratum
+# strata were region and urban/rural.
+data_set_updated <- school_dta_preamble %>%
+  left_join(sampling_strata_merge) %>%
+  left_join(sampling_frame, by=c("s_ecole_name"="NOM ETAB",
+                                 "s_commune_name"="commune")) %>%
+  mutate(commune=s_zap_name,
+           district=as.character(s_cisco_name),
+           rural=s_urbain>=3, #rural coded as greater than 3
+           urban_rural=if_else(rural==TRUE, "Rural", "Urban"),
+           public=if_else(s_public==2, "Private", "Public"),
+           ipw_school=1/(`P1 (SDI)`/4), #divide by 4 because dashboard schools make up randomly selected 25% of sample 
+                      ) %>%
+  left_join(sampling_strata_df, by=c("CODE REGION"="id",
+                                     "urban_rural"="urban_rural")) %>% # read in strata sampling info
+  mutate(ipw=ipw_school*(1/strata_prob), # incorporate stratum weights
+         ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)
+  )
+
+
+
+```
+
+First, choose the regions.  Regions are sampled with probability proportional to the number of 4th grade students, and then two districts within those regions are chosen with probability proportional to size. Descriptive information on the regions is below.
+
+```{r}
+
+sampling_strata_info %>%
+  arrange(commune) %>%
+  select(-id, -contains("Sample")) %>%
+  flextable() %>%
+  add_header_lines('Regions in Madagascar') %>%
+  set_header_labels(
+    commune = "Region",     
+    population = "Total Population",  
+    urban_school = "Total # of Urban Schools",
+    rural_school = "Total # of Rural Schools",
+    total_school = "Total # of Schools",
+    urban_4th = "Total # of Urban 4th Graders",   
+    rural_4th = "Total # of Rural 4th Graders",    
+    total_4th = "Total # of 4th Graders"
+  ) %>%
+  autofit()
+  
+
+```
+
+
+```{r regional_weights, echo=TRUE}
+
+ #form regional weights, based on the number of schools.
+  region_weights<- data_set_updated %>% #read in school sample frame as basis for forming weights
+    group_by(Region) %>%
+    summarise(n_stud=first(total_4th) )  #count number of students per region
+
+  #select six regions
+  regions_list <- region_weights %>%
+    sample_n(10, weight=n_stud) %>%
+    arrange(Region)
+
+  region_frame_name <- paste(sampling_folder,"/region_sample_",Sys.Date(),".csv", sep="")
+  
+  #table
+  flextable(regions_list) %>%
+    add_header_lines('Regions selected for Public Officials Survey') %>%
+      set_header_labels(
+    Region = "Region",     
+    n_stud = "Total # of 4th Graders"
+  ) %>%
+    autofit()
+
+  write_excel_csv(regions_list,region_frame_name) 
+
+```
+
+The regions selected are: `r paste(regions_list$Region, sep=",")`
+
+Now we will select the Districts
+
+```{r district}
+
+  #From within regions, assign how many district to visi
+  
+  regions_list <- regions_list %>% 
+    mutate(N_district_to_sample=case_when(
+      TRUE ~ 2
+    )) 
+
+    
+  district_list<- data_set_updated %>%
+    group_by(Region, district) %>%
+    mutate(n_schools_district=n()) %>%
+    summarise(across(everything(),first)) %>%
+    group_by(Region) %>%
+    left_join(regions_list) %>%
+    filter(!is.na(n_stud)) %>% #drop district in regions not selected
+    sample_n(N_district_to_sample, weight=n_schools_district) %>%
+    dplyr::select(Region,  district,n_schools_district) %>%
+    rename(DREN=Region,
+           CISCO=district,
+           `Number of Schools Sampled in District`=n_schools_district)
+  
+
+  #save as csv
+  dist_frame_name <- paste(sampling_folder,"/district_sample_",Sys.Date(),".csv", sep="")
+  #table
+  flextable(district_list) %>%
+    add_header_lines('District selected for Public Officials Survey') %>%
+      set_header_labels(
+    DREN = "Region",  
+    CISCO="District"
+  ) %>%
+    autofit()
+
+  write_excel_csv(district_list,dist_frame_name) 
+  write_excel_csv(district_list,dist_frame_name) 
+
+```
+
+ 
+

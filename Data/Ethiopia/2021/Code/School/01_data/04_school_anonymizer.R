@@ -115,7 +115,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
            N_schools_strata=N_sch_strata,
            N_selected_strata=N_sel_strata,
            school_weights=ipw,
-           ipw=ipw*!! snumber ) %>%
+           ipw=ipw*!! snumber,
+           ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
     mutate(province=Region,
            urban_rural=Location
            ) %>%
@@ -229,7 +230,7 @@ for (i in data_list ) {
       
       temp %>%
         janitor::clean_names() %>%
-        write_dta( path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+        write_csv(  file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
 
       
 

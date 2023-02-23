@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #load relevant libraries
-library(rgdal)
+#library(rgdal)
 library(tidyverse)
 library(readxl)
 library(leaflet)
@@ -27,7 +27,7 @@ set.seed(54351324)
 #Specify directory where sampling frame located
 #Specify directory where sampling frame located
 dir_frame<-"C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Ethiopia/2019/Data/Sampling/"
-
+dir_frame<-"C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Ethiopia/2020/Data/Sampling/"
 
 date_frame<-c("2020-02-14")
 

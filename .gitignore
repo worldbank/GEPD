@@ -59,6 +59,7 @@
 # R-scrips and Rmarkdown-scripts
 !/**/**/*.R
 !/**/**/*.Rmd
+!/**/**/*.Qmd
 !/**/**/*.Rproj
 
 # HTML files

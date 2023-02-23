@@ -112,7 +112,7 @@ indicators <- indicators %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 indicators <- indicators %>%
-  select(-c('X1', 'X8'))
+  select(-c('...1', '...8'))
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
@@ -174,11 +174,11 @@ ecd_metadta<-ecd_metadta %>%
 
 #bind version 18 and 17
 
-# ecd_dta <- bind_rows(ecd_dta, ecd_dta_17, ecd_dta_15)
+ecd_dta <- bind_rows(ecd_dta, ecd_dta_17, ecd_dta_15)
 label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
 
 ecd_dta %>%
-  write_dta(file.path(download_folder, "ecd_assessment.dta"))
+  write_dta(file.path(download_folder, "ecd_assessment_combined.dta"))
 
 
 

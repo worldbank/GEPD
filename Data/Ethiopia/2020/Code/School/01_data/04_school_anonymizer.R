@@ -77,7 +77,9 @@ currentDate<-c("2020-02-14")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
-  select(-sample) #variable name causes conflict
+  select(-sample) %>% #variable name causes conflict
+  distinct(Code_School, .keep_all=TRUE)
+
 load(sample_frame_name)
 
 #create weights for each school
@@ -106,7 +108,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
            N_schools_strata=N_sch_strata,
            N_selected_strata=N_sel_strata,
            school_weights=ipw,
-           ipw=ipw*!! snumber ) %>%
+           urban_rural=Location,
+           ipw=ipw*!! snumber ,
+           ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
     mutate(province=Region) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
                                                         names(data_set_updated) == "owner" )])))
@@ -218,7 +222,7 @@ for (i in data_list ) {
       
       temp %>%
         janitor::clean_names() %>%
-        write_dta( path = file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.dta", sep="")), version = 14)
+        write_csv( file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
 
       
 

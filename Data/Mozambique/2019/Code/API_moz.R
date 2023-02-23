@@ -42,6 +42,12 @@ year <- '2019'
 if (Sys.getenv("USERNAME") == "wb469649"){
   project_folder  <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work"
   download_folder <-file.path(paste(project_folder,country,year,"Data/raw/School", sep="/"))
+  
+} else if(Sys.info()["user"] == "wb577189"){
+  
+  project_folder<- "C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work"
+  download_folder <-file.path(paste(project_folder,country,year,"Data/raw/School", sep="/"))
+  
 } else {
   
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -97,7 +103,7 @@ makeVlist <- function(dta) {
 
 
 #read in school level file
-school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+school_dta<-read_dta(file.path(download_folder, "EPDash_Moz.dta"))
 school_metadta<-makeVlist(school_dta)
 
 #read in ecd level file

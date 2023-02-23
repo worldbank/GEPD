@@ -27,12 +27,12 @@ makeVlist <- function(dta) {
 
 
 #AC - Modification to the folder paths to be able to run the code localy
-if(Sys.info()["user"] == "AdrianoCiretto"){
-  
-  setwd(dir = "/Users/AdrianoCiretto/Documents/Github/GEPD")
-  download_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Raw/School"
-  confidential_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Clean/School"
-}
+# if(Sys.info()["user"] == "AdrianoCiretto"){
+#   
+#   setwd(dir = "/Users/AdrianoCiretto/Documents/Github/GEPD")
+#   download_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Raw/School"
+#   confidential_folder <- "/Users/AdrianoCiretto/Desktop/Education GP/02. Country_work/ETH/Technical/Data/Clean/School"
+# }
 
 ############################
 #read in teacher roster file
@@ -47,10 +47,11 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash_school_survey_v1.dta"))
+school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
+  rename(school_code_preload = school_emis_preload) %>% 
   mutate(enumerator_name_other= m1s0q1_name_other  ,
          enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
@@ -67,7 +68,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Data/Madagascar/2021/Code/Analysis/gepd_MDG_app/indicators.md', delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
@@ -78,8 +79,8 @@ indicator_names <- indicators$indicator_tag
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info <- c( 'interview__key', 'school_code',
-                   'school_name_preload', 'school_address_preload', 
-                   'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                   'school_name_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_code_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                    'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq10'
                    )
@@ -602,82 +603,92 @@ final_indicator_data_CONT_F <- teacher_assessment_dta %>%
 #############################################
 ### Teacher Pedagogy ###
 #############################################
-
-teacher_pedagogy <- school_dta %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
-
-# Generate useful variables
-
-# One observation per segment
-
-segment2 <- teacher_pedagogy %>%
-  select(-starts_with('s1'))
-
-segment1 <- teacher_pedagogy %>%
-  select(-starts_with('s2'))
-
-names(segment1) <- str_replace(names(segment1), "s1", "s")
-names(segment2) <- str_replace(names(segment2), "s2", "s")
-
-teacher_pedagogy_segments <- bind_rows(segment1, segment2)
-
-#create sub-indicators from TEACH
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
-         instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
-         socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
-  ) %>%
-  mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
-
-# Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
-# Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
-# We are only taking into account teachers for which we have at least 2 snapshots observed
-
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
-  mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
-
-#een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
-#replace tt_yes=tt_yes*100
-#egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
-#replace tt_no=tt_no*100
-
-# Time on task - Second measure
-# Proportion of classes where a low number of students are on task, a medium number of students are on task
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
-         tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
-         tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
-
-# We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
-
-# For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
-# We are only taking into account teachers for which we have at least 2 snapshots observed
-
-teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
-  mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
-         tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
-         tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
-         tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
-
-
-final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
-  mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
-         classroom_culture_prof=100*as.numeric(classroom_culture>=3),
-         instruction_prof=100*as.numeric(instruction>=3),
-         socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
-  filter(!is.na(teach_score)) %>%
-  write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
-  group_by(school_code) %>%
-  mutate(number_segments=  sum(!is.na(teach_score))) %>%
-  summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'),
-          -starts_with('m4saq1'))
-
-#Breakdowns by Male/Female
-
-
-write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+if (teach_avail==1) {
+  
+  teacher_pedagogy <- read.csv(paste0(confidential_folder,"/teach_raw_data_eth.csv"))
+  
+  score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
+  
+  ## Wrangling
+  
+  teacher_pedagogy <- teacher_pedagogy  %>% 
+    
+    ## Cleaning the scores
+    mutate_all(funs(str_replace(., "Y", "1"))) %>% 
+    mutate_all(funs(str_replace(., "N", "0"))) %>% 
+    mutate_all(funs(str_replace(., "L", "2"))) %>% 
+    mutate_all(funs(str_replace(., "M", "3"))) %>% 
+    mutate_all(funs(str_replace(., "H", "4"))) %>% 
+    mutate_all(funs(str_replace(., "NA", "1")))%>% 
+    rename(school_code = 1) %>% 
+    select(-Enumerator, -starts_with("X"))%>%
+    mutate(across(everything(), as.numeric)) %>% distinct(school_code, Segment, .keep_all=T)
+  
+  
+  
+  # Generate useful variables
+  
+  teacher_pedagogy_segments <- teacher_pedagogy
+  
+  #create sub-indicators from TEACH
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
+           instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
+           socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
+    ) %>%
+    mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
+  
+  # Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
+  # Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
+  # We are only taking into account teachers for which we have at least 2 snapshots observed
+  
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
+    mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_)) 
+  
+  #een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
+  #replace tt_yes=tt_yes*100
+  #egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
+  #replace tt_no=tt_no*100
+  
+  # Time on task - Second measure
+  # Proportion of classes where a low number of students are on task, a medium number of students are on task
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 2),
+           tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 3),
+           tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == 4))
+  
+  # We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
+  
+  # For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
+  # We are only taking into account teachers for which we have at least 2 snapshots observed
+  
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
+           tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
+           tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
+           tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
+  
+  
+  final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
+    mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+           classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+           instruction_prof=100*as.numeric(instruction>=3),
+           socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+    filter(!is.na(teach_score)) %>%
+    #write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    group_by(school_code) %>%
+    mutate(number_segments=  sum(!is.na(teach_score))) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'),
+            -starts_with('m4saq1'))
+  
+  #Breakdowns by Male/Female
+  
+  
+  write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+  
+}
 
 #############################################
 ##### 4th Grade Assessment ###########
@@ -1954,18 +1965,18 @@ final_indicator_data_SCFN <- school_data_SCFN %>%
 # 
 # Scoring: 
 #   -score is between 1-5 based on how satisfied the principal is with status in community. We will also add in component based on Principal salaries.
-# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=JO.  
+# For salary, based GDP per capita from 2018 World Bank  https://data.worldbank.org/indicator/NY.GDP.PCAP.CN?locations=ET.  
 
 school_data_SATT <- school_data_SATT %>%
   mutate(principal_satisfaction=attitude_fun_rev(m7shq1_satt),
-         principal_salary=12*m7shq2_satt/3011.67	) %>%
+         principal_salary=12*m7shq2_satt/29351.46	) %>%
   mutate(
     principal_salary_score=case_when(
       between(principal_salary,0,0.5) ~ 1,
       between(principal_salary,0.5,0.75) ~ 2,
       between(principal_salary,0.75,1) ~ 3,
       between(principal_salary,1,1.5) ~ 4,
-      between(principal_salary,1.5,5) ~ 5)) %>%
+      between(principal_salary,1.5,15) ~ 5)) %>%
   mutate(sch_management_attraction=(principal_satisfaction+principal_salary_score)/2)
 
 final_indicator_data_SATT <- school_data_SATT %>%
@@ -2094,14 +2105,14 @@ final_indicator_data_SEVL <- school_data_SEVL %>%
 #first create temp dataset with only required info (school_code + indicator info).  Main thing here is to drop enumerator code, interview ID, which mess up merges
 #list additional info that will be useful to keep in each indicator dataframe
 drop_info <- c('interview__id', 'interview__key',                    
-               'school_name_preload', 'school_address_preload', 
-               'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+               'school_name_preload', 
+               'school_province_preload', 'school_district_preload', 'school_code_preload',
                'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                'survey_time', 'lat', 'lon' )
 
 keep_info <-       c('school_code',
-                     'school_name_preload', 'school_address_preload', 
-                     'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                     'school_name_preload', 
+                     'school_province_preload', 'school_district_preload', 'school_code_preload',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
                      'survey_time', 'lat', 'lon', 'total_enrolled')
 
@@ -2158,7 +2169,11 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
-                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
+                                "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
+                                "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
+                                "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
 
 
 #Create list of key indicators
@@ -2253,12 +2268,12 @@ final_school_data <- final_school_data %>%
 
 
 write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
-write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+#write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
 write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
-write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+#write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
 if (backup_onedrive=="yes") {
   write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
-  write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
+  #write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
 
@@ -2278,11 +2293,11 @@ school_dta_short <- final_school_data %>%
   select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
 
 write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
-write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
+#write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
   write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
-  write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
+  #write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
 

@@ -14,14 +14,17 @@ library(shinycssloaders)
 library(shinyBS)
 library(shinyjs)
 library(plotly)
+library(ggtext)
 library(glue)
 library(DT)
 library(rvg)
 #library(officer)
 library(kableExtra)
 library(ggcorrplot)
-library(stargazer)
-library(sandwich)
+#library(stargazer)
+library(modelsummary)
+library(estimatr)
+library(flextable)
 library(Cairo)
 library(scales)
 library(ggpmisc)
@@ -30,6 +33,9 @@ library(Hmisc)
 library(quantreg)
 library(psych)
 library(tidyverse)
+library(markdown)
+library(estimatr)
+library(srvyr)
 
 #library(wbgcharts)
 
@@ -174,9 +180,10 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                    necessarily causal.  The X variables include our Dashboard indicators, as well as the option to include
                                    the rural status of the school, as well as GDP per square kilometer within one square kilometer of the school.  GDP per square kilometer data 
                                    is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  Additionally, 
-                                   the user has the option to include regional fixed effects.  In the case of Rwanda, these are Rwandan District fixed effects.'),
+                                   the user has the option to include regional fixed effects.  In the case of Sierra Leone, these are Sierra Leone District fixed effects.'),
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
+                                 
                                  
                                  selectizeInput("control_choices", "Choose X Variables to Include in Regressions", 
                                                 choices=NULL  , 
@@ -192,7 +199,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                              choices=c('No', 'Yes'),
                                              selected='No'),
                                  downloadButton("downloadmultireg", "Download"),
-                                 htmlOutput("multivariate_regs", height=1400)
+                                 htmlOutput("multivariate_regs")
                         ),
                         tabPanel("Sub-Indicator Regression Analysis", value=6,
                                  p('This tool allows the user to produce multivaratie OLS regression tables by selecting an outcome variable along with 
@@ -220,40 +227,25 @@ ui <- navbarPage("Global Education Policy Dashboard",
 server <- function(input, output, session) {
 
     #Load the GEPD indicator data
-    load(paste("school_indicators_data_anon.RData", sep="/"))
-    load(paste("public_officials_indicators_data_anon.RData", sep="/"))
+    load("school_indicators_data_anon.RData")
+    load("public_officials_indicators_data_anon.RData")
     
     
+    #modelsummary output
+    gm <- tibble::tribble(
+      ~raw,        ~clean,          ~fmt,
+      "nobs",      "N",             0,
+      "r.squared", "R Sq.", 2)
     
-    
-    load(paste("school_sample_2019-08-30.RData"))
-
-    
-    
-
-    
-    #define function to reformat the sampling frame dataset to match needs of App
-    sampling_dataset_function <- function(dataset, prov, snumber) {
-      prov<-enquo(prov)
-      snumber<-enquo(snumber)
+    #add equations to plots
+    eq_plot_txt <- function(data, inp, var) {
+      eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+      coef <- round(coef(eq),2)
+      std_err <- round(sqrt(diag(vcov(eq))),2)
+      r_2<- round(summary(eq)$r.squared,2)
+      sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
       
-      dataset %>%
-        group_by(!! prov) %>%
-        mutate(weights=replace(.data$weights, which(is.na(.data$weights)),
-                               mean(.data$weights, na.rm=TRUE)),
-               !! snumber := replace(!! snumber, which(is.na(!! snumber)),
-                                     mean(!! snumber, na.rm=TRUE)),
-               province=!! prov
-        )
     }
-    
-    
-    
-        #correct a few missing values in weights with province average
-    #because stratification was at the province level, this is accurate correction.
-    #data_set_updated <- sampling_dataset_function(data_set_updated, district, total_enrolled)
-      
-
     
     
     indicators <- indicators %>%
@@ -328,7 +320,7 @@ server <- function(input, output, session) {
                         "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
                         "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
                         "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
-                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
+                        "Characteristics of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
                         "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
                         )
   
@@ -357,11 +349,11 @@ server <- function(input, output, session) {
                         "School Management Attraction", 
                         "School Management Selection & Deployment",
                         "School Management Support", 
-                        "School Management Evaluation", 
-                        "National Learning Goals",
-                        "Mandates and Accountability",
-                        "Quality of Bureaucracy",
-                        "Impartial Decision Making"
+                        "School Management Evaluation",
+                         "National Learning Goals",
+                         "Mandates and Accountability",
+                         "Characteristics of Bureaucracy",
+                         "Impartial Decision Making"
     )  
     
     indicators_list<-c('student_proficient',
@@ -387,12 +379,12 @@ server <- function(input, output, session) {
                        'sch_management_clarity',
                        'sch_management_attraction', 
                        'sch_selection_deployment', 
-                       'sch_support', 
-                       'principal_evaluation', 
-                       'national_learning_goals',
-                       'mandates_accountability',
-                       'quality_bureaucracy',
-                       'impartial_decision_making'
+                       'sch_support',
+                       'principal_evaluation',
+                        'national_learning_goals',
+                        'mandates_accountability',
+                        'quality_bureaucracy',
+                        'impartial_decision_making'
     )
     
     #Create list of key sub-indicators
@@ -474,6 +466,7 @@ server <- function(input, output, session) {
     get_tag <- reactive({
     
     get_tag_df<-indicators %>%
+        as_tibble(.name_repair='universal') %>%
         filter(Indicator.Name==input$indicators)
     
     
@@ -554,10 +547,10 @@ server <- function(input, output, session) {
         
        if (input$subgroup=="Rural") {
           df<- df %>%
-            filter(rural==TRUE)
+            filter(urban_rural=="Rural")
         } else if (input$subgroup=="Urban") {
           df<- df %>%
-            filter(rural==FALSE)  
+            filter(urban_rural=="Urban")  
         }
         
         } else if (input$stud_level=="Yes") {
@@ -591,10 +584,10 @@ server <- function(input, output, session) {
           
           if (input$subgroup=="Rural") {
             df<- df %>%
-              filter(rural==TRUE)
+              filter(urban_rural=="Rural")
           } else if (input$subgroup=="Urban") {
             df<- df %>%
-              filter(rural==FALSE)  
+              filter(urban_rural=="Urban")  
           }
           
         }
@@ -662,11 +655,10 @@ server <- function(input, output, session) {
     ##########################
     
     #Get metadata from github
-    indicator_choices<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
+    indicator_choices<-read_csv('indicators_choices.csv')
     
     #Display metadata for indicator
     indicator_choices <- indicator_choices %>%
-      dplyr::select(-X1, -X6) %>%
       dplyr::filter(Series!="---") 
     
     names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
@@ -678,7 +670,7 @@ server <- function(input, output, session) {
         dplyr::filter(Indicator.Name==input$indicators) 
       
       
-      get_meta_df[,'How.is.the.indicator.scored.']
+      get_meta_df[,'Source.Note']
       
     })
     
@@ -879,7 +871,7 @@ server <- function(input, output, session) {
 
       } else if ((str_sub(get_tag()[1],1,1) %in% c('B'))) {
         sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="gender|DEM|IDM|NLG|ACM|QB|ORG")])
-        metadata<-public_officials_metadata
+       # metadata<-public_officials_metadata
         
         #add function to produce weighted summary stats
         my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
@@ -1000,10 +992,10 @@ server <- function(input, output, session) {
       
       if (input$subgroup=="Rural") {
         df_reg<- df_reg %>%
-          filter(rural==TRUE)
+          filter(urban_rural=="Rural")
       } else if (input$subgroup=="Urban") {
         df_reg<- df_reg %>%
-          filter(rural==FALSE)  
+          filter(urban_rural=="Urban")  
       }
       
       #keep just school code and learning outcome
@@ -1124,9 +1116,10 @@ server <- function(input, output, session) {
         ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices),50)) +
         labs(colour = "Indicator") +
         ylab(input$reg_choices) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+        geom_richtext(
+          aes(x=1,y=5,label = eq_plot_txt(na.omit(df_reg_plot_dta), y, values), hjust=0.2)
+        ) 
+
       
       
       regplots
@@ -1167,7 +1160,7 @@ server <- function(input, output, session) {
     get_tag_mult_cov <- reactive({
       
       labels_gdp <- data.frame(
-        indicators=c("GDP",'rural'),
+        indicators=c("GDP",'urban_rural'),
         indicator_labels=c("Log GDP per Sq km", "Rural")
       )
       
@@ -1232,10 +1225,10 @@ server <- function(input, output, session) {
       
       if (input$subgroup=="Rural") {
         df_mult_reg<- df_mult_reg %>%
-          filter(rural==TRUE)
+          filter(urban_rural=="Rural")
       } else if (input$subgroup=="Urban") {
         df_mult_reg<- df_mult_reg %>%
-          filter(rural==FALSE)  
+          filter(urban_rural=="Urban")  
       }
       
       #keep just school code and learning outcome
@@ -1243,7 +1236,7 @@ server <- function(input, output, session) {
       
       
       df_mult_reg <- df_mult_reg %>%
-        select(hashed_school_code, as.character(get_tag_outcome()[1]), ipw, province, rural ) %>%
+        select(hashed_school_code, as.character(get_tag_outcome()[1]), ipw, province, urban_rural ) %>%
         rename(y=2) 
       
       if (input$explorer_weights=="No") {
@@ -1274,11 +1267,8 @@ server <- function(input, output, session) {
       
       
         my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), sep=""))
-        multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw)   
-        # Adjust standard errors
-        cov1_multi         <- vcovHC(multi_reg, type = "HC1")
-        robust_multi_se    <- sqrt(diag(cov1_multi))
-        
+        multi_reg<-lm_robust(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw, se_type='HC2')   
+
       } else if (input$province_dummies=="Yes") {
         df_multi_reg <- dat_for_regs() %>%
           left_join(gdp) %>%
@@ -1287,27 +1277,56 @@ server <- function(input, output, session) {
           select(-hashed_school_code, -ipw) 
         
         my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), ' + ', 'factor(province)', sep=""))
-        multi_reg<-lm(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw)     
-        # Adjust standard errors
-        cov1_multi         <- vcovHC(multi_reg, type = "HC1")
-        robust_multi_se    <- sqrt(diag(cov1_multi))
+        multi_reg<-lm_robust(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw, se_type='HC2')     
+
       }
       
-
       
-      stargazer( multi_reg, type = "html",
-                 se        = list(robust_multi_se),
+      modelsummary(multi_reg,
+                 output = "flextable",
+                 stars=TRUE,
+                 coef_rename = c(
+                   "presence_rate"  = "Teacher Presence",
+                   "content_knowledge" = "Teacher Content Knowledge",
+                   "teach_score" = "Teacher Pedagogy",
+                   "inputs" = "Basic Inputs",
+                   "infrastructure" = "Basic Infrastructure",
+                   "ecd_student_knowledge" = "1st Grade Student Knowledge",
+                   "student_attendance"="Student Attendance",
+                   "operational_management" = "Operational Management",
+                   "instructional_leadership" = "Instructional Leadership",
+                   "principal_knowledge_score" = "Principal Knowledge",
+                   "principal_management" = "Principal Management",
+                   "teacher_attraction" = "Teacher Attraction",
+                   "teacher_selection_deployment" = "Teacher Selection & Deployment",
+                   "teacher_support" = "Teacher Support",
+                   "teaching_evaluation" = "Teacher Evaluation",
+                   "teacher_monitoring" = "Teacher Monitoring & Accountability",
+                   "intrinsic_motivation" = "Teacher Intrinsic Motivation",
+                   "standards_monitoring" = "Standards",
+                   "sch_monitoring" = "Monitoring",
+                   "sch_management_clarity" = "Clarity of Functions",
+                   "sch_management_attraction" = "School Management Attraction",
+                   "sch_selection_deployment" = "School Management Selection & Deployment",
+                   "sch_support" = "School Management Support",
+                   "principal_evaluation" = "School Management Evaluation",
+                   "quality_bureaucracy" = "Characteristics of Bureaucracy",
+                   "national_learning_goals" = "National Learning Goals",
+                   "impartial_decision_making" = "Impartial Decision Making",
+                   "mandates_accountability"= "Mandates & Accountability"),
+                 gof_map = gm,
                  title = "Multivariate OLS Regression using School Level GEPD Data",
-                 column.labels = input$multi_reg_choices,
-                 covariate.labels = input$control_choices,
-                 style='aer',
                  notes= c('Observations weighted using sampling weights.',
                           'Heteroskedasticity robust standard errors in parenthesis.', 
                           'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
                           'GDP measures were produced by researchers at the World Bank DECRG.',  
                           'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
-      )
+      ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        htmltools_value()
       
+
     })        
     
     output$multivariate_regs<-renderUI({
@@ -1358,10 +1377,10 @@ server <- function(input, output, session) {
       
       if (input$subgroup=="Rural") {
         df_sub_reg<- df_sub_reg %>%
-          filter(rural==TRUE)
+          filter(urban_rural=="Rural")
       } else if (input$subgroup=="Urban") {
         df_sub_reg<- df_sub_reg %>%
-          filter(rural==FALSE)  
+          filter(urban_rural=="Urban")  
       }
       
       #keep just school code and learning outcome
@@ -1544,9 +1563,9 @@ output$downloadfa <- downloadHandler(
 
 school_dta_collapsed <- school_dta_short_anon %>%
   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
-
-public_officials_dta_collapsed <- public_officials_dta_clean_anon %>%
-  summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+# 
+# public_officials_dta_collapsed <- public_officials_dta_clean_anon %>%
+#   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
 
 
@@ -1559,10 +1578,10 @@ public_officials_dta_collapsed <- public_officials_dta_clean_anon %>%
  
 main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
                          'Student Attendance',
-                         'Teacher Effort', 
+                         'Teacher Presence', 
                          "Teacher Content Knowledge", 
                          "Teacher Pedagogical Skills",
-                         'Capacity for Learning', 
+                         'Student Readiness', 
                          'Basic Inputs', 
                          'Basic Infrastructure', 
                          'Operational Management', 
@@ -1581,10 +1600,10 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
                          'Policy Lever (School Management) - Attraction' ,                   
                          'Policy Lever (School Management) - Selection & Deployment'  ,      
                          'Policy Lever (School Management) - Support' ,                      
-                         'Policy Lever (School Management) - Evaluation'    , 
+                         'Policy Lever (School Management) - Evaluation'    ,
                          'Politics & Bureaucratic Capacity - National Learning Goals' ,
                          'Politics & Bureaucratic Capacity - Mandates & Accountability'   ,  
-                         'Politics & Bureaucratic Capacity - Quality of Bureaucracy'    ,    
+                         'Politics & Bureaucratic Capacity - Characteristics of Bureaucracy'    ,    
                          'Politics & Bureaucratic Capacity - Impartial Decision-Making'    
                          
                          
@@ -1601,170 +1620,128 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 output$indicators_table <- DT::renderDataTable({
   
-# School Survey
-    metadata<-metadta
+  #function for creating these tables
+  svymeantab <- function(data, strata) {
     
-
-    sch_ipw<-school_dta_short_anon$ipw 
+    temp <- get(data) %>%
+      filter(!is.na(ipw)) %>%
+      filter(!is.infinite(ipw)) %>%
+      select(one_of(indicators_list), strata, ipw ) %>%
+      pivot_longer(cols=one_of(indicators_list),
+                   names_to = 'indicators',
+                   values_to='value') 
+    
     
     if (input$table_weights=="Yes") {
-    #add function to produce weighted summary stats
-      my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
-                                             sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
-                                             p25 = ~ (wtd.quantile(., probs=c(0.25),  weights=sch_ipw, na.rm=TRUE)),
-                                             p50 = ~ (wtd.quantile(., probs=c(0.5), weights=sch_ipw, na.rm=TRUE)),
-                                             p75 = ~ (wtd.quantile(., probs=c(0.75), weights=sch_ipw, na.rm=TRUE)),
-                                             complete = ~ sum(!is.na(.))))
+      #add function to produce weighted summary stats
+      temp %>%
+        as_survey_design(strata=strata,
+                         weight=ipw) %>%
+        select(-strata, -ipw) %>%
+        group_by(indicators) %>%
+        summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
+        as_tibble() %>%
+        mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        select(varlabel, mean, ci) 
+      
+      
     } else {
-      my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
-                                             sd = ~ sqrt(var(.,   na.rm=TRUE)),
-                                             p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
-                                             p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
-                                             p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
-                                             complete = ~ sum(!is.na(.))))
+      temp %>%
+        mutate(ipw=1) %>%
+        as_survey_design(strata=strata,
+                         weight=ipw) %>%
+        select(-strata, -ipw) %>%
+        group_by(indicators) %>%
+        summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
+        as_tibble() %>%
+        mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
+        left_join(labels_df_2) %>%
+        mutate(varlabel=indicator_labels) %>%
+        select(varlabel, mean, ci) 
     }
- 
+  }
   
-    sumstats_school <- school_dta_short_anon %>%
-      select(one_of(indicators_list) ) 
+  svymeantabpo <- function(data) {
     
-    
-    
-    sumstats_school_df<-my_skim(sumstats_school) %>%
-      yank("numeric") %>%
-      mutate(variable=skim_variable) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-    
-    
-    #add variable label
-    sumstats_school_df <- sumstats_school_df %>%
-      mutate(name=variable,
-             indicators=variable) %>%
+    get(data) %>%
+      select(one_of(indicators_list) ) %>%
+      mutate(ipw=1) %>%
+      pivot_longer(cols=one_of(indicators_list),
+                   names_to = 'indicators',
+                   values_to='value') %>%
+      as_survey_design(weight=ipw) %>% #equal weights
+      select(-ipw) %>%
+      group_by(indicators) %>%
+      summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
+      as_tibble() %>%
+      mutate(ci=paste("[",round(mean_low,2),", ", round(mean_upp,2),"]", sep="")) %>%
+      mutate(mean_urban=as.numeric(NA),
+             ci_urban=as.character(NA),
+             mean_rural=as.numeric(NA),
+             ci_rural=as.character(NA)) %>%
       left_join(labels_df_2) %>%
       mutate(varlabel=indicator_labels) %>%
-      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-      select(varlabel, mean, ci)
-    
-    #Now do breakdown by Urban/Rural
-    #urban
-    sumstats_school_urban <- school_dta_short_anon %>%
-      filter(rural==FALSE) 
-
-    
-    sch_ipw<-sumstats_school_urban$ipw 
-    
-    sumstats_school_urban <- sumstats_school_urban %>%
-      select(one_of(indicators_list)) 
-    
-    
-    
-    sumstats_school_urban_df<-my_skim(sumstats_school_urban) %>%
-      yank("numeric") %>%
-      mutate(variable=skim_variable) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-    
-    
-    #add variable label
-    sumstats_school_urban_df <- sumstats_school_urban_df %>%
-      mutate(name=variable,
-             indicators=variable) %>%
-      left_join(labels_df_2) %>%
-      mutate(varlabel=indicator_labels) %>%
-      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-      mutate(mean_urban=mean,
-             ci_urban=ci) %>%
-      select(varlabel, mean_urban, ci_urban)
-    
-    #rural
-      sumstats_school_rural <- school_dta_short_anon  %>%
-        filter(rural==TRUE) 
-
-        
-        sch_ipw<-sumstats_school_rural$ipw 
-      
-        sumstats_school_rural <- sumstats_school_rural %>%
-        select(one_of(indicators_list)) 
-      
-
-    sumstats_school_rural_df<-my_skim(sumstats_school_rural) %>%
-      yank("numeric") %>%
-      mutate(variable=skim_variable) %>%
-      select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
-    
-    
-    #add variable label
-    sumstats_school_rural_df <- sumstats_school_rural_df %>%
-      mutate(name=variable,
-             indicators=variable) %>%
-      left_join(labels_df_2) %>%
-      mutate(varlabel=indicator_labels) %>%
-      mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-             ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-      mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-      mutate(mean_rural=mean,
-             ci_rural=ci) %>%
-      select(varlabel, mean_rural, ci_rural)
-    
-    #now bind urban/rural with the main results
-    sumstats_school_df <- sumstats_school_df %>%
-      left_join(sumstats_school_urban_df) %>%
-      left_join(sumstats_school_rural_df)
-    
-      
-    
-  #Survey of Public Officials
-    metadata<-public_officials_metadata
-    
-    #add function to produce weighted summary stats
-    my_skim<-    skim_with( numeric = sfl( mean = ~ mean(.,   na.rm=TRUE),
-                                           sd = ~ sqrt(var(.,   na.rm=TRUE)),
-                                           p25 = ~ (quantile(., probs=c(0.25),   na.rm=TRUE)),
-                                           p50 = ~ (quantile(., probs=c(0.5),  na.rm=TRUE)),
-                                           p75 = ~ (quantile(., probs=c(0.75),  na.rm=TRUE)),
-                                           complete = ~ sum(!is.na(.))))    
+      select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)  
+  }
+  
+  strat=c('province', 'private', 'urban_rural')
+  
+  # School Survey
+  metadata<-metadta
   
   
-  sumstats_public_officials <- public_officials_dta_clean_anon %>%
-    select(one_of(indicators_list) ) 
+  sumstats_school <- school_dta_short_anon %>%
+    mutate(presence_rate=100-sch_absence_rate)
+  
+  sumstats_school_df <- svymeantab('sumstats_school', strata=strat)
+  
+  #Now do breakdown by Urban/Rural
+  #urban
+  sumstats_school_urban <- school_dta_short_anon %>%
+    filter(urban_rural=="Urban")  %>%
+    mutate(presence_rate=100-sch_absence_rate)
+  
+  
+  sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=strat)
+  
+  #rural
+  sumstats_school_rural <- school_dta_short_anon  %>%
+    filter(urban_rural=="Rural") %>%
+    mutate(presence_rate=100-sch_absence_rate)
+  
+  
+  sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=strat)
+  
+  
+  #now bind urban/rural with the main results
+  sumstats_school_df_final <- sumstats_school_df %>%
+    left_join((sumstats_school_urban_df %>% rename(mean_urban=mean, ci_urban=ci))) %>%
+    left_join((sumstats_school_rural_df %>% rename(mean_rural=mean, ci_rural=ci)))
   
   
   
-  sumstats_public_officials_df<-my_skim(sumstats_public_officials) %>%
-    yank("numeric") %>%
-    mutate(variable=skim_variable) %>%
-    select(variable, mean, sd, p0, p25, p50, p75, p100, complete,  hist) 
+  #public officials
+  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
   
-  
-  #add variable label
-  sumstats_public_officials_df <- sumstats_public_officials_df %>%
-    mutate(name=variable,
-           indicators=variable) %>%
-    left_join(labels_df_2) %>%
-    mutate(varlabel=indicator_labels) %>%
-    mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
-           ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
-    mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
-    mutate(mean_urban=as.numeric(NA),
-           ci_urban=as.numeric(NA),
-           mean_rural=as.numeric(NA),
-           ci_rural=as.numeric(NA)) %>%
-    select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
-  
-  
-  sumstats_df <- sumstats_school_df %>%
+  sumstats_df <- sumstats_school_df_final %>%
     bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
-   sumstats_df <- sumstats_df %>%
-     inner_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
-   
-   sumstats_df <- sumstats_df %>%
-     select(varlabel, Value, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
-   
+  
+  
+  
+  
+  sumstats_df <- sumstats_df %>%
+    inner_join(indicator_choices, by=c('varlabel'='Indicator.Name')) 
+  
+  sumstats_df <- sumstats_df %>%
+    select(varlabel, Value, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)
+  
+  sumstats_df <- sumstats_df %>%
+    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
+  
   #add in custom column sub-headers
   sketch = htmltools::withTags(table(
     class = 'display',
@@ -1785,14 +1762,12 @@ output$indicators_table <- DT::renderDataTable({
   
   # create 19 breaks and 20 rgb color values ranging from white to red
   
-  sumstats_df <- sumstats_df %>%
-    mutate(ratio=(as.numeric(mean_rural))/as.numeric(mean_urban))
   
   brks <- seq(0, max(sumstats_df$ratio, na.rm=T), length.out = 19)
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Rwanda 2020",
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Niger 2022",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
                 escape = FALSE,
@@ -1804,7 +1779,7 @@ output$indicators_table <- DT::renderDataTable({
                   scrollX = TRUE, 
                   paging=FALSE,
                   ordering=F)) %>%
-    formatRound(columns = c('mean', 'ci', 'mean_urban', 'ci_urban', 'mean_rural', 'ci_rural', 'ratio' ),
+    formatRound(columns = c('mean', 'mean_urban', 'mean_rural', 'ratio' ),
                 digits=2)  %>% 
     formatStyle('ratio', backgroundColor = styleInterval(brks, clrs))
   
@@ -1816,16 +1791,15 @@ output$indicators_table <- DT::renderDataTable({
 
 output$indicators_choices <- DT::renderDataTable({
   
-  indicator_choices_table<-read_delim('indicators_choices.md', delim="|", trim_ws=TRUE)
+  indicator_choices_table<-read_csv('indicators_choices.csv')
 
   
 
   #Display metadata for indicator
   indicator_choices_table <- indicator_choices_table %>%
-    dplyr::select(-X1, -X6) %>%
     dplyr::filter(Series!="---") %>%
     dplyr::select(-Series) %>%
-    rename(name='Indicator Name' ) %>%
+    rename(name='Indicator.Name' ) %>%
     dplyr::filter(name %in% main_indicator_labels2) %>%
     arrange(factor(name, levels=main_indicator_labels2)) %>%
     rename('Indicator Name'=name ) 
