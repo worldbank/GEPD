@@ -1,11 +1,11 @@
 ---
-title: "RWA Teacher Linkages"
+title: "JOR Teacher Linkages"
 format: html
 ---
 
 # Introduction
 
-This analysis will link the teacher modules  using teacher IDs and names and then do some basic analysis.
+This analysis will link the teacher modulese using teacher IDs and names and then do some basic analysis.
 
 Teachers can be linked by a common ID.  The following are the column names in the various files
 
@@ -37,10 +37,10 @@ library(validate)
 library(GGally)
 library(Hmisc)
 #Country name
-country <-'RWA'
-country_name <- "Rwanda"
-year <- '2020'
-school_file <-'EPDash_RWA_clean.dta'
+country <-'JOR'
+country_name <- "Jordan"
+year <- '2019'
+school_file <-'EPDash.dta'
 #########################
 # File paths #
 #########################
@@ -82,30 +82,22 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 #function to attach weights
 
+#function to attach weights
+
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
   snumber<-enquo(snumber)
   prov<-enquo(prov)
   
-  data_set_updated <- data_set_updated %>%
-    left_join(auxillary_frame_info) %>%
-    mutate(province=district) %>%
-    group_by(district_code, urban_rural) %>%
-    mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
-    mutate(weights=n()/allocate) %>%
-    mutate(unity=1) %>%
-    ungroup() 
-    
-  
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
-    mutate(rural=urban_rural=="RURAL") %>%
-    mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
-                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
+    mutate(ipw=if_else(is.na(.data$weights), median(.data$weights, na.rm=T), .data$weights)*!! snumber ) %>%
+    mutate(province=governorate) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "rural" | names(data_set_updated) == "governorate" | names(data_set_updated) == "province" |
+                                                      names(data_set_updated) == "foundation_period" | names(data_set_updated) == "territory" | names(data_set_updated) == "Syrian_school" |
+                                                      names(data_set_updated) == "property_type" | names(data_set_updated) == "supervisory_authority")])))
 }
-
 
 df_add_weights<- function(dataset) {
   temp<-get(dataset) 
@@ -120,9 +112,8 @@ df_add_weights<- function(dataset) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, sch_id, unity, district)
+      temp <- df_weights_function(temp, organization_code, total_students_grade_4, governorate)
     }
-    
 }
 
 ```
@@ -175,14 +166,10 @@ attach(paste0(confidential_folder,"/school_survey_data.RData"))
 ```{r}
 #read in the file on school weights
 #Load original sample of schools
-currentDate<-c("2019-08-30")
+currentDate<-c("2019-10-11")
 sample_frame_name <- paste(sampling_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
-
-#load some auxiliary data to help do sampling weights, because we lacked total enrollment for the districts
-auxillary_frame_info<-read_csv(file.path(paste(download_folder,"/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
-  mutate(district=str_to_upper(district))
 
 
 
@@ -196,14 +183,14 @@ key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash_RWA.dta")) %>%
+school_dta<-read_dta(file.path(download_folder, "EPDash.dta")) %>%
   select(-starts_with("ENUM"))
 
 #vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number= as.double(m1s0q1_number_other) ,
+         enumerator_number=if_else(!is.na(m1s0q1_name),m1s0q1_name, as.double(m1s0q1_number_other)) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
@@ -213,6 +200,7 @@ school_dta<- school_dta %>%
   ) %>%
   mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
   mutate(school_code=if_else(school_code==62181, 558163, school_code))  #fix an error where the school code was loaded incorrectly
+
 
 
 
@@ -278,16 +266,10 @@ school_data_preamble <- school_dta %>%
 ```{r}
 
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) 
-
 #Add school preamble info
 teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
-  select(preamble_info, everything()) %>%
-  group_by(school_code,m3sb_tnumber) %>%
-  fill(everything(), .direction='downup') %>%
-  slice(1) %>% 
-  ungroup()
-
+  select(preamble_info, everything())
 
 
 
@@ -306,7 +288,6 @@ teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
 ############################
 
 teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta")) 
-
 #Add school preamble info
 teacher_absence_dta <- teacher_absence_dta %>%
   left_join(school_data_preamble) %>%
@@ -360,18 +341,17 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 
-  
-teacher_pedagogy <- read_csv(paste0(confidential_folder,"/Indicators/PEDG_final_indicator_data.csv")) %>%
-     select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis"))
+
+teacher_pedagogy <- school_micro_raw %>%
+  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+
   
 #add weights and anonymize
 teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') %>%
-  select(-starts_with('interview__'), -survey_time) 
+  select(-starts_with('interview__')) 
 
 
 ```
-
-
 
 
 
@@ -447,7 +427,7 @@ teacher_absence_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
 
-teacher_pedagogy_combined %>%
+teacher_pedagogy_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta"))
 
