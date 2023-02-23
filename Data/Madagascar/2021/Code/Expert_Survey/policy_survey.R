@@ -15,6 +15,7 @@ if(Sys.info()["user"] == "wb577189"){
   
   
 }
+
 #read in data
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
@@ -36,6 +37,7 @@ read_var <- function(var) {
 #start with teachers
 ##########################
   expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Madagascar (2021.Sep.23) Final.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
+
   fill(Question..) %>% 
   filter(!is.na(Question))
 
@@ -109,6 +111,7 @@ expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Mada
   fill(`Question..`) %>%
   filter(!is.na(Question)) 
   
+
 
 
 expert_dta_inputs_shaped<-data.frame(t(expert_dta_inputs[-1]))
