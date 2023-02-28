@@ -539,7 +539,7 @@ linked_sample %>%
   filter(!is.infinite(ipw)) %>%
   ungroup() %>%
   as_survey_design(strata=c('idregion','iddistrict','sch_owner'),
-                   weight=strata_school_prob) %>%
+                   weight=ipw) %>%
     mutate(electricity=if_else(electricity=="No Electricity",0,1),
            school_feeding=if_else(sch_feeding=="No",0,1),
            internet=if_else(internet=="No",0,1)) %>%

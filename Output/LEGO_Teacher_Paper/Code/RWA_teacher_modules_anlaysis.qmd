@@ -447,7 +447,7 @@ teacher_absence_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
 
-teacher_pedagogy_combined %>%
+teacher_pedagogy_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta"))
 

@@ -212,31 +212,6 @@ var.list <- sapply(school_dta, function(x) attr(x,"label"))
 var.labels= unlist(var.list)
 
 
-#merge on derived indicators
-school_micro_comb <- school_micro_raw %>%
-  left_join(
-    school_dta_short %>%
-      rename(
-        sch_goals_exist=school_goals_exist,
-        sch_goals_clear=school_goals_clear,
-        sch_goals_relevant=school_goals_relevant,
-        sch_goals_measured=school_goals_measured
-      ) %>%
-      select(school_code, ind_list)
-  ) %>%
-  select(colnames(school_data_preamble), ind_list, everything())
-
-#add weights and anonymize
-school_micro <- df_add_weights('school_micro_comb')                   
-
-#school_micro <- Hmisc::upData(school_micro, labels = var.labels)
-
-```
-
-
-```{r}
-#create a file for matching to tecaher and student files
-
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info <- c( 'interview__key', 'school_code',
                    'school_name_preload', 
@@ -261,7 +236,30 @@ school_data_preamble <- school_dta %>%
   group_by(interview__key) %>%
   select(interview__key, school_code) %>%
   left_join(school_data_preamble_temp)
+
+
+#merge on derived indicators
+school_micro_comb <- school_micro_raw %>%
+  left_join(
+    school_dta_short %>%
+      rename(
+        sch_goals_exist=school_goals_exist,
+        sch_goals_clear=school_goals_clear,
+        sch_goals_relevant=school_goals_relevant,
+        sch_goals_measured=school_goals_measured
+      ) %>%
+      select(school_code, ind_list)
+  ) %>%
+  select(colnames(school_data_preamble), ind_list, everything())
+
+#add weights and anonymize
+school_micro <- df_add_weights('school_micro_comb')                   
+
+#school_micro <- Hmisc::upData(school_micro, labels = var.labels)
+
 ```
+
+
 
 
 ## Teacher Questionnaire File
@@ -439,7 +437,7 @@ teacher_absence_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
 
-teacher_pedagogy_combined %>%
+teacher_pedagogy_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta"))
 
