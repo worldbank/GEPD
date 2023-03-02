@@ -46,8 +46,7 @@ data_list<-ind_dta_list
 # Code to anonymize
 ####################
 #create hashed school code
-public_officials_dta_short <- public_officials_dta_short %>%
-  mutate(id_code=row_number())
+public_officials_dta_short <- public_officials_dta_short 
 
 public_officials_dta_short$hashed_position <-as.character(lapply(public_officials_dta_short$position, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 public_officials_dta_short$hashed_office <-as.character(lapply(public_officials_dta_short$office_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
@@ -77,7 +76,7 @@ for (i in data_list ) {
     }
     
     
-
+    
     #Scrub names, geocodes
     temp <- temp %>%
       select(-starts_with('position'), -starts_with('office'), contains('location')) %>% # drop position names and address
@@ -90,7 +89,7 @@ for (i in data_list ) {
       select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
       select(-contains('name')) %>%
       select(-starts_with('ORG1'))  #drop ORG1 questions, which could lead to reidentification
-
+    
     #Drop any "other" responses to questions
     temp <- temp %>%
       select(-contains('_other'))
@@ -183,7 +182,7 @@ for (i in data_list ) {
     #do noise addition (10% of std dev) using sdcMicro and addNoise for income
     if ("DEM1q14n" %in% colnames(temp)) { #What is your monthly net salary?
       
-      temp$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
+      temp$net_monthly_salary<-as.numeric(addNoise(temp, variables=c('DEM1q14n'), noise=110)$xm)
       temp <- temp %>%
         select(-DEM1q14n)
       
