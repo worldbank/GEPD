@@ -33,8 +33,10 @@ makeVlist <- function(dta) {
 #read in teacher roster file
 ############################
 
-teacher_roster<-read_dta(file.path(download_folder, "/TEACHERS.dta")) %>% 
-
+teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>% 
+  # 
+  # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>%
+  # bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta"))) %>% 
   mutate(teacher_name=m2saq2,
          teacher_number=TEACHERS__id)
 
@@ -42,7 +44,8 @@ teacher_roster<-read_dta(file.path(download_folder, "/TEACHERS.dta")) %>%
 #read in school level file
 ###########################
 school_dta<-read_dta(paste(download_folder,school_file, sep = "/")) 
-
+# read_dta(paste(download_folder, "/v1/" ,school_file, sep = "")) %>% 
+# bind_rows(read_dta(paste(download_folder, "/v2/", school_file, sep = "")))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
@@ -125,6 +128,8 @@ for (i in indicator_names ) {
 #########################################
 teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
 
+# read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
+# bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 
 
@@ -693,10 +698,10 @@ write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_scor
 
 #read in 4th grade assessment level file
 assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
-  
-  
-  # read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
-  # bind_rows(read_dta(file.path(download_folder, "v2/fourth_grade_assessment.dta")))
+
+
+# read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
+# bind_rows(read_dta(file.path(download_folder, "v2/fourth_grade_assessment.dta")))
 
 #Add school preamble info
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
@@ -1100,8 +1105,8 @@ school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
 school_data_INPT <- school_data_INPT %>%
   mutate(used_ict_num=case_when(
     m1sbq12_inpt==0  ~ 0,
-    (m1sbq12_inpt>=1 ) ~ m1sbq13a_inpt_etri,
-    (is.na(m1sbq12_inpt==0) | is.na(m1sbq13b_inpt_etri)) ~ as.numeric(NA)
+    (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
+    (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
   ))
 
 #access to ICT

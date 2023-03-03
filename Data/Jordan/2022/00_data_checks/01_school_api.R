@@ -80,7 +80,7 @@ close(filecon)
 
 ## Unzip the folder
 
-unzip(file.path(download_folder, tounzip), exdir=paste(download_folder,'version_7', sep="/"))
+unzip(file.path(download_folder, tounzip), exdir=paste(download_folder))
   
 
 
@@ -101,7 +101,7 @@ indicators <- indicators %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 indicators <- indicators %>%
-  select(-c('X1', 'X8'))
+  select(-c(1))
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)
@@ -112,7 +112,7 @@ indicator_names <- sapply(indicator_names, tolower)
 
 
 #read in school level file
-school_dta_18<-read_dta(file.path(paste(download_folder,'version_7', sep="/"), school_file))
+school_dta<-read_dta(file.path(paste(download_folder), school_file))
 
 
 
@@ -133,7 +133,7 @@ school_metadta<-school_metadta %>%
   left_join(indicators)
 
 #bind version 18 and 17
-# school_dta <- bind_rows(school_dta, school_dta_18, school_dta_17,  school_dta_16) 
+# school_dta <- bind_rows(school_dta, school_dta, school_dta_17,  school_dta_16) 
 
 label(school_dta) = as.list(as.character(school_metadta$varlabel))
 
@@ -145,7 +145,7 @@ school_dta %>%
 
 
 #read in ecd level file
-ecd_dta_18<-read_dta(file.path(paste(download_folder,'version_7', sep="/"), "ecd_assessment.dta"))
+ecd_dta<-read_dta(file.path(paste(download_folder), "ecd_assessment.dta"))
 
 
 #Add in ecd metadata
@@ -158,7 +158,7 @@ ecd_metadta<-ecd_metadta %>%
   left_join(indicators)
 
 #bind version 18 and 17
-#ecd_dta <- bind_rows(ecd_dta, ecd_dta_18,ecd_dta_17, ecd_dta_16)
+#ecd_dta <- bind_rows(ecd_dta, ecd_dta,ecd_dta_17, ecd_dta_16)
 
 label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
 
@@ -190,7 +190,7 @@ assess_4th_grade_dta %>%
 
 
 #read in teacher questionnaire level file
-teacher_questionnaire_18<-read_dta(file.path(paste(download_folder,'version_7', sep="/"), "questionnaire_roster.dta"))
+teacher_questionnaire<-read_dta(file.path(paste(download_folder), "questionnaire_roster.dta"))
 
 
 #Add in questionnaire metadata
@@ -209,7 +209,7 @@ teacher_questionnaire_metadta<-teacher_questionnaire_metadta %>%
   left_join(indicators)
 
 #bind version 18 and 17
-#teacher_questionnaire <- bind_rows(teacher_questionnaire, teacher_questionnaire_18, teacher_questionnaire_17, teacher_questionnaire_16)
+#teacher_questionnaire <- bind_rows(teacher_questionnaire, teacher_questionnaire, teacher_questionnaire_17, teacher_questionnaire_16)
 
 
 label(teacher_questionnaire) = as.list(as.character(teacher_questionnaire_metadta$varlabel))
@@ -221,7 +221,7 @@ teacher_questionnaire %>%
 
 
 #read in teacher absence file
-teacher_absence_dta_18<-read_dta(file.path(paste(download_folder,'version_7', sep="/"), "TEACHERS.dta"))
+teacher_absence_dta<-read_dta(file.path(paste(download_folder), "TEACHERS.dta"))
 
 
 #Add in absemce metadata
@@ -240,7 +240,7 @@ teacher_absence_metadta<-teacher_absence_metadta %>%
   left_join(indicators)
 
 #bind version 18 and 17
-#teacher_absence_dta <- bind_rows(teacher_absence_dta,teacher_absence_dta_18, teacher_absence_dta_17, teacher_absence_dta_16)
+#teacher_absence_dta <- bind_rows(teacher_absence_dta,teacher_absence_dta, teacher_absence_dta_17, teacher_absence_dta_16)
 
 label(teacher_absence_dta) = as.list(as.character(teacher_absence_metadta$varlabel))
 
@@ -251,7 +251,7 @@ teacher_absence_dta %>%
 
 
 #read in teacher assessment file
-teacher_assessment_dta_18<-read_dta(file.path(paste(download_folder,'version_7', sep="/"), "teacher_assessment_answers.dta"))
+teacher_assessment_dta<-read_dta(file.path(paste(download_folder), "teacher_assessment_answers.dta"))
 
 
 #Add in assessment metadata
@@ -265,7 +265,7 @@ teacher_assessment_metadta<-teacher_assessment_metadta %>%
   left_join(indicators)
 
 #bind version 18 and 17
-#teacher_assessment_dta <- bind_rows(teacher_assessment_dta, teacher_assessment_dta_18, teacher_assessment_dta_17, teacher_assessment_dta_16)
+#teacher_assessment_dta <- bind_rows(teacher_assessment_dta, teacher_assessment_dta, teacher_assessment_dta_17, teacher_assessment_dta_16)
 
 label(teacher_assessment_dta) = as.list(as.character(teacher_assessment_metadta$varlabel))
 

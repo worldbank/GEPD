@@ -33,7 +33,7 @@ makeVlist <- function(dta) {
 #read in teacher roster file
 ############################
 
-teacher_roster<-read_dta(file.path(download_folder, "school_survey/TEACHERS.dta")) %>% 
+teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>% 
   # 
   # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>%
   # bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta"))) %>% 
@@ -43,7 +43,7 @@ teacher_roster<-read_dta(file.path(download_folder, "school_survey/TEACHERS.dta"
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(paste(download_folder,"/school_survey/",school_file, sep = "")) 
+school_dta<-read_dta(paste(download_folder,school_file, sep = "/")) 
   # read_dta(paste(download_folder, "/v1/" ,school_file, sep = "")) %>% 
   # bind_rows(read_dta(paste(download_folder, "/v2/", school_file, sep = "")))
 vtable(school_dta)
@@ -126,7 +126,7 @@ for (i in indicator_names ) {
 #########################################
 #read in teacher questionnaire level file
 #########################################
-teacher_questionnaire<-read_dta(file.path(download_folder, "school_survey/questionnaire_roster.dta"))
+teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
   
   # read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
   # bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
@@ -256,7 +256,7 @@ bin_var_2 <- function(var, val) {
 }
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "school_survey/TEACHERS.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
 
 # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>% 
 #   bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta")))
@@ -431,7 +431,7 @@ graded_data <- "no"
 # School survey. Fraction correct on teacher assessment. In the future, we will align with SDG criteria for minimum proficiency.
 
 if (graded_data!='yes') {
-  teacher_assessment_dta <- read_dta(file.path(download_folder, "school_survey/teacher_assessment_answers.dta")) %>% 
+  teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>% 
     
     # read_dta(file.path(download_folder, "v1/teacher_assessment_answers.dta")) %>%
     # bind_rows(read_dta(file.path(download_folder, "v2/teacher_assessment_answers.dta"))) %>% 
@@ -697,7 +697,7 @@ write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_scor
 #############################################
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "school_survey/fourth_grade_assessment.dta"))
+assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
   
   
   # read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
@@ -890,7 +890,7 @@ final_indicator_data_LERN_F <- assess_4th_grade_anon %>%
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "school_survey/ecd_assessment.dta")) 
+ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta")) 
 
 # read_dta(file.path(download_folder, "v1/ecd_assessment.dta")) %>% 
 #   bind_rows(read_dta(file.path(download_folder, "v2/ecd_assessment.dta")))
