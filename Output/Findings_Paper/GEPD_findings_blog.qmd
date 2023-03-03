@@ -276,7 +276,7 @@ In Peru, only around 33% of students reached the proficiency level (around 80% o
 
 ```{r studteach}
 #| fig.width=6,
-#| fig.height=5,
+#| fig.height=6,
 #| dpi=350
 ind <- c(  'SE.PRM.LERN',
   'SE.PRM.EFFT',
@@ -505,7 +505,7 @@ tab_df_comb <- tab_df_R %>%
 
 Further, a consistent finding is that rural areas tend to struggle even more than the national totals suggest.  In most cases, teachers and students in rural areas perform worse than those from urban areas.  The disparities extend to other areas of the education system as well.  In school inputs and infrastructure, typically rural areas are worse off than urban areas.  For example, in Peru while around 65% of urban schools have a working internet connection, only around 8% of rural schools have one. While around 63% of children in urban schools in Ethiopia have access to a working tablet or computer, only around 14% have access in rural areas.  In Madagascar, 27% of children in urban schools have access to pens, pencils, textbooks, and exercise books, a low rate, but in rural areas it is even worse with only around 10% having access to these learning materials.
 ```{r}
-#| , fig.width = 7, fig.height = 5, dpi=350
+#| , fig.width = 7, fig.height = 6, dpi=350
 series_list <- c('SE.PRM.INPT.5.U', 'SE.PRM.INPT.5.R', #(De Facto) Percent of schools with access to EdTech
                  'SE.PRM.INPT.3.U','SE.PRM.INPT.3.R', # (De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books 
                  'SE.PRM.INFR.3.U','SE.PRM.INFR.3.R', # (De Facto) Percent of schools with functioning toilets
@@ -567,7 +567,7 @@ Using the data collected at the school level and the interviews of public offici
 
 One novelty of the GEPD is that it provides data not just on the school indicators, but the policies and politics as well.  This value can be shown by looking at how much additional explanatory power is gained by including the policy and politics indicators.  In a linear regression with school average 4th grade student achievement as the outcome variable, the school level practice indicators explain around 34% of the variation in student learning.  When adding the de facto policy indicators, this rises to 46% of the variation explained.  Finally, when adding the indicators captured by the survey of public officials for public officials who oversee the schools, the percentage explained rises to more than 50%.
 
-![Variation in 4th Grade Student Achievement Explained by School Practices, Policies, and Politics Indicators](./plots/cor_gif.gif)
+![Variation in 4th Grade Student Achievement Explained by School Practices, Policies, and Politics Indicators](./plots/cor_gif_updated.gif)
 
 
 The GEPD is meant to provide countries a way to prioritize investment and better understand problem areas in their education systems.  Any policy making strategy will need to be tailored to the individual country context.  However, some general patterns across multiple countries have emerged including that teachers and students are struggling to perform, that rural areas tend to lag behind, that the policy environments exists, and that looking at the entire system can be helpful for understanding what is driving differences in learning.  
@@ -963,7 +963,7 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
 
 baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
 
-m <- feols(baseline_pract_pol_bur , data=anova_df)
+m <- feols(baseline_pract_pol_bur , data=anova_df )
 
 baseline_pract_pol_bur_df <- anova_df %>%
   add_predictions(m)
