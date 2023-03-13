@@ -77,7 +77,7 @@ school_file<-"EPDash.dta"
 # #launch file to access data from API
 # source('C:/Users/wb577189/OneDrive - WBG/Desktop/api_pak.R', local = T)
 
- source('01_school_api.R', local=TRUE)
+ #source('01_school_api.R', local=TRUE)
 
 # #launch file to clear data=
 source('02_school_data_cleaner.R', local=TRUE)

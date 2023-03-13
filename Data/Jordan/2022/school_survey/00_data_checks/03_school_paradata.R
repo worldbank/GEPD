@@ -253,10 +253,8 @@ para_df_module <- para_df %>%
   group_by(ï..interview__id, module) %>% 
   summarise(responsible=first(responsible), date=first(date), timelength_sec=sum(timelength_sec))
 
-school_dta <- school_dta %>% rename(
-  lon = m1s0q9__Longitude,
-  lat = m1s0q9__Latitude
-) 
+
+
 
 school_dta_preamble_id <- school_dta %>%
   mutate( school_emis_preload=if_else(school_info_correct==1,as.double(school_emis_preload), as.double(m1s0q2_emis))) %>% 
