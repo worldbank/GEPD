@@ -36,16 +36,16 @@ makeVlist <- function(dta) {
 teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>% 
   # 
   # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>%
-  # bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta"))) %>% 
+  bind_rows(read_dta(file.path(download_folder, "v8/TEACHERS.dta"))) %>% 
   mutate(teacher_name=m2saq2,
          teacher_number=TEACHERS__id)
 
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(paste(download_folder,school_file, sep = "/")) 
+school_dta<-read_dta(paste(download_folder,school_file, sep = "/")) %>% 
 # read_dta(paste(download_folder, "/v1/" ,school_file, sep = "")) %>% 
-# bind_rows(read_dta(paste(download_folder, "/v2/", school_file, sep = "")))
+ bind_rows(read_dta(paste(download_folder, "/v8/", school_file, sep = "")))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
@@ -126,10 +126,10 @@ for (i in indicator_names ) {
 #########################################
 #read in teacher questionnaire level file
 #########################################
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) %>% 
 
 # read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
-# bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
+ bind_rows(read_dta(file.path(download_folder, "v8/questionnaire_roster.dta")))
 teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire)
 
 
@@ -256,10 +256,10 @@ bin_var_2 <- function(var, val) {
 }
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>% 
 
 # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>% 
-#   bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta")))
+   bind_rows(read_dta(file.path(download_folder, "v8/TEACHERS.dta")))
 teacher_absence_metadta<-makeVlist(teacher_absence_dta)
 
 #Add school preamble info
@@ -434,7 +434,7 @@ if (graded_data!='yes') {
   teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>% 
     
     # read_dta(file.path(download_folder, "v1/teacher_assessment_answers.dta")) %>%
-    # bind_rows(read_dta(file.path(download_folder, "v2/teacher_assessment_answers.dta"))) %>% 
+     bind_rows(read_dta(file.path(download_folder, "v8/teacher_assessment_answers.dta"))) %>% 
     left_join(school_data_preamble) %>%
     select(preamble_info, everything()) 
   
@@ -451,8 +451,8 @@ if (graded_data!='yes') {
   school_data_preamble_21<- school_dta_21 %>%
     select(interview__key, preamble_info_21)
   
-  teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "v1/teacher_assessment_answers.dta")) %>% 
-    bind_rows(read_dta(file.path(paste(download_folder,'version_21', sep="/"), "v2/teacher_assessment_answers.dta")))
+  teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta")) %>% 
+    bind_rows(read_dta(file.path(paste(download_folder,'version_21', sep="/"), "v8/teacher_assessment_answers.dta")))
   teacher_metadata <- makeVlist(teacher_assessment_dta_21)
   
   #Add school preamble info
@@ -697,11 +697,11 @@ write_excel_csv(final_indicator_data_PEDG, path = paste(save_folder, "teach_scor
 #############################################
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta")) %>% 
 
 
 # read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
-# bind_rows(read_dta(file.path(download_folder, "v2/fourth_grade_assessment.dta")))
+ bind_rows(read_dta(file.path(download_folder, "v8/fourth_grade_assessment.dta")))
 
 #Add school preamble info
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
@@ -890,10 +890,10 @@ final_indicator_data_LERN_F <- assess_4th_grade_anon %>%
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta")) 
+ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta")) %>% 
 
 # read_dta(file.path(download_folder, "v1/ecd_assessment.dta")) %>% 
-#   bind_rows(read_dta(file.path(download_folder, "v2/ecd_assessment.dta")))
+   bind_rows(read_dta(file.path(download_folder, "v8/ecd_assessment.dta")))
 
 ecd_dta_metadata <- makeVlist(ecd_dta)
 

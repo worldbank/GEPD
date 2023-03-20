@@ -101,6 +101,7 @@ library(here)
 
 
   para_df<-read.delim(paste(download_folder, "paradata.tab", sep="/"), sep="\t") %>%  
+    bind_rows(read.delim(paste(download_folder, "v8/paradata.tab", sep="/"), sep="\t")) %>% 
     mutate(across(everything(), as.character))
     
   #   read.delim(paste(download_folder, "v1/paradata/paradata.tab", sep="/"), sep="\t") %>%  
@@ -187,38 +188,38 @@ makeVlist <- function(dta) {
 
 
 #create school metadata frame
-raw_school_dta<-read_dta(paste(download_folder,"/",school_file, sep = ""))
+raw_school_dta<-read_dta(paste(download_folder,"/",school_file, sep = "")) %>% 
 
 # read_dta(paste(download_folder, "/v1/" ,school_file, sep = "")) %>% 
-#   bind_rows(read_dta(paste(download_folder, "/v2/", school_file, sep = "")))
+   bind_rows(read_dta(paste(download_folder, "/v8/", school_file, sep = "")))
 school_metadta<-makeVlist(raw_school_dta)
 
 #create teacher questionnaire metadata frame
-raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+raw_teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) %>% 
   
   # read_dta(file.path(download_folder, "v1/questionnaire_roster.dta")) %>% 
-  # bind_rows(read_dta(file.path(download_folder, "v2/questionnaire_roster.dta")))
+   bind_rows(read_dta(file.path(download_folder, "v8/questionnaire_roster.dta")))
 teacher_questionnaire_metadta<-makeVlist(raw_teacher_questionnaire)
 
 #create teacher absence metadata frame
-raw_teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+raw_teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>% 
   
   # read_dta(file.path(download_folder, "v1/TEACHERS.dta")) %>% 
-  # bind_rows(read_dta(file.path(download_folder, "v2/TEACHERS.dta")))
+   bind_rows(read_dta(file.path(download_folder, "v8/TEACHERS.dta")))
 teacher_absence_metadta<-makeVlist(raw_teacher_absence_dta)
 
 #create ecd metadata frame
-raw_ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+raw_ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta")) %>% 
   
   # read_dta(file.path(download_folder, "v1/ecd_assessment.dta")) %>% 
-  # bind_rows(read_dta(file.path(download_folder, "v2/ecd_assessment.dta")))
+  bind_rows(read_dta(file.path(download_folder, "v8/ecd_assessment.dta")))
 ecd_metadta<-makeVlist(raw_ecd_dta)
 
 #create 4th grade assessment metadata frame
-raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+raw_assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta")) %>% 
   # 
   # read_dta(file.path(download_folder, "v1/fourth_grade_assessment.dta")) %>% 
-  # bind_rows(read_dta(file.path(download_folder, "v2/fourth_grade_assessment.dta")))
+   bind_rows(read_dta(file.path(download_folder, "v8/fourth_grade_assessment.dta")))
 assess_4th_grade_metadta<-makeVlist(raw_assess_4th_grade_dta)
 
 metadata <- rbind(school_metadta, teacher_questionnaire_metadta, ecd_metadta, assess_4th_grade_metadta)
