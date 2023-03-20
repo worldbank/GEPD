@@ -1105,8 +1105,8 @@ school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
 school_data_INPT <- school_data_INPT %>%
   mutate(used_ict_num=case_when(
     m1sbq12_inpt==0  ~ 0,
-    (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
-    (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
+    (m1sbq12_inpt>=1 ) ~ m1sbq12a_inpt_etri,
+    (is.na(m1sbq12_inpt==0) | is.na(m1sbq12a_inpt_etri)) ~ as.numeric(NA)
   ))
 
 #access to ICT
