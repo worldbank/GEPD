@@ -199,7 +199,8 @@ school_dta<- school_dta %>%
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
   mutate(school_code=if_else(school_code==0, 328328, school_code)) %>%
-  mutate(school_code=if_else(school_code==62181, 558163, school_code))
+  mutate(school_code=if_else(school_code==62181, 558163, school_code)) %>%
+  distinct(interview__key, school_code, .keep_all=TRUE)
 
 school_micro_raw <- school_dta %>%
   group_by(school_code) %>%
@@ -235,7 +236,8 @@ school_data_preamble_temp <- school_dta %>%
 school_data_preamble <- school_dta %>%
   group_by(interview__key) %>%
   select(interview__key, school_code) %>%
-  left_join(school_data_preamble_temp)
+  left_join(school_data_preamble_temp) %>%
+  distinct(school_code, .keep_all=TRUE)  
 
 
 #merge on derived indicators
@@ -266,7 +268,8 @@ school_micro <- df_add_weights('school_micro_comb')
 
 ```{r}
 
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) 
+teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta")) %>%
+  distinct(interview__key, questionnaire_roster__id, .keep_all=TRUE)
 
 #Add school preamble info
 teacher_questionnaire <- teacher_questionnaire %>%
@@ -294,7 +297,8 @@ teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
 #read in teacher roster file
 ############################
 
-teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta")) 
+teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta")) %>%
+  distinct(interview__key, questionnaire_selected__id, .keep_all=TRUE)
 
 #Add school preamble info
 teacher_absence_dta <- teacher_absence_dta %>%
@@ -303,11 +307,11 @@ teacher_absence_dta <- teacher_absence_dta %>%
 
 #merge on derived indicators
 teacher_absence_dta_comb <- teacher_absence_dta %>%
+  mutate(teacher_number=questionnaire_selected__id) %>%
   left_join(
     teacher_absence_final %>%
       select(school_code, teacher_number, contains(ind_list))
   ) %>%
-  distinct(school_code, teacher_number, .keep_all = TRUE) %>%
   rename(TEACHERS__id=questionnaire_selected__id)
 
 #add weights and anonymize
@@ -322,7 +326,12 @@ teacher_absence_micro <- df_add_weights('teacher_absence_dta_comb')       %>%
 
 ```{r teacherassess}
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
-teacher_assessment_dta_raw <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>%
+
+load(paste0(confidential_folder,"/dashboard_teacher_assessment_data.RData"))
+
+teacher_assessment_dta_raw <- teacher_assessment_dta %>%
+  distinct(school_code, teacher_assessment_answers__id, .keep_all=TRUE) %>%
+  select(-interview__key) %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
 
@@ -421,33 +430,41 @@ matches <- teacher_combined_df %>%
 
 teacher_combined_df %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.dta")) %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.csv"))
 
 
 matches %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_modules_key.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_modules_key.dta")) %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_modules_key.csv"))
 
 #save input files
 school_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.dta")) %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.csv"))
+
 
 teacher_absence_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta")) %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.csv"))
 
 teacher_pedagogy_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.dta")) %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_pedagogy.csv"))
 
 teacher_assessment_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_assessment.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_assessment.dta")) %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_assessment.csv"))
 
 teacher_questionnaire_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))  %>%
+  write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.csv"))
 ```
 
 

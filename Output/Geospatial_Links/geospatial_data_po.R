@@ -1,6 +1,8 @@
 library(tidyverse)
 library(here)
+library(geosphere)
 
+set.seed(123)
 
 #directories
 
@@ -82,7 +84,7 @@ PER_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  select(-starts_with("ENUMq")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name')) %>%
@@ -99,7 +101,20 @@ PER_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
                                                                                    'Refused to answer' ))) %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
-  select(-starts_with('prop_reported_underperform1'))
+  select(-starts_with('prop_reported_underperform1')) %>%
+  select(-starts_with("ORG")) %>%
+  mutate(interview_code=floor(10^9*runif(nrow(.))))
+
+#read in data from office administrators
+PER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+  filter(director_hr==1) %>%
+  select(school_district_preload, school_province_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number())
+
+
+#join the questions on organziation
+PER_bur_df <- PER_bur_df %>%
+  left_join(PER_po_admin_df)
 
 ########
 # Jordan
@@ -111,7 +126,7 @@ JOR_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", paste0(country,
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  select(-starts_with("ENUMq")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name'))  %>%
@@ -128,8 +143,22 @@ JOR_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", paste0(country,
                                                                                    'Refused to answer' ))) %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
+  select(-starts_with("ORG")) %>%
   select(-starts_with('prop_reported_underperform1'))
 
+
+#read in data from office administrators
+JOR_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+  filter(director_hr==1) %>%
+  select(office_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number()) %>%
+  filter(!is.na(office_preload)) %>%
+  filter(office_preload!="")
+
+
+#join the questions on organziation
+JOR_bur_df <- JOR_bur_df %>%
+  left_join(JOR_po_admin_df)
 
 ########
 # Rwanda
@@ -141,7 +170,7 @@ RWA_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  select(-starts_with("ENUMq")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name')) %>%
@@ -158,6 +187,7 @@ RWA_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
                                                                                    'Refused to answer' )))  %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
+  select(-starts_with("ORG")) %>%
   select(-starts_with('prop_reported_underperform1'))
 
 
@@ -169,9 +199,9 @@ country <- "ETH"
 year <- "2020_2021"
 ETH_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
-  select(iso3c, govt_tier, bur_indicators, everything()) %>%
+  select(iso3c, govt_tier, Region, Zone, Woreda, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  #select(-starts_with("ENUM")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name'))  %>%
@@ -188,7 +218,22 @@ ETH_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
                                                                                    'Refused to answer' )))  %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
+  select(-starts_with("ORG")) %>%
   select(-starts_with('prop_reported_underperform1'))
+
+#read in data from office administrators
+ETH_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_final_combined.dta", sep="/"))  %>%
+  filter(director_hr==1) %>% 
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c('Ministry of Education (or equivalent)', 
+                                                                 'Regional office (or equivalent)',
+                                                                 'District office (or equivalent)'))) %>%
+  select( govt_tier, Region, Zone, Woreda, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number()) %>%
+  filter(Zone!="A.A")
+
+#join the questions on organziation
+ETH_bur_df <- ETH_bur_df %>%
+  left_join(ETH_po_admin_df)
 
 ########
 # Madagascar
@@ -200,7 +245,7 @@ MDG_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  select(-starts_with("ENUMq")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name')) %>%
@@ -217,6 +262,7 @@ MDG_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
                                                                                    'Refused to answer' ))) %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
+  select(-starts_with("ORG")) %>%
   select(-starts_with('prop_reported_underperform1'))
 
 ########
@@ -229,7 +275,7 @@ SLE_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  select(-starts_with("ENUMq")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name')) %>%
@@ -246,6 +292,7 @@ SLE_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
                                                                                    'Refused to answer' ))) %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
+  select(-starts_with("ORG")) %>%
   select(-starts_with('prop_reported_underperform1'))
 ########
 # Madagascar
@@ -257,7 +304,7 @@ NER_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
-  select(-starts_with("ENUM")) %>%
+  select(-starts_with("ENUMq")) %>%
   select(-contains('ENUMq8')) %>% #drop enumerator notes
   select(-starts_with('enumerators_preload'), -contains('m1s0q1_name_other')) %>%  #get rid of enumerator names
   select(-contains('name')) %>%
@@ -274,6 +321,7 @@ NER_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
                                                                                    'Refused to answer' )))  %>%
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
+  select(-starts_with("ORG")) %>%
   select(-starts_with('prop_reported_underperform1')) 
 ########
 #combined
@@ -289,3 +337,335 @@ combined_bur_df %>%
   ) %>%
   janitor::clean_names() %>%
   haven::write_dta(  paste0(confidential_dir, "General/combined_public_officials_confidential.dta")) 
+
+
+
+
+###################
+# Combined Data ###
+###################
+
+
+#specify some key indicators to be imputed with mean value when necessary
+practices <- c('presence_rate', 'content_knowledge', 'teach_score', 'inputs', 'infrastructure', 'ecd_student_knowledge', 'student_attendance', 'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management')
+policies <- c('teacher_attraction', 'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring', 'intrinsic_motivation', 'standards_monitoring', 'sch_monitoring', 'sch_management_clarity', 'sch_management_attraction', 'sch_selection_deployment', 'sch_support', 'principal_evaluation')
+politics <- c('quality_bureaucracy', 'national_learning_goals', 'impartial_decision_making', 'mandates_accountability')
+
+
+# read in the microdata
+########
+## Peru
+########
+#read in anonymized school data
+country <- "PER"
+year <- "2019"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+PER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+PER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+PER_school_office_link_df <- PER_school_anon_df %>%
+  left_join(PER_school_gdp) %>%
+  left_join(PER_school_office_linkages) %>%
+  left_join(PER_school_size) %>%
+  mutate(country="Peru") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Jordan
+########
+#read in anonymized school data
+country <- "JOR"
+year <- "2019"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+JOR_school_anon_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/"))
+JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+JOR_school_gdp <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.dta", sep="/")) %>%
+  select(hashed_school_code, GDP)
+#load school size info
+JOR_school_size <-haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")),
+         students_enrolled=as.character(students_enrolled)) %>%
+  filter(!is.na(students_enrolled))
+JOR_school_office_link_df <- JOR_school_anon_df %>%
+  left_join(JOR_school_gdp) %>%
+  left_join(JOR_school_office_linkages) %>%
+  left_join(JOR_school_size) %>%
+  mutate(country="Jordan") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         rural=if_else(rural==1, TRUE,FALSE),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Rwanda
+########
+#read in anonymized school data
+country <- "RWA"
+year <- "2020"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+RWA_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+RWA_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+RWA_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+RWA_school_office_link_df <- RWA_school_anon_df %>%
+  left_join(RWA_school_gdp) %>%
+  left_join(RWA_school_office_linkages) %>%
+  left_join(RWA_school_size) %>%
+  mutate(country="Rwanda") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+########
+## Ethiopia
+########
+#read in anonymized school data
+country <- "ETH"
+year <- "2020_2021"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+ETH_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+ETH_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+ETH_school_office_link_df <- ETH_school_anon_df %>%
+  left_join(ETH_school_gdp) %>%
+  left_join(ETH_school_office_linkages) %>%
+  left_join(ETH_school_size) %>%
+  mutate(country="Ethiopia")  %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         rural=if_else(urban_rural=="Rural",TRUE,FALSE),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+########
+########
+## Madagascar
+########
+#read in anonymized school data
+country <- "MDG"
+year <- "2021"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv")) %>%
+  select(hashed_school_code, national_learning_goals, targeting,monitoring, incentives, community_engagement, mandates_accountability, coherence, transparency, accountability, quality_bureaucracy, knowledge_skills, work_environment, merit, motivation_attitudes, motivation_relative_start, impartial_decision_making, politicized_policy_implementation, employee_unions_as_facilitators, school_lat, school_lon, office_lat, office_lon)
+#load gdp info
+
+MDG_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+MDG_school_office_link_df <- MDG_school_anon_df %>%
+  left_join(MDG_school_gdp) %>%
+  left_join(MDG_school_office_linkages) %>%  
+  select(-district) %>%
+  mutate(country="Madagascar") %>%
+  mutate(
+    presence_rate=100-absence_rate,
+    dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+    dist_km=dist/1000,
+    dist_log=log(dist_km),
+    bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+    rural=if_else(urban_rural=="Rural",TRUE,FALSE)
+  ) %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(c('presence_rate', 'content_knowledge', 'inputs', 'infrastructure', 'ecd_student_knowledge',  'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management'), ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+
+
+########
+########
+## Sierra Leone
+########
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+SLE_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+SLE_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+SLE_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+SLE_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+SLE_school_office_link_df <- SLE_school_anon_df %>%
+  left_join(SLE_school_gdp) %>%
+  left_join(SLE_school_office_linkages) %>%
+  left_join(SLE_school_size) %>%
+  mutate(country="Sierra Leone") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+
+
+########
+########
+## Niger
+########
+#read in anonymized school data
+country <- "NER"
+year <- "2022"
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+NER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
+NER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+#load gdp info
+NER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
+#load school size info
+NER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
+  select(hashed_school_code, students_enrolled) %>%
+  filter(!is.na(students_enrolled))
+NER_school_office_link_df <- NER_school_anon_df %>%
+  left_join(NER_school_gdp) %>%
+  left_join(NER_school_office_linkages) %>%
+  left_join(NER_school_size) %>%
+  mutate(country="Niger") %>%
+  mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
+         dist_km=dist/1000,
+         dist_log=log(dist_km),
+         bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
+         # rural2=if_else(urban_rural=="Rural",1,0),
+         # rural=if_else(is.na(rural),rural2,rural ),
+         students_enrolled=case_when(
+           students_enrolled=="Under 25" ~1, 
+           students_enrolled=="25-50" ~2 , 
+           students_enrolled=="50-75" ~3, 
+           students_enrolled=="75-100" ~4, 
+           students_enrolled=="100-150" ~5, 
+           students_enrolled=="150-300" ~6, 
+           students_enrolled=="300-500" ~7, 
+           students_enrolled=="Over 500" ~8),
+         students_enrolled=factor(students_enrolled, 
+                                  levels=c(1:8),
+                                  labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
+  group_by(country) %>%
+  #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  ungroup() 
+
+###########
+# Combined
+##########
+
+
+
+combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df, SLE_school_office_link_df, NER_school_office_link_df) 
+
+
+combined_school_office_df %>%
+  rename(pol_policy_implementation=politicized_policy_implementation) %>%
+  haven::write_dta( paste0(confidential_dir, "General/combined_school_office_df.dta")) 
+

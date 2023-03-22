@@ -82,7 +82,7 @@ for (i in data_list ) {
     #Scrub names, geocodes
     temp <- temp %>%
       select(-starts_with('position'), -starts_with('office'), one_of('location')) %>% # drop position names and address
-      select(-one_of('survey_time', 'lat','lon')) %>% #drop geo-codes
+      select(-one_of('survey_time', 'lat','lon', 'Region','Zone','Woreda')) %>% #drop geo-codes
       select(-contains('office')) %>%
       select(-contains('ENUMq8')) %>% #drop enumerator notes
       select(-contains('m1s0q9')) %>%

@@ -17,6 +17,7 @@ library(here)
 library(knitr)
 library(markdown)
 library(rmarkdown)
+library(tidyverse)
 ######################################
 # User Inputs for Run File #
 ######################################
@@ -38,7 +39,7 @@ year <- '2021'
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
 
-if (Sys.getenv("USERNAME") == "WB469649"){
+if (str_to_lower(Sys.getenv("USERNAME")) == str_to_lower("WB469649")){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/Public_Officials", sep="/"))
