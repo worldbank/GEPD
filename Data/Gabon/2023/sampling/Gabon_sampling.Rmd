@@ -55,7 +55,9 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 ## Introduction
 
-This file outlines the sampling strategy for Gabon.  We will draw a sample of 200 schools.  Only schools with at least 15 students and 3 teachers will be selected, which is consistent with the approach in Niger.  Strata will be based on province and public/private status.
+This file outlines the sampling strategy for Gabon.  We will draw a sample of 200 schools.  Only schools with at least 15 students and 3 teachers will be selected, which is consistent with the approach in Niger.  Strata will be based on province, urban/rural, and public/private status.
+
+Everything in a Canton was considered in a rural area.
 
 ## General Notes on Sampling
 The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
@@ -98,6 +100,7 @@ df_raw <- bind_rows(lapply(sheets, frame_read))
 
 df_raw <- df_raw %>%
   filter(Etablissement_Fonctionnel=='Fonctionnel') %>% #keep just functional schools
+  filter(Type_Etablissement=='Primaire') %>% 
   separate_wider_delim(
     cols='Nbre_élève_garçon_fille_total_élèves_ens_homme_femme_ total',
     delim="        ",
@@ -106,7 +109,8 @@ df_raw <- df_raw %>%
   mutate(across(c('total_boy_students','total_girl_students','total_students', 'total_male_teachers', 'total_female_teachers', 'total_teachers'), as.numeric)) %>%
   mutate(private=as.numeric(!str_detect(Ordre_Enseignement, "Public")),
          GPS_Latitude=as.numeric(GPS_Latitude),
-         GPS_Longitude=as.numeric(GPS_Longitude)) %>%
+         GPS_Longitude=as.numeric(GPS_Longitude),
+         rural=str_detect(str_to_lower(`Canton /Ville/Arrondissement`),"canton")) %>%
   select(-`...21`, -`...22`)
 ```
 
@@ -123,6 +127,18 @@ df_raw %>%
   adorn_totals() %>%
   flextable() %>% 
   add_header_lines('Number of Schools in Raw Sampling Frame by Type of Establishment') %>% 
+  autofit()
+
+
+df_raw %>% 
+  group_by(rural) %>% 
+  summarise(n=n(),Students=sum(total_students)) %>% 
+  arrange(-Students) %>%
+  ungroup() %>%
+  mutate(`Student Share`=scales::percent(round(Students/sum(Students),3))) %>%  
+  adorn_totals() %>%
+  flextable() %>% 
+  add_header_lines('Number of Schools in Raw Sampling Frame by Urban/Rural') %>% 
   autofit()
 
 #Province
@@ -175,6 +191,18 @@ df_updated %>%
   add_header_lines('Number of Schools in Restricted Sampling Frame by Type of Establishment') %>% 
   autofit()
 
+df_updated %>% 
+  group_by(rural) %>% 
+  summarise(n=n(),Students=sum(total_students)) %>% 
+  arrange(-Students) %>%
+  ungroup() %>%
+  mutate(`Student Share`=scales::percent(round(Students/sum(Students),3))) %>%  
+  adorn_totals() %>%
+  flextable() %>% 
+  add_header_lines('Number of Schools in Restricted Sampling Frame by Urban/Rural') %>% 
+  autofit()
+
+
 #Province
 df_updated %>% 
   group_by(Province) %>% 
@@ -208,40 +236,70 @@ df_updated %>%
 # get numbers to select from each district
 
 strata_df <- df_updated %>%
-  group_by(Province, private) %>%
+  group_by(Province, private, rural) %>%
   summarise(nstudents_district=sum(total_students),
                      total_district=n()
 ) %>%
   ungroup() %>%
   mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
          sample_size=case_when(
-           private==0 & Province=="ESTUAIRE" ~ 40,
-           private==1 & Province=="ESTUAIRE" ~ 50,
-        
-           private==0 & Province=="HAUT-OGOOUE" ~ 15,
-           private==1 & Province=="HAUT-OGOOUE" ~ 10,
+           # urban
+           rural==0 & private==0 & Province=="ESTUAIRE" ~ 35,
+           rural==0 & private==1 & Province=="ESTUAIRE" ~ 48,
+         
+           rural==0 & private==0 & Province=="HAUT-OGOOUE" ~ 10,
+           rural==0 & private==1 & Province=="HAUT-OGOOUE" ~ 8,
+            
+           rural==0 & private==0 & Province=="MOYEN-OGOOUE" ~ 4,
+           rural==0 & private==1 & Province=="MOYEN-OGOOUE" ~ 4,
+            
+           rural==0 & private==0 & Province=="NGOUNIE" ~ 3,
+           rural==0 & private==1 & Province=="NGOUNIE" ~ 1,
+            
+           rural==0 & private==0 & Province=="NYANGA" ~ 3,
+           rural==0 & private==1 & Province=="NYANGA" ~ 4,
+            
+           rural==0 & private==0 & Province=="OGOOUE-IVINDO" ~ 2,
+           rural==0 & private==1 & Province=="OGOOUE-IVINDO" ~ 3,
+            
+           rural==0 & private==0 & Province=="OGOOUE-LOLO" ~ 2,
+           rural==0 & private==1 & Province=="OGOOUE-LOLO" ~ 2,
+            
+           rural==0 & private==0 & Province=="OGOOUE-MARITIME" ~ 8,
+           rural==0 & private==1 & Province=="OGOOUE-MARITIME" ~ 11,
+            
+           rural==0 & private==0 & Province=="WOLEU-NTEM" ~ 2,
+           rural==0 & private==1 & Province=="WOLEU-NTEM" ~ 2,
            
-           private==0 & Province=="MOYEN-OGOOUE" ~ 6,
-           private==1 & Province=="MOYEN-OGOOUE" ~ 4,
+           #rural
            
-           private==0 & Province=="NGOUNIE" ~ 8,
-           private==1 & Province=="NGOUNIE" ~ 5,
-           
-           private==0 & Province=="NYANGA" ~ 4,
-           private==1 & Province=="NYANGA" ~ 4,
-           
-           private==0 & Province=="OGOOUE-IVINDO" ~ 5,
-           private==1 & Province=="OGOOUE-IVINDO" ~ 4,
-           
-           private==0 & Province=="OGOOUE-LOLO" ~ 4,
-           private==1 & Province=="OGOOUE-LOLO" ~ 4,
-           
-           private==0 & Province=="OGOOUE-MARITIME" ~ 10,
-           private==1 & Province=="OGOOUE-MARITIME" ~ 13,
-           
-           private==0 & Province=="WOLEU-NTEM" ~ 8,
-           private==1 & Province=="WOLEU-NTEM" ~ 6
-         ))
+           rural==1 & private==0 & Province=="ESTUAIRE" ~ 5,
+           rural==1 & private==1 & Province=="ESTUAIRE" ~ 2,
+         
+           rural==1 & private==0 & Province=="HAUT-OGOOUE" ~ 5,
+           rural==1 & private==1 & Province=="HAUT-OGOOUE" ~ 2,
+            
+           rural==1 & private==0 & Province=="MOYEN-OGOOUE" ~ 2,
+           rural==1 & private==1 & Province=="MOYEN-OGOOUE" ~ 0,
+            
+           rural==1 & private==0 & Province=="NGOUNIE" ~ 5,
+           rural==1 & private==1 & Province=="NGOUNIE" ~ 4,
+            
+           rural==1 & private==0 & Province=="NYANGA" ~ 1,
+           rural==1 & private==1 & Province=="NYANGA" ~ 0,
+            
+           rural==1 & private==0 & Province=="OGOOUE-IVINDO" ~ 3,
+           rural==1 & private==1 & Province=="OGOOUE-IVINDO" ~ 1,
+            
+           rural==1 & private==0 & Province=="OGOOUE-LOLO" ~ 2,
+           rural==1 & private==1 & Province=="OGOOUE-LOLO" ~ 2,
+            
+           rural==1 & private==0 & Province=="OGOOUE-MARITIME" ~ 2,
+           rural==1 & private==1 & Province=="OGOOUE-MARITIME" ~ 2,
+            
+           rural==1 & private==0 & Province=="WOLEU-NTEM" ~ 6,
+           rural==1 & private==1 & Province=="WOLEU-NTEM" ~ 4
+         )) 
 
 strata_df %>%
   flextable() %>%
@@ -259,7 +317,7 @@ sample_df <- df_updated %>%
   mutate(
     totalstudents=sum(total_students),
   ) %>%
-  group_by(Province, private ) %>%
+  group_by(Province, private, rural ) %>%
   mutate(strata_count=n(),
          strata_size=sum(total_students),
          strata_school_prob=strata_size/totalstudents) %>%
@@ -274,8 +332,63 @@ write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_GAB_sample_",Sys.
 ```
 
 
+# Replacement Schools
 
-```{r country_map2, eval=FALSE, include=FALSE}
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+```{r update_dataset_public, echo=FALSE, message=FALSE, warning=FALSE}
+#define sampled schools in sample dataset
+sample_chosen <- sample_df %>%
+  mutate(sample="Sampled School") 
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated %>%
+  left_join(sample_chosen) 
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by( Province,  rural) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(Province,  rural) %>% 
+  sample_n( mean(sampled_districts), weight=total_students) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(Province, private, rural, `Nom Officiel de l'Etablissement`) 
+
+sample_replace2 <- sample_chosen %>%
+    arrange(Province, private, rural, `Nom Officiel de l'Etablissement` ) 
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_NOM_ETABLISSEMENT=sample_replace2$`Nom Officiel de l'Etablissement`
+sample_replace$replaced_CODE_ETABLISSEMENT=sample_replace2$Code_Etablissement
+sample_replace$replaced_Province=sample_replace2$Province
+
+
+
+sample_replace %>%
+  select(`Nom Officiel de l'Etablissement`,Code_Etablissement, Province, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_Province) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`Nom Officiel de l'Etablissement`,Code_Etablissement, Province, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_Province, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
+
+
+```{r country_map2, echo=FALSE}
 library(leaflet)
 #unreliable data
 
