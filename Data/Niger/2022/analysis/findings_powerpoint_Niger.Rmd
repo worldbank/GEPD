@@ -28,8 +28,10 @@ library(ggridges)
 library(scales)
 library(ggtext)
 library(estimatr)
-library(srvyr)
-#library(spatstat)
+library(survey)
+library(dplyr)
+#library(svyr)
+library(spatstat)
 library(Hmisc)
 library(ggpmisc)
 library(ggalt)
@@ -200,7 +202,7 @@ wrapper <- function(x, ...)
 countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE", "NER")
 
 dir <- here()
-indicators_dir <- paste(dir, 'Indicators', sep="/")
+indicators_dir <- paste(dir, 'Github/GEPD/Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
 #read in indicator metadata
@@ -220,33 +222,33 @@ SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".cs
 
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
   mutate(country="Peru",
-         date='2019') %>%
-  select(-year)
+         date='2019') #%>%
+  #select(-year)
 
 RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
   mutate(country="Rwanda",
-         date='2020') %>%
-  select(-year)
+         date='2020') #%>%
+  #select(-year)
 
 
 JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
   mutate(country="Jordan",
-         date='2019') %>%
-  select(-year)
+         date='2019') #%>%
+  #select(-year)
 
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021')  %>%
-  select(-year)
+         date='2020-2021')  #%>%
+  #select(-year)
 
 # %>%
 #   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
-         date='2021') %>%
-  select(-year)
+         date='2021') #%>%
+  #select(-year)
 
 
 # Indicator names
@@ -1139,7 +1141,7 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/Expert_Survey"
+    expert_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/NER/NER_2022_GEPD/NER_2022_GEPD_v01_M/Data/Policy_Survey"
 
 
     expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
@@ -1469,9 +1471,9 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
   mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'Sector Office',
-    govt_tier=='Regional office ' ~ 'District Office',
-    govt_tier=='Ministry of Education '  ~ 'MINEDUC/REB'
+    govt_tier=='District office ' ~ 'District Office',
+    govt_tier=='Regional office ' ~ 'Regional Office',
+    govt_tier=='Ministry of Education '  ~ 'MEN'
   )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
@@ -1678,7 +1680,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       #Now do breakdown by non-public/public
       #private
       
-          
+           
         
       sumstats_school_nonprivate <- school_dta_short_anon %>%
         left_join(public_status) %>%
