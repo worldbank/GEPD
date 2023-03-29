@@ -307,7 +307,7 @@ teacher_absence_dta <- teacher_absence_final
 
 #add weights and anonymize
 teacher_absence_micro <- df_add_weights('teacher_absence_dta')       %>%
-  select(-starts_with('interview__'), -c('lat','lon'))             
+  select(-starts_with('interview__'), -c('lat','lon'))    
 
 
 ```
@@ -395,7 +395,7 @@ print(paste0(pct,"% of teachers assessed for content knowledge are successfully 
 
 ```{r}
 matches <- teacher_combined_df %>%
-  rename(m2saq2=teacher_name) %>%
+  mutate(m2saq2=teacher_name) %>%
   select(school_code, TEACHERS__id, m2saq2, m5sb_tnum, m5sb_troster, m3sb_tnumber, m3sb_troster,m4saq1_number, m4saq1) 
 
 ```
@@ -417,6 +417,7 @@ school_micro %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.dta"))
 
 teacher_absence_micro %>%
+  mutate(m2saq2=teacher_name) %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
 
@@ -431,6 +432,9 @@ teacher_assessment_micro %>%
 teacher_questionnaire_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))
+
+
+
 ```
 
 
