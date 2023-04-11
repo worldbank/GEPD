@@ -55,8 +55,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
   sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
   confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
-  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/output_data"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
@@ -64,8 +64,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
   confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
-  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/output_data"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -465,6 +465,15 @@ teacher_questionnaire_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))  %>%
   write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.csv"))
+
+assess_4th_grade_anon %>%
+  select(-ends_with('nogiraffe')) %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_fourth_grade_assessment.dta"))
+
+ecd_dta_anon %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_first_grade_assessment.dta"))
 ```
 
 
