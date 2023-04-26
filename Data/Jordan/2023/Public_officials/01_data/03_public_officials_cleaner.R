@@ -7,7 +7,7 @@ library(haven)
 library(stringr)
 library(Hmisc)
 library(skimr)
-#library(spatstat)
+library(spatstat)
 
 library(vtable)
 #NOTE:  The R script to pull the data from the API should be run before this file
@@ -35,13 +35,12 @@ indicators <- indicators %>%
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
 indicator_names <- indicators$indicator_tag
 
-#Get a list of enumerator names and IDs
-enumerator_id <- readxl::read_excel(path=file.path(paste0(download_folder,"/Enumerator_ID_Survey of Public Officials - Niger.xlsx"))) %>%
-  transmute(m1s0q1_number_other = id ,
-            enumerator_code=text ) %>% mutate(m1s0q1_number_other = as.character(m1s0q1_number_other))
 
 #read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, po_file))
+public_officials_dta<-read_dta(file.path(download_folder, po_file)) %>%
+  mutate(id_code=row_number())
+
+
 public_officials_metadata<-makeVlist(public_officials_dta)
 
 vtable(public_officials_dta)
@@ -64,8 +63,7 @@ bin_var <- function(var, val) {
 
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
-  left_join(enumerator_id) %>%
-  mutate(enumerator_name=enumerator_code  ,
+  mutate(enumerator_name=m1s0q1_name_other  ,
          enumerator_number=as.double(m1s0q1_number_other) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
@@ -108,7 +106,7 @@ school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD
 
 if (file.exists(paste(school_folder, "school_indicators_data_anon.RData", sep="/"))) {
   
-  load(file=paste(school_folder, "school_indicators_data_anon.RData", sep="/"))
+  attach(paste(school_folder, "school_indicators_data_anon.RData", sep="/"))
   
   #need to adjust this
   
@@ -215,7 +213,7 @@ public_officials_dta <- public_officials_dta %>%
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'interview__key', 'id_code', 'office_preload', 'govt_tier', 'location',
+preamble_info <- c('interview__id', 'interview__key', 'id_code', 'office_preload', 'location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
@@ -447,7 +445,7 @@ for (i in indicator_names ) {
   
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_short","public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables
@@ -455,5 +453,7 @@ save(list=c(ind_dta_list, "public_officials_dta_short","public_officials_dta_cle
 if (backup_onedrive=="yes") {
   save(data_list, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.RData"))
 }
+
+
 
 

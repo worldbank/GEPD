@@ -381,6 +381,55 @@ write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_scho
 
 
 ```
+
+## Pilot Schools
+
+A sample of 30 schools in NDJAMENA that are not in our sample were selected for additional piloting of new instruments.
+
+```{r echo=TRUE}
+
+picked_df <- sample_df %>% bind_rows(sample_replace)
+
+#get list of schools already selected
+selected_list <- picked_df$`CODE ETABLISSEMENT`
+
+# get numbers to select from each district
+pilot_strata_df <- df_updated %>%
+  group_by(Region) %>%
+  summarise(nstudents_district=sum(total_students),
+                     total_district=n()
+) %>%
+  ungroup() %>%
+  mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
+         sample_size=case_when(
+           Region=="VILLE DE NDJAMENA" ~ 30,
+           TRUE ~ 0
+         ))
+
+#select the 20 schools
+pilot_df <- df_updated %>%
+  filter(!(`CODE ETABLISSEMENT` %in% selected_list)) %>%
+  left_join(pilot_strata_df) %>%
+  mutate(
+    totalstudents=sum(total_students_grade_4),
+  ) %>%
+  filter(Region=="VILLE DE NDJAMENA") %>%
+  group_by(Region ) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_students_grade_4),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = mean(sample_size), weight =total_students_grade_4) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_students_grade_4/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(pilot_df, file=paste0(sampling_folder, "/GEPD_Chad_pilot_sample_",Sys.Date(),".csv"))
+
+
+
+```
+
 # Sanity Checks
 
 Below I will use the survey weights to estimate aspects of the school that are available in the sampling frame. This includes whether the school is nomadic.  These data were collected as part of the school EMIS in Chad  The population mean from the full sampling frame is compared to the estimated mean from the school sample using the sampling weights.  Estimated means very far from the population mean can indicate there is something wrong with the weights or that the school sample is biased.

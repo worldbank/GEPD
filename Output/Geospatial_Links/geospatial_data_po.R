@@ -1,6 +1,8 @@
 library(tidyverse)
 library(here)
 library(geosphere)
+library(fuzzyjoin)
+library(stringdist)
 
 set.seed(123)
 
@@ -103,16 +105,38 @@ PER_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with('prop_reported_underperform1')) %>%
   select(-starts_with("ORG")) %>%
-  mutate(interview_code=floor(10^9*runif(nrow(.))))
+  mutate(interview_code=floor(10^9*runif(nrow(.))),
+         office_name=str_to_lower(paste(school_district_preload,school_province_preload,govt_tier, sep=" - ")),
+         office_id=row_number()) %>%
+  group_by(office_name) %>%
+  fill(lat,lon, .direction = 'downup') %>%
+  ungroup() 
+  
 
 #read in data from office administrators
 PER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
-  select(school_district_preload, school_province_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
-  mutate(admin_id=row_number())
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
+  select(school_district_preload, school_province_preload, govt_tier, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude),
+         admin_office_name=str_to_lower(paste(school_district_preload,school_province_preload, govt_tier, sep=" - "))) %>%
+  select(-school_district_preload, -school_province_preload) %>%
+  group_by(admin_office_name) %>%
+  slice(1)
 
 
-#join the questions on organziation
+
+PER_bur_df$admin_office_name <- sapply(PER_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(PER_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(PER_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
 PER_bur_df <- PER_bur_df %>%
   left_join(PER_po_admin_df)
 
@@ -144,19 +168,32 @@ JOR_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", paste0(country,
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with("ORG")) %>%
-  select(-starts_with('prop_reported_underperform1'))
-
+  select(-starts_with('prop_reported_underperform1')) %>%
+  mutate(office_name=office_preload) 
 
 #read in data from office administrators
 JOR_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(office_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
-  mutate(admin_id=row_number()) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude))  %>%
   filter(!is.na(office_preload)) %>%
-  filter(office_preload!="")
+  filter(office_preload!="") %>%
+  mutate(admin_office_name=office_preload) %>%
+  select(-office_preload)
 
 
-#join the questions on organziation
+JOR_bur_df$admin_office_name <- sapply(JOR_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(JOR_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(JOR_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
 JOR_bur_df <- JOR_bur_df %>%
   left_join(JOR_po_admin_df)
 
@@ -188,7 +225,35 @@ RWA_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with("ORG")) %>%
-  select(-starts_with('prop_reported_underperform1'))
+  select(-starts_with('prop_reported_underperform1')) %>%
+  mutate(office_name=paste0(office_preload,"-",govt_tier)) 
+
+#read in data from office administrators
+RWA_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_RWA.dta", sep="/"))  %>%
+  filter(director_hr==1) %>%
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
+  select(office_preload, govt_tier, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude))  %>%
+  filter(!is.na(office_preload)) %>%
+  filter(office_preload!="") %>%
+  mutate(admin_office_name=paste0(office_preload,"-",govt_tier)) %>%
+  select(-office_preload) %>%
+  group_by(admin_office_name) %>% slice(1)
+
+
+RWA_bur_df$admin_office_name <- sapply(RWA_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(RWA_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(RWA_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
+RWA_bur_df <- RWA_bur_df %>%
+  left_join(RWA_po_admin_df)
 
 
 ########
@@ -219,21 +284,36 @@ ETH_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with("ORG")) %>%
-  select(-starts_with('prop_reported_underperform1'))
+  select(-starts_with('prop_reported_underperform1')) %>%
+  mutate(office_name=paste(Region, Zone, Woreda, sep=" - ")) 
 
 #read in data from office administrators
 ETH_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_final_combined.dta", sep="/"))  %>%
-  filter(director_hr==1) %>% 
-  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c('Ministry of Education (or equivalent)', 
-                                                                 'Regional office (or equivalent)',
-                                                                 'District office (or equivalent)'))) %>%
-  select( govt_tier, Region, Zone, Woreda, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
-  mutate(admin_id=row_number()) %>%
-  filter(Zone!="A.A")
+  filter(director_hr==1) %>%
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
+  select(office_preload,Region, Zone, Woreda, govt_tier, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude))  %>%
+  filter(!is.na(office_preload)) %>%
+  filter(office_preload!="") %>%
+  mutate(admin_office_name=paste(Region, Zone, Woreda, sep=" - ")) %>%
+  select(-office_preload) %>%
+  group_by(admin_office_name) %>% slice(1)
 
-#join the questions on organziation
+
+ETH_bur_df$admin_office_name <- sapply(ETH_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(ETH_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(ETH_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
 ETH_bur_df <- ETH_bur_df %>%
   left_join(ETH_po_admin_df)
+
 
 ########
 # Madagascar
@@ -263,7 +343,36 @@ MDG_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with("ORG")) %>%
-  select(-starts_with('prop_reported_underperform1'))
+  select(-starts_with('prop_reported_underperform1')) %>%
+  mutate(office_name=location) 
+
+
+#read in data from office administrators
+MDG_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+  filter(director_hr==1) %>%
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
+  select(location, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude))  %>%
+  filter(!is.na(location)) %>%
+  filter(location!="") %>%
+  mutate(admin_office_name=location) %>%
+  select(-location)
+
+
+MDG_bur_df$admin_office_name <- sapply(MDG_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(MDG_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(MDG_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
+MDG_bur_df <- MDG_bur_df %>%
+  left_join(MDG_po_admin_df)
+
 
 ########
 # Madagascar
@@ -293,7 +402,37 @@ SLE_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with("ORG")) %>%
-  select(-starts_with('prop_reported_underperform1'))
+  select(-starts_with('prop_reported_underperform1')) %>%
+  mutate(office_name=paste(office_preload, location, sep="-")) 
+
+#read in data from office administrators
+SLE_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+  filter(director_hr==1) %>%
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
+  select(location, office_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude))  %>%
+  filter(!is.na(location)) %>%
+  filter(location!="") %>%
+  filter(location!="Blank interview") %>%
+  filter(location!="ENTRETIEN BLANC") %>%
+  mutate(admin_office_name=paste(office_preload, location, sep="-")) %>%
+  select(-location, office_preload)
+
+
+SLE_bur_df$admin_office_name <- sapply(SLE_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(SLE_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(SLE_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
+SLE_bur_df <- SLE_bur_df 
+
+
 ########
 # Madagascar
 #######
@@ -322,7 +461,37 @@ NER_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   select(-starts_with('pol_policy_implementation1')) %>%
   select(-starts_with('res_monitoring_perform1')) %>%
   select(-starts_with("ORG")) %>%
-  select(-starts_with('prop_reported_underperform1')) 
+  select(-starts_with('prop_reported_underperform1'))  %>%
+  mutate(office_name=paste(office_preload, location, sep="-")) 
+
+
+#read in data from office administrators
+NER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+  filter(director_hr==1) %>%
+  mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
+  select(office_preload, location, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
+  mutate(admin_id=row_number(),
+         admin_lat=as.numeric(m1s0q9__Latitude),
+         admin_lon=as.numeric(m1s0q9__Longitude))  %>%
+  filter(!is.na(location)) %>%
+  filter(location!="") %>%
+  filter(location!="Blank interview") %>%
+  filter(location!="ENTRETIEN BLANC") %>%
+  mutate(admin_office_name=paste(office_preload, location, sep="-")) %>%
+  select(-location, office_preload)
+
+NER_bur_df$admin_office_name <- sapply(NER_bur_df$office_name, function(x) {
+  match_index <- amatch(x, unique(NER_po_admin_df$admin_office_name), maxDist = 2)
+  if (match_index == 0 | is.na(match_index)) {
+    return(NA)
+  } else {
+    return(unique(NER_po_admin_df$admin_office_name)[match_index])
+  }
+})
+
+NER_bur_df <- NER_bur_df %>%
+  left_join(NER_po_admin_df)
+
 ########
 #combined
 ########
@@ -366,10 +535,17 @@ PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School
 PER_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_gdp_anon.csv", sep="/"))
 PER_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
   select(hashed_school_code, students_enrolled) %>%
-  filter(!is.na(students_enrolled))
+  filter(!is.na(students_enrolled)) %>%
+  group_by(hashed_school_code) %>%
+  slice(1) %>%
+  ungroup() 
+
 PER_school_office_link_df <- PER_school_anon_df %>%
   left_join(PER_school_gdp) %>%
   left_join(PER_school_office_linkages) %>%
+  group_by(hashed_school_code) %>%
+  slice(1) %>%
+  ungroup() %>%
   left_join(PER_school_size) %>%
   mutate(country="Peru") %>%
   mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
@@ -503,10 +679,17 @@ ETH_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country
 #load school size info
 ETH_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
   select(hashed_school_code, students_enrolled) %>%
-  filter(!is.na(students_enrolled))
+  filter(!is.na(students_enrolled)) %>%
+  group_by(hashed_school_code) %>%
+  slice(1) %>%
+  ungroup() 
+  
 ETH_school_office_link_df <- ETH_school_anon_df %>%
   left_join(ETH_school_gdp) %>%
   left_join(ETH_school_office_linkages) %>%
+  group_by(hashed_school_code) %>%
+  slice(1) %>%
+  ungroup() %>%
   left_join(ETH_school_size) %>%
   mutate(country="Ethiopia")  %>%
   mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),
@@ -580,10 +763,18 @@ SLE_school_gdp <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country
 #load school size info
 SLE_school_size <-read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
   select(hashed_school_code, students_enrolled) %>%
-  filter(!is.na(students_enrolled))
+  filter(!is.na(students_enrolled)) %>%
+  group_by(hashed_school_code) %>%
+  slice(1) %>%
+  ungroup() 
+
+
 SLE_school_office_link_df <- SLE_school_anon_df %>%
   left_join(SLE_school_gdp) %>%
   left_join(SLE_school_office_linkages) %>%
+  group_by(hashed_school_code) %>%
+  slice(1) %>%
+  ungroup()  %>%
   left_join(SLE_school_size) %>%
   mutate(country="Sierra Leone") %>%
   mutate(dist=distHaversine(.[,c('school_lon', 'school_lat')], .[c('office_lon', 'office_lat')]),

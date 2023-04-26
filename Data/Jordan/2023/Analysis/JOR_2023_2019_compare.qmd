@@ -1,0 +1,455 @@
+---
+title: "Jordan GEPD 2023/2019 Comparison"
+author: "Brian Stacy"
+format:
+  html:
+    embed-resources: true
+    toc: true
+execute: 
+  echo: false
+  warning: false
+---
+
+```{r}
+#: label: setup
+library(tidyverse)
+library(haven)
+library(here)
+library(Hmisc)
+library(GGally)
+library(modelsummary)
+library(estimatr)
+
+#Country name
+country <-'JOR'
+country_name <- "Jordan"
+year <- '2023'
+init_year <- '2019'
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  confidential_folder_init <- file.path(paste(project_folder,country,paste(country,init_year,"GEPD", sep="_"),paste(country,init_year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  save_folder_init <- file.path(paste(project_folder,country,paste(country,init_year,"GEPD", sep="_"),paste(country,init_year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
+  
+}else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+
+```{r }
+#| label: indicator
+
+
+
+#Create list of key indicators
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+            'student_proficient', 'student_proficient_70', 'student_proficient_75',
+            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
+            'presence_rate','absence_rate', 'sch_absence_rate', 'student_attendance',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
+            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
+            'teach_score','classroom_culture','instruction','socio_emotional_skills',
+            'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof',
+            'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+            'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
+            'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+            'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+            'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+            'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+            'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+            'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+            'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+            'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+            'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+            'standards_monitoring',
+            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','system_in_place','parents_involved',
+            'sch_management_attraction', 'principal_satisfaction',
+            'sch_selection_deployment', 
+            'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+            'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+)
+
+```
+
+
+```{r}
+#| label: load
+
+#load school level data for 2023
+school_dta_2023 <- read_csv(file=paste0(save_folder, "/data/school_dta_short_anon.csv")) %>%
+  mutate(date=2023)
+
+#load school level data for 2019
+school_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/school_dta_short_anon.dta")) %>%
+  select(hashed_school_code, ind_list, ipw) 
+
+#combine the two
+
+school_dta_combined_wide <- school_dta_2023 %>%
+  left_join(school_dta_2019 %>%
+  rename_all(
+    function(x) paste0(x,"_2019")
+  )) %>%
+  filter(!is.na(hashed_school_code_2019)) #keep schools with two entries
+
+
+school_dta_combined_long <- school_dta_2023 %>% mutate(date=2023) %>%
+  bind_rows(school_dta_2019 %>% mutate(date=2019)) %>%
+  group_by(hashed_school_code) %>%
+  filter(max(row_number())>1) %>% #keep schools with two entries
+  mutate(across(ind_list,
+         function(x) x-lead(x),
+         .names="{.col}_gain")) 
+```
+
+## 4th Grade Achievement
+
+
+
+Calculate improvement from one year to next
+```{r}
+
+ind_comparer <- function(variables) {
+  
+  #calculate means by indicators
+  means <- school_dta_combined_long %>%
+  ungroup() %>%
+  select(date, variables, ipw) %>%
+  group_by(date) %>%
+  summarise(
+    across(everything(),wtd.mean, weights=ipw, na.rm=TRUE)
+  )
+  
+  #pivot longer
+  fig_tab <- means %>%
+    pivot_longer(cols = indicators,
+                 names_to='Indicator',
+                 values_to = 'Mean'
+    ) %>%
+    mutate(date=factor(date))
+  
+  #plot
+  ggplot(fig_tab, aes(x=date, y=Mean, fill=date)) +
+    facet_wrap(~Indicator) +
+    geom_col() +
+    geom_text(aes(label=round(Mean,2)), nudge_y = 0.5) +
+    theme_bw()
+}
+
+
+```
+
+```{r}
+#| label: fig-g4
+#| fig-cap: Comparison of 4th Grade Student Knowledge from 2019 and 2023
+
+indicators <- c("student_knowledge", "student_proficient", "math_student_knowledge", "math_student_proficient", "literacy_student_knowledge", "literacy_student_proficient")
+
+ind_comparer(indicators)
+```
+
+
+
+Scatterplot
+
+```{r}
+#| label: fig-g4_pairs
+#| fig-cap: Pairwise scatterplots of GEPD 4th Grade Test Scores in 2019 and 2023
+#| fig-width: 10
+#| fig-height: 10
+
+ggpairs(school_dta_combined_wide, columns=c("student_knowledge", "student_knowledge_2019", "math_student_knowledge",    "math_student_knowledge_2019", "literacy_student_knowledge", "literacy_student_knowledge_2019" ), title="4th Grade Student Knowledge") +
+  theme_bw()
+```
+
+
+Shrinkage Estimates of 4th Grade Performance
+
+First, let us see the raw OLS regression coefficients from a regression.
+```{r}
+
+mod <- list(
+  '4th Grade Achievement 2023' = lm_robust(student_knowledge ~ student_knowledge_2019, data=school_dta_combined_wide),
+  '4th Grade Math Achievement 2023' = lm_robust(math_student_knowledge ~ math_student_knowledge_2019, data=school_dta_combined_wide),
+  '4th Grade Literacy Achievement 2023' = lm_robust(literacy_student_knowledge ~ literacy_student_knowledge_2019, data=school_dta_combined_wide)
+)
+tab <- modelsummary(mod,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_rename = c("student_knowledge_2019"  = "4th Grade Achievement - 2019",
+                              "math_student_knowledge_2019"  = "4th Grade Math Achievement - 2019",
+                              "literacy_student_knowledge_2019"  = "4th Grade Literacy Achievement - 2019"),
+              notes="Data from the World Bank's GEPD Survey in Jordan in 2019 and 2023.
+              ***=0.001 level
+              **=0.01 level
+              *=0.05 level
+              +=0.1 level",
+              escape = FALSE
+              )
+
+tab
+
+```
+
+Now create scores that employ shrinkage estimation, where estimates of student achievement are shrunken to overall mean based on standard error.  The estimates of student achievement at the school level are biased, but consistent, and should have a lower mean squared error than the raw means.
+
+```{r}
+#| label: shrinkage
+
+#load student level data for 2023
+g4_dta_2023 <- read_csv(file=paste0(save_folder, "/data/assess_4th_grade_anon_anon.csv")) %>%
+  select(hashed_school_code, hashed_school_code_2019, student_knowledge, math_student_knowledge, literacy_student_knowledge, ipw) %>%
+  filter(!is.na(student_knowledge)) %>%
+  filter(!is.na(math_student_knowledge)) %>%
+  filter(!is.na(literacy_student_knowledge)) %>%
+  group_by(hashed_school_code, hashed_school_code_2019) %>%
+  summarise(
+    student_count=n(),
+    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) sqrt(var(x, na.rm=TRUE))/sqrt(student_count),.names="{.col}_se"),
+    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) mean(x, na.rm=TRUE))
+             ) %>%
+  filter(!is.na(student_knowledge_se)) %>%
+  filter(!is.na(math_student_knowledge_se)) %>%
+  filter(!is.na(literacy_student_knowledge_se)) %>%  
+  ungroup() %>%
+  mutate(student_knowledge_shrinkage=student_knowledge*var(student_knowledge, na.rm=TRUE)/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)) + mean(student_knowledge, na.rm=TRUE)*student_knowledge_se^2/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)),
+         math_student_knowledge_shrinkage=math_student_knowledge*var(math_student_knowledge, na.rm=TRUE)/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)) + mean(math_student_knowledge, na.rm=TRUE)*math_student_knowledge_se^2/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)),
+         literacy_student_knowledge_shrinkage=literacy_student_knowledge*var(literacy_student_knowledge, na.rm=TRUE)/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)) + mean(literacy_student_knowledge, na.rm=TRUE)*literacy_student_knowledge_se^2/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)))   %>%
+  mutate(date=2023)
+
+#load student level data for 2019
+g4_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/assess_4th_grade_anon_anon.dta")) %>%
+  select(hashed_school_code, student_knowledge, math_student_knowledge, literacy_student_knowledge, ipw) %>%
+  group_by(hashed_school_code) %>%
+  summarise(
+    student_count=n(),
+    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) sqrt(var(x, na.rm=TRUE))/sqrt(student_count),.names="{.col}_se"),
+    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) mean(x, na.rm=TRUE))
+             ) %>%
+      ungroup() %>%
+  mutate(student_knowledge_shrinkage=student_knowledge*var(student_knowledge, na.rm=TRUE)/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)) + mean(student_knowledge, na.rm=TRUE)*student_knowledge_se^2/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)),
+         math_student_knowledge_shrinkage=math_student_knowledge*var(math_student_knowledge, na.rm=TRUE)/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)) + mean(math_student_knowledge, na.rm=TRUE)*math_student_knowledge_se^2/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)),
+         literacy_student_knowledge_shrinkage=literacy_student_knowledge*var(literacy_student_knowledge, na.rm=TRUE)/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)) + mean(literacy_student_knowledge, na.rm=TRUE)*literacy_student_knowledge_se^2/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE))) 
+
+#combine the two
+
+g4_combined_wide <- g4_dta_2023 %>%
+  left_join(g4_dta_2019 %>%
+  rename_all(
+    function(x) paste0(x,"_2019")
+  )) %>%
+  filter(!is.na(hashed_school_code_2019)) #keep schools with two entries
+
+
+```
+
+Now, let us see the OLS regression coefficients from a regression using the shrunken estimates
+```{r}
+
+mod <- list(
+  'Shrinkage 4th Grade Achievement 2023' = lm_robust(student_knowledge_shrinkage ~ student_knowledge_shrinkage_2019, data=g4_combined_wide),
+  'Shrinkage 4th Grade Math Achievement 2023' = lm_robust(math_student_knowledge_shrinkage ~ math_student_knowledge_shrinkage_2019, data=g4_combined_wide),
+  'Shrinkage 4th Grade Literacy Achievement 2023' = lm_robust(literacy_student_knowledge_shrinkage ~ literacy_student_knowledge_shrinkage_2019, data=g4_combined_wide)
+)
+tab <- modelsummary(mod,
+              estimate= "{estimate}{stars}",
+              #vcov=list(NULL,"HC1",NULL),
+              coef_rename = c("student_knowledge_shrinkage2019"  = "Shrinkage 4th Grade Achievement - 2019",
+                              "math_student_knowledge_shrinkage_2019"  = "Shrinkage 4th Grade Math Achievement - 2019",
+                              "literacy_student_knowledge_shrinkage_2019"  = "Shrinkage 4th Grade Literacy Achievement - 2019"),
+              notes="Data from the World Bank's GEPD Survey in Jordan in 2019 and 2023.
+              ***=0.001 level
+              **=0.01 level
+              *=0.05 level
+              +=0.1 level",
+              escape = FALSE
+              )
+
+tab
+
+```
+
+
+
+## ECD
+
+```{r}
+#| label: fig-g1
+#| fig-cap: Comparison of 1st Grade Student Knowledge from 2019 and 2023
+
+indicators <- c("ecd_student_knowledge", "ecd_literacy_student_knowledge", "ecd_math_student_knowledge", "ecd_exec_student_knowledge", "ecd_soc_student_knowledge", "literacy_student_proficient")
+
+ind_comparer(indicators)
+```
+
+```{r}
+#| label: fig-g1pairs
+#| fig-cap: Pairwise scatterplots of GEPD 1st Grade Test Scores in 2019 and 2023
+
+#| 
+ggpairs(school_dta_combined_wide, columns=c("ecd_student_knowledge", "ecd_student_knowledge_2019" ), title="1st Grade Student Knowledge") +
+  theme_bw()
+```
+
+
+
+## Pedagogy
+
+```{r}
+#| label: fig-ped
+#| fig-cap: Comparison of Teacher Pedagogy from 2019 and 2023
+
+indicators <- c('teach_score','classroom_culture','instruction','socio_emotional_skills')
+
+ind_comparer(indicators)
+```
+
+```{r}
+#| label: fig-pedpairs
+#| fig-cap: Pairwise scatterplots of GEPD Teach scores Scores in 2019 and 2023
+
+ggpairs(school_dta_combined_wide, columns=c("teach_score", "teach_score_2019" ), title="Teacher Pedagogy") +
+  theme_bw()
+```
+
+
+## Inputs
+
+```{r}
+#| label: fig-input
+#| fig-cap: Comparison of School Inputs from 2019 and 2023
+
+indicators <- c('inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict')
+
+ind_comparer(indicators)
+```
+
+
+
+```{r}
+#| label: fig-inpt_pairs
+#| fig-cap: Pairwise scatterplots of GEPD Input Scores in 2019 and 2023
+
+ggpairs(school_dta_combined_wide, columns=c("inputs", "inputs_2019" ), title="Infrastructure") +
+  theme_bw()
+```
+
+
+
+## Infrastructure
+
+```{r}
+#| eval: false
+library(caret)
+
+infra_df <- school_dta_combined_wide %>%
+  select(hashed_school_code, 
+         starts_with('infrastructure'),
+         starts_with('drinking_water'),
+         starts_with('functioning_toilet'),
+         starts_with('internet'),
+         starts_with('class_electricity'),
+         starts_with('disability_accessibility')
+         )
+
+confusionMatrix(factor(infra_df$drinking_water), factor(infra_df$drinking_water_2019))
+confusionMatrix(factor(infra_df$functioning_toilet), factor(infra_df$functioning_toilet_2019))
+confusionMatrix(factor(infra_df$internet), factor(infra_df$internet_2019))
+
+```
+
+
+```{r}
+#| label: fig-infra
+#| fig-cap: Comparison of School Infrastructure from 2019 and 2023
+
+indicators <- c('infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility')
+
+ind_comparer(indicators)
+```
+
+
+
+```{r}
+#| label: fig-infra_pairs
+#| fig-cap: Pairwise scatterplots of GEPD Infrastructure Scores in 2019 and 2023
+
+ggpairs(school_dta_combined_wide, columns=c("infrastructure", "infrastructure_2019" ), title="Infrastructure") +
+  theme_bw()
+```
+
+
+## Absence
+
+```{r}
+#| label: fig-abs
+#| fig-cap: Comparison of Teacher Absence from 2019 and 2023
+
+indicators <- c('presence_rate','absence_rate', 'sch_absence_rate')
+
+ind_comparer(indicators)
+```
+
+```{r}
+#| label: fig-abs_pairs
+#| fig-cap: Pairwise scatterplots of GEPD School Absence Rates in 2019 and 2023
+
+ggpairs(school_dta_combined_wide, columns=c("sch_absence_rate", "sch_absence_rate_2019" ), title="Inputs") +
+  theme_bw()
+```
+
+
+## Content Knowledge
+
+```{r}
+#| label: fig-cont
+#| fig-cap: Comparison of Teacher Content Knowledge from 2019 and 2023
+
+indicators <- c('content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge')
+
+ind_comparer(indicators)
+```
+
+
+```{r}
+#| label: fig-content_pairs
+#| fig-cap: Pairwise scatterplots of GEPD Teacher Content Knowledge Scores in 2019 and 2023
+
+ggpairs(school_dta_combined_wide, columns=c("content_knowledge", "content_knowledge_2019" ), title="Inputs") +
+  theme_bw()
+```
+

@@ -213,7 +213,7 @@ public_officials_dta <- public_officials_dta %>%
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'interview__key', 'id_code', 'office_preload', 'govt_tier',
+preamble_info <- c('interview__id', 'interview__key', 'id_code', 'office_preload', 'location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
