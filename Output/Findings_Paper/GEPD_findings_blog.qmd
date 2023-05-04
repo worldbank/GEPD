@@ -865,12 +865,16 @@ combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_off
 
 ```
 
-```{r anova}
+```{r}
+#| label: tbl-models
+#| tbl-cap: GEPD Regression Output
+
+
 #set controls
-controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
-practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
-policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
-politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+controls <- 'i(country, log(GDP)) + i(country, rural) + i(country, students_enrolled) + factor(country)'
+practices <- 'i(country, presence_rate) + i(country, content_knowledge) + i(country, teach_score) + i(country, inputs) + i(country, infrastructure) + i(country, ecd_student_knowledge) + i(country, student_attendance) + i(country, operational_management) + i(country, instructional_leadership) + i(country, principal_knowledge_score) + i(country, principal_management)'
+policies <- 'i(country, teacher_attraction) + i(country, teacher_selection_deployment) + i(country, teacher_support) + i(country, teaching_evaluation) + i(country, teacher_monitoring) + i(country, intrinsic_motivation) + i(country, standards_monitoring) + i(country, sch_monitoring) + i(country, sch_management_clarity) + i(country, sch_management_attraction) + i(country, sch_selection_deployment) + i(country, sch_support) + i(country, principal_evaluation)'
+politics <- 'i(country, quality_bureaucracy) + i(country, national_learning_goals) + i(country, impartial_decision_making) + i(country, mandates_accountability)'
 
 #create formulas for regression
 baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
@@ -885,6 +889,7 @@ anova_df <- combined_school_office_df %>%
          presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
          teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
          quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+  mutate(country=factor(country, levels=unique(combined_school_office_df$country))) %>%
   na.omit
 
 
@@ -901,17 +906,17 @@ models <- list(
 'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df,vcov='hetero')
 )
 
-
+models %>% modelsummary(estimate= "{estimate}{stars}")
 
 ```
 
 ## P
 
 ```{r, fig.height=6, fig.width=8}
-controls <- 'log(GDP) + rural + students_enrolled'
-practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
-policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
-politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+controls <- 'i(country, log(GDP)) + i(country, rural) + i(country, students_enrolled) + factor(country)'
+practices <- 'i(country, presence_rate) + i(country, content_knowledge) + i(country, teach_score) + i(country, inputs) + i(country, infrastructure) + i(country, ecd_student_knowledge) + i(country, student_attendance) + i(country, operational_management) + i(country, instructional_leadership) + i(country, principal_knowledge_score) + i(country, principal_management) + factor(country)'
+policies <- 'i(country, teacher_attraction) + i(country, teacher_selection_deployment) + i(country, teacher_support) + i(country, teaching_evaluation) + i(country, teacher_monitoring) + i(country, intrinsic_motivation) + i(country, standards_monitoring) + i(country, sch_monitoring) + i(country, sch_management_clarity) + i(country, sch_management_attraction) + i(country, sch_selection_deployment) + i(country, sch_support) + i(country, principal_evaluation)'
+politics <- 'i(country, quality_bureaucracy) + i(country, national_learning_goals) + i(country, impartial_decision_making) + i(country, mandates_accountability)'
 
 
 # baseline
@@ -932,6 +937,7 @@ ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
   ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices') +
+  labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions.' ,100)) +
   theme_bw() 
 ```
 ## PP
@@ -953,6 +959,7 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
     ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies') +
+    labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice & policy indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions' ,100)) +
   theme_bw() 
 ```
 ## PPP
@@ -977,5 +984,6 @@ ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
   ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies + Politics') +
+    labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice, policy, and politics indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions' ,100)) +
   theme_bw() 
 ```

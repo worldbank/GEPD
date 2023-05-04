@@ -123,9 +123,9 @@ indicator_names <- sapply(indicator_names, tolower)
 
 if (quest_version!=17) {
 #read in school level file
-school_dta <- read_dta(file.path(download_folder, "EPDash.dta"))
+#school_dta <- read_dta(file.path(download_folder, "EPDash.dta"))
 
-school_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "EPDash.dta"))
+school_dta<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "EPDash.dta"))
 
 
 school_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "EPDash.dta"))
@@ -159,7 +159,7 @@ school_dta %>%
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_dta<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "ecd_assessment.dta"))
 ecd_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "ecd_assessment.dta"))
 ecd_dta_15<-read_dta(file.path(paste(download_folder,'version_15', sep="/"), "ecd_assessment.dta"))
 
@@ -183,7 +183,7 @@ ecd_dta %>%
 
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_dta<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "fourth_grade_assessment.dta"))
 assess_4th_grade_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "fourth_grade_assessment.dta"))
 assess_4th_grade_dta_15<-read_dta(file.path(paste(download_folder,'version_15', sep="/"), "fourth_grade_assessment.dta"))
 
@@ -208,7 +208,7 @@ assess_4th_grade_dta %>%
 
 
 #read in teacher questionnaire level file
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "questionnaire_roster.dta"))
 teacher_questionnaire_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_roster.dta"))
 teacher_questionnaire_15<-read_dta(file.path(paste(download_folder,'version_15', sep="/"), "questionnaire_roster.dta"))
 
@@ -240,7 +240,7 @@ teacher_questionnaire %>%
 
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "questionnaire_selected.dta"))
+teacher_absence_dta<-read_dta(file.path(paste(download_folder,'version_18', sep="/"), "questionnaire_selected.dta"))
 teacher_absence_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_selected.dta"))
 teacher_absence_dta_15<-read_dta(file.path(paste(download_folder,'version_15', sep="/"), "questionnaire_selected.dta"))
 
@@ -271,8 +271,7 @@ teacher_absence_dta %>%
 
 
 #read in teacher assessment file
-teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
-teacher_assessment_dta_21<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
+teacher_assessment_dta<-read_dta(file.path(paste(download_folder,'version_21', sep="/"), "teacher_assessment_answers.dta"))
 teacher_assessment_dta_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "teacher_assessment_answers.dta"))
 teacher_assessment_dta_15<-read_dta(file.path(paste(download_folder,'version_15', sep="/"), "teacher_assessment_answers.dta"))
 
@@ -288,7 +287,7 @@ teacher_assessment_metadta<-teacher_assessment_metadta %>%
 
 #bind version 18 and 17
 
-teacher_assessment_dta <- bind_rows(teacher_assessment_dta, teacher_assessment_dta_17, teacher_assessment_dta_15)
+#teacher_assessment_dta <- bind_rows(teacher_assessment_dta, teacher_assessment_dta_17, teacher_assessment_dta_15)
 label(teacher_assessment_dta) = as.list(as.character(teacher_assessment_metadta$varlabel))
 
 

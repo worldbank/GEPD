@@ -751,7 +751,7 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 
 #save  4th grade data at student level anonymized
 assess_4th_grade_anon <- assess_4th_grade_dta %>%
-  select(school_code, student_number, student_age, student_male, 
+  select(school_code, interview__key, student_number, student_age, student_male, 
          student_knowledge, math_student_knowledge, literacy_student_knowledge,
          math_items, lit_items)
 
@@ -1273,7 +1273,7 @@ overall <- c('s_a1',
 
 teacher_pedagogy_segments <- teacher_pedagogy_segments %>%  
   mutate_at(vars(overall),~(if_else(. %in% c('1','2','3','4','5'),as.numeric(.),as.numeric(NA) ))) %>%
-  mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),.,as.character(NA) ))) %>%
+  mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),as.character(.),as.character(NA) ))) %>%
   mutate_at(vars(low_medium_high), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
   mutate_at(vars(low_medium_high_na), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
   mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(str_replace_all(.,"[[:punct:]]",""))) %>%

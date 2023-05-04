@@ -65,20 +65,15 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 
 
 #Load original sample of schools
-currentDate<-c("2022-10-24")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', currentDate,  '.csv', sep="")
+#Load original sample of schools
+currentDate<-c("2022-09-21")
+
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
 ) %>%
-  mutate(ipw=case_when(
-    is.na(ipw) ~ median(ipw, na.rm=TRUE),
-    is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
-    TRUE ~ ipw)
-  ) %>%
-  ungroup() %>%
-  mutate(school_code=CODE_ETABLISSEMENT
-         #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
-         ) %>%
-  select(school_code, REGION,urban_rural,LIRE,ownership, public,
+  mutate(school_code=Inst_ID,
+         urban_rural=Location) %>%
+  select(school_code, District, Tehsil,urban_rural,Gender,
          ipw) 
 
 
@@ -93,7 +88,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   
   dataset %>%
     left_join(data_set_updated)  %>%
-    mutate(province=REGION           ) 
+    mutate(province=province,
+           district=District) 
 }
 
 
@@ -132,7 +128,7 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, Code_School, grd4_total, Region)
+      temp <- df_weights_function(temp, Inst_ID, totalstudents, District)
     }
     
     #Scrub names, geocodes
