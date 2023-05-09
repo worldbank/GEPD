@@ -302,7 +302,9 @@ plot_df <- combined_df %>%
   'SE.PRM.PEDG',
   'SE.PRM.LCAP',
   'SE.PRM.ATTD',
-  'SE.PRM.LERN')))
+  'SE.PRM.LERN'))) %>%
+  arrange(Series)
+
 
 seg_df <- plot_df %>%
   group_by(Series, `Indicator Name`) %>%
@@ -316,6 +318,7 @@ seg_df <- plot_df %>%
   'SE.PRM.LCAP',
   'SE.PRM.ATTD',
   'SE.PRM.LERN')))  
+write_excel_csv(plot_df, file=paste0(dir, "/Output/Findings_Paper/chart_data/chart2.csv"))
 
 dat_rect <- data.frame(
                     xmin = 0,
@@ -532,6 +535,15 @@ infra_df <- combined_df %>%
   mutate(Indicator=str_wrap(Indicator,20),
          country=factor(country, levels=c("Madagascar", "Ethiopia", "Rwanda", "Jordan", "Peru", "Sierra Leone")))
 
+infra_df %>%
+  pivot_longer(
+    cols = c("Rural", "Urban"),
+    names_to="Location",
+    values_to="Value"
+  ) %>%
+  write_excel_csv( file=paste0(dir, "/Output/Findings_Paper/chart_data/chart3.csv"))
+
+
 ggplot(infra_df, aes(x=country)) +
   facet_wrap(~Indicator, nrow=1) +
   geom_point(aes(y=Rural, color='Rural'), size=4) +
@@ -555,6 +567,29 @@ ggplot(infra_df, aes(x=country)) +
 ```
 
 The policy environment is another area that can be examined using the GEPD.  The GEPD measures policies in two ways.  First, the legal environment, or de jure policy environment.  Second, is how the policies are implemented and experienced by the teachers and principals in schools, or the de facto policy environment.  It turns out that the de facto and de jure policy environments often differ. To illustrate, in the figure below are the de jure policy scores for Jordan in yellow, and the de facto policy scores are in red.  Both sets of scores are on the same 1-5 scale, with 5 the highest score and 1 the lowest score. Generally speaking, the de jure scores are higher than the de facto scores, meaning that although laws are on the books that are supporting learning, the implementation in the schools is less consistent.   For example in Jordan, while there is a policy on the books encouraging professional development, only 28% of teachers, when asked in the GEPD school survey, reported participating in a professional development program in the past 12 months. 
+
+```{r}
+radar_ind <- c('SE.PRM.TATT.DF', 'SE.PRM.TEVL.DF', 'SE.PRM.TMNA.DF', 'SE.PRM.TSDP.DF','SE.PRM.TSUP.DF','SE.PRM.SATT.DF', 'SE.PRM.SEVL.DF', 'SE.PRM.SSLD.DF', 'SE.PRM.SSUP.DF',
+               'SE.PRM.TATT.DJ', 'SE.PRM.TEVL.DJ', 'SE.PRM.TMNA.DJ', 'SE.PRM.TSDP.DJ','SE.PRM.TSUP.DJ','SE.PRM.SATT.DJ', 'SE.PRM.SEVL.DJ', 'SE.PRM.SSLD.DJ', 'SE.PRM.SSUP.DJ')
+
+radar_df <- combined_df %>%
+  filter(Series %in% radar_ind) %>%
+  mutate(class=if_else(grepl("*.DF$", Series), "De Facto", "De Jure")) %>%
+  mutate(`Indicator Name`=str_remove(`Indicator Name`, "\\(De Facto\\)"),
+         `Indicator Name`=str_remove(`Indicator Name`, "\\(De Jure\\)"),
+         `Indicator Name`=str_remove(`Indicator Name`, "\\("),
+         `Indicator Name`=str_remove(`Indicator Name`, "\\)"),
+         `Indicator Name`=str_remove(`Indicator Name`, "Policy Lever")) %>%
+  select(country, `Indicator Name`, value, class) %>%
+  pivot_wider(
+    values_from = 'value',
+    names_from = "Indicator Name"
+  )
+
+write_excel_csv(radar_df,  file=paste0(dir, "/Output/Findings_Paper/chart_data/chart4.csv"))
+
+```
+
 
 ![Jordan De Facto Versus De Jure Policy Environment](./plots/DF_DJ_JOR.png)
 
@@ -987,3 +1022,25 @@ ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country
     labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice, policy, and politics indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions' ,100)) +
   theme_bw() 
 ```
+
+
+```{r}
+#within school variation
+
+student_df <- read_dta(paste0(confidential_dir, "General/combined_g4.dta"))
+
+aov_df <- student_df  %>%
+  group_by(hashed_school_code) %>%
+    mutate(weights=ipw/n()) %>%
+  group_by(iso3c) %>%
+  nest() %>%
+  mutate(
+    aov=map(data, ~aov(.x$student_knowledge ~ factor(.x$hashed_school_code), weights=.x$weights) %>% broom::tidy())
+  ) %>%
+  select(-data) %>%
+  unnest(aov) %>%
+  group_by(iso3c) %>%
+  mutate(share_explained=100*sumsq/sum(sumsq))
+
+```
+

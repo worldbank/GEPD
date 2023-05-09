@@ -19,6 +19,10 @@ library(Hmisc)
 library(GGally)
 library(modelsummary)
 library(estimatr)
+library(fixest)
+library(srvyr)
+library(flextable)
+library(patchwork)
 
 #Country name
 country <-'JOR'
@@ -26,6 +30,12 @@ country_name <- "Jordan"
 year <- '2023'
 init_year <- '2019'
 
+# parameter for using full sample (TRUE or FALSE)
+# FALSE means only the schools selected in 2019 that were revisited in 2023 are included.
+full_sample<-FALSE
+
+#get source file directory
+source_dir <- "~/GitHub/GEPD/Data/Jordan/2023/Analysis"
 #########################
 # File paths #
 #########################
@@ -43,7 +53,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   confidential_folder_init <- file.path(paste(project_folder,country,paste(country,init_year,"GEPD", sep="_"),paste(country,init_year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
   save_folder_init <- file.path(paste(project_folder,country,paste(country,init_year,"GEPD", sep="_"),paste(country,init_year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-
+  public_officials_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
+  public_officials_folder_init <- file.path(paste(project_folder,country,paste(country,init_year,"GEPD", sep="_"),paste(country,init_year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
@@ -61,6 +72,15 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 }
 
 ```
+```{r}
+#| label: programs
+
+#modelsummary output
+gm <- tibble::tribble(
+  ~raw,        ~clean,          ~fmt,
+  "nobs",      "N",             0,
+  "r.squared", "R Sq.", 2)
+```
 
 
 ```{r }
@@ -69,39 +89,64 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 
 #Create list of key indicators
-ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
-            'student_proficient', 'student_proficient_70', 'student_proficient_75',
-            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
-            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
-            'presence_rate','absence_rate', 'sch_absence_rate', 'student_attendance',
-            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
-            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
-            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
-            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
-            'teach_score','classroom_culture','instruction','socio_emotional_skills',
-            'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof',
-            'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
-            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
-            'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
-            'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
-            'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
-            'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
-            'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
-            'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
-            'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
-            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
-            'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
-            'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
-            'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
-            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
-            'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
-            'standards_monitoring',
-            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','system_in_place','parents_involved',
-            'sch_management_attraction', 'principal_satisfaction',
-            'sch_selection_deployment', 
-            'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
-            'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
-)
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+    )
+    
+    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency",  "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge",
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 
+                        "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
+                        "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
+                        "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
+                        "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
+                        "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                        "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
+                        'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                        'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                        'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                        'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                        'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 
+                        "School Management Selection & Deployment",
+                        "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+                        )
+  
 
 ```
 
@@ -115,7 +160,19 @@ school_dta_2023 <- read_csv(file=paste0(save_folder, "/data/school_dta_short_ano
 
 #load school level data for 2019
 school_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/school_dta_short_anon.dta")) %>%
-  select(hashed_school_code, ind_list, ipw) 
+  select(hashed_school_code, ind_list, supervisory_authority, territory, ipw) %>%
+  mutate(
+    
+    strata = case_when(
+      supervisory_authority=='The Ministry of Education' & territory=="North" ~ paste('Ministry of Education', territory,'2019 Sample', sep=", "),
+      supervisory_authority=='The Ministry of Education' & territory=="Middle"  ~ paste('Ministry of Education', territory,'2019 Sample', sep=", "),
+      supervisory_authority=='The Ministry of Education' & territory=="South"  ~ paste('Ministry of Education', territory,'2019 Sample', sep=", "),
+      supervisory_authority=='Private' & territory=="North"  ~ paste(supervisory_authority, territory,'2019 Sample', sep=", "),
+      supervisory_authority=='Private' & territory=="Middle"  ~ paste(supervisory_authority, territory,'2019 Sample', sep=", "),
+      supervisory_authority=='Private' & territory=="South"  ~ paste(supervisory_authority, territory,'2019 Sample', sep=", ")
+      
+    )
+  )
 
 #combine the two
 
@@ -134,7 +191,943 @@ school_dta_combined_long <- school_dta_2023 %>% mutate(date=2023) %>%
   mutate(across(ind_list,
          function(x) x-lead(x),
          .names="{.col}_gain")) 
+
+#bring in the weights
+weights_2019 <- read_dta(file=paste0(save_folder_init, "/data/school_weights_anon.dta"))
+weights_2023 <- read_csv(file=paste0(save_folder, "/data/school_weights_anon.csv"))
+
+
+####
+# Public Officials
+###
+po_dta_2023 <- read_csv(file=paste0(public_officials_folder, "/data/public_officials_dta_clean_anon.csv")) %>%
+  mutate(date=2023)
+
+#load school level data for 2019
+po_dta_2019 <- read_dta(file=paste0(public_officials_folder_init, "/data/public_officials_dta_clean_anon.dta")) %>%
+  mutate(date=2019)
 ```
+
+## Country Comparison
+
+```{r cc, echo=FALSE, message=FALSE, warning=FALSE}
+#list countries
+countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE", "NER")
+
+dir <- here()
+indicators_dir <- paste(dir, '/Indicators', sep="/")
+out_dir <- paste(dir, 'Output', sep="/")
+
+#read in indicator metadata
+indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
+
+
+# read in indicator data
+JOR_2023_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR_2023', ".csv")) %>%
+  mutate(country="Jordan-2023",
+         date='2023') 
+
+NER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'NER', ".csv")) %>%
+  mutate(country="Niger",
+         date='2022') %>%
+  select(-year)
+
+SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
+  mutate(country="Sierra Leone",
+         date='2022') %>%
+  select(-year)
+
+PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
+  mutate(country="Peru",
+         date='2019') #%>%
+  #select(-year)
+
+RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
+  mutate(country="Rwanda",
+         date='2020') #%>%
+  #select(-year)
+
+
+JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
+  mutate(country="Jordan-2019",
+         date='2019') #%>%
+  #select(-year)
+
+
+ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
+  mutate(country="Ethiopia",
+         date='2020-2021')  #%>%
+  #select(-year)
+
+# %>%
+#   rename(value=value_pooled)
+
+MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
+  mutate(country="Madagascar",
+         date='2021') #%>%
+  #select(-year)
+
+
+# Indicator names
+indicator_names_df <- PER_data %>%
+  select(Series, `Indicator Name`)
+
+combined_df_raw <- bind_rows(JOR_2023_data,JOR_data,NER_data, SLE_data,PER_data, ETH_data, RWA_data, MDG_data)
+
+
+  
+  combined_df <- combined_df_raw %>%
+    arrange(Series) %>%
+    mutate(
+           value=round(value,1),
+           value_color=case_when(
+             value_metadata=="Needs Improvement" ~ "#FF0000",
+             value_metadata=="Caution" ~ "#FCD606",
+             value_metadata=="On Target" ~ "#85C546",
+             TRUE ~ "#808080"
+           ),
+           Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
+
+
+combined_wide_df <- combined_df %>%
+  select(Series, country, value) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value
+  ) %>%
+  left_join(indicator_names_df)
+
+combined_wide_color <- combined_df %>%
+  select(Series, country, value_color) %>%
+  pivot_wider(
+    names_from=country, 
+    values_from=value_color
+  ) %>%
+  left_join(indicator_names_df)
+
+
+
+
+
+```
+
+```{r countrytabfn, echo=FALSE, message=FALSE, warning=FALSE}
+#create function for creating country comparison tables
+country_tab_fn <- function(variables, title) {
+  
+  
+tab_df <- combined_wide_df %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+#set colors
+tab_color_df <- combined_wide_color %>%
+  filter(Series %in% variables) %>%
+  arrange(factor(Series, levels=variables))
+
+Jordan_2023_col <- tab_color_df$`Jordan-2023`
+NER_col <- tab_color_df$`Niger`
+SLE_col <- tab_color_df$`Sierra Leone`
+Peru_col <- tab_color_df$Peru
+Jordan_col <- tab_color_df$`Jordan-2019`
+Rwanda_col <- tab_color_df$Rwanda
+Ethiopia_col <- tab_color_df$Ethiopia
+Madagascar_col <- tab_color_df$Madagascar
+
+
+#build table
+tab_df <- tab_df  %>%
+  select(`Indicator Name`,`Jordan-2023`, `Jordan-2019`, Niger,`Sierra Leone`, Peru, Rwanda, Ethiopia, Madagascar)
+
+
+ovr_table <- flextable(tab_df) %>%
+  add_header_lines(title) %>%
+  add_footer_lines('Source: UIS, GLAD, GEPD, World Bank. 
+ Green indicates indicator "on-target", yellow indicates "requires caution", red indicates "needs improvement"' ) %>%
+  theme_vanilla()
+
+#colors
+ovr_table <- ovr_table %>%
+  bg(j = c('Jordan-2023'),
+     bg = Jordan_2023_col) %>%
+  bg(j = c('Niger'),
+     bg = NER_col) %>%
+  bg(j = c('Sierra Leone'),
+     bg = SLE_col) %>%
+  bg(j = c('Peru'),
+     bg = Peru_col) %>%
+  bg(j = c('Jordan-2019'),
+     bg = Jordan_col) %>%
+  bg(j = c('Ethiopia'),
+     bg = Ethiopia_col) %>%
+  bg(j = c('Rwanda'),
+     bg = Rwanda_col) %>%
+  bg(j = c('Madagascar'),
+     bg = Madagascar_col)   
+
+
+ovr_table %>%
+  autofit()
+
+  
+}
+```
+
+Outcomes
+
+```{r}
+#| label: tbl-ovlout
+#| tbl-cap: GEPD Outcome Indicators
+#| eval: false
+
+# Produce a table showing means by country for select practice indicators
+outcome_indicators <- c(
+  'SE.GEPD.PRIM',
+  'SE.GEPD.PRIM.BMP',
+  'SE.PRM.TENR'
+
+)
+country_tab_fn(outcome_indicators, '') %>%
+  add_footer_lines('Rwanda does not have an internationally comparable learning assessment to report on Learning Poverty.')
+```
+
+Practices
+
+
+```{r }
+#| label: tbl-ovltab
+#| tbl-cap: GEPD Practice Indicators
+# Produce a table showing means by country for select practice indicators
+practice_indicators <- c(
+  'SE.PRM.LERN',
+  'SE.PRM.EFFT',
+  'SE.PRM.CONT',
+  'SE.PRM.PEDG',
+  'SE.PRM.INPT',
+  'SE.PRM.INFR',
+  'SE.PRM.LCAP',
+  'SE.PRM.ATTD',
+  'SE.PRM.OPMN',
+  'SE.PRM.ILDR',
+  'SE.PRM.PKNW',
+  'SE.PRM.PMAN'
+)
+country_tab_fn(practice_indicators, '')
+```
+
+Policies
+
+```{r}
+#| label: tbl-poltab
+#| tbl-cap: GEPD Policy Indicators
+# Produce a table showing means by country for select practice indicators
+policy_indicators <- c(
+'SE.PRM.TATT',
+'SE.PRM.TSDP',
+'SE.PRM.TSUP',
+'SE.PRM.TEVL',
+'SE.PRM.TMNA',
+'SE.PRM.TINM',
+'SE.PRM.ISTD',
+'SE.PRM.IMON',
+'SE.PRM.LNTN',
+'SE.PRM.LHTH',
+'SE.PRM.LCBC',
+'SE.PRM.LFCP',
+'SE.PRM.LSKC',
+'SE.PRM.SCFN',
+'SE.PRM.SATT',
+'SE.PRM.SSLD',
+'SE.PRM.SSUP',
+'SE.PRM.SEVL'
+)
+country_tab_fn(policy_indicators, '')
+```
+Politics
+
+```{r }
+#| label: tbl-ptictab
+#| tbl-cap: GEPD Politics Indicators
+# Produce a table showing means by country for select practice indicators
+politics_indicators <- c(
+'SE.PRM.BQBR',
+'SE.PRM.BIMP',
+'SE.PRM.BMAC',
+'SE.PRM.BNLG',
+'SE.PRM.BFIN'
+)
+country_tab_fn(politics_indicators, '')
+```
+
+# Changes in means
+
+In the analysis below, a set of graphs will be displayed showing the change between the average value of the indicator in 2023 and the original value in 2019.  Standard errors are adjusted for clustering at the school level.  
+
+```{r}
+#set survey design
+school_dta_compare_long <- school_dta_2023 %>% mutate(date='2023') %>%
+  bind_rows(school_dta_2019 %>% mutate(date='2019')) 
+
+if (full_sample==FALSE) {
+school_dta_compare_long_consistent <- school_dta_compare_long %>%
+  group_by(hashed_school_code) %>%
+  filter(max(row_number())>1) #keep schools with two entries
+}
+
+school_dta_compare_long <- school_dta_compare_long %>%
+  as_survey_design(id=hashed_school_code, 
+                   strata=strata,
+                    weight=ipw )
+
+school_dta_compare_long_consistent <- school_dta_compare_long_consistent %>%
+  as_survey_design(id=hashed_school_code, 
+                   strata=strata,
+                    weight=ipw )
+```
+
+
+
+
+```{r}
+
+# convert to named vector
+vec <- setNames(indicator_labels, ind_list)
+
+# Empty list to store formulas
+formulas <- list()
+
+# Loop through sub-indicators and create a formula for each one
+for (ind in ind_list) {
+  formula <- as.formula(paste0( ind, ' ~ date'))
+  formulas[[vec[ind]]] <- formula
+}
+
+# Fit linear regression models for each sub-indicator and store in list
+models <- lapply(formulas, function(f) survey::svyglm(f, school_dta_compare_long) )
+models_consistent <- lapply(formulas, function(f) survey::svyglm(f, school_dta_compare_long_consistent) )
+#
+
+
+#function for plots
+estimate_plotter <- function(values) {
+  p1 <- modelplot(models[vals],
+          coef_omit = '(Intercept)',
+          coef_rename = c(
+            'date2023'='Diff 2023 & 2019'
+          ),
+          facet=TRUE,
+          draw=FALSE
+          ) 
+
+  p2 <- modelplot(models_consistent[vals],
+            coef_omit = '(Intercept)',
+            coef_rename = c(
+              'date2023'='Diff 2023 & 2019'
+            ),
+            facet=TRUE,
+            draw=FALSE
+            ) 
+  plot <- p1 %>%
+    mutate(Sample="Full Sample") %>% 
+    bind_rows(p2 %>% mutate(Sample="Schools Visited Both Rounds")) %>%
+    mutate(model=factor(model, levels=rev(unique(p1$model)))) %>%
+    ggplot(aes(color=Sample, group=Sample)) +
+    geom_pointrange(aes(y = model, 
+                  x = estimate, xmin = conf.low, xmax = conf.high,color=Sample, group=Sample),
+                  position=position_dodge(width = .5)) +
+    geom_vline(xintercept = 0) +
+    geom_vline(xintercept = 0) +
+    theme_minimal() +
+    theme(
+      legend.position = 'top',
+      axis.title.y = element_blank()
+    ) +
+    xlab('Coefficient Estimate & 95% CI')
+    labs(title='Change in GEPD Indicators',
+         color='Sample')
+
+    return(plot)
+}
+
+```
+
+### 4th Grade Student Knowledge
+
+```{r}
+#| label: fig-1
+#| fig-cap: 4th Grade Student Knowledge
+
+vals <- c(1:8)
+estimate_plotter(vals)
+
+
+```
+
+
+
+### Student Attendance
+
+```{r}
+#| label: fig-2
+#| fig-cap: Student Attendance
+
+
+vals <- c(9)
+estimate_plotter(vals)
+```
+
+### Teacher Presence
+
+```{r}
+#| label: fig-3
+#| fig-cap: Teacher Presence
+
+
+vals <- c(10:12)
+estimate_plotter(vals)
+
+
+
+```
+### Teacher Content Knowledge
+
+```{r}
+#| label: fig-4
+#| fig-cap: Teacher Content Knowledge
+
+vals <- c(13:20)
+estimate_plotter(vals)
+
+
+
+
+```
+
+### Teacher Pedagogy
+
+```{r}
+#| label: fig-5a
+#| fig-cap: Teacher Pedagogy
+
+vals <- c(21:24)
+estimate_plotter(vals)
+
+
+
+
+
+```
+
+```{r}
+#| label: fig-5b
+#| fig-cap: Teacher Pedagogy
+
+vals <- c(25:28)
+estimate_plotter(vals)
+
+
+
+```
+
+### 1st Grade Student Knowledge
+
+```{r}
+#| label: fig-6
+#| fig-cap: 1st Grade Student Knowledge
+
+vals <- c(29:38)
+estimate_plotter(vals)
+
+
+```
+
+
+### Basic Inputs
+
+```{r}
+#| label: fig-7
+#| fig-cap: Basic Inputs
+
+vals <- c(39:45)
+estimate_plotter(vals)
+
+
+
+```
+
+### Basic Infrastructure
+
+```{r}
+#| label: fig-8
+#| fig-cap: Basic Infrastructure
+
+vals <- c(46:51)
+estimate_plotter(vals)
+
+
+
+```
+
+
+### Operational Management
+
+```{r}
+#| label: fig-9
+#| fig-cap: Operational Management
+
+
+vals <- c(52:54)
+estimate_plotter(vals)
+
+
+
+```
+
+### Teacher Intrinsic Motivation
+
+```{r}
+#| label: fig-10
+#| fig-cap: Teacher Intrinsic Motivation
+
+vals <- c(55:59)
+estimate_plotter(vals)
+
+
+```
+
+### Instructional Leadership
+
+```{r}
+#| label: fig-11
+#| fig-cap: Instructional Leadership
+
+vals <- c(60:65)
+estimate_plotter(vals)
+
+
+
+```
+
+### Principal Knowledge
+
+```{r}
+#| label: fig-12
+#| fig-cap: Principal Knowledge
+
+
+vals <- c(66:72)
+estimate_plotter(vals)
+
+
+```
+
+### Principal Management
+
+```{r}
+#| label: fig-13
+#| fig-cap: Principal Management
+
+vals <- c(73:77)
+estimate_plotter(vals)
+
+
+```
+
+### Teacher Attraction
+
+```{r}
+#| label: fig-14
+#| fig-cap:  Teacher Attraction
+
+vals <- c(78:83)
+estimate_plotter(vals)
+
+
+```
+
+### Teacher Selection & Deployment
+
+```{r}
+#| label: fig-15
+#| fig-cap:  Teacher Selection & Deployment
+
+vals <- c(84:86)
+estimate_plotter(vals)
+
+
+
+```
+
+### Teacher Support
+
+```{r}
+#| label: fig-16
+#| fig-cap:  Teacher Support
+
+
+
+vals <- c(87:91)
+estimate_plotter(vals)
+
+```
+
+### Teacher Evaluation
+
+```{r}
+#| label: fig-17
+#| fig-cap:  Teacher Evaluation
+
+vals <- c(92:96)
+estimate_plotter(vals)
+
+
+```
+
+### Teacher Monitoring & Accountability
+
+```{r}
+#| label: fig-18
+#| fig-cap:  Teacher Monitoring & Accountability
+
+vals <- c(97:101)
+estimate_plotter(vals)
+
+
+```
+### Standards 
+
+```{r}
+#| label: fig-19
+#| fig-cap:  Standards 
+
+vals <- c(102)
+estimate_plotter(vals)
+
+
+
+```
+
+
+### Monitoring 
+
+```{r}
+#| label: fig-20
+#| fig-cap:  Standards 
+
+vals <- c(103:106)
+estimate_plotter(vals)
+
+
+```
+
+### Clarity of Functions 
+
+```{r}
+#| label: fig-21
+#| fig-cap:  Clarity of Functions  
+
+vals <- c(107:114)
+estimate_plotter(vals)
+
+
+
+```
+
+### School Management Attraction 
+
+```{r}
+#| label: fig-22
+#| fig-cap:  School Management Attraction 
+
+vals <- c(115:116)
+estimate_plotter(vals)
+
+
+
+```
+
+### School Management Selection & Deployment 
+
+```{r}
+#| label: fig-23
+#| fig-cap:  School Management Selection & Deployment 
+
+vals <- c(117)
+estimate_plotter(vals)
+
+
+
+```
+
+### School Management Support 
+
+```{r}
+#| label: fig-24
+#| fig-cap:  School Management Support
+
+vals <- c(118:122)
+estimate_plotter(vals)
+
+
+
+```
+
+
+### School Management Evaluation 
+
+```{r}
+#| label: fig-25
+#| fig-cap:  School Management Evaluation 
+
+
+vals <- c(123:127)
+estimate_plotter(vals)
+
+
+
+```
+
+
+```{r}
+#| label: tbl-indicatorchanges
+#| tbl-cap: Estmiates of Changes in GEPD Indicators in Jordan Between 2019 and 2023.
+modelsummary(models, 
+             estimate= "{estimate}{stars}",
+             coef_rename = c(vec),
+          notes="Source: Global Education Policy Dashboard school survey for Jordan in 2019 & 2023. Standard errors clustered at the school level.
+              ***=0.001 level
+              **=0.01 level
+              *=0.05 level
+              +=0.1 level",
+          output=paste0(source_dir,"/full_indicator_regressions.xlsx"),
+              escape = FALSE
+              )
+
+```
+
+
+### Public Officials
+
+```{r}
+#set survey design for public officials
+
+po_dta_compare_long <- po_dta_2023 %>% mutate(date='2023',
+                                              govt_tier=factor(govt_tier, levels=c("Ministry of Education (or equivalent)", 
+                                                                                   "Regional office (or equivalent)",
+                                                                                   "District office (or equivalent)"))) %>%
+  bind_rows(po_dta_2019 %>% mutate(date='2019', govt_tier=factor(govt_tier)) %>% select(-education, -age,-years_current_org, -years_current_position,-years_civil_service,-num_pub_sector_org )) 
+
+    po_ind_list<-c(
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+    
+    po_indicator_labels<-c(
+                        "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        "Quality of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 
+                        "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+                        )
+```
+
+
+
+```{r}
+
+# convert to named vector
+vec <- setNames(po_indicator_labels, po_ind_list)
+
+# Empty list to store formulas
+formulas <- list()
+
+# Loop through sub-indicators and create a formula for each one
+for (ind in po_ind_list) {
+  formula <- as.formula(paste0( ind, ' ~ date'))
+  formulas[[vec[ind]]] <- formula
+}
+
+# Fit linear regression models for each sub-indicator and store in list
+models <- lapply(formulas, function(f) lm_robust(f, po_dta_compare_long, se_type='HC2') )
+
+#
+
+
+
+
+```
+
+
+### National Learning Goals
+
+```{r}
+#| label: fig-p1
+#| fig-cap:  Natinoal Learning Goals
+
+modelplot(models[1:5],
+          coef_omit = '(Intercept)',
+          coef_rename = c(
+            'date2023'='Diff 2023 & 2019'
+          ),
+          facet=TRUE
+          ) +
+  scale_y_discrete(limits=rev) +
+  geom_vline(xintercept = 0) +
+  theme(legend.position='none') +
+  labs(title='Change in GEPD Indicators')
+
+
+```
+
+### Mandates & Accountability
+
+```{r}
+#| label: fig-p2
+#| fig-cap:  Mandates & Accountability
+
+modelplot(models[6:9],
+          coef_omit = '(Intercept)',
+          coef_rename = c(
+            'date2023'='Diff 2023 & 2019'
+          ),
+          facet=TRUE
+          ) +
+  scale_y_discrete(limits=rev) +
+  geom_vline(xintercept = 0) +
+  theme(legend.position='none') +
+  labs(title='Change in GEPD Indicators')
+
+
+```
+
+### Characteristics of Bureaucracy
+
+```{r}
+#| label: fig-p3
+#| fig-cap:  Characteristics of Bureaucracy
+
+modelplot(models[10:14],
+          coef_omit = '(Intercept)',
+          coef_rename = c(
+            'date2023'='Diff 2023 & 2019'
+          ),
+          facet=TRUE
+          ) +
+  scale_y_discrete(limits=rev) +
+  geom_vline(xintercept = 0) +
+  theme(legend.position='none') +
+  labs(title='Change in GEPD Indicators')
+
+
+```
+
+### Impartial Decision Making
+
+```{r}
+#| label: fig-p4
+#| fig-cap:  Impartial Decision Making
+
+modelplot(models[15:19],
+          coef_omit = '(Intercept)',
+          coef_rename = c(
+            'date2023'='Diff 2023 & 2019'
+          ),
+          facet=TRUE
+          ) +
+  scale_y_discrete(limits=rev) +
+  geom_vline(xintercept = 0) +
+  theme(legend.position='none') +
+  labs(title='Change in GEPD Indicators')
+
+
+```
+
+```{r}
+#| eval: false
+#load student level data for 2023
+student_dta_2023 <- read_csv(file=paste0(save_folder, "/data/assess_4th_grade_anon_anon.csv")) %>%
+  mutate(date=2023) %>%
+  group_by(hashed_school_code) %>%
+  mutate(ipw=ipw/n()) # adjust for number of students selected
+
+#load school level data for 2019
+student_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/assess_4th_grade_anon_anon.dta")) %>%
+  mutate(date=2019) %>%
+  group_by(hashed_school_code) %>%
+  mutate(ipw=ipw/n())  # adjust for number of students selected
+
+
+student_dta_compare_long <- student_dta_2023 %>% mutate(date='2023') %>%
+  bind_rows(student_dta_2019 %>% mutate(date='2019')) %>%
+  mutate(date=factor(date, levels=c("2019", "2023")),
+         ipw=as.numeric(ipw))
+
+#set up a regression
+model <- list(
+  'Comparison of 4th Grade Outcomes' = feols(student_knowledge ~ date, cluster = 'hashed_school_code', data=student_dta_compare_long, weights = student_dta_compare_long$ipw ),
+  'Comparison of 4th Grade Math Outcomes' = feols(math_student_knowledge ~ date, cluster = 'hashed_school_code', data=student_dta_compare_long, weights = student_dta_compare_long$ipw ),
+  'Comparison of 4th Grade Reading Outcomes' = feols(literacy_student_knowledge ~ date, cluster = 'hashed_school_code', data=student_dta_compare_long, weights = student_dta_compare_long$ipw )
+
+)
+
+modelsummary(model,
+             estimate= "{estimate}{stars}",
+             gof_map = gm,
+             notes="Source: Global Education Policy Dashboard school survey for Jordan in 2019 & 2023. ",
+             escape = FALSE
+             )
+
+
+```
+
+
+1st Grade Assessment
+
+```{r}
+#| eval: false
+
+#load student level data for 2023
+ecd_student_dta_2023 <- read_csv(file=paste0(save_folder, "/data/ecd_dta_anon_anon.csv")) %>%
+  mutate(date=2023) %>%
+  group_by(hashed_school_code) %>%
+  mutate(ipw=ipw/n()) # adjust for number of students selected
+
+#load school level data for 2019
+ecd_student_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/ecd_dta_anon_anon.dta")) %>%
+  mutate(date=2019) %>%
+  group_by(hashed_school_code) %>%
+  mutate(ipw=ipw/n())  # adjust for number of students selected
+
+
+ecd_student_dta_compare_long <- ecd_student_dta_2023 %>% mutate(date='2023') %>%
+  bind_rows(ecd_student_dta_2019 %>% mutate(date='2019')) %>%
+  mutate(date=factor(date, levels=c("2019", "2023")),
+         ipw=as.numeric(ipw))
+
+#set up a regression
+model <- list(
+  'Comparison of 1st Grade Outcomes' = feols(ecd_student_knowledge ~ date, cluster = 'hashed_school_code', data=ecd_student_dta_compare_long, weights = ecd_student_dta_compare_long$ipw ),
+  'Comparison of 1st Grade Math Outcomes' = feols(ecd_math_student_knowledge ~ date, cluster = 'hashed_school_code', data=ecd_student_dta_compare_long, weights = ecd_student_dta_compare_long$ipw ),
+  'Comparison of 1st Grade Reading Outcomes' = feols(ecd_literacy_student_knowledge ~ date, cluster = 'hashed_school_code', data=ecd_student_dta_compare_long, weights = ecd_student_dta_compare_long$ipw ),
+  'Comparison of 1st Grade Executive Functioning Outcomes' = feols(ecd_exec_student_knowledge ~ date, cluster = 'hashed_school_code', data=ecd_student_dta_compare_long, weights = ecd_student_dta_compare_long$ipw ),
+  'Comparison of 1st Grade Socio-Emotional Outcomes' = feols(ecd_soc_student_knowledge ~ date, cluster = 'hashed_school_code', data=ecd_student_dta_compare_long, weights = ecd_student_dta_compare_long$ipw)
+
+)
+
+modelsummary(model,
+             estimate= "{estimate}{stars}",
+             gof_map = gm,
+             notes="Source: Global Education Policy Dashboard school survey for Jordan in 2019 & 2023. ",
+             escape = FALSE
+)
+
+
+```
+
+# Scatterplots
+
+The following graphs show changes for the subset of schools visited twice.
 
 ## 4th Grade Achievement
 
@@ -192,116 +1185,116 @@ Scatterplot
 #| fig-width: 10
 #| fig-height: 10
 
-ggpairs(school_dta_combined_wide, columns=c("student_knowledge", "student_knowledge_2019", "math_student_knowledge",    "math_student_knowledge_2019", "literacy_student_knowledge", "literacy_student_knowledge_2019" ), title="4th Grade Student Knowledge") +
+ggpairs(school_dta_combined_wide, columns=c("student_knowledge", "student_knowledge_2019" ), title="4th Grade Student Knowledge") +
   theme_bw()
 ```
 
 
-Shrinkage Estimates of 4th Grade Performance
+<!-- Shrinkage Estimates of 4th Grade Performance -->
 
-First, let us see the raw OLS regression coefficients from a regression.
-```{r}
+<!-- First, let us see the raw OLS regression coefficients from a regression. -->
+<!-- ```{r} -->
 
-mod <- list(
-  '4th Grade Achievement 2023' = lm_robust(student_knowledge ~ student_knowledge_2019, data=school_dta_combined_wide),
-  '4th Grade Math Achievement 2023' = lm_robust(math_student_knowledge ~ math_student_knowledge_2019, data=school_dta_combined_wide),
-  '4th Grade Literacy Achievement 2023' = lm_robust(literacy_student_knowledge ~ literacy_student_knowledge_2019, data=school_dta_combined_wide)
-)
-tab <- modelsummary(mod,
-              estimate= "{estimate}{stars}",
-              #vcov=list(NULL,"HC1",NULL),
-              coef_rename = c("student_knowledge_2019"  = "4th Grade Achievement - 2019",
-                              "math_student_knowledge_2019"  = "4th Grade Math Achievement - 2019",
-                              "literacy_student_knowledge_2019"  = "4th Grade Literacy Achievement - 2019"),
-              notes="Data from the World Bank's GEPD Survey in Jordan in 2019 and 2023.
-              ***=0.001 level
-              **=0.01 level
-              *=0.05 level
-              +=0.1 level",
-              escape = FALSE
-              )
+<!-- mod <- list( -->
+<!--   '4th Grade Achievement 2023' = lm_robust(student_knowledge ~ student_knowledge_2019, data=school_dta_combined_wide), -->
+<!--   '4th Grade Math Achievement 2023' = lm_robust(math_student_knowledge ~ math_student_knowledge_2019, data=school_dta_combined_wide), -->
+<!--   '4th Grade Literacy Achievement 2023' = lm_robust(literacy_student_knowledge ~ literacy_student_knowledge_2019, data=school_dta_combined_wide) -->
+<!-- ) -->
+<!-- tab <- modelsummary(mod, -->
+<!--               estimate= "{estimate}{stars}", -->
+<!--               #vcov=list(NULL,"HC1",NULL), -->
+<!--               coef_rename = c("student_knowledge_2019"  = "4th Grade Achievement - 2019", -->
+<!--                               "math_student_knowledge_2019"  = "4th Grade Math Achievement - 2019", -->
+<!--                               "literacy_student_knowledge_2019"  = "4th Grade Literacy Achievement - 2019"), -->
+<!--               notes="Data from the World Bank's GEPD Survey in Jordan in 2019 and 2023. -->
+<!--               ***=0.001 level -->
+<!--               **=0.01 level -->
+<!--               *=0.05 level -->
+<!--               +=0.1 level", -->
+<!--               escape = FALSE -->
+<!--               ) -->
 
-tab
+<!-- tab -->
 
-```
+<!-- ``` -->
 
-Now create scores that employ shrinkage estimation, where estimates of student achievement are shrunken to overall mean based on standard error.  The estimates of student achievement at the school level are biased, but consistent, and should have a lower mean squared error than the raw means.
+<!-- Now create scores that employ shrinkage estimation, where estimates of student achievement are shrunken to overall mean based on standard error.  The estimates of student achievement at the school level are biased, but consistent, and should have a lower mean squared error than the raw means. -->
 
-```{r}
-#| label: shrinkage
+<!-- ```{r} -->
+<!-- #| label: shrinkage -->
 
-#load student level data for 2023
-g4_dta_2023 <- read_csv(file=paste0(save_folder, "/data/assess_4th_grade_anon_anon.csv")) %>%
-  select(hashed_school_code, hashed_school_code_2019, student_knowledge, math_student_knowledge, literacy_student_knowledge, ipw) %>%
-  filter(!is.na(student_knowledge)) %>%
-  filter(!is.na(math_student_knowledge)) %>%
-  filter(!is.na(literacy_student_knowledge)) %>%
-  group_by(hashed_school_code, hashed_school_code_2019) %>%
-  summarise(
-    student_count=n(),
-    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) sqrt(var(x, na.rm=TRUE))/sqrt(student_count),.names="{.col}_se"),
-    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) mean(x, na.rm=TRUE))
-             ) %>%
-  filter(!is.na(student_knowledge_se)) %>%
-  filter(!is.na(math_student_knowledge_se)) %>%
-  filter(!is.na(literacy_student_knowledge_se)) %>%  
-  ungroup() %>%
-  mutate(student_knowledge_shrinkage=student_knowledge*var(student_knowledge, na.rm=TRUE)/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)) + mean(student_knowledge, na.rm=TRUE)*student_knowledge_se^2/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)),
-         math_student_knowledge_shrinkage=math_student_knowledge*var(math_student_knowledge, na.rm=TRUE)/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)) + mean(math_student_knowledge, na.rm=TRUE)*math_student_knowledge_se^2/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)),
-         literacy_student_knowledge_shrinkage=literacy_student_knowledge*var(literacy_student_knowledge, na.rm=TRUE)/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)) + mean(literacy_student_knowledge, na.rm=TRUE)*literacy_student_knowledge_se^2/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)))   %>%
-  mutate(date=2023)
+<!-- #load student level data for 2023 -->
+<!-- g4_dta_2023 <- read_csv(file=paste0(save_folder, "/data/assess_4th_grade_anon_anon.csv")) %>% -->
+<!--   select(hashed_school_code, hashed_school_code_2019, student_knowledge, math_student_knowledge, literacy_student_knowledge, ipw) %>% -->
+<!--   filter(!is.na(student_knowledge)) %>% -->
+<!--   filter(!is.na(math_student_knowledge)) %>% -->
+<!--   filter(!is.na(literacy_student_knowledge)) %>% -->
+<!--   group_by(hashed_school_code, hashed_school_code_2019) %>% -->
+<!--   summarise( -->
+<!--     student_count=n(), -->
+<!--     across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) sqrt(var(x, na.rm=TRUE))/sqrt(student_count),.names="{.col}_se"), -->
+<!--     across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) mean(x, na.rm=TRUE)) -->
+<!--              ) %>% -->
+<!--   filter(!is.na(student_knowledge_se)) %>% -->
+<!--   filter(!is.na(math_student_knowledge_se)) %>% -->
+<!--   filter(!is.na(literacy_student_knowledge_se)) %>%   -->
+<!--   ungroup() %>% -->
+<!--   mutate(student_knowledge_shrinkage=student_knowledge*var(student_knowledge, na.rm=TRUE)/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)) + mean(student_knowledge, na.rm=TRUE)*student_knowledge_se^2/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)), -->
+<!--          math_student_knowledge_shrinkage=math_student_knowledge*var(math_student_knowledge, na.rm=TRUE)/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)) + mean(math_student_knowledge, na.rm=TRUE)*math_student_knowledge_se^2/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)), -->
+<!--          literacy_student_knowledge_shrinkage=literacy_student_knowledge*var(literacy_student_knowledge, na.rm=TRUE)/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)) + mean(literacy_student_knowledge, na.rm=TRUE)*literacy_student_knowledge_se^2/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)))   %>% -->
+<!--   mutate(date=2023) -->
 
-#load student level data for 2019
-g4_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/assess_4th_grade_anon_anon.dta")) %>%
-  select(hashed_school_code, student_knowledge, math_student_knowledge, literacy_student_knowledge, ipw) %>%
-  group_by(hashed_school_code) %>%
-  summarise(
-    student_count=n(),
-    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) sqrt(var(x, na.rm=TRUE))/sqrt(student_count),.names="{.col}_se"),
-    across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) mean(x, na.rm=TRUE))
-             ) %>%
-      ungroup() %>%
-  mutate(student_knowledge_shrinkage=student_knowledge*var(student_knowledge, na.rm=TRUE)/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)) + mean(student_knowledge, na.rm=TRUE)*student_knowledge_se^2/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)),
-         math_student_knowledge_shrinkage=math_student_knowledge*var(math_student_knowledge, na.rm=TRUE)/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)) + mean(math_student_knowledge, na.rm=TRUE)*math_student_knowledge_se^2/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)),
-         literacy_student_knowledge_shrinkage=literacy_student_knowledge*var(literacy_student_knowledge, na.rm=TRUE)/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)) + mean(literacy_student_knowledge, na.rm=TRUE)*literacy_student_knowledge_se^2/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE))) 
+<!-- #load student level data for 2019 -->
+<!-- g4_dta_2019 <- read_dta(file=paste0(save_folder_init, "/data/assess_4th_grade_anon_anon.dta")) %>% -->
+<!--   select(hashed_school_code, student_knowledge, math_student_knowledge, literacy_student_knowledge, ipw) %>% -->
+<!--   group_by(hashed_school_code) %>% -->
+<!--   summarise( -->
+<!--     student_count=n(), -->
+<!--     across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) sqrt(var(x, na.rm=TRUE))/sqrt(student_count),.names="{.col}_se"), -->
+<!--     across(c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge'), function(x) mean(x, na.rm=TRUE)) -->
+<!--              ) %>% -->
+<!--       ungroup() %>% -->
+<!--   mutate(student_knowledge_shrinkage=student_knowledge*var(student_knowledge, na.rm=TRUE)/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)) + mean(student_knowledge, na.rm=TRUE)*student_knowledge_se^2/(student_knowledge_se^2 + var(student_knowledge, na.rm=TRUE)), -->
+<!--          math_student_knowledge_shrinkage=math_student_knowledge*var(math_student_knowledge, na.rm=TRUE)/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)) + mean(math_student_knowledge, na.rm=TRUE)*math_student_knowledge_se^2/(math_student_knowledge_se^2 + var(math_student_knowledge, na.rm=TRUE)), -->
+<!--          literacy_student_knowledge_shrinkage=literacy_student_knowledge*var(literacy_student_knowledge, na.rm=TRUE)/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)) + mean(literacy_student_knowledge, na.rm=TRUE)*literacy_student_knowledge_se^2/(literacy_student_knowledge_se^2 + var(literacy_student_knowledge, na.rm=TRUE)))  -->
 
-#combine the two
+<!-- #combine the two -->
 
-g4_combined_wide <- g4_dta_2023 %>%
-  left_join(g4_dta_2019 %>%
-  rename_all(
-    function(x) paste0(x,"_2019")
-  )) %>%
-  filter(!is.na(hashed_school_code_2019)) #keep schools with two entries
+<!-- g4_combined_wide <- g4_dta_2023 %>% -->
+<!--   left_join(g4_dta_2019 %>% -->
+<!--   rename_all( -->
+<!--     function(x) paste0(x,"_2019") -->
+<!--   )) %>% -->
+<!--   filter(!is.na(hashed_school_code_2019)) #keep schools with two entries -->
 
 
-```
+<!-- ``` -->
 
-Now, let us see the OLS regression coefficients from a regression using the shrunken estimates
-```{r}
+<!-- Now, let us see the OLS regression coefficients from a regression using the shrunken estimates -->
+<!-- ```{r} -->
 
-mod <- list(
-  'Shrinkage 4th Grade Achievement 2023' = lm_robust(student_knowledge_shrinkage ~ student_knowledge_shrinkage_2019, data=g4_combined_wide),
-  'Shrinkage 4th Grade Math Achievement 2023' = lm_robust(math_student_knowledge_shrinkage ~ math_student_knowledge_shrinkage_2019, data=g4_combined_wide),
-  'Shrinkage 4th Grade Literacy Achievement 2023' = lm_robust(literacy_student_knowledge_shrinkage ~ literacy_student_knowledge_shrinkage_2019, data=g4_combined_wide)
-)
-tab <- modelsummary(mod,
-              estimate= "{estimate}{stars}",
-              #vcov=list(NULL,"HC1",NULL),
-              coef_rename = c("student_knowledge_shrinkage2019"  = "Shrinkage 4th Grade Achievement - 2019",
-                              "math_student_knowledge_shrinkage_2019"  = "Shrinkage 4th Grade Math Achievement - 2019",
-                              "literacy_student_knowledge_shrinkage_2019"  = "Shrinkage 4th Grade Literacy Achievement - 2019"),
-              notes="Data from the World Bank's GEPD Survey in Jordan in 2019 and 2023.
-              ***=0.001 level
-              **=0.01 level
-              *=0.05 level
-              +=0.1 level",
-              escape = FALSE
-              )
+<!-- mod <- list( -->
+<!--   'Shrinkage 4th Grade Achievement 2023' = lm_robust(student_knowledge_shrinkage ~ student_knowledge_shrinkage_2019, data=g4_combined_wide), -->
+<!--   'Shrinkage 4th Grade Math Achievement 2023' = lm_robust(math_student_knowledge_shrinkage ~ math_student_knowledge_shrinkage_2019, data=g4_combined_wide), -->
+<!--   'Shrinkage 4th Grade Literacy Achievement 2023' = lm_robust(literacy_student_knowledge_shrinkage ~ literacy_student_knowledge_shrinkage_2019, data=g4_combined_wide) -->
+<!-- ) -->
+<!-- tab <- modelsummary(mod, -->
+<!--               estimate= "{estimate}{stars}", -->
+<!--               #vcov=list(NULL,"HC1",NULL), -->
+<!--               coef_rename = c("student_knowledge_shrinkage2019"  = "Shrinkage 4th Grade Achievement - 2019", -->
+<!--                               "math_student_knowledge_shrinkage_2019"  = "Shrinkage 4th Grade Math Achievement - 2019", -->
+<!--                               "literacy_student_knowledge_shrinkage_2019"  = "Shrinkage 4th Grade Literacy Achievement - 2019"), -->
+<!--               notes="Data from the World Bank's GEPD Survey in Jordan in 2019 and 2023. -->
+<!--               ***=0.001 level -->
+<!--               **=0.01 level -->
+<!--               *=0.05 level -->
+<!--               +=0.1 level", -->
+<!--               escape = FALSE -->
+<!--               ) -->
 
-tab
+<!-- tab -->
 
-```
+<!-- ``` -->
 
 
 
