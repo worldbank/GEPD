@@ -51,7 +51,7 @@ school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
-  rename(school_code_preload = school_emis_preload) %>% 
+  #mutate(school_code_preload = school_emis_preload) %>% 
   mutate(enumerator_name_other= m1s0q1_name_other  ,
          enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
@@ -68,7 +68,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Data/Madagascar/2021/Code/Analysis/gepd_MDG_app/indicators.md', delim="|", trim_ws=TRUE)
+indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
@@ -2370,11 +2370,11 @@ school_gdp <- as.data.frame(school_gdp) %>%
 
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
-impdata<-mice::mice(school_dta_short, m=1,
-           method='rf',
-           maxit = 50, seed = 500)
+# impdata<-mice::mice(school_dta_short, m=1,
+#            method='rf',
+#            maxit = 50, seed = 500)
 
-school_dta_short_imp <- mice::complete(impdata, 1)
+school_dta_short_imp <- school_dta_short
 
 } else {
   school_dta_short_imp <- school_dta_short

@@ -58,11 +58,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/School", sep="/"))
   
   
-}
-
-
-
-{
+} else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
 
@@ -81,11 +77,9 @@ setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
 need_api=0
 teach_avail=1
 
-#source('02_school_api.R', local=TRUE)
- 
+source('02_school_api.R', local=TRUE)
+
 # #launch file to clear data=
-source('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Data/Ethiopia/2021/Code/School/01_data/03_school_data_cleaner.R', local=TRUE)
+source('03_school_data_cleaner.R', local=TRUE)
 
-source('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Data/Ethiopia/2021/Code/School/04_school_anonymizer.R', local=TRUE)
-
-
+source('04_school_anonymizer.R', local=TRUE)

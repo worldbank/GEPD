@@ -22,7 +22,7 @@ source(file = paste0(dir, "/Countries/Ethiopia/2020/School/01_data/01_school_run
 source(file = paste0(dir, "/Countries/Ethiopia/2021/School/01_data/01_school_run.R") )
 
 #Madagascar
-rmarkdown::render(file = paste0(dir, "/Countries/Madagascar/2021/School/01_data/01_school_cleaning.Rmd"))
+rmarkdown::render(paste0(dir, "/Countries/Madagascar/2021/School/01_data/01_school_cleaning.Rmd"))
 
 # Sierra Leone
 source(file = paste0(dir, "/Countries/Sierra Leone/2022/School/01_data/01_school_run.R") )

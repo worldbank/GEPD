@@ -207,6 +207,7 @@ for (x in frames_2021) {
   
   t <- t %>%
     mutate(date=2020) %>%
+    select(-one_of('grade')) %>%
     bind_rows(t_2021) %>%
     mutate(date=if_else(is.na(date),2021,date)) 
   

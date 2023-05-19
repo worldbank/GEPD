@@ -893,7 +893,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
                          TRUE ~ NA_real_)) %>%
   mutate(grade=factor(grade, levels=c(1,2,3,4,5,6), labels=c("Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Multigrade")))
 
-label(teacher_absence_dta$grade) <- "Grade"
+#label(teacher_absence_dta$grade) <- "Grade"
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info_absence <- c('teacher_number',
@@ -2935,8 +2935,9 @@ teacher_assessment_weights <-teacher_roster_dta %>%
   summarise(numEligible4th=sum(as.numeric(s_m2aa_09b==1))) %>%
   mutate(teacher_weight_component=if_else(numEligible4th>=5,
                                           numEligible4th/5,
-                                          1)) %>%
-  select(s_ecole_code, teacher_weight_component)
+                                          1),
+         teacher_obs_weight_component=numEligible4th) %>%
+  select(s_ecole_code, teacher_weight_component,teacher_obs_weight_component)
 
 #need to fix
 g1_stud_weights<-read_dta(paste0(download_folder, '/03-SECD1.dta')) %>%
@@ -2959,7 +2960,7 @@ school_weights <- g4_stud_weights %>%
 
 
 #weights list
-weights_list<-c('g4_stud_weight_component', 'abs_weight_component', 'teacher_weight_component','g1_stud_weight_component')
+weights_list<-c('g4_stud_weight_component', 'abs_weight_component', 'teacher_weight_component','teacher_obs_weight_component','g1_stud_weight_component')
 
 
 final_school_data <- final_school_data %>%
