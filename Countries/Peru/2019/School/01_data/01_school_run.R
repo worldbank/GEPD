@@ -25,7 +25,6 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 
-
 #Country name
 country <-'PER'
 country_name <- "Peru"
@@ -61,7 +60,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 # Launch Code
 ########################
 #move working directory to github main folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+dir <- here()
+setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
 
 # #launch file to access data from API
 need_api=0
