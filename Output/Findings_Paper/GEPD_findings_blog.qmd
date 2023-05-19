@@ -276,7 +276,7 @@ In Peru, only around 33% of students reached the proficiency level (around 80% o
 
 ```{r studteach}
 #| fig.width=6,
-#| fig.height=5,
+#| fig.height=6,
 #| dpi=350
 ind <- c(  'SE.PRM.LERN',
   'SE.PRM.EFFT',
@@ -302,7 +302,9 @@ plot_df <- combined_df %>%
   'SE.PRM.PEDG',
   'SE.PRM.LCAP',
   'SE.PRM.ATTD',
-  'SE.PRM.LERN')))
+  'SE.PRM.LERN'))) %>%
+  arrange(Series)
+
 
 seg_df <- plot_df %>%
   group_by(Series, `Indicator Name`) %>%
@@ -316,6 +318,7 @@ seg_df <- plot_df %>%
   'SE.PRM.LCAP',
   'SE.PRM.ATTD',
   'SE.PRM.LERN')))  
+write_excel_csv(plot_df, file=paste0(dir, "/Output/Findings_Paper/chart_data/chart2.csv"))
 
 dat_rect <- data.frame(
                     xmin = 0,
@@ -505,7 +508,7 @@ tab_df_comb <- tab_df_R %>%
 
 Further, a consistent finding is that rural areas tend to struggle even more than the national totals suggest.  In most cases, teachers and students in rural areas perform worse than those from urban areas.  The disparities extend to other areas of the education system as well.  In school inputs and infrastructure, typically rural areas are worse off than urban areas.  For example, in Peru while around 65% of urban schools have a working internet connection, only around 8% of rural schools have one. While around 63% of children in urban schools in Ethiopia have access to a working tablet or computer, only around 14% have access in rural areas.  In Madagascar, 27% of children in urban schools have access to pens, pencils, textbooks, and exercise books, a low rate, but in rural areas it is even worse with only around 10% having access to these learning materials.
 ```{r}
-#| , fig.width = 7, fig.height = 5, dpi=350
+#| , fig.width = 7, fig.height = 6, dpi=350
 series_list <- c('SE.PRM.INPT.5.U', 'SE.PRM.INPT.5.R', #(De Facto) Percent of schools with access to EdTech
                  'SE.PRM.INPT.3.U','SE.PRM.INPT.3.R', # (De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books 
                  'SE.PRM.INFR.3.U','SE.PRM.INFR.3.R', # (De Facto) Percent of schools with functioning toilets
@@ -532,6 +535,15 @@ infra_df <- combined_df %>%
   mutate(Indicator=str_wrap(Indicator,20),
          country=factor(country, levels=c("Madagascar", "Ethiopia", "Rwanda", "Jordan", "Peru", "Sierra Leone")))
 
+infra_df %>%
+  pivot_longer(
+    cols = c("Rural", "Urban"),
+    names_to="Location",
+    values_to="Value"
+  ) %>%
+  write_excel_csv( file=paste0(dir, "/Output/Findings_Paper/chart_data/chart3.csv"))
+
+
 ggplot(infra_df, aes(x=country)) +
   facet_wrap(~Indicator, nrow=1) +
   geom_point(aes(y=Rural, color='Rural'), size=4) +
@@ -556,6 +568,29 @@ ggplot(infra_df, aes(x=country)) +
 
 The policy environment is another area that can be examined using the GEPD.  The GEPD measures policies in two ways.  First, the legal environment, or de jure policy environment.  Second, is how the policies are implemented and experienced by the teachers and principals in schools, or the de facto policy environment.  It turns out that the de facto and de jure policy environments often differ. To illustrate, in the figure below are the de jure policy scores for Jordan in yellow, and the de facto policy scores are in red.  Both sets of scores are on the same 1-5 scale, with 5 the highest score and 1 the lowest score. Generally speaking, the de jure scores are higher than the de facto scores, meaning that although laws are on the books that are supporting learning, the implementation in the schools is less consistent.   For example in Jordan, while there is a policy on the books encouraging professional development, only 28% of teachers, when asked in the GEPD school survey, reported participating in a professional development program in the past 12 months. 
 
+```{r}
+radar_ind <- c('SE.PRM.TATT.DF', 'SE.PRM.TEVL.DF', 'SE.PRM.TMNA.DF', 'SE.PRM.TSDP.DF','SE.PRM.TSUP.DF','SE.PRM.SATT.DF', 'SE.PRM.SEVL.DF', 'SE.PRM.SSLD.DF', 'SE.PRM.SSUP.DF',
+               'SE.PRM.TATT.DJ', 'SE.PRM.TEVL.DJ', 'SE.PRM.TMNA.DJ', 'SE.PRM.TSDP.DJ','SE.PRM.TSUP.DJ','SE.PRM.SATT.DJ', 'SE.PRM.SEVL.DJ', 'SE.PRM.SSLD.DJ', 'SE.PRM.SSUP.DJ')
+
+radar_df <- combined_df %>%
+  filter(Series %in% radar_ind) %>%
+  mutate(class=if_else(grepl("*.DF$", Series), "De Facto", "De Jure")) %>%
+  mutate(`Indicator Name`=str_remove(`Indicator Name`, "\\(De Facto\\)"),
+         `Indicator Name`=str_remove(`Indicator Name`, "\\(De Jure\\)"),
+         `Indicator Name`=str_remove(`Indicator Name`, "\\("),
+         `Indicator Name`=str_remove(`Indicator Name`, "\\)"),
+         `Indicator Name`=str_remove(`Indicator Name`, "Policy Lever")) %>%
+  select(country, `Indicator Name`, value, class) %>%
+  pivot_wider(
+    values_from = 'value',
+    names_from = "Indicator Name"
+  )
+
+write_excel_csv(radar_df,  file=paste0(dir, "/Output/Findings_Paper/chart_data/chart4.csv"))
+
+```
+
+
 ![Jordan De Facto Versus De Jure Policy Environment](./plots/DF_DJ_JOR.png)
 
 
@@ -567,7 +602,7 @@ Using the data collected at the school level and the interviews of public offici
 
 One novelty of the GEPD is that it provides data not just on the school indicators, but the policies and politics as well.  This value can be shown by looking at how much additional explanatory power is gained by including the policy and politics indicators.  In a linear regression with school average 4th grade student achievement as the outcome variable, the school level practice indicators explain around 34% of the variation in student learning.  When adding the de facto policy indicators, this rises to 46% of the variation explained.  Finally, when adding the indicators captured by the survey of public officials for public officials who oversee the schools, the percentage explained rises to more than 50%.
 
-![Variation in 4th Grade Student Achievement Explained by School Practices, Policies, and Politics Indicators](./plots/cor_gif.gif)
+![Variation in 4th Grade Student Achievement Explained by School Practices, Policies, and Politics Indicators](./plots/cor_gif_updated.gif)
 
 
 The GEPD is meant to provide countries a way to prioritize investment and better understand problem areas in their education systems.  Any policy making strategy will need to be tailored to the individual country context.  However, some general patterns across multiple countries have emerged including that teachers and students are struggling to perform, that rural areas tend to lag behind, that the policy environments exists, and that looking at the entire system can be helpful for understanding what is driving differences in learning.  
@@ -865,12 +900,16 @@ combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_off
 
 ```
 
-```{r anova}
+```{r}
+#| label: tbl-models
+#| tbl-cap: GEPD Regression Output
+
+
 #set controls
-controls <- 'log(GDP) + rural + students_enrolled + factor(country)'
-practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
-policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
-politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+controls <- 'i(country, log(GDP)) + i(country, rural) + i(country, students_enrolled) + factor(country)'
+practices <- 'i(country, presence_rate) + i(country, content_knowledge) + i(country, teach_score) + i(country, inputs) + i(country, infrastructure) + i(country, ecd_student_knowledge) + i(country, student_attendance) + i(country, operational_management) + i(country, instructional_leadership) + i(country, principal_knowledge_score) + i(country, principal_management)'
+policies <- 'i(country, teacher_attraction) + i(country, teacher_selection_deployment) + i(country, teacher_support) + i(country, teaching_evaluation) + i(country, teacher_monitoring) + i(country, intrinsic_motivation) + i(country, standards_monitoring) + i(country, sch_monitoring) + i(country, sch_management_clarity) + i(country, sch_management_attraction) + i(country, sch_selection_deployment) + i(country, sch_support) + i(country, principal_evaluation)'
+politics <- 'i(country, quality_bureaucracy) + i(country, national_learning_goals) + i(country, impartial_decision_making) + i(country, mandates_accountability)'
 
 #create formulas for regression
 baseline_pract <- as.formula(paste0('student_knowledge', "~",practices))
@@ -885,6 +924,7 @@ anova_df <- combined_school_office_df %>%
          presence_rate,  content_knowledge,  teach_score,  inputs,  infrastructure,  ecd_student_knowledge,  student_attendance,  operational_management,  instructional_leadership,  principal_knowledge_score,  principal_management,
          teacher_attraction,  teacher_selection_deployment,  teacher_support,  teaching_evaluation,  teacher_monitoring,  intrinsic_motivation,  standards_monitoring,  sch_monitoring,  sch_management_clarity,  sch_management_attraction,  sch_selection_deployment,  sch_support,  principal_evaluation,
          quality_bureaucracy,  national_learning_goals,  impartial_decision_making,  mandates_accountability) %>%
+  mutate(country=factor(country, levels=unique(combined_school_office_df$country))) %>%
   na.omit
 
 
@@ -901,17 +941,17 @@ models <- list(
 'Practices + Policies + Politics + Controls' = feols(baseline_pract_pol_bur_cntl, data=anova_df,vcov='hetero')
 )
 
-
+models %>% modelsummary(estimate= "{estimate}{stars}")
 
 ```
 
 ## P
 
 ```{r, fig.height=6, fig.width=8}
-controls <- 'log(GDP) + rural + students_enrolled'
-practices <- 'presence_rate + content_knowledge + teach_score + inputs + infrastructure + ecd_student_knowledge + student_attendance + operational_management + instructional_leadership + principal_knowledge_score + principal_management'
-policies <- 'teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation'
-politics <- 'quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability'
+controls <- 'i(country, log(GDP)) + i(country, rural) + i(country, students_enrolled) + factor(country)'
+practices <- 'i(country, presence_rate) + i(country, content_knowledge) + i(country, teach_score) + i(country, inputs) + i(country, infrastructure) + i(country, ecd_student_knowledge) + i(country, student_attendance) + i(country, operational_management) + i(country, instructional_leadership) + i(country, principal_knowledge_score) + i(country, principal_management) + factor(country)'
+policies <- 'i(country, teacher_attraction) + i(country, teacher_selection_deployment) + i(country, teacher_support) + i(country, teaching_evaluation) + i(country, teacher_monitoring) + i(country, intrinsic_motivation) + i(country, standards_monitoring) + i(country, sch_monitoring) + i(country, sch_management_clarity) + i(country, sch_management_attraction) + i(country, sch_selection_deployment) + i(country, sch_support) + i(country, principal_evaluation)'
+politics <- 'i(country, quality_bureaucracy) + i(country, national_learning_goals) + i(country, impartial_decision_making) + i(country, mandates_accountability)'
 
 
 # baseline
@@ -932,6 +972,7 @@ ggplot(baseline_pract_df, aes(x=pred, y=student_knowledge, color=country)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
   ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices') +
+  labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions.' ,100)) +
   theme_bw() 
 ```
 ## PP
@@ -953,6 +994,7 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
     ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies') +
+    labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice & policy indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions' ,100)) +
   theme_bw() 
 ```
 ## PPP
@@ -963,7 +1005,7 @@ ggplot(baseline_pract_pol_df, aes(x=pred, y=student_knowledge, color=country)) +
 
 baseline_pract_pol_bur <-  as.formula(paste0('student_knowledge', "~",practices," + ", policies," + ", politics))
 
-m <- feols(baseline_pract_pol_bur , data=anova_df)
+m <- feols(baseline_pract_pol_bur , data=anova_df )
 
 baseline_pract_pol_bur_df <- anova_df %>%
   add_predictions(m)
@@ -977,5 +1019,28 @@ ggplot(baseline_pract_pol_bur_df, aes(x=pred, y=student_knowledge, color=country
   xlab('Fitted value from regression') +
   ylab('4th-grade student knowledge') +
   ggtitle('Explaining 4th-grade Student Outcomes using \nSchool Practices + Policies + Politics') +
+    labs(caption = str_wrap('Fitted values produced using a pooled OLS regression across countries of 4th grade student knowledge scores on GEPD school practice, policy, and politics indicators.  Interaction terms were included so that slopes were allowed to vary by country.  No other controls included in regressions' ,100)) +
   theme_bw() 
 ```
+
+
+```{r}
+#within school variation
+
+student_df <- read_dta(paste0(confidential_dir, "General/combined_g4.dta"))
+
+aov_df <- student_df  %>%
+  group_by(hashed_school_code) %>%
+    mutate(weights=ipw/n()) %>%
+  group_by(iso3c) %>%
+  nest() %>%
+  mutate(
+    aov=map(data, ~aov(.x$student_knowledge ~ factor(.x$hashed_school_code), weights=.x$weights) %>% broom::tidy())
+  ) %>%
+  select(-data) %>%
+  unnest(aov) %>%
+  group_by(iso3c) %>%
+  mutate(share_explained=100*sumsq/sum(sumsq))
+
+```
+

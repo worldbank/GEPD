@@ -1,0 +1,421 @@
+---
+title: "Data Quality Checks - Survey of Public Officials"
+author: "Brian Stacy"
+output: html_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+
+
+library(knitr)
+library(tidyverse)
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(kableExtra)
+library(DT)
+library(mice)
+library(stargazer)
+library(skimr)
+library(ggthemes)
+#Load the data
+#read in office level file
+
+skim_with_defaults()
+load(file=paste(save_folder, "paradata.RData", sep="/"))
+```
+
+## Introduction
+
+This file produces a set of basic quality checks to highlight potential issues in data collection.  
+
+
+## Paradata on Interview Lengths & Time Completed
+
+The following figures and tables show the time length of each question and modules.  Specific information for each enumerator, date, and module is available.
+
+A useful check is to examine the length of time that passes between questions.  It may be useful for detecting anomalies with respect to enumerators, and also could be useful for streamlining our survey.  The filter in the sidebar gives the user the ability to filter by length of time that passes between questions.  By scrolling all the way to the right, only the questions that take an exceptionally long time to fill out appear.  Additionally, the user has the option to filter by enumerator, date of survey, section of the questionnaire, and module.
+
+```{r echo=FALSE, warning=FALSE}
+
+######################################
+# Length of each question by Enumerator
+#######################################
+
+para_df_tab <- para_df %>%
+  select( responsible, date, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
+
+linked_q_df<-SharedData$new(para_df_tab)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("time", "Length in Seconds", linked_q_df, ~timelength_sec),
+         filter_select("enumerator", "Enumerator", linked_q_df, ~responsible),
+         filter_select("date", "Date of Survey", linked_q_df, ~as.character(date)),
+         #filter_checkbox("section", "Section", linked_q_df, ~section, inline=FALSE),
+         filter_checkbox("indicator", "Indicator", linked_q_df, ~indicator, inline=FALSE)
+         
+       ),
+      
+       list (
+         plot_ly(linked_q_df, x=~responsible, y=~timelength_sec, type='scatter', mode='markers', color=~question,
+                 hovertext=paste(
+                   "Question: ", linked_q_df$data()$question, " <br>",
+                   "Question Text: ", linked_q_df$data()$varlabel, " <br>",
+                   "Enumerator: ", linked_q_df$data()$responsible)) %>%
+           layout(title='Question Length by Enumerator',yaxis=list(title='Length in Seconds'), xaxis=list(title='Enumerator ID'))
+         # datatable(linked_q_df, 
+         #           colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+         #                    'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Length in Seconds' = 'timelength_sec'),
+         #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
+         #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+         
+       )
+       
+)
+
+######################################
+# Length of each section by Enumerator
+#######################################
+
+para_df_section <- para_df %>% 
+  group_by(ï..interview__id, section) %>% 
+  summarise(responsible=first(responsible), date=first(date), module=first(module), indicator=first(indicator), timelength_sec=sum(timelength_sec))
+
+linked_s_df<-SharedData$new(para_df_section)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("time", "Length in Seconds", linked_s_df, ~timelength_sec),
+         filter_select("enumerator", "Enumerator", linked_s_df, ~responsible),
+         filter_select("date", "Date of Survey", linked_s_df, ~as.character(date)),
+         filter_checkbox("indicator", "Indicator", linked_s_df, ~indicator, inline=FALSE)
+       ),
+       list (
+       plot_ly(linked_s_df, x=~section, y=~timelength_sec, type='scatter', mode='markers', color=~responsible,
+               hovertext=paste(
+                   "Section: ", linked_s_df$data()$section, " <br>",
+                   "Enumerator: ", linked_s_df$data()$responsible)) %>%
+         layout(title='Section Length by Enumerator',yaxis=list(title='Length of Question in Seconds'), xaxis=list(title='Question Name'))
+      
+        # datatable(linked_s_df, 
+        #          colnames=c('Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+        #                     'Length in Seconds' = 'timelength_sec'),
+        #          extensions="Scroller", style="bootstrap", class="compact", width="100%",
+        #          options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+      
+       )
+       
+)
+
+
+```
+
+The graph below shows the overall time length of each interview.  In the final column of the graph, we report the average length of all interviews.  
+
+
+```{r overall_time, echo=FALSE}
+#Plot of overall length of survey
+
+
+para_df_overall<-para_df %>%
+  group_by(ï..interview__id) %>% 
+  summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60)
+
+
+para_df_overall_avg<-para_df_overall %>%
+  ungroup() %>%
+  summarise( timelength_min=mean(timelength_min), date=last(date) ) %>%
+  mutate(responsible='Overall Average', ï..interview__id=1)
+
+para_df_overall <- rbind(para_df_overall, para_df_overall_avg)
+
+  
+  
+p<-ggplot(para_df_overall, aes(x=responsible, y=timelength_min)) +   geom_point() +
+  labs(title='Overall Time Length of Interview by Enumerator', x='Enumerator', y='Time length in Minutes') + theme_classic() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+
+
+ggplotly(p)
+```
+
+The table below shows summary statistics of the interview length both overall and by module.  Note that the sum of the mean lengths of the modules does not sum to the overall mean.  This is because the "Overall" mean is the overall time length of each interview.  Given that some modules are given to some and not others (for instance the Organizational Characteristics and Capabilities module is only given to the Director of HR), the total time span doesn't sum up.
+
+```{r overall_time_sumstats, echo=FALSE}
+
+overall_time<-para_df %>%
+  group_by(ï..interview__id, indicator) %>% 
+  summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60)
+
+
+overall_time_avg<-para_df %>%
+  group_by(ï..interview__id) %>%
+  summarise(responsible=first(responsible), date=first(date), timelength_min=sum(timelength_sec)/60) %>%
+  mutate(indicator='Overall')
+
+
+
+#add function to produce weighted summary stats
+skim_with( numeric = list( complete_count= ~ sum(!is.na(.))))
+
+overall_time_comb<-bind_rows(overall_time, overall_time_avg) %>%
+  spread(indicator, timelength_min) %>%
+  ungroup() %>%
+  select( Overall, DEM, NLG, ACM, QB, IDM, ORG ) %>%
+  skim() %>%
+  select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  arrange(factor(variable, levels=c('Overall', 'NLG','ACM' ,'QB', 'IDM','DEM', 'ORG'))) %>%
+  mutate(variable=factor(variable, levels=c('NLG','ACM' ,'QB', 'IDM','DEM', 'ORG', 'Overall'),
+                         labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making', 'Demographics', 'Organizational Characteristics and Capabilities', 'Overall')))
+
+```
+
+
+```{r overalltime_kable}
+
+kable(overall_time_comb, caption="Summary Statistics of Time Length of Interviews by Indicator" ,  col.names = c("Indicator", "Mean",  "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"), digits = 2 ) %>%
+  kable_styling()
+
+```
+
+
+
+The next graph shows the time of day each question was completed by each enumerator.  One quality check that this provides is to determine when the enumerator filled out the question.  Enumerators that fill out questions outside of normal operating hours of the office can be asked to clarify why they did so.
+
+```{r time_day, echo=FALSE, warning=FALSE}
+
+######################################
+# Time of Day of each question by Enumerator
+#######################################
+
+para_df_tab <- para_df %>%
+  select( responsible, date, timestamp, module, section, indicator, question, varlabel, timelength_sec, ï..interview__id,)
+
+linked_t_df<-SharedData$new(para_df_tab)
+
+
+bscols(widths=c(3,NA),
+       list(
+         filter_slider("Time", "Time Question Completed", linked_t_df, ~timestamp),
+         filter_select("enumerator", "Enumerator", linked_t_df, ~responsible),
+         filter_checkbox("date", "Date of Survey", linked_t_df, ~as.character(date), inline=FALSE),
+         #filter_checkbox("section", "Section", linked_t_df, ~section, inline=FALSE),
+         filter_checkbox("indicator", "Indicator", linked_t_df, ~indicator, inline=FALSE)
+         
+       ),
+       
+       list (
+         plot_ly(linked_t_df, x=~question, y=~timestamp, type='scatter', mode='markers', color=~responsible,
+                 hovertext=paste(
+                   "Question: ", linked_t_df$data()$question, " <br>",
+                   "Question Text: ", linked_t_df$data()$varlabel, " <br>",
+                   "Enumerator: ", linked_t_df$data()$responsible)) %>%
+           layout(title='Time Question Completed by Enumerator',yaxis=list(title='Time'), xaxis=list(title='Question ID'))
+         # datatable(linked_t_df, 
+         #           colnames=c('Interview Code'='ï..interview__id', 'Enumerator' = 'responsible', 'Date' = 'date', 'Module' = 'module', 'Section' = 'section',
+         #                      'Indicator' = 'indicator', 'Question ID' = 'question', 'Question'='varlabel', 'Time' = 'timestamp'),
+         #           extensions="Scroller", style="bootstrap", class="compact", width="100%",
+         #           options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+         
+       )
+       
+)  
+
+```
+
+
+
+## Missing Values and Other Checks
+
+To start, the following figures and tables will highlight missing values for a few of our key indicators.  
+
+```{r missings, error=FALSE, message=FALSE, include=FALSE}
+
+load(paste(save_folder, "public_officials_survey_data.RData", sep="/"))
+
+
+sumstats<-public_officials_dta_clean %>%
+  select(c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making')) 
+
+
+
+```
+
+
+
+
+```{r missings3, echo=FALSE, error=FALSE, message=FALSE}
+#plot missing values by indicator
+gg_miss_var(sumstats)
+```
+
+Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation for each variable.  The means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
+
+```{r missings2, include=FALSE}
+
+#table of summary stats %>% 
+#merge on teacher content knowledge
+
+
+
+sumstats_df<-skim(sumstats) %>%
+  select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  mutate(variable=factor(variable, levels=c('national_learning_goals','mandates_accountability' ,'quality_bureaucracy', 'impartial_decision_making'),
+                         labels=c('National Learning Goals','Mandates & Accountability' ,'Quality of Bureaucracy', 'Impartial Decision Making')))
+
+#export Indicators sumstats
+write_excel_csv(sumstats_df, paste(save_folder,'GEPD_Public_Officials_Indicators.csv',sep=""))
+```
+
+
+```{r missings_kable}
+
+kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean",  "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram"), digits = 2 ) %>%
+  kable_styling()
+
+```
+## Who Was Interviewed?
+
+The following table shows the position of the individual interviewed in each office.
+
+```{r interviewed, include=FALSE}
+
+interviewed<- public_officials_dta_clean %>%
+  mutate(ID = group_indices(., govt_tier, region_code, district_code))  %>%
+  arrange(govt_tier, region_code, district_code) %>%
+  select(ID, govt_tier, region_code, district_code, district, province, location, position) 
+
+```
+
+
+```{r interviewed2, echo=FALSE}
+
+  datatable(interviewed,
+            extensions="Scroller", style="bootstrap", class="compact", width="100%",
+                 options=list(deferRender=TRUE, scrollY=300, scrollX=TRUE))
+
+```
+
+## Interactive Map
+In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the offices that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only offices that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
+
+The map is color coded.  Green indicators, for instance, have no missing information on our key bureaucracy indicators.  
+
+```{r map_guts, include=FALSE}
+
+####################################################################
+#######Map of offices with missing offices info#####
+####################################################################
+public_officials_map <- public_officials_dta_short %>%
+  filter(!is.na(lat) & !is.na(lon))
+
+#Create indicator of public_officialss with missing values in our indicators
+
+public_officials_map <- public_officials_map %>%
+  mutate(missings=(is.na(national_learning_goals) | is.na(mandates_accountability) | is.na(quality_bureaucracy) | 
+                     is.na(impartial_decision_making)))%>%
+  mutate(total_missing=is.na(national_learning_goals) + is.na(mandates_accountability) + is.na(quality_bureaucracy) + 
+           is.na(impartial_decision_making) ) 
+
+
+#color coded markers for missing values
+getColor <- function(df_input) {
+  sapply(df_input$total_missing, function(total_missing) {
+    if (total_missing == 0) {
+      "#12E539" #green
+    } 
+    else if (total_missing == 1) {
+      "#1232E5" #blue
+    } 
+    else if (total_missing == 2) {
+      "#E5E512" #yellow
+    } 
+    else if (total_missing == 3) {
+      "#E59412" #orange
+    }     
+    else if (total_missing == 4) {
+      "#8A12E5" #purple
+    } 
+    else if (total_missing == 5) {
+      "#E51212" #red
+    }
+    else {
+      "#000000" #black
+    } 
+    })
+}
+
+#add legend for icons
+pal <- colorFactor(
+  levels = c( '0','1', '2', '3', '4', '5', '6+'),
+  palette = c('#12E539', '#1232E5', '#E5E512', '#E59412', '#8A12E5', '#E51212', '#000000'),
+  domain = public_officials_map$total_missing
+)
+
+#create icons
+icons <- awesomeIcons(
+  icon = 'user',
+  iconColor = getColor(public_officials_map),
+  library = 'fa',
+  markerColor = 'black'
+)
+
+
+map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
+  addTiles()  %>%
+  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
+                    popup = paste("Enumerator Name: ", public_officials_map$enumerator_name, " <br>",
+                                  "Enumerator Number: ", public_officials_map$enumerator_number, " <br>",
+                                  "Interview key: ", public_officials_map$interview__key, " <br>",
+                                  "Province: ", public_officials_map$province, " <br>",
+                                  "District: ", public_officials_map$district, " <br>",
+                                  "Government Tier: ", public_officials_map$govt_tier, " <br>",
+                                  "Number Interviewed: ", public_officials_map$count, " <br>",
+                                  "<font color='red' > Bureaucracy Indicators ", " <br> <font color='black' >",
+                                  "National Learning Goals: ", round(as.data.frame(linked_df$data())$national_learning_goals, digits=2), " <br>",
+                                  "Mandates & Accountability: ", round(as.data.frame(linked_df$data())$mandates_accountability, digits=2)," <br>",
+                                  "Quality of Bureaucracy: ", round(as.data.frame(linked_df$data())$quality_bureaucracy, digits=2), " <br>",
+                                  "Impartial Decision Making: ", round(as.data.frame(linked_df$data())$impartial_decision_making, digits=2)))   %>%
+    addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
+
+}
+
+```
+
+
+```{r map_plot, echo=FALSE}
+
+
+linked_df<-SharedData$new(public_officials_map)
+
+
+
+bscols(widths=c(3,NA),
+  list(
+  filter_select("enumerator", "Enumerator", linked_df, ~enumerator_name),
+  filter_select("prov", "Province", linked_df, ~province),
+  filter_select("dist", "District", linked_df, ~district),
+  filter_slider("nlg", "National Learning Goals:", linked_df, ~national_learning_goals, round=TRUE),
+  filter_slider("mna", "Mandates & Accountability:", linked_df, ~mandates_accountability, round=TRUE),
+  filter_slider("qb", "Quality of Bureaucracy:", linked_df, ~quality_bureaucracy, round=TRUE),
+  filter_slider("idm", "Impartial Decision Making:", linked_df, ~impartial_decision_making, round=TRUE)
+
+  ),
+  map(linked_df) 
+
+)
+
+```

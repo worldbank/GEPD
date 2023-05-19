@@ -1,0 +1,482 @@
+---
+title: "MDG Teacher Linkages"
+format: html
+---
+
+# Introduction
+
+This analysis will link the teacher modules  using teacher IDs and names and then do some basic analysis.
+
+Teachers can be linked by a common ID.  The following are the column names in the various files
+
+* Teacher pedagogy: m4saq1_number
+* Teacher Content Knowledge: m5sb_tnum
+* Teacher Questionnaire: m3sb_tnumber
+* Teacher Roster: TEACHERS__id
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.height = 6,
+	fig.width = 8,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(haven)
+library(vtable)
+library(here)
+library(readxl)
+library(stringr)
+library(Hmisc)
+library(naniar)
+library(lubridate)
+library(skimr)
+library(digest)
+library(validate)
+library(GGally)
+library(Hmisc)
+#Country name
+country <-'MDG'
+country_name <- "Madagascar"
+year <- '2021'
+school_file <-'EPDash.dta'
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+  download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
+
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
+
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+
+```
+
+```{r functions}
+
+
+
+#function to attach weights
+
+df_weights_function <- function(dataset) {
+
+  
+  dataset %>%
+    left_join(data_set_updated, by='s_ecole_code') %>%
+        select(-ends_with(".x"), -ends_with(".y")) %>%
+    mutate(ipw=if_else(is.na(ipw),median(ipw, na.rm=T), ipw)) %>%
+    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "province" | names(data_set_updated) == "district" |
+                                                      names(data_set_updated) == "rural" | names(data_set_updated) == "public" | names(data_set_updated) == "students_enrolled"
+                                                      | names(data_set_updated) == "ipw" | names(data_set_updated) == "ipw_school" | names(data_set_updated) == "s_ecole_code" )])))
+}
+
+
+
+
+df_add_weights<- function(dataset) {
+  temp<-get(dataset) 
+    
+    #add hashed school code if needed
+       if ("s_ecole_code" %in% colnames(temp)) {
+      temp <- temp %>%
+        left_join(key) %>%
+        select(hashed_school_code, everything())
+    }
+    
+    
+    #add on weights
+    if ("s_ecole_code" %in% colnames(temp)) {
+      temp <- df_weights_function(temp)
+    }
+    
+    
+}
+
+```
+
+```{r}
+#list of key indicators
+
+ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
+            'student_proficient', 'student_proficient_70', 'student_proficient_75',
+            'literacy_student_proficient', 'literacy_student_proficient_70', 'literacy_student_proficient_75',
+            'math_student_proficient', 'math_student_proficient_70', 'math_student_proficient_75',
+            'presence_rate','absence_rate', 'sch_absence_rate', 'student_attendance',
+            'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 
+            'content_proficiency',  'content_proficiency_70', 'content_proficiency_75',
+            'literacy_content_proficiency',  'literacy_content_proficiency_70', 'literacy_content_proficiency_75',
+            'math_content_proficiency',  'math_content_proficiency_70', 'math_content_proficiency_75',
+            'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+            'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+            'inputs', 'blackboard_functional', 'pens_etc', 'textbooks', 'share_desk', 'used_ict', 'access_ict',
+            'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+            'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+            'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+            'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+            'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+            'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+            'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+            'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+            'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+            'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+            'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+            'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+            'standards_monitoring',
+            'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','system_in_place','parents_involved',
+            'sch_management_attraction', 'principal_satisfaction',
+            'sch_selection_deployment', 
+            'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+            'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences'
+)
+
+#attach derived indicators
+load(paste0(confidential_folder,"/school_survey_data.RData"))
+
+```
+
+
+## Weights File
+
+```{r}
+#read in the file on school weights
+
+sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'))
+sampling_frame_replacements <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'), sheet = 'Écoles réserve')
+
+sampling_frame <- sampling_frame %>%
+  bind_rows(sampling_frame_replacements) %>%
+  distinct(`CODE ETAB`, `NOM ETAB`, `CODE REGION`, `CODE COMMUNE 6`,.keep_all=TRUE)
+
+sampling_strata_info <- read_csv(paste0(sampling_folder,'/school_strata_sampling.csv'))
+
+
+#create straturm weights
+sampling_strata_df <- sampling_strata_info %>%
+  select(id, urban_sample, rural_sample, urban_4th, rural_4th) %>%
+  pivot_longer(
+    cols=c('urban_sample', 'rural_sample', 'urban_4th', 'rural_4th'),
+    names_to='group',
+    values_to='size'
+  ) %>%
+  mutate(sample=if_else(grepl('sample',group),'Sample_Size','Total_Size'),
+         urban_rural=if_else(grepl('urban',group),'Urban','Rural')) %>%
+  select(-group) %>%
+  pivot_wider(
+    names_from=sample,
+    values_from=size
+  ) %>%
+  mutate(strata_prob= Total_Size/sum(Total_Size) )
+
+# merge on the sampling info.  This dataframe contains probabilities each school was selected in a stratum
+# strata were region and urban/rural.
+data_set_updated <- school_dta_preamble %>%
+  left_join(sampling_frame, by=c("s_etab_code"="CODE ETAB")) %>%
+  mutate(province=s_commune_name,
+           district=as.character(s_cisco_code),
+           rural=s_urbain>=3, #rural coded as greater than 3
+           urban_rural=if_else(rural==TRUE, "Rural", "Urban"),
+           public=if_else(s_public==2, "Private", "Public"),
+      students_enrolled=case_when(
+        `Éleves Total`<25 ~ 1,
+        `Éleves Total`>=25 &  `Éleves Total`<50 ~ 2,
+        `Éleves Total`>=50 &  `Éleves Total`<75 ~ 3,
+        `Éleves Total`>=75 &  `Éleves Total`<100 ~ 4,
+        `Éleves Total`>=100 &  `Éleves Total`<150 ~ 5,
+        `Éleves Total`>=150 &  `Éleves Total`<300 ~ 6,
+        `Éleves Total`>=300 &  `Éleves Total`<500 ~ 7,
+        `Éleves Total`>=500  ~ 8
+      )) %>%
+      mutate(students_enrolled=factor(students_enrolled, levels=c(1,2,3,4,5,6,7,8), labels = c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")),
+           ipw_school=1/(`P1 (SDI)`/4), #divide by 4 because dashboard schools make up randomly selected 25% of sample 
+                      ) %>%
+  left_join(sampling_strata_df, by=c("CODE REGION"="id",
+                                     "urban_rural"="urban_rural")) %>% # read in strata sampling info
+  mutate(ipw=ipw_school*(1/strata_prob) # incorporate stratum weights
+         
+  )
+
+
+
+
+key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
+```
+
+## School File
+
+```{r school}
+
+###########################
+#read in school level file
+###########################
+
+school_micro_raw <- school_dta %>%
+  group_by(school_code) %>%
+  fill(everything(), .direction='downup') %>%
+  slice(1) %>% 
+  ungroup()
+
+school_data_preamble <- school_dta_preamble
+
+var.list <- sapply(school_dta, function(x) attr(x,"label"))
+var.labels= unlist(var.list)
+
+
+#merge on derived indicators
+school_micro_comb <- school_micro_raw %>%
+  left_join(
+    school_dta_short %>%
+      select(school_code, ind_list)
+  ) %>%
+  left_join(school_data_preamble) %>%
+  select(colnames(school_data_preamble), ind_list, everything())
+
+#add weights and anonymize
+school_micro <- df_add_weights('school_micro_comb')                   
+
+#school_micro <- Hmisc::upData(school_micro, labels = var.labels)
+
+```
+
+
+
+
+
+## Teacher Questionnaire File
+
+```{r}
+
+
+#Add school preamble info
+teacher_questionnaire <- teacher_questionnaire_dta %>%
+  left_join(school_data_preamble) %>%
+  select(colnames(school_data_preamble), everything()) %>%
+  group_by(school_code,s_m2aa_02c) %>%
+  fill(everything(), .direction='downup') %>%
+  slice(1) %>% 
+  ungroup() %>%
+  mutate(
+    m3sb_tnumber=s_m2aa_02c, 
+    m3sb_troster=s_m2ba1_01n
+  )
+
+
+
+
+#add weights and anonymize
+teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')     %>%
+  left_join(key) %>%
+  select(colnames(key), everything())
+
+
+
+```
+
+
+## Teacher Absence File
+
+```{r}
+############################
+#read in teacher roster file
+############################
+
+teacher_roster_dta <- teacher_roster_dta %>%
+  left_join(school_data_preamble) %>%
+  select(colnames(school_data_preamble), everything()) %>%
+  mutate(TEACHERS__ID=s_m2aa_02c,
+         m2saq2=s_m2aa_02n) 
+
+
+#add weights and anonymize
+teacher_roster_micro <- df_add_weights('teacher_roster_dta')   %>%
+  left_join(key)    %>%
+  select(colnames(key), TEACHERS__ID, m2saq2, starts_with("s_m2aa_"))
+
+# Now do absence
+
+teacher_absence_dta <- teacher_absence_final %>%
+  left_join(school_data_preamble) %>%
+  select(colnames(school_data_preamble), everything()) %>%
+  mutate(s_m2aa_02c=teacher_number)  
+
+
+#add weights and anonymize
+teacher_absence_micro <- df_add_weights('teacher_absence_dta')   %>%
+  left_join(key)    %>%
+  select(colnames(key), everything())
+
+```
+
+
+## Teacher Assessment File
+
+```{r teacherassess}
+#read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
+
+#add weights and anonymize
+teacher_assessment_micro <- teacher_assessment_dta     %>%
+  left_join(school_data_preamble) %>%
+  select(colnames(school_data_preamble), everything()) %>%
+  mutate(m5sb_tnum =teacher_number, 
+         m5sb_troster=id12) 
+   
+#add weights and anonymize
+teacher_assessment_micro <- df_add_weights('teacher_assessment_micro')     %>%
+  left_join(key) %>%
+  select(colnames(key), everything())
+
+```
+
+
+
+## Teacher Pedagogy File
+
+There was no teacher pedagogy module in Madagascar 2021.
+
+```{r pedg}
+
+
+# 
+#   
+# teacher_pedagogy <- final_indicator_data_PEDG %>%
+#   left_join(school_data_preamble) %>%
+#   left_join(school_micro_comb %>% select(school_code, starts_with('m4saq1'))) %>%
+#   distinct(school_code,.keep_all = TRUE)
+# 
+# #add weights and anonymize
+# teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') 
+
+```
+
+
+
+
+
+```{r}
+#join the assessment, pedagogy, and questionnaire info to the roster
+
+#start with teacher questionnaire
+teacher_combined_df <- teacher_roster_micro %>%
+  left_join(teacher_absence_micro) %>%
+  left_join(teacher_questionnaire_micro %>% mutate(TEACHERS__id=m3sb_tnumber) , na_matches='never') %>%
+  group_by(school_code,TEACHERS__id) %>%
+  slice(1) 
+
+
+sum(!is.na(teacher_combined_df$m3sb_tnumber))
+pct <- round(100*sum(!is.na(teacher_combined_df$m3sb_tnumber))/nrow(teacher_questionnaire_micro))
+print(paste0(pct,"% of teachers interviewed for questionnaire are successfully matched"))
+
+
+# # now teacher pedagogy
+# teacher_combined_df <- teacher_combined_df %>%
+#   left_join(teacher_pedagogy_micro %>% mutate(TEACHERS__id=m4saq1_number), na_matches='never') %>%
+#   group_by(school_code,TEACHERS__id) %>%
+#   slice(1) 
+# 
+# 
+# sum(!is.na(teacher_combined_df$m4saq1_number))
+# pct <- round(100*sum(!is.na(teacher_combined_df$m4saq1_number))/nrow(teacher_pedagogy_micro))
+# print(paste0(pct,"% of teachers assessed for pedagogy are successfully matched"))
+
+
+
+
+
+# now teacher content
+teacher_combined_df <- teacher_combined_df %>%
+  left_join(teacher_assessment_micro %>% mutate(TEACHERS__id=m5sb_tnum, ), na_matches='never') %>%
+  group_by(school_code,TEACHERS__id) %>%
+  slice(1) 
+
+
+sum(!is.na(teacher_combined_df$m5sb_tnum))
+pct <- round(100*sum(!is.na(teacher_combined_df$m5sb_tnum))/nrow(teacher_assessment_micro))
+print(paste0(pct,"% of teachers assessed for content knowledge are successfully matched"))
+
+
+
+```
+
+```{r}
+matches <- teacher_combined_df %>%
+  select(school_code, TEACHERS__id, m2saq2, m5sb_tnum, m5sb_troster, m3sb_tnumber, m3sb_troster)
+
+
+
+```
+
+```{r}
+
+teacher_combined_df %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.dta"))
+
+
+matches %>%
+  janitor::clean_names() %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_modules_key.dta"))
+
+#save input files
+school_micro %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.dta"))
+
+teacher_absence_micro %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
+
+teacher_assessment_micro %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_assessment.dta"))
+
+teacher_questionnaire_micro %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))
+
+teacher_roster_micro %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_roster.dta"))
+
+assess_4th_grade_anon %>%
+  select(-ends_with('nogiraffe')) %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_fourth_grade_assessment.dta"))
+
+ecd_dta_anon %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_first_grade_assessment.dta"))
+```
+
+

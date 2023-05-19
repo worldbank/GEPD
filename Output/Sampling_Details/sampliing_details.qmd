@@ -1,0 +1,352 @@
+---
+title: "Sampling Info"
+author: "Brian Stacy"
+format: docx
+execute:
+  echo: false
+  warning: false
+---
+
+```{r}
+#| label: setup
+
+library(tidyverse)
+library(flextable)
+library(here)
+library(readxl)
+library(haven) 
+
+#set directory path
+dir <- here()
+
+project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+
+#create an empty dataframe with sampling details
+sampling_df <- data.frame(
+  country = character(),
+  year = numeric(),
+  strata = character(),
+  number_schools = numeric(),
+  number_sampled = numeric(),
+  sampling_notes=character(),
+  stringsAsFactors = FALSE
+)
+
+```
+
+
+# Introduction
+
+This document provides information on the samples taken for the Global Education Policy Dashboard school survey.  It provides details on the sampling methodology across countries.
+
+
+Here are the stratification details across countries
+
+
+
+
+```{r}
+#| label: peru_sample
+
+country <-'PER'
+country_name <- "Peru"
+year <- '2019'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+
+currentDate<-c("2019-07-22")
+sample_frame_name <- paste(sampling_folder,"/school_sample_",currentDate,".RData", sep="")
+load(sample_frame_name)
+
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="Urban/Rural, Department", 
+  number_schools=nrow(data_set_updated), 
+  number_sampled=nrow(sample_updated %>% filter(sample_dashboard==1)),
+  sampling_notes = 'Schools with less than 3 1st grade, 3 4th grade students, and 3 total teachers excluded.'
+                                             ))
+```
+
+```{r}
+#| label: jordan_sample
+
+country <-'JOR'
+country_name <- "Jordan"
+year <- '2019'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+
+currentDate<-c("2019-10-11")
+sample_frame_name <- paste(sampling_folder,"/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="Governorate, urban/rural, public/private, Evening Schools", 
+  number_schools=nrow(data_set_updated), 
+  number_sampled=nrow(data_set_updated %>% filter(sample=="Sampled School")),
+  sampling_notes = 'Schools with less than 3 1st grade, 3 4th grade students, and 3 total teachers excluded.  No schools supervised by the Ministry of Defense, Ministry of Endowments, Ministry of Higher Education , or Ministry of Social Development are included.'
+                                             ))
+```
+
+```{r}
+#| label: rwanda_sample
+
+country <-'RWA'
+country_name <- "Rwanda"
+year <- '2020'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+
+currentDate<-c("2019-08-30")
+sample_frame_name <- paste(sampling_folder,"/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="District, urban/rural", 
+  number_schools=nrow(data_set_updated), 
+  number_sampled=nrow(data_set_updated %>% filter(sample_desc=="Selected")),
+  sampling_notes = 'Schools with less than 3 1st grade, 3 4th grade students, and 3 total teachers excluded.'
+                                             ))
+```
+
+
+```{r}
+#| label: ethiopia_sample
+
+country <-'ETH'
+country_name <- "Ethiopia"
+year <- '2020/2021'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+
+currentDate<-c("2020-02-14")
+sample_folder <- file.path(paste(project_folder,"CNT",country,paste(country,'2021',"GEPD", sep="_"),paste(country,'2021',"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
+weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
+  select(-sample) #variable name causes conflict
+load(sample_frame_name)
+
+
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="Region, urban/rural", 
+  number_schools=nrow(data_set_updated), 
+  number_sampled=nrow(data_set_updated %>% filter(sample=="Sampled School")),
+  sampling_notes = 'Schools with less than 3 1st grade, 3 4th grade students, and 3 total teachers excluded.  Some regions were inaccessible due to active conflict.  Cluster sampling was used with stratification.  100 Woredas were randomly selected as clusters from across the regions.  In each Woreda, typically 1 urban and 2 rural schools were selected.'
+                                             ))
+```
+
+```{r}
+#| label: mdf_sample
+
+country <-'MDG'
+country_name <- "Madagascar"
+year <- '2021'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+
+
+sampling_frame <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'))
+sampling_frame_replacements <- read_excel(path=paste0(sampling_folder,'/Echantillons SDI V12.xlsx'), sheet = 'Écoles réserve')
+
+sampling_frame <- sampling_frame %>%
+  bind_rows(sampling_frame_replacements) %>%
+  distinct(`CODE ETAB`, `NOM ETAB`, `CODE REGION`, `CODE COMMUNE 6`,.keep_all=TRUE)
+
+sampling_strata_info <- read_csv(paste0(sampling_folder,'/school_strata_sampling.csv'))
+
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="Region, urban/rural", 
+  number_schools=nrow(sampling_frame), 
+  number_sampled=nrow(sampling_frame %>% filter(`Choisie (Dashboard)`==1)),
+  sampling_notes = 'Schools with less than 3 1st grade, 3 4th grade students, and 3 total teachers excluded.  200 schools sampled randomly from a set of 800 schools visited for the SDI.'
+                                             ))
+```
+
+```{r}
+#| label: sle_sample
+
+country <-'SLE'
+country_name <- "Sierra Leone"
+year <- '2022'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+
+
+
+#function to attach weights
+
+df_weights_function <- function(dataset,scode, snumber, prov) {
+  scode<-enquo(scode)  
+  snumber<-enquo(snumber)
+  prov<-enquo(prov)
+  
+  dataset %>%
+    left_join(data_set_updated)  %>%
+    mutate(province=idregion           ) 
+}
+
+df_add_weights<- function(dataset) {
+  temp<-get(dataset) 
+    
+    #add hashed school code if needed
+    if ("school_code" %in% colnames(temp)) {
+      temp <- temp %>%
+        select(-starts_with('school_province_preload')) %>%
+        select(-starts_with('school_district_preload')) %>%
+        left_join(key) %>%
+        select(hashed_school_code, hashed_school_province, hashed_school_district, everything())
+    }
+    
+    
+    #add on weights
+    if ("school_code" %in% colnames(temp)) {
+      temp <- df_weights_function(temp, school_code, class4_combined, idregion)
+    }
+}
+
+
+sample_date<-c("2022-10-07")
+data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', sample_date,  '.csv', sep="")
+) %>%
+  mutate(ipw=case_when(
+    is.na(ipw) ~ median(ipw, na.rm=TRUE),
+    is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
+    TRUE ~ ipw)
+    ) %>%
+  ungroup() %>%
+  mutate(school_code=idemis_code,
+         urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural"),
+         private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")) %>%
+  select(school_code, sch_owner, idregion, iddistrict,accessibility,school_districthq_distance, urban_rural,sch_owner,private,
+         ipw) 
+
+key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
+
+###########################
+#read in school level file
+###########################
+school_dta<-read_dta(file.path(download_folder, "EPDash.dta")) %>%
+  select(-starts_with("ENUM"))
+
+#vtable(school_dta)
+#rename a few key variables up front
+school_dta<- school_dta %>%
+  mutate(enumerator_name_other= m1s0q1_name_other  ,
+         enumerator_number=m1s0q1_name ,
+         survey_time=m1s0q8,
+         lat=m1s0q9__Latitude,
+         lon=m1s0q9__Longitude,
+         m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
+         total_enrolled=m1saq7) %>%
+  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
+  left_join((read_csv(file.path(download_folder, "emis_fixes.csv")) %>% select(interview__key, interview__id, school_code))) %>%
+  mutate(school_code=as.numeric(school_code)) %>%
+  filter(!is.na(school_code))
+
+
+
+school_micro_raw <- school_dta %>%
+  group_by(school_code) %>%
+  fill(everything(), .direction='downup') %>%
+  slice(1) %>% 
+  ungroup()
+
+
+var.list <- sapply(school_dta, function(x) attr(x,"label"))
+var.labels= unlist(var.list)
+
+#add weights and anonymize
+school_micro <- df_add_weights('school_micro_raw')  %>%
+  filter(!is.na(ipw))
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="Region, urban/rural", 
+  number_schools=nrow(data_set_updated), 
+  number_sampled=nrow(school_micro),
+  sampling_notes = 'Schools with less than 3 1st grade, 3 4th grade students, and 3 total teachers excluded.  240 schools chosen from 2019 EGRA/EGMA.'
+                                             ))
+```
+
+```{r}
+#| label: niger_sample
+
+country <-'NER'
+country_name <- "Niger"
+year <- '2022'
+sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
+
+sample_date<-c("2022-10-24")
+data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', sample_date,  '.csv', sep="")
+)
+
+school_sample <- read_csv(paste(sampling_folder, '/sample_schools_2022-04-25.csv', sep=""))
+
+
+sampling_df <- rbind(sampling_df, data.frame(
+  country=country_name, 
+  year=year, 
+  strata="District, urban/rural, LIRE schools", 
+  number_schools=nrow(data_set_updated), 
+  number_sampled=nrow(school_sample %>% filter(is.na(replacemnts))),
+  sampling_notes = 'Schools with less than 15 total students excluded.  70 additional LIRE schools randomly selected on top of 200 normally selected.'
+                                             ))
+```
+
+
+```{r}
+#| label: sampling_tab
+#| tbl-cap: Sampling Info Across Countries.
+
+flextable(
+  sampling_df
+) %>%
+  set_header_labels(
+  country="Country", 
+  year="Year", 
+  strata="Stratification", 
+  number_schools="Number of Schools in Sampling Frame", 
+  number_sampled='Number of Schools Visited',
+  sampling_notes = 'Sampling Details'
+  ) %>%
+  theme_zebra() %>%
+  autofit() 
+
+```
+
+Now look at percent of schools visited
+
+```{r}
+#| label: analysis
+#| tbl-cap: Percent of Schools Visited in GEPD School Survey by Country
+
+ sampling_df %>%
+  mutate(pct = 100*round(number_sampled/number_schools,3)) %>%
+  select(country, year, number_schools, number_sampled, pct) %>%
+  flextable() %>%
+  set_header_labels(
+  country="Country", 
+  year="Year", 
+  number_schools="Number of Schools in Sampling Frame", 
+  number_sampled='Number of Schools Visited',
+  pct = 'Percent of Schools Visited'
+  ) %>%
+  theme_zebra() %>%
+  autofit() 
+
+```
+
+

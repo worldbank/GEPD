@@ -2156,10 +2156,26 @@ MDG_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,yea
   mutate(iso3c=country) %>%
   select(-district)
 ########
+# Sierra Leone
+#######
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+SLE_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country)
+########
+# Niger
+#######
+#read in anonymized school data
+country <- "NER"
+year <- "2022"
+NER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/assess_4th_grade_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country)
+########
 #combined
 ########
-combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df) %>%
-  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")),
+combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df, SLE_g4_df, NER_g4_df) %>%
+  mutate(country_code=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER", "SLE", "NER")),
          `Student Proficient`=if_else(student_proficient==100,"Yes", "No"),
          `Student Proficient Math`=if_else(math_student_proficient==100,"Yes", "No"),
          `Student Proficient Literacy`=if_else(literacy_student_proficient==100,"Yes", "No"))
