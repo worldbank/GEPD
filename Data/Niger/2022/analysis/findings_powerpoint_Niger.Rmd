@@ -202,7 +202,7 @@ wrapper <- function(x, ...)
 countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE", "NER")
 
 dir <- here()
-indicators_dir <- paste(dir, 'Github/GEPD/Indicators', sep="/")
+indicators_dir <- paste(dir, 'Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
 #read in indicator metadata
