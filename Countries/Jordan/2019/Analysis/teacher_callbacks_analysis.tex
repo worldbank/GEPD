@@ -1,0 +1,378 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode=true}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Analysis of Callbacks to Absent Teachers - Jordan 2019},
+  pdfauthor={Brian Stacy},
+  hidelinks,
+}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\title{Analysis of Callbacks to Absent Teachers - Jordan 2019}
+\author{Brian Stacy}
+\date{2/26/2020}
+
+\begin{document}
+\maketitle
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+In Jordan, a number of teachers that we selected to interview were
+absent, and as a result, we could not collect their information in the
+school. In these cases, replacement teachers were selected and these
+replacement teachers were interviewed. If a teacher was absent, we asked
+the enumerators to record their phone numbers, so that we could contact
+them with a follow up. The survey firm then contacted randomly 35
+teachers and asked them a set of questions.
+
+In what follows, we will explore whether teachers that were absent
+systematically differ from teachers that were present to answer the
+survey by comparing their answers to the same set of questions.
+
+\hypertarget{questions-asked-in-follow-up}{%
+\section{Questions Asked in Follow
+Up}\label{questions-asked-in-follow-up}}
+
+\begin{itemize}
+\tightlist
+\item
+  Below are the questions asked to teachers by phone as part of the
+  follow up.
+\end{itemize}
+
+\begin{table}
+
+\caption{\label{tab:questions}Questions Asked to Teachers in Follow Up Survey}
+\centering
+\begin{tabular}[t]{l|l}
+\hline
+Question ID & Question Text\\
+\hline
+interview\_\_id & Unique 32-character long identifier of the interview\\
+\hline
+interview\_\_key & Interview key (identifier in XX-XX-XX-XX format)\\
+\hline
+sssys\_irnd & Random number in the range 0..1 associated with interview\\
+\hline
+has\_\_errors & Errors count in the interview\\
+\hline
+interview\_\_status & Status of the interview\\
+\hline
+emiscode & School Code\\
+\hline
+phonenumber & Phone Number\\
+\hline
+nameteacher & Teacher Name\\
+\hline
+m3saq1 & What is your position in the school?  (most senior position)\\
+\hline
+m3saq2\_\_99 & Which grades do you teach this academic year?:Pre-School\\
+\hline
+m3saq2\_\_1 & Which grades do you teach this academic year?:Grade 1\\
+\hline
+m3saq2\_\_2 & Which grades do you teach this academic year?:Grade 2\\
+\hline
+m3saq2\_\_3 & Which grades do you teach this academic year?:Grade 3\\
+\hline
+m3saq2\_\_4 & Which grades do you teach this academic year?:Grade 4\\
+\hline
+m3saq2\_\_5 & Which grades do you teach this academic year?:Grade 5\\
+\hline
+m3saq2\_\_6 & Which grades do you teach this academic year?:Grade 6\\
+\hline
+m3saq2\_\_7 & Which grades do you teach this academic year?:Grade 7\\
+\hline
+m3saq2\_\_98 & Which grades do you teach this academic year?:Special needs\\
+\hline
+m3saq3\_\_1 & Which subjects did you teach this academic year?:Language\\
+\hline
+m3saq3\_\_2 & Which subjects did you teach this academic year?:Mathematics\\
+\hline
+m3saq3\_\_3 & Which subjects did you teach this academic year?:Both/All Subjects\\
+\hline
+m3saq3\_\_97 & Which subjects did you teach this academic year?:Other (Specify)\\
+\hline
+m3saq3\_other & Other (Specify)\\
+\hline
+m3saq4 & What is the highest level of education that you have completed?\\
+\hline
+m3saq4\_other & Other (Specify)\\
+\hline
+m3saq5 & What year did you begin teaching?\\
+\hline
+m3saq6 & What is your age?\\
+\hline
+m3sbq1\_tatt\_\_1 & Over the past year, did you have to miss at least one day of class because of an:Collect paycheck?\\
+\hline
+m3sbq1\_tatt\_\_2 & Over the past year, did you have to miss at least one day of class because of an:School administrative procedure?\\
+\hline
+m3sbq1\_tatt\_\_3 & Over the past year, did you have to miss at least one day of class because of an:Errands or request of the school district office?\\
+\hline
+m3sbq1\_tatt\_\_97 & Over the past year, did you have to miss at least one day of class because of an:Other administrative task? Please specify\\
+\hline
+m3sbq1\_other\_tatt & Specify Other\\
+\hline
+m3sbq2\_tmna\_\_1 & What happens if a teacher is absent over 30\% of the time without proper justific:Teacher can be dismissed\\
+\hline
+m3sbq2\_tmna\_\_2 & What happens if a teacher is absent over 30\% of the time without proper justific:Salary can be reduced\\
+\hline
+m3sbq2\_tmna\_\_3 & What happens if a teacher is absent over 30\% of the time without proper justific:Teacher can be assigned additional monitoring\\
+\hline
+m3sbq2\_tmna\_\_4 & What happens if a teacher is absent over 30\% of the time without proper justific:Teacher promotion can be delayed\\
+\hline
+m3sbq2\_tmna\_\_5 & What happens if a teacher is absent over 30\% of the time without proper justific:Teacher would be temporarily suspended\\
+\hline
+m3sbq2\_tmna\_\_6 & What happens if a teacher is absent over 30\% of the time without proper justific:Written or oral call for attention\\
+\hline
+m3sbq2\_tmna\_\_7 & What happens if a teacher is absent over 30\% of the time without proper justific:No consequence\\
+\hline
+m3sbq2\_tmna\_\_97 & What happens if a teacher is absent over 30\% of the time without proper justific:Other (specify)\\
+\hline
+m3sbq2\_tmna\_\_98 & What happens if a teacher is absent over 30\% of the time without proper justific:Don’t know\\
+\hline
+m3scq1\_tinm & It is acceptable for a teacher to be absent if the assigned curriculum has been\\
+\hline
+m3scq2\_tinm & It is acceptable for a teacher to be absent if students are left with work to do\\
+\hline
+m3scq3\_tinm & It is acceptable for a teacher to be absent if the teacher is doing something us\\
+\hline
+m3scq4\_tinm & Students deserve more attention if they attend school regularly.\\
+\hline
+m3scq5\_tinm & Students deserve more attention if they come to school with materials\\
+\hline
+m3scq6\_tinm & Students deserve more attention if they are motivated to learn\\
+\hline
+m3scq7\_tinm & Students have a certain amount of intelligence and cannot do much to change it\\
+\hline
+m3scq10\_tinm & To be honest, students can’t really change how intelligent they are\\
+\hline
+m3scq11\_tinm & 11. Students can always substantially change how intelligent they are.\\
+\hline
+m3scq14\_tinm & Students can change even their basic intelligence level considerably\\
+\hline
+m3scq15\_tinm\_\_1 & What is your main motivation to come to school? Ranking:I have always wanted to be a teacher\\
+\hline
+m3scq15\_tinm\_\_2 & What is your main motivation to come to school? Ranking:I like teaching\\
+\hline
+m3scq15\_tinm\_\_3 & What is your main motivation to come to school? Ranking:Teaching will offer a steady career path\\
+\hline
+m3scq15\_tinm\_\_4 & What is your main motivation to come to school? Ranking:Teaching will allow me to shape child and adolescent values\\
+\hline
+m3scq15\_tinm\_\_5 & What is your main motivation to come to school? Ranking:Teaching will allow me to benefit the socially disadvantaged\\
+\hline
+m3seq1\_tatt & How satisfied or dissatisfied are you with your job as a teacher?\\
+\hline
+m3seq2\_tatt & How satisfied or dissatisfied are you with your social status in the community?\\
+\hline
+m3seq3\_tatt & If two people became public teachers five years ago and one was much better at t\\
+\hline
+m3seq6\_tatt & Was your  salary delayed in the last academic year?\\
+\hline
+m3seq7\_tatt & How many months was your  salary delayed in the last academic year (200XX- 200XX\\
+\hline
+comments & Comments:\\
+\hline
+\end{tabular}
+\end{table}
+
+\hypertarget{comparison-of-means-for-teachers-sampled-and-follow-up-teachers}{%
+\section{Comparison of Means for Teachers Sampled and Follow up
+Teachers}\label{comparison-of-means-for-teachers-sampled-and-follow-up-teachers}}
+
+\begin{table}
+
+\caption{\label{tab:sumstats_table}Summary Statistics of Questions by Teacher Type (Sampled/Follow up)}
+\centering
+\begin{tabular}[t]{l|r|l|r|r|l|r|r|l|r}
+\hline
+\multicolumn{1}{c|}{ } & \multicolumn{3}{c|}{Sampled Teachers} & \multicolumn{3}{c|}{Sampled Teachers in Follow Up Schools} & \multicolumn{3}{c}{Follow Up Teachers} \\
+\cline{2-4} \cline{5-7} \cline{8-10}
+Indicator & Mean & 95% Confident Interval & Count & Mean & 95% Confident Interval & Count & Mean & 95% Confident Interval & Count\\
+\hline
+What is your position in the school?  (most senior position) & 3.00 & [3, 3] & 1091 & 3.00 & [3, 3] & 98 & 2.95 & [2.89, 3.02] & 35\\
+\hline
+Which grades do you teach this academic year?:Pre-School & 0.00 & [0, 0] & 1090 & 0.00 & [0, 0] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 1 & 0.06 & [0.05, 0.08] & 1090 & 0.06 & [0.01, 0.11] & 97 & 0.02 & [-0.03, 0.08] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 2 & 0.11 & [0.09, 0.13] & 1090 & 0.19 & [0.11, 0.27] & 97 & 0.20 & [0.06, 0.33] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 3 & 0.21 & [0.19, 0.24] & 1090 & 0.33 & [0.23, 0.42] & 97 & 0.28 & [0.13, 0.42] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 4 & 0.53 & [0.5, 0.56] & 1090 & 0.37 & [0.27, 0.46] & 97 & 0.42 & [0.26, 0.59] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 5 & 0.38 & [0.35, 0.41] & 1090 & 0.39 & [0.3, 0.49] & 97 & 0.38 & [0.22, 0.54] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 6 & 0.22 & [0.19, 0.24] & 1090 & 0.18 & [0.11, 0.26] & 97 & 0.27 & [0.12, 0.41] & 35\\
+\hline
+Which grades do you teach this academic year?:Grade 7 & 0.15 & [0.13, 0.17] & 1090 & 0.16 & [0.09, 0.23] & 97 & 0.12 & [0.01, 0.22] & 35\\
+\hline
+Which grades do you teach this academic year?:Special needs & 0.00 & [0, 0.01] & 1090 & 0.00 & [0, 0] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+Which subjects did you teach this academic year?:Language & 0.41 & [0.38, 0.43] & 1090 & 0.42 & [0.32, 0.52] & 97 & 0.37 & [0.21, 0.53] & 35\\
+\hline
+Which subjects did you teach this academic year?:Mathematics & 0.28 & [0.26, 0.31] & 1090 & 0.18 & [0.1, 0.25] & 97 & 0.19 & [0.06, 0.33] & 35\\
+\hline
+Which subjects did you teach this academic year?:Both/All Subjects & 0.28 & [0.26, 0.31] & 1090 & 0.42 & [0.32, 0.52] & 97 & 0.44 & [0.28, 0.61] & 35\\
+\hline
+Which subjects did you teach this academic year?:Other (Specify) & 0.05 & [0.04, 0.06] & 1090 & 0.00 & [-0.01, 0.02] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+What is the highest level of education that you have completed? & 13.82 & [12.31, 15.33] & 1090 & 18.30 & [12.12, 24.49] & 97 & 11.03 & [4.24, 17.82] & 35\\
+\hline
+What year did you begin teaching? & 2010.77 & [2010.36, 2011.17] & 1090 & 2010.45 & [2009.27, 2011.64] & 97 & 2012.95 & [2011.28, 2014.62] & 35\\
+\hline
+What is your age? & 34.37 & [33.91, 34.84] & 1090 & 34.88 & [33.7, 36.07] & 97 & 33.87 & [31.33, 36.41] & 35\\
+\hline
+Over the past year, did you have to miss at least one day of class because of an:Collect paycheck? & 0.02 & [0.01, 0.03] & 1086 & 0.09 & [0.03, 0.15] & 97 & 0.00 & [0, 0] & 34\\
+\hline
+Over the past year, did you have to miss at least one day of class because of an:School administrative procedure? & 0.02 & [0.01, 0.03] & 1078 & 0.04 & [0, 0.08] & 97 & 0.00 & [0, 0] & 34\\
+\hline
+Over the past year, did you have to miss at least one day of class because of an:Errands or request of the school district office? & 0.02 & [0.01, 0.03] & 1061 & 0.07 & [0.02, 0.13] & 92 & 0.00 & [0, 0] & 34\\
+\hline
+Over the past year, did you have to miss at least one day of class because of an:Other administrative task? Please specify & 0.01 & [0, 0.01] & 1077 & 0.00 & [-0.01, 0.01] & 96 & 0.39 & [0.23, 0.55] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Teacher can be dismissed & 0.28 & [0.25, 0.3] & 1089 & 0.20 & [0.12, 0.28] & 97 & 0.25 & [0.11, 0.39] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Salary can be reduced & 0.34 & [0.31, 0.36] & 1089 & 0.36 & [0.26, 0.45] & 97 & 0.03 & [-0.03, 0.09] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Teacher can be assigned additional monitoring & 0.20 & [0.18, 0.23] & 1089 & 0.21 & [0.13, 0.29] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Teacher promotion can be delayed & 0.13 & [0.11, 0.15] & 1089 & 0.19 & [0.11, 0.27] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Teacher would be temporarily suspended & 0.08 & [0.06, 0.09] & 1089 & 0.12 & [0.06, 0.19] & 97 & 0.15 & [0.03, 0.27] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Written or oral call for attention & 0.54 & [0.51, 0.57] & 1089 & 0.51 & [0.41, 0.61] & 97 & 0.25 & [0.11, 0.4] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:No consequence & 0.02 & [0.01, 0.03] & 1089 & 0.09 & [0.03, 0.15] & 97 & 0.05 & [-0.02, 0.11] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Other (specify) & 0.00 & [0, 0] & 1089 & 0.00 & [0, 0] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+What happens if a teacher is absent over 30% of the time without proper justific:Don’t know & 0.06 & [0.05, 0.07] & 1089 & 0.07 & [0.02, 0.12] & 97 & 0.26 & [0.12, 0.41] & 35\\
+\hline
+It is acceptable for a teacher to be absent if the assigned curriculum has been & 1.53 & [1.49, 1.57] & 1088 & 1.42 & [1.31, 1.54] & 96 & 1.25 & [1.11, 1.39] & 35\\
+\hline
+It is acceptable for a teacher to be absent if students are left with work to do & 1.66 & [1.62, 1.69] & 1085 & 1.60 & [1.47, 1.72] & 96 & 2.22 & [1.9, 2.54] & 35\\
+\hline
+It is acceptable for a teacher to be absent if the teacher is doing something us & 2.09 & [2.04, 2.14] & 1086 & 2.28 & [2.09, 2.47] & 96 & 2.35 & [2.03, 2.68] & 34\\
+\hline
+Students deserve more attention if they attend school regularly. & 2.65 & [2.6, 2.7] & 1085 & 3.09 & [2.91, 3.26] & 94 & 2.99 & [2.82, 3.17] & 35\\
+\hline
+Students deserve more attention if they come to school with materials & 2.70 & [2.65, 2.75] & 1087 & 3.03 & [2.86, 3.2] & 95 & 3.07 & [2.91, 3.22] & 35\\
+\hline
+Students deserve more attention if they are motivated to learn & 2.86 & [2.81, 2.92] & 1088 & 3.14 & [2.96, 3.31] & 96 & 3.66 & [3.5, 3.82] & 35\\
+\hline
+Students have a certain amount of intelligence and cannot do much to change it & 2.49 & [2.44, 2.53] & 1080 & 2.79 & [2.63, 2.96] & 94 & 2.33 & [2.12, 2.55] & 32\\
+\hline
+To be honest, students can’t really change how intelligent they are & 2.36 & [2.32, 2.4] & 1089 & 2.26 & [2.09, 2.44] & 97 & 2.06 & [1.82, 2.3] & 35\\
+\hline
+11. Students can always substantially change how intelligent they are. & 2.82 & [2.78, 2.85] & 1087 & 3.02 & [2.87, 3.17] & 95 & 2.86 & [2.61, 3.12] & 35\\
+\hline
+Students can change even their basic intelligence level considerably & 2.69 & [2.65, 2.73] & 1084 & 2.83 & [2.67, 2.99] & 94 & 2.10 & [1.92, 2.29] & 35\\
+\hline
+What is your main motivation to come to school? Ranking:I have always wanted to be a teacher & 0.41 & [0.37, 0.45] & 1089 & 0.61 & [0.48, 0.74] & 97 & 0.16 & [0.03, 0.29] & 35\\
+\hline
+What is your main motivation to come to school? Ranking:I like teaching & 0.71 & [0.67, 0.75] & 1089 & 0.61 & [0.47, 0.76] & 97 & 0.57 & [0.38, 0.77] & 35\\
+\hline
+What is your main motivation to come to school? Ranking:Teaching will offer a steady career path & 0.52 & [0.48, 0.56] & 1089 & 0.32 & [0.19, 0.44] & 97 & 0.33 & [0.17, 0.48] & 35\\
+\hline
+What is your main motivation to come to school? Ranking:Teaching will allow me to shape child and adolescent values & 0.35 & [0.31, 0.39] & 1089 & 0.19 & [0.08, 0.3] & 97 & 0.05 & [-0.02, 0.12] & 35\\
+\hline
+What is your main motivation to come to school? Ranking:Teaching will allow me to benefit the socially disadvantaged & 0.20 & [0.16, 0.23] & 1089 & 0.23 & [0.11, 0.35] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+How satisfied or dissatisfied are you with your job as a teacher? & 1.77 & [1.72, 1.83] & 1087 & 1.60 & [1.45, 1.75] & 97 & 1.57 & [1.41, 1.74] & 35\\
+\hline
+How satisfied or dissatisfied are you with your social status in the community? & 1.82 & [1.77, 1.87] & 1087 & 1.99 & [1.78, 2.21] & 97 & 2.01 & [1.76, 2.25] & 35\\
+\hline
+If two people became public teachers five years ago and one was much better at t & 0.51 & [0.47, 0.54] & 913 & 0.78 & [0.69, 0.88] & 68 & 0.51 & [0.31, 0.71] & 25\\
+\hline
+Was your  salary delayed in the last academic year? & 0.09 & [0.08, 0.11] & 1087 & 0.04 & [0, 0.07] & 97 & 0.00 & [0, 0] & 35\\
+\hline
+NA & 542.94 & [518.86, 567.02] & 1091 & 395.21 & [362.82, 427.6] & 98 & 395.28 & [346.7, 443.85] & 35\\
+\hline
+\end{tabular}
+\end{table}
+
+\includegraphics{teacher_callbacks_analysis_files/figure-latex/dumbbell-1.pdf}
+\includegraphics{teacher_callbacks_analysis_files/figure-latex/dumbbell-2.pdf}
+\includegraphics{teacher_callbacks_analysis_files/figure-latex/dumbbell-3.pdf}
+\includegraphics{teacher_callbacks_analysis_files/figure-latex/dumbbell-4.pdf}
+
+\end{document}

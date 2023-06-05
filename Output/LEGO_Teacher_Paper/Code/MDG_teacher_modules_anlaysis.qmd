@@ -55,8 +55,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
   sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
   confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
-  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/output_data"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
@@ -64,8 +64,8 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School", sep="/"))
   sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
   confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/input_data"))
-  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/output_data"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -91,7 +91,7 @@ df_weights_function <- function(dataset) {
     mutate(ipw=if_else(is.na(ipw),median(ipw, na.rm=T), ipw)) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "province" | names(data_set_updated) == "district" |
                                                       names(data_set_updated) == "rural" | names(data_set_updated) == "public" | names(data_set_updated) == "students_enrolled"
-                                                      | names(data_set_updated) == "ipw" | names(data_set_updated) == "ipw_school" )])))
+                                                      | names(data_set_updated) == "ipw" | names(data_set_updated) == "ipw_school" | names(data_set_updated) == "s_ecole_code" )])))
 }
 
 
@@ -433,6 +433,7 @@ matches <- teacher_combined_df %>%
 
 teacher_combined_df %>%
   janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.dta"))
 
 
@@ -443,23 +444,39 @@ matches %>%
 #save input files
 school_micro %>%
   janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_school_modules.dta"))
 
 teacher_absence_micro %>%
   janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_absence.dta"))
 
 teacher_assessment_micro %>%
   janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_assessment.dta"))
 
 teacher_questionnaire_micro %>%
   janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))
 
 teacher_roster_micro %>%
   janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_roster.dta"))
+
+assess_4th_grade_anon %>%
+  select(-ends_with('nogiraffe')) %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_fourth_grade_assessment.dta"))
+
+ecd_dta_anon %>%
+  janitor::clean_names() %>%
+  mutate(school_code=s_ecole_code) %>%
+  write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_first_grade_assessment.dta"))
 ```
 
 

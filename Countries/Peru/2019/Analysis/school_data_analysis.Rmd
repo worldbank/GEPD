@@ -1,0 +1,942 @@
+
+<style type="text/css">
+.main-container {
+  max-width: 1500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+---
+title: "Data Analysis - School Survey"
+author: "Brian Stacy"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load relevant libraries
+library(haven)
+library(plotly)
+library(naniar)
+library(crosstalk)
+library(leaflet)
+library(Hmisc)
+library(DT)
+library(mice)
+library(stargazer)
+library(skimr)
+library(knitr)
+library(kableExtra)
+
+library(sandwich)
+library(estimatr)
+library(lmtest)
+library(rpart)
+library(rpart.plot)
+library(ipred)
+library(caret)
+library(glmnet)
+library(raster)
+library(rgdal)
+library(stats)
+library(psych)
+library(purrr)
+library(broom)
+library(tidyverse)
+
+#Load the data
+#read in school level file
+
+
+load(paste(open_folder, "school_survey_data.RData", sep="/"))
+
+load(paste(open_folder, "school_indicators_data.RData", sep="/"))
+
+load(paste(open_folder, "dashboard_4th_grade_assessment_data.RData", sep="/"))
+
+
+```
+
+## Introduction
+
+
+
+To start, the following figures and tables will highlight missing values for a few of our key indicators. 
+
+
+```{r preamble, echo=FALSE, error=FALSE, message=FALSE}
+
+load(paste(open_folder, "school_survey_data.RData", sep="/"))
+
+#Load original sample of schools
+currentDate<-c("2019-07-22")
+sample_frame_name <- paste("C:/Users/WB469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/sampling/school_sample_",currentDate,".RData", sep="")
+
+load(sample_frame_name)
+
+#list additional info that will be useful to keep in each indicator dataframe
+preamble_info <- c('interview__id', 'school_code',
+                   'school_name_preload', 'school_address_preload', 
+                   'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                   'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                   'survey_time', 'lat', 'lon', 
+                   'enumerator_name_other', 'enumerator_number')
+
+keep_info <-       c('school_code',
+                     'school_name_preload', 'school_address_preload', 
+                     'school_province_preload', 'school_district_preload', 'school_code_preload', 'school_emis_preload',
+                     'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
+                     'survey_time', 'lat', 'lon')
+
+
+orig_colnames<-colnames(school_dta_short)
+
+#compare data collected to original sample
+school_dta_short <- school_dta_short %>%
+  mutate(codigo.modular=as.numeric(school_code_preload)) %>%
+  left_join(data_set_updated) %>%
+  mutate(longitude=as.character(longitude)) %>%
+  mutate(latitude=as.character(latitude)) %>%
+  mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+         lon=if_else(is.na(lon), as.numeric(longitude), lon))
+  
+ school_dta_short %>%
+    group_by(rural) %>%
+    summarise(N=n()) 
+ 
+ 
+
+
+
+```
+
+Below the missings plot is a table of summary statistics for a few key indicators. This shows the min, 25th percentile, median, 75th percentile, max, mean, standard deviation, total number of schools, and number of schools with missing information for each variable.  The underlying data is aggregated to the school, and the means reported are raw means, not weighted means, which will be produced in the report.  These are meant to give a basic idea of the data.
+
+```{r missings2, include=FALSE}
+
+#table of summary stats
+#merge on teacher content knowledge
+
+indicator_list<-c("student_knowledge", 
+                  'student_attendance',
+                  "absence_rate", 
+                  "content_knowledge", 
+                  "ecd_student_knowledge", 
+                  "inputs", 
+                  "infrastructure", 
+                  "operational_management", 
+                  "instructional_leadership",
+                  'principal_management',
+                  'teacher_attraction',
+                  'teacher_selection_deployment',
+                  'teacher_support',
+                  'teaching_evaluation',
+                  'teacher_monitoring',
+                  'intrinsic_motivation',
+                  'school_monitoring',
+                  'school_management_attraction',
+                  'school_selection_deployment',
+                  'school_support',
+                  'principal_evaluation'
+                  )
+
+indicator_labels<-c("4th Grade Student Knowledge (Fraction Correct)", 
+                    "Student Attendance Rate",
+                    "Teacher Absence Rate", 
+                    "Teacher Content Knowledge", 
+                    "1st Grade Assessment (Fraction Correct)", 
+                    "Inputs", 
+                    "Infrastructure",
+                    "Operational Management",
+                    "Instructional Leadership",
+                    'Principal Management Skills',
+                    'Teacher Attraction (De Facto)',
+                    'Teacher Selection & Deployment (De Facto)',
+                    'Teacher Support (De Facto)',
+                    'Teacher Evaluation (De Facto)',
+                    'Teacher Monitoring & Accountability (De Facto)',
+                    "Teacher Intrinsic Motivation",
+                    "Inputs and Infrastructure Monitoring",
+                    "School Management Attraction",
+                    "School Management Selection & Deployment",
+                    "School Management Support",
+                    "School Management Evaluation"
+                    )
+
+sumstats<-school_dta_short %>%
+  dplyr::select(indicator_list) 
+
+
+sumstats_df<-skim(sumstats) %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  mutate(variable=factor(variable, levels=indicator_list,
+                         labels=indicator_labels)) %>%
+  mutate(ci_low=as.numeric(mean)-1.96*(as.numeric(sd)/sqrt(as.numeric(complete))),
+         ci_high=as.numeric(mean)+1.96*(as.numeric(sd)/sqrt(as.numeric(complete)))) %>%
+  mutate(ci=paste("[",round(ci_low,2),", ", round(ci_high,2),"]", sep="")) %>%
+  dplyr::select(variable, mean, ci, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  arrange(match(variable, indicator_labels))
+
+```
+
+
+```{r missings_kable, echo=FALSE}
+
+knitr::kable(sumstats_df, caption="Summary Statistics of Key Indicator Variables" , col.names = c("Indicator", "Mean", "95% Confidence Interval", "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram") ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) %>%
+  pack_rows("Outcomes", 1,1) %>%
+  pack_rows("Practices", 2,10) %>%
+  pack_rows("Policies", 11,21) %>%
+  footnote(general="The summary statistics in this table do not factor in the survey design. For instance, means are unweighted and Confidence Intervals do not factor in sampling weights.")
+
+```
+
+
+
+
+## Interactive Map
+In the following map below, users may click on specific provinces or regions to examine missing indicators.  The slider controls the schools that appear based on the number of missing indicators.  For instance, sliding the slider to 4 will keep only schools that are missing four or more indicators, indicating a relatively severe missing data problem.  In the future, I may also include checkboxes for specific survey supervisors, to examine if any particular supervisors have worse performance than others.  I could also add filters by day the survey took place.  
+
+The map is color coded.  Green indicators, for instance, have no missing information on our key indicators: 4th grade student achievement, teacher absence, teacher content knowledge, Capacity for Learning (ECD student knowledge), basic inputs, and basic infrastructure ).  Black indicators are missing all six indicators.  More indicators can be added to this list, but for now in the SDI data this is what we could produce before our data collection.
+
+```{r map_guts, include=FALSE}
+
+####################################################################
+#######Map of schools with missing school info#####
+####################################################################
+school_map <- school_dta_short %>%
+  filter(!is.na(lat) & !is.na(lon))
+
+#Create indicator of schools with missing values in our indicators
+
+school_map <- school_map %>%
+  mutate(missings=(is.na(student_knowledge) | is.na(absence_rate) | is.na(student_attendance) | is.na(content_knowledge) | 
+                     is.na(ecd_student_knowledge) | is.na(inputs) | is.na(infrastructure) |  is.na(operational_management)
+                   | is.na(intrinsic_motivation) | is.na(instructional_leadership) | is.na(principal_management) | is.na(teacher_attraction) | is.na(teacher_selection_deployment)
+                   | is.na(teacher_support) | is.na(teaching_evaluation) | is.na(teacher_monitoring)
+                   | is.na(school_monitoring) | is.na(school_management_attraction) | is.na(school_selection_deployment) 
+                   | is.na(school_support) | is.na(principal_evaluation))
+         
+         )%>%
+  mutate(total_missing=is.na(student_knowledge) + is.na(absence_rate) + is.na(student_attendance) + is.na(content_knowledge) + 
+           is.na(ecd_student_knowledge) + is.na(inputs) + is.na(infrastructure) + is.na(operational_management)
+         + is.na(intrinsic_motivation) + is.na(instructional_leadership) + is.na(principal_management) + is.na(teacher_attraction) + is.na(teacher_selection_deployment) + is.na(teacher_support) + is.na(teaching_evaluation) +
+         is.na(teacher_monitoring) + is.na(school_monitoring) + is.na(school_management_attraction) + is.na(school_selection_deployment) +
+         is.na(school_support) + is.na(principal_evaluation))
+
+
+#color coded markers for missing values
+getColor <- function(df_input) {
+  sapply(df_input$total_missing, function(total_missing) {
+    if (total_missing == 0) {
+      "#12E539" #green
+    } 
+    else if (total_missing == 1) {
+      "#1232E5" #blue
+    } 
+    else if (total_missing == 2) {
+      "#E5E512" #yellow
+    } 
+    else if (total_missing == 3) {
+      "#E59412" #orange
+    }     
+    else if (total_missing == 4) {
+      "#8A12E5" #purple
+    } 
+    else if (total_missing == 5) {
+      "#E51212" #red
+    }
+    else {
+      "#000000" #black
+    } 
+    })
+}
+
+#add legend for icons
+pal <- colorFactor(
+  levels = c( '0','1', '2', '3', '4', '5', '6+'),
+  palette = c('#12E539', '#1232E5', '#E5E512', '#E59412', '#8A12E5', '#E51212', '#000000'),
+  domain = school_map$total_missing
+)
+
+#create icons
+icons <- awesomeIcons(
+  icon = 'graduation-cap',
+  iconColor = getColor(school_map),
+  library = 'fa',
+  markerColor = 'black'
+)
+
+
+#Add in GDP Info
+######################
+# Read in Data
+######################
+
+#file directory
+download_dir <- "C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/Peru/2019/Data/Maps/GDP_PERU"
+
+
+#basic info on tiff file
+GDALinfo(paste(download_dir, "GDP.tif", sep="/"))
+
+#open the raster
+gdp_raster <- raster(paste(download_dir, "GDP.tif", sep="/"))
+
+#color palette
+values(gdp_raster)[values(gdp_raster)<=0]=NA
+
+#create a pallete with specified bins
+pal_raster <- colorBin("RdYlBu", domain = c(0,100000), bins=c(0,5,10,20,30,40,50,100,10000000), 
+                    na.color = "transparent")
+#####################
+# Do the plotting
+#####################
+
+
+map <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
+  addTiles()  %>%  
+  addRasterImage(gdp_raster, colors=pal_raster, opacity=0.8) %>%
+  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons,
+                    popup = paste("Name: ", school_map$school_name_preload, " <br>",
+                                  "Province: ", school_map$school_province_preload, " <br>",
+                                  "District: ", school_map$school_district_preload, " <br>",
+                                  "EMIS Code: ", school_map$school_emis_preload, " <br>",
+                                  "<font color='red' > Outcomes ", " <br> <font color='black' >",
+                                  "Avg 4th Grade Learning Score:", round(100*school_map$student_knowledge, digits=2), "% <br>",
+                                  "Avg 4th Grade Student Attendance:", round(100*school_map$student_attendance, digits=2), "% <br>",
+                                  "<font color='red' > Practice Indicators ", " <br> <font color='black' >",
+                                  "Teacher Absence Rate: ", round(100*school_map$absence_rate, digits=2), "% <br>",
+                                  "Teacher Content Knowledge Score: ", round(100*school_map$content_knowledge, digits=2),"% <br>",
+                                  "Basic Inputs: ", round(school_map$inputs, digits=2), " <br>",
+                                  "Basic Infrastructure: ", round(school_map$infrastructure, digits=2), " <br>",
+                                  "Capacity for Learning: ", round(100*school_map$ecd_student_knowledge, digits=2), "% <br>",
+                                  "Operational Management: ", round(school_map$operational_management, digits=2), " <br>",
+                                  "Instructional Leadership: ", round(school_map$instructional_leadership, digits=2), " <br>",
+                                  "Principal Management Skills: ", round(school_map$principal_management, digits=2), " <br>",
+                                  "<font color='blue' > Policy Indicators ", " <br> <font color='black' >",
+                                  "Teacher Attraction (De Facto): ", round(school_map$teacher_attraction, digits=2), " <br>",
+                                  "Teacher Selection & Deployment (De Facto): ", round(school_map$teacher_selection_deployment, digits=2), " <br>",
+                                  "Teacher Support (De Facto): ", round(school_map$teacher_support, digits=2), " <br>",
+                                  "Teacher Evaluation (De Facto): ", round(school_map$teaching_evaluation, digits=2), " <br>",
+                                  "Teacher Monitoring & Accoutability (De Facto): ", round(school_map$teaching_evaluation, digits=2), " <br>",
+
+                                  "Teacher Intrinsic Motivation: ", round(school_map$intrinsic_motivation, digits=2), "<br>",
+                                  "Inputs & Infrastructure Monitoring (De Facto): ", round(school_map$school_monitoring, digits=2), "<br>",
+                                  "School Management Attraction (De Facto): ", round(school_map$school_management_attraction, digits=2), "<br>",
+                                  "School Management Selection & Deployment: ", round(school_map$school_selection_deployment, digits=2), "<br>",
+                                  "School Management Support: ", round(school_map$school_support, digits=2), "<br>",
+                                  "School Management Evaluation: ", round(school_map$principal_evaluation, digits=2), "<br>"
+
+
+                                  ) )  %>%
+    addLegend("bottomright", pal=pal, values=~total_missing, title="Missing Indicators"    )
+
+}
+
+```
+
+
+```{r map_plot, echo=FALSE}
+
+
+linked_df<-SharedData$new(school_map)
+
+
+
+bscols(widths=c(3,NA),
+  list(
+  filter_slider("missings", "Missing Indicators", linked_df, ~total_missing),
+  filter_select("prov", "Province", linked_df, ~school_province_preload),
+  filter_select("reg", "District", linked_df, ~school_district_preload),
+  filter_slider("student_knowledge", "4th Grade Student Knowledge", linked_df, ~student_knowledge),
+  filter_slider("student_attendance", "4th Grade Student Attendance", linked_df, ~student_attendance),
+  filter_slider("absence_rate", "Teacher Absence Rate", linked_df, ~absence_rate),
+  filter_slider("content_knowledge", "Teacher Content Knowledge Score", linked_df, ~content_knowledge),
+  filter_slider("inputs", "Basic Inputs", linked_df, ~inputs),
+  filter_slider("infrastructure", "Basic Infrastructure", linked_df, ~infrastructure),
+  filter_slider("ecd_student_knowledge", "Capacity for Learning", linked_df, ~ecd_student_knowledge),
+  filter_slider("operational_management", "Operational Management", linked_df, ~operational_management),
+  filter_slider("instructional_leadership", "Instructional Leadership", linked_df, ~instructional_leadership),
+  filter_slider("principal_management", "Principal Management Skills", linked_df, ~principal_management)
+
+  ),
+  map(linked_df) 
+
+               
+)
+```
+
+
+# Student Assessment Proficiency
+
+```{r student_proficiency}
+
+#get set of items that UIS experts judge as being appropriate for 4th grade
+g4_items <- c('m8sbq3c_arithmetic', 'm8sbq3f_arithmetic', 'm8sbq3i_arithmetic', 'm8sbq3g_arithmetic', 'm8sbq5_word_problem', 'm8sbq6_sequences' )
+
+#score these six items
+assess_4th_grade_anon <- assess_4th_grade_anon %>%
+  mutate(g4_uis=rowSums(select(.,g4_items), na.rm=T))
+
+#get number of students who score each total on the 6 items aligned with UIS criteria for G4
+
+assess_4th_grade_anon %>%
+  group_by(g4_uis) %>%
+  summarise(n=n()) %>%
+  ungroup() %>%
+  mutate(fraction=n/sum(n))
+
+#plot the distributions
+ggplot(data=assess_4th_grade_anon, aes(x=g4_uis, fill='#9fcbd3', y=stat(count/sum(count)))) +
+  geom_histogram(binwidth = 1) +
+  stat_bin(binwidth = 1, geom="text", aes( label=round(..count../sum(..count..),2)), 
+           position=position_stack(vjust = 0.9)) +
+  theme_bw() +
+  xlab('Total Score on Items Aligned 4th Grade') +
+  ylab('Fraction of Students') +
+  theme(legend.position='none') +
+  ggtitle(str_wrap('Fraction of Students by Total Score on Items Judged by UIS Experts to be 4th Grade',70))
+
+
+
+sumstats_g4<-assess_4th_grade_anon %>%
+  rename(math_total_uis=g4_uis) %>%
+  mutate(math_total_all=math_student_knowledge*14/100) %>%
+  dplyr::select(g4_items, math_total_uis, math_total_all) 
+
+
+
+sumstats_df_g4<-skim(sumstats_g4) %>%
+  dplyr::select(-level, -type, -value) %>%
+  spread(stat, formatted) %>%
+  dplyr::select(variable, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) %>%
+  left_join(metadta, by=c('variable'='name')) %>%
+  dplyr::select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, missing, hist) 
+
+knitr::kable(sumstats_df_g4, caption="Summary Statistics of Items Judged by UIS to Appropriate Grade 4" , col.names = c("Indicator", "Description", "Mean",  "Std Dev","Min", "25th Percentile", "Median", "75th Percentile", "Max", "# Complete Cases", "# Missing Cases", "Histogram") ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "responsive")) 
+
+
+#plot the distributions of total score with 6 point score as vertical line
+ggplot(data=sumstats_g4, aes(x=math_total_all, fill='#9fcbd3', y=cumsum(..count..)/sum(..count..))) +
+  geom_histogram(binwidth = 1) +
+  stat_bin(binwidth = 1, geom="text", aes( label=round(cumsum(..count..)/sum(..count..),2)), 
+           position=position_stack(vjust = 0.9)) +
+  geom_vline(xintercept=6) +
+  theme_bw() +
+  xlab('Total Score on All Items') +
+  ylab('Fraction of Students') +
+  theme(legend.position='none') +
+  ggtitle(str_wrap('Cumulative Fraction of Students by Total Score on All Items with Cutscore based on 6 Items included',70))  
+
+```
+
+
+
+# Factor Analysis
+```{r fa}
+   ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient',
+                'student_attendance', 'absence_rate', 'school_absence_rate', 
+                'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility','disab_road_access', 'disab_school_ramp', 'disab_school_entr', 'disab_class_ramp', 'disab_class_entr', 'disab_screening',
+                'operational_management', 'vignette_1', 'vignette_1_resp', 'vignette_1_finance', 'vignette_1_address', 'vignette_2', 'vignette_2_resp', 'vignette_2_finance', 'vignette_2_address', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'school_monitoring', 'standards_monitoring','monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'school_management_attraction', 'principal_satisfaction',
+                'school_selection_deployment', 
+                'school_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+    
+    indicators_list<-c('student_knowledge',
+            'student_attendance', 
+            'absence_rate',
+            'content_knowledge', 
+            'ecd_student_knowledge', 
+            'inputs', 
+            'infrastructure',
+            'operational_management', 
+            'instructional_leadership',
+            'principal_knowledge_score',
+            'principal_management', 
+            'teacher_attraction', 
+            'teacher_selection_deployment', 
+            'teacher_support', 
+            'teaching_evaluation', 
+            'teacher_monitoring',
+            'intrinsic_motivation', 
+            'school_monitoring', 
+            'school_management_attraction', 
+            'school_selection_deployment', 
+            'school_support', 
+            'principal_evaluation'
+
+)
+
+fa_df <- final_indicator_data_OPMN %>%
+  dplyr::select(one_of(ind_list)) %>%
+  dplyr::select(-one_of(indicators_list))
+
+fa_cor <- cor(fa_df,  use='complete.obs')
+
+#drop columns with zero variance
+no_variance <- caret::nearZeroVar(fa_df, names=T)
+
+fa_df <- fa_df %>%
+  dplyr::select(-no_variance)
+
+fa <-psych::fa(na.omit(fa_df), nfactors=1)
+summary(psych::fa(na.omit(fa_df), nfactors=1))
+summary(fa)
+#fa
+
+final_indicator_data_OPMN$pca=predict(fa, fa_df)
+
+cor(x=final_indicator_data_OPMN$operational_management, final_indicator_data_OPMN$pca,  use='complete.obs')
+
+ggplot(data=final_indicator_data_OPMN, aes(x=operational_management, y=pca, color='red')) +
+  geom_point() +
+  geom_smooth(method='lm') 
+  
+
+
+
+
+  df_fa_dat <- final_indicator_data_OPMN %>%
+    select(one_of(sub_ind_list))
+  
+  #drop columns with zero variance
+  no_variance <- caret::nearZeroVar(df_fa_dat, names=T)
+  
+  df_fa_dat <- df_fa_dat %>%
+    dplyr::select(-no_variance)
+  
+  model_fa <- fa(na.omit(df_fa_dat), nfactors = 1)
+  
+  #create dataset with fa included
+  df_fa_plot <- final_indicator_data_OPMN
+  
+  df_fa_plot$fa_pred = factor.scores(df_fa_dat, model_fa)
+  
+
+  df_fa_plot <- df_fa_plot %>%
+    dplyr::select(school_code, fa_pred) %>%
+    left_join(dat()) %>%
+    dplyr::select(one_of(indicators_list), fa_pred) %>%
+    rename(outcome=1) 
+    
+  
+  ggplot(data=df_fa_plot, aes(x=outcome, y=fa_pred)) +
+    geom_point() +
+    geom_smooth(method='lm') +
+    theme_bw() +
+    theme(
+      plot.title = element_text( family='Helvetica',
+      size=28,
+      face="bold",
+      color="#222222"),
+      axis.title.x = element_text(family='Helvetica', size=20 ),
+      axis.title.y = element_text(family='Helvetica',  size=20),
+      axis.text = ggplot2::element_text(family='Helvetica',
+                                        size=18,
+                                        color="#222222")
+    ) +
+    xlab(input$indicators) +
+    ylab('First Principal Component') +
+    ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on First Factor for ", input$reg_choices)),60) +
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                 label.x.npc = "right", label.y.npc = 0.2,
+                 formula = 'y~x', parse = TRUE, size = 5) 
+
+
+```
+
+# Multivariate Regression
+```{r gdp_reg}
+
+#map of linear model of each indicator on GDP
+
+#add GDP to database
+coordinates(school_map) <- c("lon","lat")
+school_map$GDP <- extract(gdp_raster, school_map, 
+                           buffer=1000, # 1000m radius
+                           fun=mean,na.rm=T,
+                           method='simple')
+  
+
+school_map <- as.data.frame(school_map) %>%
+  mutate(GDP=as.numeric(GDP))
+
+
+
+y <-  school_map$GDP   
+    
+r2s <- school_map %>%
+  dplyr::select(indicators_list) %>% # just keep indicators for regression on GDP
+  purrr::map(~lm(.x ~ log(school_map$GDP) , data = school_map)) %>%
+  purrr::map(summary) %>%
+  map_dbl("r.squared") %>% 
+  tidy %>% 
+  dplyr::arrange(desc(x)) %>% 
+  rename(r.squared = x) 
+
+kable(r2s)
+
+r2s_plot <- r2s %>%
+  dplyr::filter(names %in% indicators_list)
+
+ggplot(r2s_plot, aes(x = reorder(names, r.squared), y = r.squared)) + 
+  geom_point(size = 5, color = "red") +
+  ylab(expression(R^{2})) +
+  xlab("predictors") +
+  coord_flip() +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain the Variance our Indicators?",width=50))
+
+ggplot(school_map, aes(y = infrastructure, x = log(GDP))) + 
+  geom_point( color = "red") +
+  geom_smooth(method='lm') +
+  xlab("Log GDP per Sq km") +
+  ylab("Infrastructure") +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Infrastructure in our School?",width=50))
+
+
+ggplot(school_map, aes(y = student_knowledge, x = log(GDP))) + 
+  geom_point( color = "red") +
+  geom_smooth(method='lm') +
+  xlab("Log GDP per Sq km") +
+  ylab("Student 4th Grade Assessment Scores") +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Learning in our School?",width=50))
+
+ggplot(school_map, aes(y = ecd_student_knowledge, x = log(GDP))) + 
+  geom_point( color = "red") +
+  geom_smooth(method='lm') +
+  xlab("Log GDP per Sq km") +
+  ylab("Student 1st Grade ECD Assessment Scores") +
+  ggtitle(str_wrap( "How Well do GDP Estimates from Satellite Imagery Explain Levels of Learning in our School?",width=50))
+
+```
+
+
+```{r gdp_reg_2}
+
+mod_fun <- function(df) {
+  lm_robust(student_knowledge ~ .x + log(school_map$GDP) , data = school_map, se_type='HC3')
+}
+
+partial_regression <- school_map %>%
+  dplyr::select(indicators_list) %>% # just keep indicators for regression on GDP
+  purrr::map(~lm_robust(student_knowledge ~ .x + log(school_map$GDP) , data = school_map, se_type='HC3')) %>%
+  purrr::map(coef) %>%
+  map_dbl(".x") %>% 
+  tidy %>% 
+  dplyr::arrange(desc(x)) %>% 
+  rename(.x = x) 
+
+kable(partial_regression)
+
+
+reg_plot_df <- school_map %>%
+  dplyr::select(indicators_list, GDP) %>% # just keep indicators for regression on GDP
+  pivot_longer(
+    cols=c(
+            'student_attendance', 
+            'absence_rate',
+            'content_knowledge', 
+            'ecd_student_knowledge', 
+            'inputs', 
+            'infrastructure',
+            'operational_management', 
+            'instructional_leadership',
+            'principal_knowledge_score',
+            'principal_management', 
+            'teacher_attraction', 
+            'teacher_selection_deployment', 
+            'teacher_support', 
+            'teaching_evaluation', 
+            'teacher_monitoring',
+            'intrinsic_motivation', 
+            'school_monitoring', 
+            'school_management_attraction', 
+            'school_selection_deployment', 
+            'school_support', 
+            'principal_evaluation'
+
+), 
+    names_to = "type",
+    values_to="indicators"
+  )
+
+
+mod_fun <- function(df) {      
+  lm_robust(student_knowledge ~ indicators  , data = df, se_type='HC3') 
+}
+
+mod_fun_gdp <- function(df) {      
+  lm_robust(student_knowledge ~ indicators + log(school_map$GDP) , data = df, se_type='HC3') 
+}
+
+b_fun <- function(mod)   {   
+  coef(summary(mod))[2,1] 
+}
+
+se_fun <- function(mod)   {   
+  coef(summary(mod))[2,2] 
+}
+
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+knowledge_regs <- reg_plot_df %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(model_gdp=purrr::map(data, mod_fun_gdp)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            se = map_dbl(model, se_fun),
+            r2 = map_dbl(model, r2_fun),
+            beta_gdp = map_dbl(model_gdp, b_fun),
+            se_gdp = map_dbl(model_gdp, se_fun),
+            r2_gdp = map_dbl(model_gdp, r2_fun)) %>%
+  dplyr::select(type, beta, beta_gdp, se, r2,  se_gdp, r2_gdp, everything())
+
+#plot of coefficient plots without GDP
+ggplot(data=knowledge_regs, aes(x=type, y=beta)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta-1.96*se),
+                    ymax=(beta+1.96*se))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Regression Without GDP Satellite Controls", 60))
+
+#plot of coefficient plots with GDP
+ggplot(data=knowledge_regs, aes(x=type, y=beta_gdp)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=(beta_gdp-1.96*se_gdp),
+                    ymax=(beta_gdp+1.96*se_gdp))) +
+  coord_flip() +
+  theme_bw() +
+  ggtitle(str_wrap("Coefficients and Confidence Intervals of Indicators in Regression With GDP Satellite Controls", 60))
+```
+
+
+
+## Linear Model of Learning on Indicators
+
+```{r linear_model, include=FALSE}
+
+#Create list of key indicators
+ind_list<-c('student_knowledge', 
+            'absence_rate', 'school_absence_rate', 'student_attendance',
+            'content_knowledge', 
+            'ecd_student_knowledge',  
+            'inputs', 
+            'infrastructure',
+            'operational_management',  'intrinsic_motivation', 'instructional_leadership','principal_management','teacher_attraction',
+            'teacher_selection_deployment', 'teacher_support', 'teaching_evaluation', 'teacher_monitoring','school_monitoring',
+            'school_management_attraction', 'school_selection_deployment', 'school_support', 'principal_evaluation'
+)
+
+#create database with just indicators
+school_dta_indicators <- school_dta_short %>%
+  select(ind_list)
+
+linear.1 <- lm(student_knowledge ~ ., data=school_dta_indicators)
+
+linear.1 <- coeftest(linear.1, vcov = vcovHC(linear.1, type="HC1"))
+
+#logit.1 <- glm(student_knowledge ~ ., data=school_dta_indicators, family=binomial())
+
+#logit.1 <- coeftest(logit.1, vcov = vcovHC(logit.1, type="HC1"))
+
+
+
+```
+
+```{r, results='asis'}
+stargazer(linear.1,   title="Linear/Logit Model of Student Learning on Indicators - Coefficients", type="html")
+
+```
+
+```{r include=FALSE}
+#inpute missings using mice
+imputed_Data <- mice(data = school_dta_indicators, m = 5, method = "rf", maxit = 50, seed = 500)
+completeData <- complete(imputed_Data,2)
+
+```
+
+## Machine Learning Models to Predict Learning Based on Indicators
+
+
+```{r ml_train, echo=FALSE}
+
+
+tree<- completeData %>%
+  rpart(student_knowledge~., data=.)
+
+tree
+
+rpart.plot(tree, box.palette="RdBu", shadow.col = "gray", nn=TRUE)
+
+plotcp(tree)
+
+
+bagged_m1 <- completeData %>%
+  bagging(
+    formula = student_knowledge ~ .,
+    data    = .,
+    coob    = TRUE
+    )
+
+bagged_m1
+
+
+# Specify 10-fold cross validation
+ctrl <- trainControl(method = "cv",  number = 5) 
+
+# CV bagged model
+bagged_cv <- train(
+  student_knowledge ~ .,
+  data = completeData,
+  method = "treebag",
+  trControl = ctrl,
+  importance = TRUE,
+  na.action=na.omit
+  )
+
+# assess results
+bagged_cv
+
+#nueral network
+#Bayesian Regularized Neural Networks
+
+
+neural_cv <- train(
+  student_knowledge ~ .,
+  data = completeData,
+  method = "brnn",
+  trControl = ctrl,
+  importance = TRUE,
+  na.action=na.omit
+  )
+
+# assess results
+neural_cv
+
+# # CV boosted model
+# boosted_cv <- train(
+#   student_knowledge ~ .,
+#   data = completeData,
+#   method = "blackboost",
+#   trControl = ctrl,
+#   importance = TRUE,
+#   na.action=na.omit
+#   )
+
+# assess results
+# boosted_cv 
+
+#Linear
+linear.1 <- lm(student_knowledge ~ ., data=completeData)
+
+#Logit
+
+#logit.1 <- glm(student_knowledge ~ ., data=completeData, family=binomial())
+
+#lasso
+lambda <- 10^seq(10, -2, length = 100)
+x<-model.matrix(student_knowledge ~ ., completeData)
+
+y<-completeData$student_knowledge
+
+
+cvfit = cv.glmnet(x, y, type.measure = "mse", nfolds = 5)
+coef(cvfit, s = "lambda.min")
+
+bestlam <- cvfit$lambda.min
+lasso.1 <- glmnet(x,y, family="gaussian", alpha=1, lambda=bestlam)
+
+
+#predictions
+school_dta_indicators_pred<- completeData %>%
+  modelr::add_predictions(neural_cv, var="pred_neural") %>%
+  modelr::add_predictions(bagged_cv, var="pred_bagged") %>%
+  # modelr::add_predictions(boosted_cv, var="pred_boosted") %>%
+  modelr::add_predictions(linear.1, var="pred_linear") %>%
+  #modelr::add_predictions(logit.1, var="pred_logit", type="response") %>%
+  mutate(pred_lasso=predict(cvfit, newx=x, s = "lambda.min")) %>%
+  select(student_knowledge, pred_neural, pred_bagged, pred_linear,  pred_lasso, everything())
+
+#plot
+pred_plot_dta <- school_dta_indicators_pred %>%
+  select(student_knowledge, pred_neural, pred_bagged, pred_linear,  pred_lasso) %>%
+  pivot_longer(
+    cols=c('pred_neural' , 'pred_bagged', 'pred_linear',  'pred_lasso'), 
+    names_to = "type",
+    values_to="predictions"
+  )
+
+plot_ly(pred_plot_dta, type="scatter", y=~student_knowledge, x=~predictions, color=~type)   %>%
+  layout(hovermode = 'compare')  %>%
+        layout(
+          yaxis = list(rangemode = "tozero"),
+          xaxis = list(rangemode = "tozero"))
+
+
+
+
+#save regression output
+
+mod_fun <- function(df) {      
+  lm(student_knowledge ~ predictions, data = df) 
+}
+
+b_fun <- function(mod)   {   
+  coefficients(mod)[[2]] 
+}
+
+r2_fun <- function(mod) {
+  summary(mod)$r.squared
+}
+
+#create database with saved regression output to test model fit (with R^2)
+fit <- pred_plot_dta %>%
+  group_by(type) %>%
+  nest() %>%
+  mutate(model=purrr::map(data, mod_fun)) %>% 
+  mutate(   beta = map_dbl(model, b_fun),
+            r2 = map_dbl(model, r2_fun)  )
+
+
+
+
+# plot most important variables
+plot(varImp(bagged_cv), 20)  
+
+
+fit
+
+
+```
+

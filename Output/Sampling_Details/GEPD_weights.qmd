@@ -1,0 +1,119 @@
+---
+title: "Sampling Info"
+author: "Brian Stacy"
+format: docx
+execute:
+  echo: false
+  warning: false
+---
+
+```{r}
+#| label: setup
+
+library(tidyverse)
+library(flextable)
+library(here)
+library(readxl)
+library(haven) 
+
+#set directory path
+dir <- here()
+
+project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
+
+
+```
+
+
+# Introduction
+
+This document provides information on the weights for the Global Education Policy Dashboard school survey. It provides weights at different levels: students, teachers, schools.
+
+
+
+```{r}
+#function to read in the weights file
+weights_reader <- function(cntry, yr) {
+  weights_folder <-file.path(paste(project_folder,"CNT",cntry,paste(cntry,yr,"GEPD", sep="_"),paste(cntry,yr,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School/data", sep="/"))
+
+  read_csv(paste0(weights_folder, "/school_weights_anon.csv"))
+}
+
+#Peru
+PER_weights <- weights_reader("PER", 2019) %>%
+  mutate(iso3c="PER",
+         date=2019)
+
+#Jordan
+JOR_weights <- read_csv(paste0(file.path(paste(project_folder,"CNT","JOR",paste("JOR",'2019',"GEPD", sep="_"),paste("JOR",'2019',"GEPD_v01_RAW", sep="_"),"Data/anonymized/School/data", sep="/")), "/school_weights_anon.csv")) %>%
+  mutate(iso3c="JOR",
+         date=2019)
+
+#Rwanda
+RWA_weights <- weights_reader("RWA", 2020) %>%
+  mutate(iso3c="RWA",
+         date=2020)
+
+#Ethiopia
+cntry <-'ETH'
+country_name <- "Ethiopia"
+yr <- '2020_2021'
+
+weights_folder <-file.path(paste(project_folder,"CNT",cntry,paste(cntry,yr,"GEPD", sep="_"),paste(cntry,yr,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+
+attach(paste0(weights_folder, "/school_indicators_data_anon.Rdata"))
+ETH_weights <- school_weights_anon %>%
+  filter(
+    !(hashed_school_code=='55f7525b6c88fcbf' & date==2020),
+    !(hashed_school_code=='9241f63261396360' & date==2020)
+  ) %>%
+  mutate(iso3c="ETH",
+         date=2021) 
+
+#Madagascar
+MDG_weights <- weights_reader("MDG", 2021) %>%
+  mutate(iso3c="MDG",
+         date=2021) %>%
+  select(-district)
+
+#Sierra Leone
+SLE_weights <- weights_reader("SLE", 2022) %>%
+  mutate(iso3c="SLE",
+         date=2022)
+
+#Niger
+NER_weights <- weights_reader("NER", 2022) %>%
+  mutate(iso3c="NER",
+         date=2022)
+```
+
+```{r}
+#combine and save
+school_weights <- bind_rows(
+  PER_weights, JOR_weights, RWA_weights, ETH_weights, MDG_weights, SLE_weights, NER_weights
+) %>%
+  select(c("hashed_school_code",
+           "hashed_school_province",
+           "hashed_school_district",
+           "g4_stud_weight_component",
+           "abs_weight_component",
+           "teacher_weight_component",
+           "teacher_obs_weight_component",
+           "g1_stud_weight_component",
+           "ipw",
+           "iso3c", 
+           "date"))
+
+
+#check for duplicates
+
+duplicates <- school_weights %>%
+  group_by(iso3c, date, hashed_school_code) %>%
+  summarise(n=n()) %>%
+  filter(n>1)
+
+write_dta(school_weights, paste0(project_folder, "/General/LEGO_Teacher_Paper/5_output_data/GEPD_weights.dta"))
+
+
+```
+
