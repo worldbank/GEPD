@@ -1,0 +1,447 @@
+---
+title: "Comparison across different groups - GEPD Niger 2022"
+author: "Education Global Practice, World Bank"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+    toc: yes
+    theme: readable
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.height = 8,
+	fig.width = 10,
+	warning = FALSE
+)
+#include packages
+library(tidyverse)
+library(haven)
+library(kableExtra)
+library(skimr)
+library(flextable)
+library(ggridges)
+library(scales)
+library(ggtext)
+library(estimatr)
+library(survey)
+library(dplyr)
+#library(svyr)
+library(spatstat)
+library(Hmisc)
+library(ggpmisc)
+library(ggalt)
+library(here)
+library(patchwork)
+library(DT)
+library(ggstatsplot)
+
+
+```
+
+
+
+
+# Introduction
+
+Using the GEPD data that were collected in Niger in 2022, we are desegregating learning outcomes for both Grade 4 and Grade 1 students. In particular, we are analyzing the possible difference that might exist between the following groups:
+
+ - Gender (boys vs girls)
+ - Location (urban vs rural)
+ - LIRE (did the school participate in the LIRE program)
+
+```{r data, message=FALSE, warning=FALSE, include=FALSE}
+
+#Country name
+country <-'NER'
+country_name <- "Niger"
+year <- '2022'
+
+
+#set directory to bring in data
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/", sep="/"))
+  anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189") {
+  
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+  backup_onedrive="no"
+  save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work",country_name,year,"Data/clean/", sep="/"))
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+  anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
+}
+
+work_dir<- save_folder
+
+#load public official data
+load(paste(work_dir, "/Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
+
+#load school data for comparisons
+load(paste(work_dir, "/School/school_indicators_data_anon.RData", sep=""))
+
+
+```
+
+
+## Grade 4 learning assessment
+
+
+```{r cc, echo=FALSE, message=FALSE, warning=FALSE}
+
+grade4_long <- assess_4th_grade_anon_anon %>%
+  select(hashed_school_code, student_male, urban_rural, LIRE, student_knowledge, math_student_knowledge, literacy_student_knowledge) %>% 
+  # left_join(sample) %>% 
+  pivot_longer(
+    cols = c("student_knowledge", "math_student_knowledge", "literacy_student_knowledge"),
+    names_to = "indicators",
+    values_to = "score",
+    values_drop_na = TRUE
+  ) %>% 
+  select(hashed_school_code, student_male, urban_rural, LIRE, indicators, score) %>% 
+  mutate(gender = case_when(
+    
+    student_male == 1 ~ "Boys",
+    student_male == 0 ~ "Girls"
+    
+  ))
+
+```
+
+By Gender
+
+```{r gender4, echo=FALSE, message=FALSE, warning=FALSE}
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "student_knowledge")),
+  x                = gender,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in overall scores by gender in Niger (Grade 4)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "math_student_knowledge")),
+  x                = gender,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in math scores by gender in Niger (Grade 4)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "literacy_student_knowledge")),
+  x                = gender,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in literacy scores by gender in Niger (Grade 4)")
+)
+
+```
+
+By location
+
+```{r loc4, echo=FALSE, message=FALSE, warning=FALSE}
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "student_knowledge")),
+  x                = urban_rural,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in overall scores by location in Niger (Grade 4)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "math_student_knowledge")),
+  x                = urban_rural,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in math scores by location in Niger (Grade 4)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "literacy_student_knowledge")),
+  x                = urban_rural,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in literacy scores by location in Niger (Grade 4)")
+)
+
+
+```
+
+LIRE vs Non LIRE Schools
+
+```{r lire4, echo=FALSE, message=FALSE, warning=FALSE}
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "student_knowledge")),
+  x                = LIRE,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in overall scores between LIRE/Non LIRE in Niger (Grade 4)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "math_student_knowledge")),
+  x                = LIRE,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in math scores by LIRE/Non LIRE  in Niger (Grade 4)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade4_long, indicators %in% c( "literacy_student_knowledge")),
+  x                = LIRE,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in literacy scores by LIRE/Non LIRE  in Niger (Grade 4)")
+)
+
+
+```
+
+
+
+
+## Grade 1 learning assessment
+
+
+```{r cc1, echo=FALSE, message=FALSE, warning=FALSE}
+
+grade1_long <- ecd_dta_anon_anon %>%
+  select(hashed_school_code, m6s1q3, m6s1kg, urban_rural, LIRE, ecd_literacy_student_knowledge, ecd_math_student_knowledge, ecd_student_knowledge) %>% 
+  # left_join(sample) %>% 
+  pivot_longer(
+    cols = c("ecd_student_knowledge", "ecd_literacy_student_knowledge", "ecd_math_student_knowledge"),
+    names_to = "indicators",
+    values_to = "score",
+    values_drop_na = TRUE
+  ) %>% 
+  select(hashed_school_code, m6s1q3, m6s1kg, LIRE, urban_rural,indicators, score) %>% 
+  mutate(gender = case_when(
+    
+    m6s1q3 == 1 ~ "Boys",
+    m6s1q3 == 2 ~ "Girls"
+    
+  ),
+  kindergarten = case_when(
+    
+    m6s1kg==1 ~ "Yes",
+    m6s1kg ==0 ~ "No"
+    
+  ))
+
+```
+
+By Gender
+
+```{r gender1, echo=FALSE, message=FALSE, warning=FALSE}
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_student_knowledge")),
+  x                = gender,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in overall scores by gender in Niger (Grade 1)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_math_student_knowledge")),
+  x                = gender,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in math scores by gender in Niger (Grade 1)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_literacy_student_knowledge")),
+  x                = gender,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in literacy scores by gender in Niger (Grade 1)")
+)
+
+```
+
+By location
+
+```{r loc1, echo=FALSE, message=FALSE, warning=FALSE}
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_student_knowledge")),
+  x                = urban_rural,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in overall scores by location in Niger (Grade 1)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_math_student_knowledge")),
+  x                = urban_rural,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in math scores by location in Niger (Grade 1)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_literacy_student_knowledge")),
+  x                = urban_rural,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in literacy scores by location in Niger (Grade 1)")
+)
+
+
+```
+
+LIRE vs Non LIRE Schools
+
+```{r lire1, echo=FALSE, message=FALSE, warning=FALSE}
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_student_knowledge")),
+  x                = LIRE,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in overall scores between LIRE/Non LIRE in Niger (Grade 1)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_math_student_knowledge")),
+  x                = LIRE,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in math scores by LIRE/Non LIRE  in Niger (Grade 1)")
+)
+
+
+grouped_ggbetweenstats(
+  data             = dplyr::filter(grade1_long, indicators %in% c( "ecd_literacy_student_knowledge")),
+  x                = LIRE,
+  y                = score,
+  grouping.var     = indicators,
+  ggsignif.args    = list(textsize = 4, tip_length = 0.01),
+  p.adjust.method  = "bonferroni",
+  palette          = "default_jama",
+  package          = "ggsci",
+  plotgrid.args    = list(nrow = 1),
+  annotation.args  = list(title = "Differences in literacy scores by LIRE/Non LIRE  in Niger (Grade 1)")
+)
+
+
+```
+
+
+
