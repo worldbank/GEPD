@@ -63,7 +63,7 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 
 #define function to create weights for summary statistics
 #load school code file
-school_codes <- read_csv(file.path(confidential_folder, "EPDash_school_idfile_hashed.csv"))
+school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.csv"))
 
 #Load original sample of schools
 #Load original sample of schools
@@ -77,11 +77,8 @@ data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentD
          urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
          public=if_else(private==1, "Private", "Public")) %>%
   left_join(school_codes) %>%
-  select(school_code, Province, Département, private, public, rural ,urban_rural,
+  select(school_code,school_name_preload, Province, Département, private, public, rural ,urban_rural,
          ipw) 
-
-
-
 
 
 
@@ -128,19 +125,13 @@ for (i in data_list ) {
     if ("school_code" %in% colnames(temp)) {
       temp <- temp %>%
         left_join(key) %>%
-        select(hashed_school_code, hashed_school_province, hashed_school_district, everything()) %>%
-        group_by(hashed_school_code) %>%
-        slice(1) %>%
-        ungroup()
+        select(hashed_school_code, hashed_school_province, hashed_school_district, everything())
     }
     
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, Inst_ID, totalstudents, District) %>%
-        group_by(hashed_school_code) %>%
-        slice(1) %>%
-        ungroup()
+      temp <- df_weights_function(temp, Inst_ID, totalstudents, District) 
     }
     
     #Scrub names, geocodes

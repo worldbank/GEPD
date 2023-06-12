@@ -408,7 +408,29 @@ SEVL_rules <- validator(
 
 ```{r data}
 
+# get unique ID from the sampling frame for schools
+currentDate<-c("2023-05-12")
 
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentDate,  '.csv', sep="")
+) %>%
+  mutate(temp_school_code=Code_Etablissement,
+         school_name_preload=`Nom Officiel de l'Etablissement`,
+         urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
+         public=if_else(private==1, "Private", "Public"))  %>%
+  group_by(temp_school_code, school_name_preload) %>% 
+  mutate(group_id = cur_group_id()) %>%
+  ungroup() 
+
+data_set_updated$school_code <-as.character(lapply(data_set_updated$group_id, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
+
+#save a hashed version of the dataset, to produce a link file
+key<-data_set_updated %>%
+  group_by(school_code) %>%
+  slice(1) %>%
+  select(school_name_preload, temp_school_code, school_code) 
+
+write_excel_csv(key, file.path(confidential_folder, "school_idfile_hashed.csv"))
 
 ############################
 #read in teacher roster file
@@ -469,19 +491,10 @@ school_dta<- school_dta %>%
   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
   filter(!is.na(temp_school_code)) %>%
   ungroup() %>%
-  group_by(temp_school_code, school_name_preload) %>% 
-  mutate(group_id = cur_group_id()) %>%
-  ungroup() 
+  left_join(key) %>%
+  filter(!is.na(school_code))
 
-school_dta$school_code <-as.character(lapply(school_dta$group_id, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 
-#save a hashed version of the dataset, to produce a link file
-key<-school_dta %>%
-  group_by(school_code) %>%
-  slice(1) %>%
-  select(school_name_preload, school_emis_preload, school_province_preload, school_district_preload, temp_school_code, school_code, group_id) 
-
-write_excel_csv(key, file.path(confidential_folder, "EPDash_school_idfile_hashed.csv"))
 
 
 #create school metadata frame

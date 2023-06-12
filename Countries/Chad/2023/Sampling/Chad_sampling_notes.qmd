@@ -424,11 +424,10 @@ sample_replace2 <- data_set_updated_chosen2 %>%
   mutate(
     sample_size=case_when(
 
-           Region=="LOGONE OCCIDENTAL"   ~ 11,
-           Region=="MANDOUL"          ~ 10, 
-
-           Region=="OUADDAÏ"           ~ 12,
-           Region=="SALAMAT" ~ 0,
+           Region=="BATHA" ~ 14,
+           Region=="CHARI BAGUIRMI" ~ 28,
+           Region=="HADJER LAMIS" ~ 18,
+           Region=='BARH EL GAZAL' ~ 9,
            TRUE ~ 0
 
          )) %>%
@@ -438,7 +437,8 @@ sample_replace2 <- data_set_updated_chosen2 %>%
   arrange(Region, ETABLISSEMENT) 
 
 #list of schools
-sch_list <- c(223033,12008,11805,4196,1244,10131,13154,1265,10487,1337,12322)
+sch_list <- c(223033,12008,11805,4196,1244,10131,13154,1265,10487,1337,12322,
+              8597,6751,223033,12008,3538,225478,3541,4962,3769,222435,1279,1378,222693,224145)
 
 sample_replace_2 <- sample_chosen %>%
     bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
@@ -466,7 +466,69 @@ write_excel_csv(sample_replace2, paste(sampling_folder, '/sample_replacement_sch
 
 
 ```
+
+
+Another set of schools May 31
+```{r}
+
+
+#define sampled schools in sample dataset
+sample_chosen3 <- sample_df %>%
+  mutate(sample="Sampled School") %>%
+  bind_rows(sample_replace %>% mutate(sample="1st Replacement Set")) %>%
+    bind_rows(sample_replace2 %>% mutate(sample="2nd Replacement Set"))
+
+  
+
+#add sample schools back to original database
+data_set_updated_chosen3 <- df_updated %>%
+  left_join(sample_chosen3) %>%
+  filter(is.na(sample)) 
+
+
+# select one replacement per district
+sample_replace3 <- data_set_updated_chosen3 %>%
+  mutate(
+    sample_size=case_when(
+
+           Region=="CHARI BAGUIRMI" ~ 9,
+           TRUE ~ 0
+
+         )) %>%
+  group_by(Region) %>% 
+  sample_n( mean(sample_size), weight=total_students_grade_4) %>% #select two replacement schools
+  mutate(sample='2nd Replacement School') %>%
+  arrange(Region, ETABLISSEMENT) 
+
+#list of schools
+sch_list <- c(1378,3769,3541)
+
+sample_replace_3 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(Region, ETABLISSEMENT )  %>%
+  filter(`CODE ETABLISSEMENT` %in% sch_list)
+
+
+#add in school info for school that will be replaced
+#add in school info for school that will be replaced
+sample_replace3$replaced_NOM_ETABLISSEMENT=sample_replace_3$ETABLISSEMENT
+sample_replace3$replaced_CODE_ETABLISSEMENT=sample_replace_3$`CODE ETABLISSEMENT`
+sample_replace3$replaced_Region=sample_replace_3$Region
+
+
+
+sample_replace3 %>%
+  select(ETABLISSEMENT,`CODE ETABLISSEMENT`, ETABLISSEMENT, Region, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_Region) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace3 <- sample_replace3 %>%
+  select(ETABLISSEMENT,`CODE ETABLISSEMENT`, ETABLISSEMENT, Region, replaced_NOM_ETABLISSEMENT, replaced_CODE_ETABLISSEMENT, replaced_Region, everything())
+  
+write_excel_csv(sample_replace3, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
 ```
+
 
 
 ## Pilot Schools
