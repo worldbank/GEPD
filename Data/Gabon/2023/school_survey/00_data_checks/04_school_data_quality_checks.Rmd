@@ -1,7 +1,7 @@
 
 ---
 title: "Data Quality Checks - School Survey"
-author: "Adrien Ciret"
+author: "GEPD team"
 output: html_document
 ---
 
@@ -24,7 +24,7 @@ library(kableExtra)
 
 #Load the data
 #read in school level file
-save_folder <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Jordan/2022/Data/school_survey/rollout'
+save_folder <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work/Gabon/2023/Data/school_survey/rollout/clean/'
 
 load(file=paste(save_folder, "paradata_light.RData", sep="/"))
 ```
@@ -524,7 +524,7 @@ icons2 <- awesomeIcons(
 )
 
 
-map2 <- function(df_input) {    leaflet(df_input, height=2200, width=1020) %>% 
+map2 <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons2,
                     popup = paste("Name: ", school_map$school_name_preload, " <br>",
