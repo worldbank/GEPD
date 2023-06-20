@@ -1497,8 +1497,8 @@ PER_school_office_link_df <- PER_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         # rural2=if_else(urban_rural=="Rural",1,0),
-         # rural=if_else(is.na(rural),rural2,rural ),
+         #rural2=if_else(urban_rural=="Rural",1,0),
+         #rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1513,6 +1513,8 @@ PER_school_office_link_df <- PER_school_anon_df %>%
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
+  mutate(across(policies, ~if_else(is.na(.), 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   ungroup() 
@@ -1545,8 +1547,8 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
          dist_log=log(dist_km),
          rural=if_else(rural==1, TRUE,FALSE),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         # rural2=if_else(urban_rural=="Rural",1,0),
-         # rural=if_else(is.na(rural),rural2,rural ),
+         #rural2=if_else(urban_rural=="Rural",1,0),
+         #rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1561,6 +1563,8 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
+  mutate(across(policies, ~if_else(is.na(.), 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   ungroup() 
@@ -1589,8 +1593,8 @@ RWA_school_office_link_df <- RWA_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         # rural2=if_else(urban_rural=="Rural",1,0),
-         # rural=if_else(is.na(rural),rural2,rural ),
+         #rural2=if_else(urban_rural=="Rural",1,0),
+         #rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1605,6 +1609,8 @@ RWA_school_office_link_df <- RWA_school_anon_df %>%
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
+  mutate(across(policies, ~if_else(is.na(.), 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   ungroup() 
@@ -1649,6 +1655,8 @@ ETH_school_office_link_df <- ETH_school_anon_df %>%
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500"))) %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
+  mutate(across(policies, ~if_else(is.na(.), 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   ungroup() 
@@ -1681,9 +1689,12 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
   ) %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(c('presence_rate', 'content_knowledge', 'inputs', 'infrastructure', 'ecd_student_knowledge',  'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management'), ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(c('presence_rate', 'content_knowledge', 'inputs', 'infrastructure', 'ecd_student_knowledge',  'operational_management', 'instructional_leadership', 'principal_knowledge_score', 'principal_management'), ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
+  mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
-  ungroup() 
+  ungroup() %>%
+  select(-public)
 
 
 ########
@@ -1711,8 +1722,8 @@ SLE_school_office_link_df <- SLE_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         # rural2=if_else(urban_rural=="Rural",1,0),
-         # rural=if_else(is.na(rural),rural2,rural ),
+         rural=if_else(urban_rural=="Rural",1,0),
+         #rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1727,9 +1738,12 @@ SLE_school_office_link_df <- SLE_school_anon_df %>%
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
+  mutate(across(policies, ~if_else(is.na(.), 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
-  ungroup() 
+  ungroup() %>%
+  rename(GDP=gdp)
 
 
 ########
@@ -1757,8 +1771,8 @@ NER_school_office_link_df <- NER_school_anon_df %>%
          dist_km=dist/1000,
          dist_log=log(dist_km),
          bureau_index=(quality_bureaucracy + national_learning_goals + impartial_decision_making + mandates_accountability )/4,
-         # rural2=if_else(urban_rural=="Rural",1,0),
-         # rural=if_else(is.na(rural),rural2,rural ),
+         rural=if_else(urban_rural=="Rural",1,0),
+         #rural=if_else(is.na(rural),rural2,rural ),
          students_enrolled=case_when(
            students_enrolled=="Under 25" ~1, 
            students_enrolled=="25-50" ~2 , 
@@ -1773,9 +1787,13 @@ NER_school_office_link_df <- NER_school_anon_df %>%
                                   labels= c("Under 25", "25-50", "50-75", "75-100", "100-150", "150-300", "300-500", "Over 500")))  %>%
   group_by(country) %>%
 #impute missing values with the mean within country
+  mutate(across(practices, ~if_else(is.na(.) , 1,0), .names = "{.col}_impflag")) %>%
+  mutate(across(policies, ~if_else(is.na(.), 1,0), .names = "{.col}_impflag")) %>%
   mutate(across(practices, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
   mutate(across(policies, ~if_else(is.na(.), mean(., na.rm=TRUE),.))) %>%
-  ungroup() 
+  ungroup() %>%
+  select(-public) %>%
+  rename(GDP=gdp)
 
 ###########
 # Combined
@@ -1787,7 +1805,10 @@ combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_off
 
 
 combined_school_office_df %>%
-  rename(pol_policy_implementation=politicized_policy_implementation) %>%
+  rename(pol_policy_implementation=politicized_policy_implementation,
+         principal_know_score_impflag=principal_knowledge_score_impflag, 
+         teacher_sel_deployment_impflag=teacher_selection_deployment_impflag, 
+         sch_man_attraction_impflag=sch_management_attraction_impflag) %>%
   haven::write_dta( paste0(confidential_dir, "General/combined_school_office_df.dta")) %>%
   haven::write_dta(  paste0(shared_loc, "Data/combined_school_office_df.dta"))
   

@@ -1,0 +1,487 @@
+---
+title: "Nigeria Sampling Notes"
+author: "Brian Stacy"
+format: 
+  html:
+    embed-resources: true
+date: '2023-06-13'
+execute: 
+  echo: false
+  warning: false
+---
+
+```{r}
+#|label: setup
+#| include: false
+
+library(tidyverse)
+library(here)
+library(readxl)
+library(flextable) 
+library(vtable)
+
+#Country name
+country <-'NGA'
+country_name <- "Nigeria"
+year <- '2023'
+#specify name of sampling frame file.  This needs to be a csv file
+#file_frame<-"EdoBEST Schools_Rural & Urban Classification.xlsx"
+file_frame <- "TOTALNUMBER OF PRIMARY AND SECONDARY PUPILS (1)_FM.xlsx"
+#frame_sheet <- "EdoBEST Schools_Rural & Urban C"
+frame_sheet <- "Schools_Pupils"
+
+
+
+set.seed(8473227)
+
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data","/Sampling", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data","/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+
+```
+
+
+## Introduction
+
+This file outlines the sampling strategy for Nigeria (Edo State) in 2023.  A sample of 200 schools will be selected.  Schools will be selected by strata based on the LGA & urban/rural status of the school.  
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+
+
+ 
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions.  New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below.  The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years).  Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 200-300 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+## Nigeria Sampling
+
+
+```{r}
+#| label: data
+pupil_count_min_threshold_g1 = 3
+pupil_count_min_threshold_g4 = 3
+#read sample frame
+df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet,
+              skip=3) %>%
+  filter(`School Type`=="Primary")
+
+
+#final sampling frame
+df_updated <- df_raw  %>%
+  filter(!is.na(`UBEC SCHOOL CODE`)) %>%
+  mutate(urban_rural=if_else(str_detect("URBAN", CLASSIFICATION), "Urban", "Rural"),
+         total_g1_students=`Primary 2`,
+         total_g4_students=`Primary 5`,
+         total_students=`Grand Total`) %>%
+  filter(total_g1_students>=pupil_count_min_threshold_g1) %>% #keep schools with more than 3 g1 students
+  filter(total_g4_students>=pupil_count_min_threshold_g4) # keep schools with more than 3 g4 students
+```
+
+The raw sampling frame contains `r scales::comma(nrow(df_raw))` primary schools.  
+
+When we restrict to schools with more than three 4th grade students and three 1st grade students, we have `r scales::comma(nrow(df_updated))` schools.
+
+
+```{r country_map2, echo=FALSE}
+library(leaflet)
+#unreliable data
+
+   pal <- colorFactor(
+     palette = c("red", "green"),
+     domain = c(1,0)
+   )
+   
+leaflet(data=df_raw) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~Longitude,  lat=~Latitude,
+                      #color=~pal(sample_df$private),
+                      radius=7,
+                popup =  paste("Name: ", df_raw$`EdoBEST School Name`, " <br>",
+                                  "LGA: ", df_raw$LGA, " <br>",
+                                  "School ID: ", df_raw$`EdoBEST School ID`)) 
+```
+
+
+
+Here are the counts by the 18 LGA
+
+```{r}
+#| label: sumstatsreg
+#| tbl-cap: LGA Counts in the Sampling Frame
+
+#create list of indicators for 
+std_border = officer::fp_border(color="black", width = 1)
+
+
+df_updated %>%
+  group_by(LGA) %>%
+  summarise(N=n(),
+            student_count=sum(total_students)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage Students`=paste0(round(100*student_count/sum(student_count),1),"%")) %>%
+  janitor::adorn_totals("row")  %>%  
+  rename(LGA=LGA) %>%
+  flextable() %>%
+  theme_booktabs() %>%
+  hline( i = 18) %>%
+  autofit() 
+```
+
+```{r}
+#| label: sumstatsurban
+#| tbl-cap: Urban/Rural Counts in the Sampling Frame
+
+#create list of indicators for 
+std_border = officer::fp_border(color="black", width = 1)
+
+
+df_updated %>%
+  group_by(CLASSIFICATION) %>%
+  summarise(N=n(),
+            student_count=sum(total_students)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage Students`=paste0(round(100*student_count/sum(student_count),1),"%")) %>%
+  janitor::adorn_totals("row")  %>%  
+  rename(`Urban/Rural`=CLASSIFICATION) %>%
+  flextable() %>%
+  theme_booktabs() %>%
+  autofit() 
+```
+
+
+
+
+
+# Sampling
+
+```{r echo=TRUE}
+
+
+strata_df <- df_updated %>%
+    group_by(LGA, urban_rural) %>%
+    summarise(
+      nstudents_district=sum(total_students),
+              total_district=n()
+    ) %>%
+    ungroup() %>%
+    mutate(share_district=100*round(nstudents_district/sum(nstudents_district),3),
+           sample_size=share_district)
+
+# get numbers to select from each district
+
+strata_df <- df_updated %>%
+  group_by(LGA, urban_rural) %>%
+  summarise(
+    #nstudents_district=sum(total_students),
+                     total_district=n()
+) %>%
+  ungroup() %>%
+  mutate(
+    #share_district=100*round(nstudents_district/sum(nstudents_district),3),
+         sample_size=case_when(
+           LGA=="Akoko Edo" & urban_rural=="Rural"   ~  5,   
+           LGA=="Akoko Edo"  & urban_rural=="Urban"   ~  1 , 
+           
+           LGA=="Egor" & urban_rural=="Rural"   ~  2,   
+           LGA=="Egor" & urban_rural=="Urban"   ~  4, 
+           
+           LGA=="Esan Central" & urban_rural=="Rural"   ~ 2,   
+           LGA=="Esan Central" & urban_rural=="Urban"   ~  1, 
+           
+           LGA=="Esan North East" & urban_rural=="Rural"   ~  4,   
+           LGA=="Esan North East" & urban_rural=="Urban"   ~  1, 
+           
+           LGA=="Esan South East" & urban_rural=="Rural"   ~  4,   
+           LGA=="Esan South East" & urban_rural=="Urban"   ~  0, 
+           
+           LGA=="Esan West" & urban_rural=="Rural"   ~  1,   
+           LGA=="Esan West" & urban_rural=="Urban"   ~  3, 
+           
+           LGA=="Etsako Central" & urban_rural=="Rural"   ~  2,   
+           LGA=="Etsako Central" & urban_rural=="Urban"   ~  1, 
+           
+           LGA=="Etsako East" & urban_rural=="Rural"   ~  1,   
+           LGA=="Etsako East" & urban_rural=="Urban"   ~  5, 
+           
+           LGA=="Etsako West" & urban_rural=="Rural"   ~  4,   
+           LGA=="Etsako West"     & urban_rural=="Urban"   ~  3, 
+           
+           LGA=="Igueben" & urban_rural=="Rural"   ~  3,   
+           LGA=="Igueben" & urban_rural=="Urban"   ~  1, 
+           
+           LGA=="Ikpoba Okha" & urban_rural=="Rural"   ~  5,   
+           LGA=="Ikpoba Okha" & urban_rural=="Urban"   ~  6, 
+           
+           LGA=="Oredo" & urban_rural=="Rural"   ~  1,   
+           LGA=="Oredo" & urban_rural=="Urban"   ~  9, 
+           
+           LGA=="Orhionmwon" & urban_rural=="Rural"   ~  4,   
+           LGA=="Orhionmwon" & urban_rural=="Urban"   ~  2, 
+           
+           LGA=="Ovia North East" & urban_rural=="Rural"   ~  4,   
+           LGA=="Ovia North East" & urban_rural=="Urban"   ~  3,  
+           
+           LGA=="Ovia South West"  & urban_rural=="Rural"   ~  4,   
+           LGA=="Ovia South West"  & urban_rural=="Urban"   ~  1, 
+           
+           LGA=="Owan East"        & urban_rural=="Rural"   ~  3,   
+           LGA=="Owan East"    & urban_rural=="Urban"   ~  2,     
+           
+           LGA=="Owan West"      & urban_rural=="Rural"   ~  4,     
+           
+           LGA=="Uhunmwode"    & urban_rural=="Rural"   ~  3,       
+           LGA=="Uhunmwode" & urban_rural=="Urban"   ~  1
+         ))
+
+strata_df %>%
+  flextable() %>%
+  add_header_lines('Share of Students per Region and School Type')
+
+
+```
+
+Select the sample and save.
+```{r option2, echo=TRUE}
+# set the numbers of schools selected by strata (grade)
+
+sample1_df <- df_updated %>%
+  left_join(strata_df) %>%
+  mutate(
+    totalstudents=sum(total_g4_students),
+  ) %>%
+  group_by(LGA, urban_rural ) %>%
+  mutate(
+    strata_count=n()
+         ,strata_size=sum(total_g4_students),
+         strata_school_prob=strata_size/totalstudents
+    ) %>%
+  sample_n(size = mean(sample_size)
+           , weight =total_g4_students
+           ) %>%
+  ungroup() %>%
+  mutate(sample="1st Set of Sampled Schools") %>%
+  mutate(strata_prob=(sample_size)*(total_g4_students/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+#pick second set of 100
+
+sample2_df <-  df_updated %>%
+  left_join(sample1_df %>% select(`EdoBEST School ID`, sample)) %>%
+  filter(is.na(sample)) %>%
+  left_join(strata_df) %>%
+  mutate(
+    totalstudents=sum(total_g4_students),
+  ) %>%
+  group_by(LGA, urban_rural ) %>%
+  mutate(
+    strata_count=n()
+         ,strata_size=sum(total_g4_students),
+         strata_school_prob=strata_size/totalstudents
+    ) %>%
+  sample_n(size = mean(sample_size)
+           , weight =total_g4_students
+           ) %>%
+  ungroup() %>%
+  mutate(sample="2nd Set of Sampled Schools")  %>%
+  mutate(strata_prob=(sample_size)*(total_g4_students/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+sample_df <- bind_rows(sample1_df, sample2_df)
+
+
+write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_Edo_sample_",Sys.Date(),".csv"))
+
+#get weights for all schools
+weights_df <- df_updated %>%
+  left_join(strata_df) %>%
+  mutate(
+    totalstudents=sum(total_g4_students),
+  ) %>%
+  group_by(LGA, urban_rural  ) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_g4_students),
+         strata_school_prob=strata_size/totalstudents) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_g4_students/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(weights_df, file=paste0(sampling_folder, "/GEPD_Edo_weights_",Sys.Date(),".csv"))
+```
+Sample by Region
+
+```{r}
+sample_df %>%
+  group_by(LGA, urban_rural ) %>%
+  summarise(N=n()) %>%
+  ungroup() %>%
+  mutate(Percentage = paste0(round(100*N/sum(N),1),"%")) %>%
+  janitor::adorn_totals("row")  %>%  
+  rename(Region=LGA) %>%
+  flextable() %>%
+  theme_booktabs() %>%
+  autofit() 
+```
+
+Sample by Urban/Rural
+
+```{r}
+sample_df %>%
+  group_by(urban_rural) %>%
+  summarise(N=n()) %>%
+  ungroup() %>%
+  mutate(Percentage = paste0(round(100*N/sum(N),1),"%")) %>%
+  janitor::adorn_totals("row")  %>%  
+  flextable() %>%
+  theme_booktabs() %>%
+  autofit() 
+```
+
+
+```{r country_map23, echo=FALSE}
+library(leaflet)
+#unreliable data
+
+   pal <- colorFactor(
+     palette = c("orange", "blue"),
+     domain = c('1st Set of Sampled Schools','2nd Set of Sampled Schools')
+   )
+   
+leaflet(data=sample_df) %>%
+    addTiles()  %>%
+    addCircleMarkers( lng=~Longitude,  lat=~Latitude,
+                      color=~pal(sample_df$sample),
+                      radius=7,
+                popup =  paste("Name: ", sample_df$`EdoBEST School Name`, " <br>",
+                                  "LGA: ", sample_df$LGA, " <br>",
+                                  "School ID: ", sample_df$`EdoBEST School ID`)) %>%
+  addLegend(position="bottomright", pal=pal, values=~sample_df$sample, title="Schools to visit")
+```
+
+# Replacement Schools
+
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+```{r update_dataset_public, echo=FALSE, message=FALSE, warning=FALSE}
+#define sampled schools in sample dataset
+sample_chosen <- sample_df %>%
+  mutate(sample="Sampled School") 
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated %>%
+  left_join(sample_chosen) 
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by( `Senatorial District`) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(`Senatorial District`) %>% 
+  sample_n( mean(2*sampled_districts), weight=total_g4_students) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(LGA,urban_rural, `UBEC SCHOOL CODE`) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(LGA, urban_rural, `UBEC SCHOOL CODE` ) 
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_name=sample_replace2$`EdoBEST School Name`
+sample_replace$replaced_code=sample_replace2$`UBEC SCHOOL CODE`
+sample_replace$replaced_LGA=sample_replace2$LGA
+
+
+
+sample_replace %>%
+  select(`UBEC SCHOOL CODE`,`EdoBEST School Name`,  LGA, replaced_name, replaced_code, replaced_LGA) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`UBEC SCHOOL CODE`,`EdoBEST School Name`,  LGA, replaced_name, replaced_code, replaced_LGA, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
+
+
+
+
+
+# Sanity Checks
+
+Below I will use the survey weights to estimate aspects of the school that are available in the sampling frame. This includes the student totals for grade 5.  These data were collected as part of the school EMIS in Nigeria  The population mean from the full sampling frame is compared to the estimated mean from the school sample using the sampling weights.  Estimated means very far from the population mean can indicate there is something wrong with the weights or that the school sample is biased.
+
+The estimates based on the school weights are similar and within the confidence interval of those produced using the sampling frame.
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+df_updated %>%
+  ungroup() %>%
+  summarise(
+            grd5=mean(as.numeric(`Primary 6`), na.rm=TRUE)
+            ) %>%
+  flextable() %>%
+  add_header_lines("Population estimate")
+
+
+
+
+sample_df %>%
+  ungroup() %>%
+  as_survey_design(strata=c('LGA', 'urban_rural'),
+                   weight=ipw) %>%
+    summarise(
+              grd5=survey_mean(as.numeric(`Primary 6`), na.rm=TRUE)
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on Schools Visited and Sampling Weights")
+```
