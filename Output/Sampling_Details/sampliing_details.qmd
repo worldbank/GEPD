@@ -304,6 +304,9 @@ sampling_df <- rbind(sampling_df, data.frame(
   number_sampled=nrow(school_sample %>% filter(is.na(replacemnts))),
   sampling_notes = 'Schools with less than 15 total students excluded.  70 additional LIRE schools randomly selected on top of 200 normally selected.'
                                              ))
+
+#save as csv
+write_excel_csv(sampling_df, paste0(dir, "/Output/Sampling_Details.csv"))                                            
 ```
 
 

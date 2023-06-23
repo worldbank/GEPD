@@ -134,22 +134,22 @@ for (i in data_list ) {
       # G4 students
       if (i %in% c("final_indicator_data_LERN","final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
                   "final_indicator_data_ATTD",  "final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F")) {
-        temp <- df_weights_function(temp, school_code, g4_stud_weight_component, district)
+        temp <- df_weights_function(temp, sch_id, g4_stud_weight_component, district)
       # Teacher Questionnaire and content knowledge  
       } else if (i %in% c("final_indicator_data_TATT",   "final_indicator_data_TSDP", "final_indicator_data_TSUP",
                           "final_indicator_data_TEVL",   "final_indicator_data_TMNA",   "final_indicator_data_TINM",
                           "final_indicator_data_CONT","final_indicator_data_CONT_M","final_indicator_data_CONT_F")) {
-        temp <- df_weights_function(temp, school_code, teacher_weight_component, district)
+        temp <- df_weights_function(temp, sch_id, teacher_weight_component, district)
       # Teacher Absence  
       } 
         else if (i %in% c("final_indicator_data_EFFT","final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F" )) {
-        temp <- df_weights_function(temp, school_code, abs_weight_component, district)
+        temp <- df_weights_function(temp, sch_id, abs_weight_component, district)
       # G1 Assessment  
       } else if (i %in% c("final_indicator_data_LCAP","final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F" )) {
-        temp <- df_weights_function(temp, school_code, g1_stud_weight_component, district)
+        temp <- df_weights_function(temp, sch_id, g1_stud_weight_component, district)
       # school level  
       } else {
-        temp <- df_weights_function(temp, school_code, unity, district)
+        temp <- df_weights_function(temp, sch_id, unity, district)
       }
     }
     

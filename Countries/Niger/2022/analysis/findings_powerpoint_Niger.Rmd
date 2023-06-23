@@ -202,7 +202,7 @@ wrapper <- function(x, ...)
 countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE", "NER")
 
 dir <- here()
-indicators_dir <- paste(dir, 'Github/GEPD/Indicators', sep="/")
+indicators_dir <- paste(dir, 'GitHub/GEPD/Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
 #read in indicator metadata
@@ -435,7 +435,7 @@ country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
 ```{r dt, echo=FALSE, message=FALSE, warning=FALSE}
   
  
-
+library(srvyr)
 #function for creating these tables
 svymeantab <- function(data, strata) {
   
@@ -554,6 +554,8 @@ main_indicator_labels2<-c('Proficiency on GEPD Assessment',
 labels_df_2<-data.frame(indicators=as.character(indicators_list),
                       indicator_labels=as.character(main_indicator_labels2))
 
+
+school_dta_short_anon <- school_dta_short_anon %>% select(-public)
 
 strat=c('REGION', 'LIRE', 'urban_rural')
 
@@ -710,6 +712,85 @@ strat=c('REGION', 'LIRE', 'urban_rural')
     add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
   
 
+  
+
+#LIRE/non LIRE schools
+ 
+      #get data with public/private status
+        LIRE_status <- school_dta_anon %>%
+          group_by(hashed_school_code) %>%
+          select(LIRE) %>%
+          filter(!is.na(LIRE)) %>% 
+          summarise(LIRE=first(LIRE))
+        
+      #Now do breakdown by non-public/public
+      #private
+      
+          
+        
+      sumstats_school_LIRE <- school_dta_short_anon %>%
+        left_join(LIRE_status) %>%
+        filter(LIRE=="LIRE School") 
+      
+      
+
+      
+      #add variable label
+      sumstats_school_LIRE_df <-  svymeantab('sumstats_school_LIRE', strata=strat) %>%
+        rename(
+          mean_lire=mean,
+          ci_lire=ci
+        )
+        
+      
+      #private
+      sumstats_school_nonlire <- school_dta_short_anon %>%
+        left_join(LIRE_status) %>%
+        filter(LIRE=="Non-LIRE School")       
+      
+      
+      
+      #add variable label
+      sumstats_school_nonlire_df <-  svymeantab('sumstats_school_nonlire', strata=strat) %>%
+        rename(
+          mean_nonlire=mean,
+          ci_nonlire=ci
+        )
+        
+      
+      
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_LIRE_df) %>%
+        left_join(sumstats_school_nonlire_df)
+      
+    
+      sumstats_df <- sumstats_school_df_final %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_lire, ci_lire, mean_nonlire, ci_nonlire)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_nonlire))/as.numeric(mean_lire))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Niger 2022 - LIRE/Non LIRE Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Non LIRE Schools to LIRE Schools"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"LIRE"=2,"Non-LIRE"=2, " "=1))
 
     
 ```
@@ -834,53 +915,44 @@ inpt_urban_rural
     ##############################
 
 
-      df_reg<-school_dta_short_anon
       
+  df_reg<-school_dta_short_anon
 
-      
-      
-      regplots<- ggplot(data=df_reg, aes(x=ecd_student_knowledge, y=student_knowledge, weight=ipw, color="#0081a8")) +
-        geom_point() +
-        geom_smooth(method='lm') +
-        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
-        theme_bw() +
-        theme(
-          text = element_text(size = 14),
-          legend.position='none'
-        ) +
-        expand_limits(x = 0, y = 0) +
-        labs(colour = "Indicator") +
-        ylab(paste0("4th Grade Score")) +
-        xlab(paste0("1st Grade Score")) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
-      
-      
-      # regplots2<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#ff0000")) +
-      #   geom_point() +
-      #   geom_smooth(method='lm') +
-      #   scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#ff0000")) +
-      #   theme_bw() +
-      #   theme(
-      #     text = element_text(size = 14),
-      #     legend.position='none',
-      #     axis.text.y=element_blank(),
-      #     axis.title.y=element_blank()
-      #   ) +
-      #   expand_limits(x = 1, y = 0) +
-      #   labs(colour = "Indicator") +
-      #   ylab(paste0("4th Grade Score")) +
-      #   xlab(paste0("Pedagogy Score")) +
-      #   stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-      #                label.x.npc = "right", label.y.npc = 0.2,
-      #                formula = 'y~x', parse = TRUE, size = 5)
-      
-      
-      regplots +
-          plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against 1st Grade Student Scores",90))
+library(ggtext)
 
-      
+#add equations to plots
+eq_plot_txt <- function(data, inp, var) {
+  eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+  coef <- round(coef(eq),2)
+  std_err <- round(sqrt(diag(vcov(eq))),2)
+  r_2<- round(summary(eq)$r.squared,2)
+  sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+  
+}
+
+
+regplots<- ggplot(data=df_reg, aes(x=ecd_student_knowledge, y=student_knowledge, weight=ipw, color="#0081a8")) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+  theme_bw() +
+  theme(
+    text = element_text(size = 14),
+    legend.position='none'
+  ) +
+  expand_limits(x = 0, y = 0) +
+  labs(colour = "Indicator") +
+  ylab(paste0("4th Grade Score")) +
+  xlab(paste0("1st Grade Score")) +
+  geom_richtext(
+    aes(x=10,y=10,label = eq_plot_txt(df_reg, student_knowledge, ecd_student_knowledge), hjust=0.2)
+  ) 
+
+
+
+regplots +
+  plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against 1st Grade Student Scores",90))
+
 
 
       
@@ -909,29 +981,34 @@ inpt_urban_rural
 
       
       
-      regplots<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#0081a8")) +
-        geom_point() +
-        geom_smooth(method='lm') +
-        scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
-        theme_bw() +
-        theme(
-          text = element_text(size = 14),
-          legend.position='none'
-        ) +
-        expand_limits(x = 0, y = 0) +
-        ggtitle(str_wrap("Scatterplot of School Average 4th Grade Student Scores against Teacher Pedagogical Scores",60)) +
-        labs(colour = "Indicator") +
-        ylab(paste0("4th Grade Score")) +
-        xlab(paste0("Teach Score")) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+regplots<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#0081a8")) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  scale_color_manual(labels = c( "Principal Indicator "),  values= c( "#0081a8")) +
+  theme_bw() +
+  theme(
+    text = element_text(size = 14),
+    legend.position='none'
+  ) +
+  expand_limits(x = 0, y = 0) +
+  labs(colour = "Indicator") +
+  ylab(paste0("4th Grade Score")) +
+  xlab(paste0("TEACH score")) +
+  geom_richtext(
+    aes(x=10,y=10,label = eq_plot_txt(df_reg, student_knowledge, teach_score), hjust=0.2)
+  ) 
+
+
+
+regplots +
+  plot_annotation(title = str_wrap("Scatterplot of School Average 4th Grade Student Scores against TEACH Scores",90))
       
       
-      regplots
       
       
       
+      
+    summary(lm(student_knowledge~teach_score, data=df_reg))
 
     
 
@@ -1153,30 +1230,30 @@ main_indicator_labels<-c(
       bind_rows(expert_dta_radar)
        
    #create radar plot
-    ggradar(data_radar,
-            grid.min=1,
-            grid.mid=3,
-            grid.max=5,
-            values.radar=c("1", "3", "5"),
-            axis.label.size=3,
-            axis.label.offset = 1.25,
-            axis.labels= str_wrap(main_indicator_labels,15),
-            plot.extent.x.sf = 1.5, 
-            plot.extent.y.sf = 1.3,
-            legend.text.size = 3
-              ) +
-      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
-      theme_minimal()+
-      theme(    axis.title = ggplot2::element_blank(),
-    axis.text.x = ggplot2::element_blank(),
-    axis.text.y = ggplot2::element_blank(),
-    axis.ticks = ggplot2::element_blank(),
-    axis.line = ggplot2::element_blank(),
-    panel.grid.minor = ggplot2::element_blank(),
-    panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
-    panel.grid.major.x = ggplot2::element_blank()
-
-    )
+    # ggradar(data_radar,
+    #         grid.min=1,
+    #         grid.mid=3,
+    #         grid.max=5,
+    #         values.radar=c("1", "3", "5"),
+    #         axis.label.size=3,
+    #         axis.label.offset = 1.25,
+    #         axis.labels= str_wrap(main_indicator_labels,15),
+    #         plot.extent.x.sf = 1.5, 
+    #         plot.extent.y.sf = 1.3,
+    #         legend.text.size = 3
+    #           ) +
+    #   ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+    #   theme_minimal()+
+    #   theme(    axis.title = ggplot2::element_blank(),
+    # axis.text.x = ggplot2::element_blank(),
+    # axis.text.y = ggplot2::element_blank(),
+    # axis.ticks = ggplot2::element_blank(),
+    # axis.line = ggplot2::element_blank(),
+    # panel.grid.minor = ggplot2::element_blank(),
+    # panel.grid.major.y = ggplot2::element_line(color="#cbcbcb"),
+    # panel.grid.major.x = ggplot2::element_blank()
+    # 
+    # )
     
 ```
 
@@ -1748,6 +1825,85 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
   
 
+    
+
+#LIRE/non LIRE schools
+ 
+      #get data with public/private status
+        LIRE_status <- school_dta_anon %>%
+          group_by(hashed_school_code) %>%
+          select(LIRE) %>%
+          filter(!is.na(LIRE)) %>% 
+          summarise(LIRE=first(LIRE))
+        
+      #Now do breakdown by non-public/public
+      #private
+      
+          
+        
+      sumstats_school_LIRE <- school_dta_short_anon %>%
+        left_join(LIRE_status) %>%
+        filter(LIRE=="LIRE School") 
+      
+      
+
+      
+      #add variable label
+      sumstats_school_LIRE_df <-  svymeantab('sumstats_school_LIRE', strata=strat) %>%
+        rename(
+          mean_lire=mean,
+          ci_lire=ci
+        )
+        
+      
+      #private
+      sumstats_school_nonlire <- school_dta_short_anon %>%
+        left_join(LIRE_status) %>%
+        filter(LIRE=="Non-LIRE School")       
+      
+      
+      
+      #add variable label
+      sumstats_school_nonlire_df <-  svymeantab('sumstats_school_nonlire', strata=strat) %>%
+        rename(
+          mean_nonlire=mean,
+          ci_nonlire=ci
+        )
+        
+      
+      
+      
+      #now bind urban/rural with the main results
+      sumstats_school_df_final <- sumstats_school_df %>%
+        left_join(sumstats_school_LIRE_df) %>%
+        left_join(sumstats_school_nonlire_df)
+      
+    
+      sumstats_df <- sumstats_school_df_final %>%
+        arrange(factor(varlabel, levels=main_indicator_labels2))
+      
+
+      
+      sumstats_df <- sumstats_df %>%
+        select(varlabel,  mean, ci, mean_lire, ci_lire, mean_nonlire, ci_nonlire)
+      
+
+      
+
+      sumstats_df <- sumstats_df %>%
+        mutate(ratio=(as.numeric(mean_nonlire))/as.numeric(mean_lire))
+      
+  sumstats_df %>%
+    mutate(ratio=cell_spec(
+      round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
+    )) %>%
+    kable(caption = "Summary Statistics of Dashboard Indicators - Niger 2022 - LIRE/Non LIRE Schools",
+          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
+          , "Mean", "95% Confident Interval", "Ratio of Non LIRE Schools to LIRE Schools"),
+          digits = 1, 
+          escape=F) %>%
+    kable_styling("striped") %>%
+    add_header_above(c(" "=1, "Overall"=2,"LIRE"=2,"Non-LIRE"=2, " "=1))
 
     
 ```

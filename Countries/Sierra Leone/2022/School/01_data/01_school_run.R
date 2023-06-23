@@ -27,9 +27,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'ETH'
-country_name <- "Ethiopia"
-year <- '2021'
+country <-'SLE'
+country_name <- "Sierra Leone"
+year <- '2022'
 
 #########################
 # File paths #
@@ -68,15 +68,16 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 # Launch Code
 ########################
 #move working directory to github main folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-
+dir <- here()
+setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
 # #launch file to access data from API
 need_api=0
-teach_avail=1
+teach_avail=0
 source('02_school_api.R', local=TRUE)
  
 # #launch file to clear data=
-source('03_school_data_cleaner.R', local=TRUE)
+rmarkdown::render("03_school_data_cleaner.Rmd")
+
 
 source('04_school_anonymizer.R', local=TRUE)
 

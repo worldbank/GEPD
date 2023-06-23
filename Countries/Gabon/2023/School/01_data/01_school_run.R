@@ -69,14 +69,14 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
 #########################
 # Launch Code
 ########################
-#move working directory to github main folder
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+# dir <- here()
+# setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
 
 # #launch file to access data from API
 need_api=1
 school_file<-"EPDash.dta"
 
-source('02_school_api.R', local=TRUE)
+#source('02_school_api.R', local=TRUE)
  
 # #launch file to clean data=
 rmarkdown::render("03_school_data_cleaner.Rmd")

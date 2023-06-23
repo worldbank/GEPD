@@ -79,12 +79,7 @@ close(filecon)
 
 #unzip
 unzip(file.path(download_folder, tounzip), exdir=download_folder)
-} else {
-  tounzip <- paste("mydata-",'2020-02-28', ".zip" ,sep="")
-  
-  unzip(file.path(download_folder, tounzip), exdir=download_folder)
-  
-}
+} 
 
 
 #Create function to save metadata for each question in each module

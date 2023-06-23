@@ -100,13 +100,15 @@ makeVlist <- function(dta) {
 
 
 #Read in list of indicators
+#Read in list of indicators
 indicators <- readr::read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 indicators <- indicators %>%
-  select(-c('..1', '...8'))
+  select(-c('...1', '...8'))
+
 
 indicator_names <-  indicators$indicator_tag
 indicator_names <- sapply(indicator_names, tolower)

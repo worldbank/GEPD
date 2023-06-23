@@ -524,7 +524,7 @@ icons2 <- awesomeIcons(
 )
 
 
-map2 <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
+map2 <- function(df_input) {    leaflet(df_input, height=2200, width=1020) %>% 
   addTiles()  %>%
   addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons2,
                     popup = paste("Name: ", school_map$school_name_preload, " <br>",

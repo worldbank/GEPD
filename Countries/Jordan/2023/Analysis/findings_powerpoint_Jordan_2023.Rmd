@@ -895,7 +895,16 @@ inpt_urban_rural
 
       df_reg<-school_dta_short_anon
       
-
+    
+          #add equations to plots
+    eq_plot_txt <- function(data, inp, var) {
+      eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
+      coef <- round(coef(eq),2)
+      std_err <- round(sqrt(diag(vcov(eq))),2)
+      r_2<- round(summary(eq)$r.squared,2)
+      sprintf(" y = %.2f + %.2f x, R<sup>2</sup> = %.2f <br> (%.2f) <span style='color:white'> %s</span> (%.2f) ", coef[1], coef[2], r_2[1], std_err[1],"s", std_err[2])
+      
+    }
       
       
       regplots<- ggplot(data=df_reg, aes(x=ecd_student_knowledge, y=student_knowledge, weight=ipw, color="#0081a8")) +
@@ -911,9 +920,9 @@ inpt_urban_rural
         labs(colour = "Indicator") +
         ylab(paste0("4th Grade Score")) +
         xlab(paste0("1st Grade Score")) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+        geom_richtext(
+          aes(x=10,y=10,label = eq_plot_txt(df_reg, student_knowledge, ecd_student_knowledge), hjust=0.2)
+        ) 
       
       
       # regplots2<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#ff0000")) +
