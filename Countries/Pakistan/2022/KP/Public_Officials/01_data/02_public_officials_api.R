@@ -127,26 +127,23 @@ makeVlist <- function(dta) {
 
 
 #read in public officials interview file
-#read in public officials interview file
-
-#read in public officials interview file
-public_officials_v1_dta<-read_dta(file.path(download_folder, 'public_officials_v1.dta')) %>%
-  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) 
-public_officials_v2_dta<-read_dta(file.path(download_folder, 'public_officials_v2.dta')) %>%
-  mutate(m1s0q1_number_other=as.character(m1s0q1_number_other)) 
+#read in school level file
+public_officials_dta_1 <- read_dta(file.path(download_folder, "/version1/", po_file))
+public_officials_dta_2 <- read_dta(file.path(download_folder, "/version2/", po_file))
+public_officials_dta_3 <- read_dta(file.path(download_folder, "/version3/", po_file))
+public_officials_dta_4 <- read_dta(file.path(download_folder, "/version4/", po_file))
 
 
 
-public_officials_dta<-public_officials_v1_dta %>%
-  bind_rows(public_officials_v2_dta)
+public_officials_dta <- bind_rows(
+                                  public_officials_dta_3, public_officials_dta_4) %>%
+  filter(!(inter_officials=='Vacant Position' | inter_officials=='Vacant position' )) %>%
+  filter(m1s2q2!=0)
+
+
 
 public_officials_metadata<-makeVlist(public_officials_dta)
 
-# #bind version 7
-# public_officials_dta_2<-read_dta(file.path(download_folder,'version_2', po_file)) 
-# 
-# public_officials_dta <- public_officials_dta %>%
-#   bind_rows(public_officials_dta_2)
 
 
 public_officials_dta <- public_officials_dta %>%

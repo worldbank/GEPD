@@ -66,15 +66,13 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 
 #Load original sample of schools
 #Load original sample of schools
-currentDate<-c("2023-05-24")
+currentDate<-c("2023-06-28")
 
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_KP_sample_', currentDate,  '.csv', sep="")
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_KP_weights_200_', currentDate,  '.csv', sep="")
 ) %>%
   mutate(school_code=EmisCode,
-         urban_rural=Location) %>%
-  select(school_code, District, Tehsil,urban_rural,Gender,
-         ipw) 
+         urban_rural=Location)
 
 
 
@@ -88,7 +86,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   
   dataset %>%
     left_join(data_set_updated)  %>%
-    mutate(province=province,
+    mutate(
            district=District) 
 }
 
@@ -128,7 +126,7 @@ for (i in data_list ) {
     
     #add on weights
     if ("school_code" %in% colnames(temp)) {
-      temp <- df_weights_function(temp, Inst_ID, totalstudents, District)
+      temp <- df_weights_function(temp, EmisCode, totalstudents, Location)
     }
     
     #Scrub names, geocodes

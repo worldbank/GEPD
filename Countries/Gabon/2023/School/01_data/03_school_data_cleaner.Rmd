@@ -3168,7 +3168,12 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
-                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F"))
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
+                                "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
+                                "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
+                                "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
+                                "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
 
 
 #Create list of key indicators
