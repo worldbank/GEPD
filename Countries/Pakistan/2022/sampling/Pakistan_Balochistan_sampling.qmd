@@ -1,0 +1,372 @@
+---
+title: "Pakistan (Balochistan) Sampling"
+author: "Brian Stacy"
+date: "7/5/2023"
+output: html_document
+execute: 
+  echo: false
+  warning: false
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(here)
+library(readxl)
+library(flextable) 
+library(leaflet)
+library(Hmisc)
+#Country name
+country <-'PAK'
+country_name <- "Pakistan"
+year <- '2022'
+province <- "Balochistan"
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"Flat sheet of Census 2021-22 Genrated on 21-Dec-2022.xlsx"
+frame_sheet <- "Final Sheet"
+
+
+set.seed(897394)
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+
+
+## Introduction
+
+This file outlines the sampling strategy for Pakistan (Balochistan).
+
+## General Notes on Sampling
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to detect differences by urban/rural location. 
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff.  In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field.  A total of 10 teachers will be sampled for absenteeism.  Five teachers will be interviewed and given a content knowledge exam.  Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random.  Stratification will be based on the school’s urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions. 
+
+
+
+ 
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions.  New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below.  The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years).  Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level.  We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators.  It will consist of streamlined versions of existing instruments—including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality—together with new questions to fill gaps in those instruments.  Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified  random sampling. As currently envisioned, the School Survey will include 8 short modules.
+Expert Survey: The Expert Survey will collect information to feed into the policy indicators.  This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years).  The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+## KP Sampling
+
+200 schools will be drawn.  The strata are the urban/rural status of the school and the gender of the school (male,female, mixed).  Schools from each of the 34 districts are selected.
+
+
+```{r}
+#| label: loadraw
+#read sample frame
+df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet) %>%
+  mutate(
+    total_enrollment=`Total`,
+    class_prep=GirlKachi+BoyKachi,                
+    class_1=BoyPakki+GirlPakki,                   
+    class_1_girls=GirlPakki,                   
+    class_1_boys=BoyPakki,                   
+    class_2=Boy2nd+Girl2nd,                   
+    class_3=Boy3rd+Girl3rd,                    
+    class_4=Boy4th+Girl4th,                    
+    class_4_girls=Girl4th,                    
+    class_4_boys=Boy4th,                    
+    class_5=Boy5th+Girl5th,                    
+    class_6=Boy6th+ Girl6th
+  )
+
+
+
+```
+
+
+```{r}
+#| label: updateframe
+df_updated_gepd <- df_raw %>%
+  filter(class_1>=3,
+         class_4>=3) 
+
+
+df_updated <- df_raw %>%
+  filter(class_prep>=3,
+         class_1>=3,
+         class_4>=3,
+         class_5>=3)
+```
+
+Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
+
+However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(class_prep<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(class_5<3))` because of the grade 5 restriction. 
+
+
+Basic summary stats of frame
+
+```{r}
+#| label: tbl-sumstats
+#| tbl-cap: Summary Statistics for Balochistan Raw Sampling Frame
+#level
+df_updated_gepd %>% 
+  group_by(SchoolLevel) %>% 
+  summarise(n=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_updated_gepd %>% 
+  group_by(District) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by District') %>% 
+  autofit()
+
+#Gender
+df_updated_gepd %>% 
+  group_by(Gender) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+
+#Urban/rural
+df_updated_gepd %>% 
+  group_by(Location) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+
+
+
+```
+
+# Sampling
+
+## 200 schools
+```{r large, echo=TRUE}
+# get numbers to select from each district
+# strata_df_200 <- df_updated_gepd %>%
+#   filter(!(Location=="NULL")) %>%
+#   group_by(District,Location ) %>%
+#   summarise(nstudents_district=sum(class_4),
+#                      total_district=n()
+# ) %>%
+#   ungroup() %>%
+#   mutate(sample_size=200*round(nstudents_district/sum(nstudents_district),2))
+# 
+# write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
+
+strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
+
+
+
+# set the numbers of schools selected by strata (grade)
+
+sample_df_200 <- df_updated %>%
+  left_join(strata_df_200) %>%
+  ungroup() %>%
+  mutate(
+    totalstudents=sum(class_4),
+  ) %>%
+  group_by(District,Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(class_4),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = min(sample_size), weight= class_4) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(class_4/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+
+write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_sample_200_",Sys.Date(),".csv"))
+
+weights_df_200 <- df_updated %>%
+  left_join(strata_df_200) %>%
+  ungroup() %>%
+  mutate(
+    totalstudents=sum(total_enrollment),
+  ) %>%
+  group_by(District,Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+
+  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_weights_200_",Sys.Date(),".csv"))
+
+```
+
+
+
+Basic summary stats of overall frame
+
+```{r}
+#| label: tbl-sumstats2
+#| tbl-cap: Summary Statistics for Balochistan Selected Sample
+#level
+sample_df_200 %>% 
+  group_by(SchoolLevel) %>% 
+  summarise(n=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+sample_df_200 %>% 
+  group_by(District) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by District') %>% 
+  autofit()
+
+#Gender
+sample_df_200 %>% 
+  group_by(Gender) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+
+#Urban/rural
+sample_df_200 %>% 
+  group_by(Location) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+
+
+
+```
+# Replacement Schools
+
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+```{r}
+#| label: tbl-update_dataset_public
+#| tbl-cap: Sanity Checks
+
+
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_sample_200_","2023-07-05",".csv")) %>%
+  mutate(sample="Sampled School") %>%
+  select(-YearofNonFunctinal)
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated %>%
+  left_join(sample_chosen) 
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by( District) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(District) %>%
+  sample_n(2*mean(sampled_districts), weight=class_4) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(District,Location, BemisCode) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(District,Location, BemisCode)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$`School Name`
+sample_replace$replaced_EmisCode=sample_replace2$BemisCode
+sample_replace$replaced_District=sample_replace2$District
+
+
+
+sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
+
+
+
+# Sanity Checks
+
+Below I will use the survey weights to estimate aspects of the school that are available in the sampling frame. These are teacher numbers per school, Electricity, Gas, Drinking Water. These data were collected as part of the school EMIS in Balochistan The population mean from the full sampling frame is compared to the estimated mean from the school sample using the sampling weights. Estimated means very far from the population mean can indicate there is something wrong with the weights or that the school sample is biased.
+
+The estimates based on the school weights are similar and within the confidence interval of those produced using the sampling frame.
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+df_updated %>%
+  ungroup() %>%
+  summarise(total_teachers=mean(`Teacher Total`),
+            electricity=mean(ElectricityInSchool=='Yes'), 
+            gas=mean(GasInSchool=='Yes'),
+            drinking_water=mean(DrinkingWaterAtSchool=='Yes')) %>%
+  flextable() %>%
+  add_header_lines("Population estimate")
+
+
+
+
+sample_df_200 %>%
+  ungroup() %>%
+  as_survey_design(strata=c('District','Location'),
+                   weight=ipw) %>%
+    summarise(total_teachers=survey_mean(`Teacher Total`),
+            electricity=survey_mean(ElectricityInSchool=='Yes'), 
+            gas=survey_mean(GasInSchool=='Yes'),
+            drinking_water=survey_mean(DrinkingWaterAtSchool=='Yes')
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on Schools Visited and Sampling Weights")
+```
