@@ -2,7 +2,9 @@
 title: "Pakistan (Balochistan) Sampling"
 author: "Brian Stacy"
 date: "7/5/2023"
-output: html_document
+format:
+  html: 
+      embed-resources: true
 execute: 
   echo: false
   warning: false
