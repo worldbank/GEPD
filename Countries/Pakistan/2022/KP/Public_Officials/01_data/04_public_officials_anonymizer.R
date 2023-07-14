@@ -17,7 +17,7 @@ load(file = file.path(confidential_folder, "public_officials_indicators_data.RDa
 
 #generate list of datasets to anonnymize
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators.md', delim="|", trim_ws=TRUE)
 
 indicators <- indicators %>%
   filter(Series!="---") %>%

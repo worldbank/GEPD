@@ -24,7 +24,7 @@ final_school_data <- final_school_data %>%
 
 #generate list of datasets to anonnymize
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators.md', delim="|", trim_ws=TRUE)
 
 indicators <- indicators %>%
   filter(Series!="---") %>%
@@ -66,12 +66,12 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 
 #Load original sample of schools
 #Load original sample of schools
-currentDate<-c("2022-09-21")
+currentDate<-c("2022-07-20")
 
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data",province,"sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_KP_sample_200_', currentDate,  '.csv', sep="")
 ) %>%
-  mutate(school_code=Inst_ID,
+  mutate(school_code=EmisCode,
          urban_rural=Location) %>%
   select(school_code, District, Tehsil,urban_rural,Gender,
          ipw) 
@@ -110,7 +110,7 @@ write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"
 #######################################
 #loop through databases and remove PII
 #######################################
-
+save_folder <- ""
 
 
 for (i in data_list ) {
@@ -210,3 +210,4 @@ for (i in data_list ) {
 }
 
 save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+

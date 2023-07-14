@@ -30,7 +30,7 @@ library(GGally)
 #Country name and year of survey
 country <-'PAK'
 country_name <- "Pakistan"
-province <- "ICT"
+province <- "KP"
 year <- '2022'
 
 #########################
@@ -116,7 +116,7 @@ bin_var_3 <- function(var, val) {
 ```{r indicator}
 
 #Read in list of indicators
-indicators <- read_csv(here::here('Indicators','indicators.csv'),  trim_ws=TRUE)
+indicators <- read_csv('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators.csv')
 
 
 
@@ -447,7 +447,7 @@ school_dta<- school_dta %>%
 school_metadta<-makeVlist(school_dta)
 
 #Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+indicators <- read_delim("C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators.md", delim="|", trim_ws=TRUE)
 indicators <- indicators %>%
   filter(Series!="---") %>%
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -893,7 +893,8 @@ plot(out)
   low_medium_high_na <- c("s_a1_1",
                           "s_a1_2",
                           "s_a1_3",
-                          "s_a1_4",
+                          "s_a1_4a",
+                          "s_a1_4b",
                           "s_b4_1",
                           "s_b4_2",
                           "s_b4_3"
@@ -1736,8 +1737,8 @@ school_teacher_questionnaire_INPT <- teacher_questionnaire_INPT %>%
 school_data_INPT <- school_data_INPT %>%
   mutate(used_ict_num=case_when(
     m1sbq12_inpt==0  ~ 0,
-      (m1sbq12_inpt>=1 ) ~ m1sbq14_inpt,
-      (is.na(m1sbq12_inpt==0) | is.na(m1sbq14_inpt)) ~ as.numeric(NA)
+      (m1sbq12_inpt>=1 ) ~ m1sbq15_inpt,
+      (is.na(m1sbq12_inpt==0) | is.na(m1sbq15_inpt)) ~ as.numeric(NA)
   ))
 
 #access to ICT
@@ -3249,9 +3250,9 @@ write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicat
 
 
 
-extra_info='yes'
-
-if (extra_info=='yes') {
+# extra_info='yes'
+# 
+# if (extra_info=='yes') {
 #################################
 # Read in Satellite Data on GDP
 #################################
@@ -3271,61 +3272,61 @@ if (extra_info=='yes') {
 # suitability for a particular application. This product was compiled by DECRG for the Global Assessment Report on Risk 
 # Reduction (GAR). It was modeled using global data. Credit: GIS processing World Bank DECRG, Washington, DC, 
 # extrapolation UNEP/GRID-Geneva.
-
-#Load original sample of schools
-currentDate<-c("2022-09-21")
-
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
-                             ) %>%
-  mutate(school_code=Inst_ID)
-
-
-
-#open the raster
-raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/Maps/GDP", sep="/")) 
-
-gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
-
-#add GDP to database
-school_gdp <- school_dta_short %>%
-  left_join(data_set_updated) %>%
-  # mutate(longitude=as.character(geopointlongitude)) %>%
-  # mutate(latitude=as.character(geopointlatitude)) %>%
-  # mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
-  #        lon=if_else(is.na(lon), as.numeric(longitude), lon)) %>%
-  filter(!is.na(lat) & !is.na(lon)) %>%
-  dplyr::select(school_code, lon, lat)
-
-
-sp::coordinates(school_gdp) <- c("lon","lat")
-school_gdp$GDP <- raster::extract(gdp_raster, school_gdp, 
-                                  buffer=1000, # 1000m radius
-                                  fun=mean,na.rm=T,
-                                  method='simple')
-
-
-school_gdp <- as.data.frame(school_gdp) %>%
-  mutate(GDP=as.numeric(GDP)) %>%
-  select(school_code, GDP)
-
-####################################
-# Multiple Imputation of missing values
-###################################
-
-#use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
-#https://academic.oup.com/aje/article/179/6/764/107562
-# impdata<-mice::mice(school_dta_short, m=1,
-#            method='rf',
-#            maxit = 50, seed = 500)
-
-school_dta_short_imp <- school_dta_short
-
-} else {
-  school_dta_short_imp <- school_dta_short
-  school_gdp <-school_dta_short
-}
-
+# 
+# #Load original sample of schools
+# currentDate<-c("2022-09-21")
+# 
+# sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/sampling/", sep="/"))
+# data_set_updated <- read_csv(paste(sample_folder, '/GEPD_ICT_sample_', currentDate,  '.csv', sep="")
+#                              ) %>%
+#   mutate(school_code=Inst_ID)
+# 
+# 
+# 
+# #open the raster
+# raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/Maps/GDP", sep="/")) 
+# 
+# gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
+# 
+# #add GDP to database
+# school_gdp <- school_dta_short %>%
+#   left_join(data_set_updated) %>%
+#   # mutate(longitude=as.character(geopointlongitude)) %>%
+#   # mutate(latitude=as.character(geopointlatitude)) %>%
+#   # mutate(lat=if_else(is.na(lat), as.numeric(latitude), lat),
+#   #        lon=if_else(is.na(lon), as.numeric(longitude), lon)) %>%
+#   filter(!is.na(lat) & !is.na(lon)) %>%
+#   dplyr::select(school_code, lon, lat)
+# 
+# 
+# sp::coordinates(school_gdp) <- c("lon","lat")
+# school_gdp$GDP <- raster::extract(gdp_raster, school_gdp, 
+#                                   buffer=1000, # 1000m radius
+#                                   fun=mean,na.rm=T,
+#                                   method='simple')
+# 
+# 
+# school_gdp <- as.data.frame(school_gdp) %>%
+#   mutate(GDP=as.numeric(GDP)) %>%
+#   select(school_code, GDP)
+# 
+# ####################################
+# # Multiple Imputation of missing values
+# ###################################
+# 
+# #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
+# #https://academic.oup.com/aje/article/179/6/764/107562
+# # impdata<-mice::mice(school_dta_short, m=1,
+# #            method='rf',
+# #            maxit = 50, seed = 500)
+# 
+# school_dta_short_imp <- school_dta_short
+# 
+# } else {
+#   school_dta_short_imp <- school_dta_short
+#   school_gdp <-school_dta_short
+# }
+# 
 
 
 ################################
@@ -3338,11 +3339,20 @@ metadta <- read_excel(path=file.path(download_folder, "metadata.xlsx"))
 
 #saves the following in R and stata format
 
-data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               "indicators", 'metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon')
+data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 
+               #'school_dta_short_imp', 
+               'school_data_preamble', 
+               'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
+               "indicators", 'metadta', 
+               #'school_gdp', 
+               'assess_4th_grade_anon', 'ecd_dta_anon')
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'metadta',  'school_gdp' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
+save(list=c(ind_dta_list,"school_dta_short", 
+            #'school_dta_short_imp', 
+            "indicators", 'metadta'  
+            #'school_gdp' 
+            ), file = file.path(confidential_folder, "school_indicators_data.RData"))
 
 
 
