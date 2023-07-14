@@ -77,7 +77,7 @@ if (need_api==1) {
   id <-  unlist(content(pst)[1])
   
   #sleep for 10 seconds to wait for stata file to compile
-  Sys.sleep(15)
+  Sys.sleep(30)
   
   
   

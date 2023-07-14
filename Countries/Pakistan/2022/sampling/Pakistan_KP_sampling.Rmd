@@ -285,6 +285,23 @@ sample_df_200 <- df_updated_gepd_nmd %>%
 
 write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_KP_sample_200_",Sys.Date(),".csv"))
 
+weights_df_200 <- df_updated_gepd_nmd %>%
+  filter(!(Location=="NULL")) %>%
+  left_join(strata_df_200) %>%
+  mutate(
+    totalstudents=sum(total_enrollment),
+  ) %>%
+  group_by(Gender, Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+
+  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_KP_weights_200_",Sys.Date(),".csv"))
+
 ```
 
 ```{r country_map, echo=FALSE}
@@ -376,3 +393,60 @@ leaflet(data=sample_df_175) %>%
   addLegend(position="bottomright", pal=pal, values=~sample_df_175$Gender, title="Schools to visit")
 ```
 
+
+# Replacement Schools
+
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+```{r update_dataset_public, echo=FALSE, message=FALSE, warning=FALSE}
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_KP_sample_200_","2022-11-08",".csv")) %>%
+  mutate(sample="Sampled School") %>%
+  select(-Pk_No, -NA_NO)
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated %>%
+  left_join(sample_chosen) 
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by( District) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(District) %>%
+  sample_n(2*mean(sampled_districts), weight=total_enrollment) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(District, Gender, EmisCode) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(District, EmisCode)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$School_Name
+sample_replace$replaced_EmisCode=sample_replace2$EmisCode
+sample_replace$replaced_District=sample_replace2$District
+
+
+
+sample_replace %>%
+  select(School_Name, EmisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(School_Name, EmisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```

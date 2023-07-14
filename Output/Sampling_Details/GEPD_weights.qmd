@@ -84,7 +84,8 @@ SLE_weights <- weights_reader("SLE", 2022) %>%
 #Niger
 NER_weights <- weights_reader("NER", 2022) %>%
   mutate(iso3c="NER",
-         date=2022)
+         date=2022) %>%
+  select(-public)
 ```
 
 ```{r}
@@ -102,7 +103,22 @@ school_weights <- bind_rows(
            "g1_stud_weight_component",
            "ipw",
            "iso3c", 
-           "date"))
+           "date")) %>%
+  #fix an issue where there were no eligible teachers
+  mutate(teacher_obs_weight_component=case_when(
+    teacher_obs_weight_component==-Inf ~ 1,
+    teacher_obs_weight_component==0 ~ 1,
+    is.na(teacher_obs_weight_component) ~ 1,
+    TRUE ~ teacher_obs_weight_component
+  )) %>%
+  mutate(
+    g4_stud_weight=ipw*g4_stud_weight_component,
+    g1_stud_weight=ipw*g1_stud_weight_component,
+    teacher_absence_weight=ipw*abs_weight_component,
+    teacher_questionnaire_weight=ipw*teacher_weight_component,
+    teacher_observation_weight=ipw*teacher_obs_weight_component
+  )
+  
 
 
 #check for duplicates
@@ -114,6 +130,6 @@ duplicates <- school_weights %>%
 
 write_dta(school_weights, paste0(project_folder, "/General/LEGO_Teacher_Paper/5_output_data/GEPD_weights.dta"))
 
-
+school_weights %>% group_by(iso3c) %>% summarise(teacher_obs_weight_component=median(teacher_obs_weight_component))
 ```
 
