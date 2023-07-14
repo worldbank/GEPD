@@ -62,9 +62,8 @@ library(skimr)
   } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
 
     dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
-    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+    shared_loc <- 'C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
   }
-
 
 indicators_dir <- paste(dir, 'Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
@@ -136,19 +135,22 @@ indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 # read in indicator data
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
   mutate(country="Peru",
-         date='2019') %>%
-  select(-year)
+         date='2019') 
+#%>%
+  #select(-year)
 
 RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
   mutate(country="Rwanda",
-         date='2020') %>%
-  select(-year)
+         date='2020') 
+# %>%
+#   select(-year)
 
 
 JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
   mutate(country="Jordan",
-         date='2019') %>%
-  select(-year)
+         date='2019') 
+# %>%
+#   select(-year)
 
 SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
   mutate(country="Sierra Leone",
@@ -157,22 +159,25 @@ SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".cs
 
 NER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'NER', ".csv")) %>%
   mutate(country="Niger",
-         date='2022') %>%
-  select(-year)
+         date='2022') 
+# %>%
+#   select(-year)
 
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021')  %>%
-  select(-year)
+         date='2020-2021')  
+# %>%
+#   select(-year)
 
 # %>%
 #   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
-         date='2021') %>%
-  select(-year)
+         date='2021') 
+# %>%
+#   select(-year)
 
 
 # Indicator names
@@ -1781,9 +1786,19 @@ NER_school_office_link_df <- NER_school_anon_df %>%
 # Combined
 ##########
 
+NER_school_office_link_df <- NER_school_office_link_df %>% 
+  mutate(public = case_when(
+    public ==0 ~ "Private",
+    public ==1 ~ "Public"
+  ))
 
-
-combined_school_office_df <- bind_rows(PER_school_office_link_df, JOR_school_office_link_df, RWA_school_office_link_df, ETH_school_office_link_df, MDG_school_office_link_df, SLE_school_office_link_df, NER_school_office_link_df) 
+combined_school_office_df <- bind_rows(PER_school_office_link_df , 
+                                       JOR_school_office_link_df, 
+                                       RWA_school_office_link_df, 
+                                       ETH_school_office_link_df, 
+                                       MDG_school_office_link_df, 
+                                       SLE_school_office_link_df, 
+                                       NER_school_office_link_df) 
 
 
 combined_school_office_df %>%
@@ -2174,6 +2189,12 @@ NER_g4_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,yea
 ########
 #combined
 ########
+NER_g4_df <- NER_g4_df %>% 
+  mutate(public = case_when(
+    public ==0 ~ "Private",
+    public ==1 ~ "Public"
+  ))
+
 combined_g4_df <- bind_rows(PER_g4_df, JOR_g4_df, RWA_g4_df, ETH_g4_df_2020, ETH_g4_df_2021, MDG_g4_df, SLE_g4_df, NER_g4_df) %>%
   mutate(country_code=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER", "SLE", "NER")),
          `Student Proficient`=if_else(student_proficient==100,"Yes", "No"),
@@ -3517,7 +3538,7 @@ Concrete examples of teacher policies related to teacher support and teacher eva
  
 ```
 
-Teacher pedagogy has no statistically significant relationships to the underlying policy indicators.  Data from Madagascar are not included in this regression analysis, as data on teacher pedagogical skills were note collected in this country. The Madagascar survey was done in conjunction with a survey for the Service Deliverty Inidcators (SDI) project, and differences in methodology led to some indicators not being collected.
+Teacher pedagogy has no statistically significant relationships to the underlying policy indicators.  Data from Madagascar are not included in this regression analysis, as data on teacher pedagogical skills were note collected in this country. The Madagascar survey was done in conjunction with a survey for the Service Delivery Indicators (SDI) project, and differences in methodology led to some indicators not being collected.
 
 ```{r}
 
