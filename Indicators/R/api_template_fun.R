@@ -21,14 +21,14 @@ api_template_fun <- function(variables) {
   ###########################
   #Read in list of indicators
   indicators <- read_csv(here::here('Indicators','indicators.csv'))
-  indicators <- indicators %>%
-    filter(Series!="---") %>%
-    separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+  indicators <- indicators 
+  #%>%
+    # filter(Series!="---") %>%
+    # separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+    # 
   
   
-  
-  indicator_names <-  indicators$indicator_tag
-  indicator_names <- sapply(indicator_names, tolower)
+#  indicator_names <- sapply(indicator_names, tolower)
   
   names(indicators)<-make.names(names(indicators), unique=TRUE)
   
@@ -67,10 +67,10 @@ api_template_fun <- function(variables) {
   
   
   #Read in Sergio's excel with subquestions to include
-  subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
+  subquestions<-read_excel('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
   
-  df<-indicators %>%
-    left_join(subquestions) %>%
+  df<-indicator_choices %>%
+    left_join(subquestions %>% rename(Series = series)) %>%
     select(Series, indicator_tag, Indicator.Name,  starts_with('Column_'), starts_with('Sub')) 
   
   
