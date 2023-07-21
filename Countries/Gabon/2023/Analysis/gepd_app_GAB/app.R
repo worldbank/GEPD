@@ -179,7 +179,7 @@ ui <- navbarPage("Global Education Policy Dashboard",
                                    necessarily causal.  The X variables include our Dashboard indicators, as well as the option to include
                                    the rural status of the school, as well as GDP per square kilometer within one square kilometer of the school.  GDP per square kilometer data 
                                    is produced by World Bank staff originally for the the Global Assessment Report on Risk Reduction (GAR) for the year 2010.  The data can be found at https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010.  Additionally, 
-                                   the user has the option to include regional fixed effects.  In the case of Niger, these are Niger Region fixed effects.'),
+                                   the user has the option to include regional fixed effects.  In the case of Gabon, these are Gabon Region fixed effects.'),
                                  selectizeInput("multi_reg_choices", "Choose Outcome Variable for Regressions: (Default: 4th Grade Learning)", 
                                                 choices=NULL)   ,
                                  
@@ -1766,7 +1766,7 @@ output$indicators_table <- DT::renderDataTable({
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
   
-  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Niger 2022",
+  DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Gabon 2023",
                 container = sketch, rownames=FALSE,
                 class='cell-border stripe',
                 escape = FALSE,
