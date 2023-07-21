@@ -79,7 +79,7 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
 #             return_wide = T,
 #             removeNA=FALSE)
 
-wbopendat<-WDI(country='NE', indicator=ind_list, start=2000, end=2021, extra=T) %>%
+wbopendat<-WDI(country='GA', indicator=ind_list, start=2000, end=2022, extra=T) %>%
   fill(starts_with("SE.")) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
