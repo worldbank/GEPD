@@ -60,9 +60,14 @@ api_template <- api_template_fun()
 
 # Example:
 
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data/"
+if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
 
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data"
 
+}else if (Sys.getenv("USERNAME") == "wb577189"){
+  
+  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data"
+}
 
 
 #pull data for learning poverty from wbopendata
@@ -178,7 +183,7 @@ GAB_data_2023 <- api_metadata_fn('GAB', 2023)
 #export Indicators_metatdata section
 write_excel_csv(GAB_data_2023, paste( 'GEPD_Indicators_API_GAB.csv',sep=""))
 
-write_excel_csv(GAB_data_2023, paste(data_dir,'Indicators/', 'GEPD_Indicators_API_GAB.csv',sep=""))
+write_excel_csv(GAB_data_2023, paste(data_dir,'/Indicators/', 'GEPD_Indicators_API_GAB.csv',sep=""))
 
 
 
