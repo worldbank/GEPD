@@ -319,7 +319,9 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
 
 public_officials_dta_short <-public_officials_dta_clean %>%
   dplyr::select(preamble_info, bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm
-                , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+                , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) %>% 
+  rename_with(~str_trunc(.,25)) 
+  
 
 
 #filter out the director of HR, which isn't specifically asked about indicator questions
@@ -332,8 +334,8 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
 
 
 if (backup_onedrive=="yes") {
-  write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))
-  write_dta(public_officials_dta_short, path = file.path(confidential_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+  write.csv(public_officials_dta_clean, file = file.path(confidential_folder, "public_officials_survey_data.csv"))
+  write_dta(public_officials_dta_short, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
 }
 
 
@@ -344,7 +346,7 @@ public_officials_dta_clean2 <- public_officials_dta_clean %>%
   mutate(pol_personnel_management=politicized_personnel_management ,
          pol_policy_making=politicized_policy_making ,
          pol_policy_implementation=politicized_policy_implementation) %>%
-  rename_with(~str_trunc(.,32)) %>%
+  rename_with(~str_trunc(.,25)) %>%
   janitor::clean_names()
 
 write_dta(public_officials_dta_clean2, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
@@ -451,7 +453,7 @@ save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metada
 #loop and produce list of data tables
 
 if (backup_onedrive=="yes") {
-  save(data_list, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.RData"))
+  save(data_list, file = file.path(confidential_folder, "public_officials_survey_data.RData"))
 }
 
 

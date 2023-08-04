@@ -75,7 +75,7 @@ setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
 need_api=0
 school_file<-"EPDash.dta"
 
-source('02_school_api.R', local=TRUE)
+#source('02_school_api.R', local=TRUE)
  
 # #launch file to clean data=
 rmarkdown::render("03_school_data_cleaner.Rmd")
