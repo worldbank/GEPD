@@ -23,16 +23,19 @@ api_template_fun <- function(variables) {
   if (Sys.getenv("USERNAME") == "wb577189"){
     
     indicators <- read.csv('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info.csv')
-  }else {
+    indicators <- indicators %>%
+      filter(Series!="---") %>%
+      separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
+      rename(`Indicator.Name`= Indicator)
+    }else {
     
-    indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
-    
+    indicators <- read_csv(here::here('Indicators','indicators.csv'))
+    indicators <- indicators %>%
+      filter(Series!="---") %>%
+      separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) 
     
   }
-  indicators <- indicators %>%
-    filter(Series!="---") %>%
-    separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
-    rename(`Indicator.Name`= Indicator)
+
   
   
   

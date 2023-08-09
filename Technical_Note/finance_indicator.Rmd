@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
 )
 library(tidyverse)
 library(here)
+library(frontier)
 
 dir <- here()
 
@@ -71,7 +72,7 @@ When available the 2016 version of PEFA is used.  When not available, the 2011 v
 
 ```{r pefa}
 #get data based on 2016 framework
-pefa_2016_df <- read_csv(file=paste0(dir, "/Technical_Note/Finance_Data/PEFA_2016_framework_data_20220418.csv")) %>%
+pefa_2016_df <- read_csv(file=paste0(dir, "/Technical_Note/Finance_Data/pefa_2016_framework_data_20230809.csv")) %>%
   select(Country, Year, contains(".")) %>%
   mutate(across(starts_with(c('PI','UD')),~case_when(
     . == "A" ~ 4,
@@ -101,7 +102,7 @@ pefa_2016_final_df <- pefa_2016_df %>%
 
 
 #get data based on 2011 framework
-pefa_2011_df <- read_csv(file=paste0(dir, "/Technical_Note/Finance_Data/PEFA_2011_framework_data_20220418.csv")) %>%
+pefa_2011_df <- read_csv(file=paste0(dir, "/Technical_Note/Finance_Data/pefa_2011_framework_data_20230809.csv")) %>%
   select(Country, Year, contains(".")) %>%
   mutate(across(starts_with(c('PI','UD')),~case_when(
     . == "A" ~ 4,
@@ -158,16 +159,85 @@ predict xb_adj, xb
 predict u_adj, u 
 ```
 
-The model for the stochastic frontier model is as follows.  Let $y_i$ be an outcome indicator, in our case it is the learning adjusted years of schooling, and $x_i$ be the inputs, in our case expenditures per child over a 5 year period.
+The model for the stochastic frontier model is as follows.  Let $y_i$ be an outcome indicator, in our case it is harmonized learning outcomes (HLO) from the world bank, and $x_i$ be the inputs, in our case government expenditure per student, primary (PPP adjusted).
 
 $$ln(y_i) = \beta_0 + \beta_1 ln(x_i) + \epsilon_i - u_i$$
 and 
 
-$$e^{u_i}$$ is the country's efficiency paramater.  These parameters are estimated using maximum likelihood.
+$$e^{u_i}$$ is the country's efficiency parameter.  These parameters are estimated using maximum likelihood.
 
 
 ```{r}
 stochastic_frontier_df <- read_csv(paste0(dir, "/Technical_Note/Finance_Data/stochastic_frontier.csv"))
 ```
 
+```{r data, message=FALSE, warning=FALSE, include=FALSE}
+
+# get World Bnak country metadata
+countries_df <- wb_countries()
+
+# get WDI data on Government expenditure per student, primary (% of GDP per capita)
+wdi_df <- wb_data(indicator=c('SE.XPD.PRIM.PC.ZS','SP.POP.TOTL','NY.GDP.PCAP.PP.CD','HD.HCI.HLOS', "HD.HCI.LAYS"),
+                  country='countries_only',
+                  start_date = 2010,
+                  end_date=2022) %>%
+  group_by(iso3c) %>%
+  arrange(date) %>%
+  fill(c('SE.XPD.PRIM.PC.ZS','SP.POP.TOTL','NY.GDP.PCAP.PP.CD','HD.HCI.HLOS', "HD.HCI.LAYS"), .direction="downup")
+
+
+# get WDI data on Government expenditure per student, primary (% of GDP per capita)
+gni_df <- wb_data(indicator=c( 'NY.GNP.PCAP.CD'),
+                  country='countries_only',
+                  start_date = 2022,
+                  end_date=2022) %>%
+  select(iso3c, NY.GNP.PCAP.CD) %>%
+  write_excel_csv(file=paste0(dir, '/Technical_Note/GEPD_finance/gni_df.csv'))
+
+#pull finance indicator data from UIS
+finance_pull <- 'http://data.uis.unesco.org/RestSDMX/sdmx.ashx/GetData/NATMON_DS/X_PPP_1_FSGOV+SAP_1+20062.AFG+ALA+ALB+DZA+ASM+AND+AGO+AIA+ATG+ARG+ARM+ABW+AUS+AUT+AZE+BHS+BHR+BGD+BRB+BLR+BEL+BLZ+BEN+BMU+BTN+BOL+BIH+BWA+BRA+VGB+BRN+BGR+BFA+BDI+KHM+CMR+CAN+CPV+CYM+CAF+TCD+ZZA+CHL+CHN+HKG+MAC+COL+COM+COG+COK+CRI+CIV+HRV+CUB+CUW+CYP+CZE+PRK+COD+DNK+DJI+DMA+DOM+ECU+EGY+SLV+GNQ+ERI+EST+SWZ+ETH+FRO+FLK+FJI+FIN+FRA+GUF+PYF+GAB+GMB+GEO+DEU+GHA+GIB+GRC+GRL+GRD+GLP+GUM+GTM+GGY+GIN+GNB+GUY+HTI+VAT+HND+HUN+ISL+IND+IDN+IRN+IRQ+IRL+IMN+ISR+ITA+JAM+JPN+JEY+JOR+KAZ+KEN+KIR+KWT+KGZ+LAO+LVA+LBN+LSO+LBR+LBY+LIE+LTU+LUX+MDG+MWI+MYS+MDV+MLI+MLT+MHL+MTQ+MRT+MUS+MYT+MEX+FSM+MCO+MNG+MNE+MSR+MAR+MOZ+MMR+NAM+NRU+NPL+NLD+ANT+NCL+NZL+NIC+NER+NGA+NIU+NFK+MKD+MNP+NOR+OMN+PAK+PLW+PSE+PAN+PNG+PRY+PER+PHL+PCN+POL+PRT+PRI+QAT+KOR+MDA+REU+ROU+RUS+RWA+SHN+KNA+LCA+SPM+VCT+BLM+MAF+WSM+SMR+STP+SAU+SEN+SRB+SYC+SLE+SGP+SXM+SVK+SVN+SLB+SOM+ZAF+SSD+ESP+LKA+SDN+XDN+SUR+SJM+SWE+CHE+SYR+TJK+THA+TLS+TGO+TKL+TON+TTO+TUN+TUR+TKM+TCA+TUV+UGA+UKR+ARE+GBR+TZA+USA+VIR+URY+UZB+VUT+VEN+VNM+WLF+ESH+YEM+ZMB+ZWE/all?startTime=2010&endTime=2023'
+
+finance_sdmx_df <- readSDMX(file=finance_pull) %>% as_tibble()
+
+
+finance_df <- finance_sdmx_df %>%
+  pivot_wider(id_cols = c('LOCATION', 'obsTime'),
+              names_from = NATMON_IND,
+              values_from=obsValue
+  ) %>%
+  mutate(spending_per_sap=X_PPP_1_FSGOV*1000000/SAP_1,
+         spending_per_pupil=X_PPP_1_FSGOV*1000000/`20062`) %>%
+  filter(!is.na(X_PPP_1_FSGOV)) %>%
+  rename(iso3c=LOCATION,
+         date=obsTime) %>%
+  mutate(date=as.numeric(date))  %>%
+  left_join(wdi_df) %>%
+  left_join(countries_df) %>%
+  mutate(spender_per_sap_gdp=100*spending_per_sap/NY.GDP.PCAP.PP.CD) %>%
+  group_by(iso3c) %>%
+  arrange(date) %>%
+  fill(spending_per_sap,spender_per_sap_gdp, spending_per_pupil, SE.XPD.PRIM.PC.ZS,HD.HCI.HLOS, .direction = 'downup') %>%
+  group_by(iso3c) %>%
+  filter(row_number()==max(row_number()))
+
+
+
+
+```
+
+```{r sfa}
+#use frontier package to calculate stochastic frontier analysis using HLOs and spending per school age child.
+cobbDouglas <- sfa( log( HD.HCI.LAYS ) ~ log( spending_per_pupil ),
+                    data = finance_df)
+
+summary(cobbDouglas)
+
+#get efficiencies
+
+finance_df$sfa_results <- as.vector(efficiencies(cobbDouglas, asInData = TRUE))
+
+write_excel_csv(finance_df, file=paste0(dir, '/Technical_Note/GEPD_finance/finance_df.csv'))
+
+
+```
 
