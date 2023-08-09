@@ -28,10 +28,9 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name and year of survey
-country <-'PAK'
-country_name <- "Pakistan"
-province <- "ICT"
-year <- '2022'
+country_name <-'Chad'
+country <- "TCD"
+year <- '2023'
 
 #########################
 # File paths #
@@ -42,32 +41,24 @@ year <- '2022'
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/Public_Officials/", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/Public_Officials", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/Public_Officials", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/Public_Officials/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
   
-
-  backup_onedrive="no"
-  
-} else if (Sys.getenv("USERNAME") == "wb550666"){
+}else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/"
+  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
   
-  download_folder <-file.path(paste(project_folder,country_name,year,"Data/raw/Public_Officials", sep="/"))
-  save_folder <- file.path(paste(project_folder,country_name,year,"Data/clean/Public_Officials", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/Public_Officials/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
   
-  # This is experimental and not currently in use.
-  backup_onedrive="yes"
-  save_folder_onedrive <- file.path(paste("C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/Public_Officials", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
-  save_folder_onedrive <- choose.dir(default = "", caption = "Select folder to save backed up data to onedrive")
   
 }
-
-
 #########################
 # Launch Code
 ########################
@@ -77,7 +68,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 #main file name:
 po_file<-"public_officials.dta"
 need_api=0
-
+backup_onedrive="no"
 
 #launch file to access data from API
 source('02_public_officials_api.R', local=TRUE)
