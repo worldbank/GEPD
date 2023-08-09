@@ -445,6 +445,20 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
+## Adding the urban/rural variables
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentDate,  '.csv', sep="")
+) %>%
+  mutate(school_code_bis=Code_Etablissement,
+         school_name_preload=`Nom Officiel de l'Etablissement`,
+         urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
+         public=if_else(private==1, "Private", "Public")) %>% 
+  select(ipw:public) %>% 
+  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
+         school_name_preload = str_squish(school_name_preload),
+         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT"))
+
+
+##School
 school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
 vtable(school_dta)
 #rename a few key variables up front
@@ -506,7 +520,34 @@ school_dta<- school_dta %>%
   left_join(key) %>%
   filter(!is.na(temp_school_code)) %>% 
   select(-school_code) %>% 
-  rename(school_code = temp_school_code)
+  mutate(school_code = school_emis_preload) %>% 
+  
+  ## VERY IMPORTANT FOR MATCHING LATER ON
+  
+ mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
+         school_name_preload = str_squish(school_name_preload),
+         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
+  
+  ##Manual cleaning for the 12 schools that don't match on names
+  mutate(school_name_preload = case_when(
+    
+    temp_school_code == "ECOLE MARTIN LUTHER KING _ 0101301088X506" ~ "ECOLE BILINGUE MARTIN LUTHER KING",
+   temp_school_code == "COMPLEXE SCOLAIRE FRANCO-ARABE A OZANGUE _ 0101305188x524" ~ "ECOLE PUBLIQUE D OZANGUE",
+   temp_school_code =="COMPLEXE SCOLAIRE LA MAISON DE DAVID 3 _ 0101301002X504" ~ "COMPLEXE SCOLAIRE MAISON DE DAVID 3",
+   temp_school_code == "COMPLEXE SCOLAIRE LES OLIVIER VERDOYANT _ 0101306005X510" ~ "OLIVIERS VERDOYANTS",
+   temp_school_code == "COMPLEXE SCOLAIRE REHMA _ " ~ "COMPLEXE SCOLAIRE LA PATIENCE RIMA",
+   temp_school_code == "ECOLE PRIVEE LAÏC BILINGUE LES ECLAIREURS _ " ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LES LEADERS",
+   temp_school_code == "ECOLE PRIVEE LAÏQUE  LA CONQUÊTE _ "~ "COMPLEXE SCOLAIRE PRIVE LA CONQUETE DU PETIT CHEMINOT",
+   T ~ school_name_preload
+    
+  )) %>% 
+  
+  left_join(data_set_updated, by=c("school_name_preload")) %>% 
+  rename(old_school_code = school_code) %>% 
+  mutate(school_code = paste(school_name_preload, "_", old_school_code))
+  
+
+rm(data_set_updated)
 
 
 

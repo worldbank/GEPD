@@ -20,7 +20,15 @@ api_template_fun <- function(variables) {
   #Read in indicators.md file
   ###########################
   #Read in list of indicators
-  indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
+  if (Sys.getenv("USERNAME") == "wb577189"){
+    
+    indicators <- read.csv('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info.csv')
+  }else {
+    
+    indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
+    
+    
+  }
   indicators <- indicators %>%
     filter(Series!="---") %>%
     separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
@@ -36,7 +44,12 @@ api_template_fun <- function(variables) {
   
   #get metadata on indicators
   #Read in list of indicators
+  if (Sys.getenv("USERNAME") == "wb577189"){
+    
+    indicator_choices <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators_choices.md', delim="|", trim_ws=TRUE)
+  }else {
   indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
+  }
   indicator_choices <- indicator_choices %>%
     filter(Series!="---") %>%
     separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -48,7 +61,13 @@ api_template_fun <- function(variables) {
   
   #get metadata on indicators
   #Read in list of indicators
-  indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
+  if (Sys.getenv("USERNAME") == "wb577189"){
+    
+    indicator_choices <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators_choices.md', delim="|", trim_ws=TRUE)
+  }else {
+    indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
+  }
+  
   indicator_choices <- indicator_choices %>%
     filter(Series!="---") %>%
     separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
@@ -68,7 +87,12 @@ api_template_fun <- function(variables) {
   
   
   #Read in Sergio's excel with subquestions to include
-  subquestions<-read_excel('GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions') 
+  if (Sys.getenv("USERNAME") == "wb577189"){
+    
+    subquestions <- read_excel('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions')
+  }else {
+    subquestions<-read_excel(here::here('Indicators','GEPD_Indicators_Info_v5.xlsx'), sheet='SubQuestions') 
+  }
   
   df<-indicators %>%
     left_join(subquestions) %>%
