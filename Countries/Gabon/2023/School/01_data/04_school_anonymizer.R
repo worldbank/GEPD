@@ -73,21 +73,11 @@ school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.cs
 
 #Load original sample of schools
 #Load original sample of schools
-currentDate<-c("2023-05-12")
+currentDate<-c("2023-08-09")
 
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentDate,  '.csv', sep="")
-) %>%
-  mutate(temp_school_code=Code_Etablissement,
-         school_name_preload=`Nom Officiel de l'Etablissement`,
-         urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
-         public=if_else(private==1, "Private", "Public")) %>%
-  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
-         school_name_preload = str_squish(school_name_preload),
-         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
-  rename(old_school_code = temp_school_code) %>% 
-  mutate(school_code = paste(school_name_preload, "_", old_school_code)) %>% 
-  select(-school_name_preload) %>% 
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_revised_', currentDate,  '.csv', sep="")
+)  %>% 
   left_join(school_codes, by = c("school_code")) %>%
   select(school_code, Province, Département, private, public, rural ,urban_rural,
          ipw) 
@@ -104,7 +94,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   dataset %>%
     left_join(data_set_updated)  %>%
     mutate(province=Province,
-           district=Département) 
+           district=Département) %>%
+    mutate(ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw) ) 
+    
 }
 
 

@@ -1,0 +1,188 @@
+---
+title: "Gabon Sampling Revised Weights"
+author: "Brian Stacy"
+date: "8/9/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(here)
+library(readxl)
+library(flextable) 
+library(janitor)
+
+#Country name
+country <-'GAB'
+country_name <- "Gabon"
+year <- '2023'
+#specify name of sampling frame file.  This needs to be a csv file
+file_frame<-"Copy of Base données structures éducatives fiche de dénombrement RGOE 2019.xlsx"
+
+
+set.seed(8473227)
+
+#########################
+# File paths #
+#########################
+#The download_folder will be the location of where raw data is downloaded from the API
+#The save_folder will be the location of where cleaned data is stored
+
+
+
+if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/Sampling", sep="/"))
+  confidential_folder <- file.path(paste('C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/',country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+
+  
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
+
+  project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  
+} else {
+  download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
+  save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
+
+}
+
+```
+
+## Introduction
+
+This file outlines the sampling strategy for Gabon. We will draw a sample of 200 schools. Only schools with at least 15 students and 3 teachers will be selected, which is consistent with the approach in Niger. Strata will be based on province, urban/rural, and public/private status.
+
+Everything in a Canton was considered in a rural area.
+
+## General Notes on Sampling
+
+The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to detect differences by urban/rural location.
+
+For our school survey, we will employ a two-stage random sample design, where in the first stage a sample of around 200 schools, based on local conditions, is drawn, chosen in advance by the Bank staff. In the second stage, a sample of teachers and students will be drawn to answer questions from our survey modules, chosen in the field. A total of 10 teachers will be sampled for absenteeism. Five teachers will be interviewed and given a content knowledge exam. Three 1st grade students will be assessed at random, and a classroom of 4th grade students will be assessed at random. Stratification will be based on the school's urban/rural classification and based on region. When stratifying by region, we will work with our partners within the country to make sure we include all relevant geographical divisions.
+
+Sampling Approach for Global Education Policy Dashboard
+
+This document will provide an overview of the sampling strategy used in the Global Education Policy Dashboard (GEPD) surveys, as well as remaining questions. New data for the dashboard will be collected using three main instruments: a School Survey, an Expert Survey, and a Survey of Public Officials. More information pertaining to each can be found below. The goal of the Global Education Policy Dashboard is to provide summary information at the national level on a set of 35 indicators and to allow countries to track progress on those indicators over a short time frame (every 2 years). Specifically, we aim to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to disaggregate by urban/rural.
+
+School Survey: The School Survey will collect data primarily on Practices (the quality of service delivery in schools), but also on some de facto Policy and school-level Politics indicators. It will consist of streamlined versions of existing instruments---including SDI and SABER SD on teachers, 4th grade students, and inputs/infrastructure, TEACH on pedagogical practice, GECDD on school readiness of young children, and DWMS on management quality---together with new questions to fill gaps in those instruments. Though the number of modules is similar to the full version of SDI, the number of items within each module is significantly lower. In each country, this survey will be administered in a nationally representative sample of 250 schools, selected through stratified random sampling. As currently envisioned, the School Survey will include 8 short modules. Expert Survey: The Expert Survey will collect information to feed into the policy indicators. This survey will be filled out by key informants in each country, drawing on their knowledge to identify key elements of the policy framework (as in the SABER approach to policy-data collection that the Bank has used over the past 7 years). The survey will have 4 modules with each including approximately ten questions.
+
+Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank's Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument. As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices. It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
+
+## Gabon Sampling
+
+200 schools will be drawn in Gabon. Strata are formed on the basis of the province and public/private status.
+
+```{r}
+#read sample frame
+frame_read <- function(frame_sheet) {
+  temp <- read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet) 
+  
+  temp
+}
+
+# list of provinces / sheet names 
+sheets <- c('RGOE2019_Données_Estuaire', 'RGOE2019_Données_Haut_Ogooué', 'RGOE2019_Données_Moyen_Ogooué', 'RGOE2019_Données_Ngounié', 'RGOE2019_Données_Nyanga', 'RGOE2019_Données_Ogooué_Ivindo', 'RGOE2019_Données_Ogooué_Lolo', 'RGOE2019_Données_OgoouéMaritime', 'RGOE2019_Données_Woleu_Ntem')
+
+df_raw <- bind_rows(lapply(sheets, frame_read))
+
+# do some basic manipulation of data
+
+df_raw <- df_raw %>%
+  filter(Etablissement_Fonctionnel=='Fonctionnel') %>% #keep just functional schools
+  filter(Type_Etablissement=='Primaire') %>% 
+  separate_wider_delim(
+    cols='Nbre_élève_garçon_fille_total_élèves_ens_homme_femme_ total',
+    delim="        ",
+    names=c('total_boy_students','total_girl_students','total_students', 'total_male_teachers', 'total_female_teachers', 'total_teachers'),
+    too_few = 'align_start') %>% #split the totals by student and teachers into separate colummns
+  mutate(across(c('total_boy_students','total_girl_students','total_students', 'total_male_teachers', 'total_female_teachers', 'total_teachers'), as.numeric)) %>%
+  mutate(private=as.numeric(!str_detect(Ordre_Enseignement, "Public")),
+         GPS_Latitude=as.numeric(GPS_Latitude),
+         GPS_Longitude=as.numeric(GPS_Longitude),
+         rural=str_detect(str_to_lower(`Canton /Ville/Arrondissement`),"canton")) %>%
+  select(-`...21`, -`...22`)
+```
+
+
+
+```{r}
+
+df_updated <- df_raw %>%
+  filter(total_students>=15,
+         total_teachers>=3) 
+
+
+```
+
+Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected. However, this breakdown at the grade level is not possible. We will use an alternative approach used in Niger, where we select schools with at least 15 students across all grades and 3 total teachers. Applying these restrictions results in `r nrow(df_updated)` schools eligible. This results in the total number of students covered dropping from `r scales::comma(sum(df_raw$total_students))` in the raw sampling frame to `r scales::comma(sum(df_updated$total_students))` in the restricted frame. Only `r scales::percent((sum(df_raw$total_students)-sum(df_updated$total_students))/sum(df_raw$total_students))` of students are dropped due to these restrictions.
+
+
+# Revised Weighting
+
+Select the sample and save.
+
+
+```{r}
+#redo weights based on actual visited schools
+
+#read in actual visited schools
+visited_schools <- read_csv(paste0(confidential_folder, "/final_indicator_school_data.csv")) %>%
+  select(school_code, school_name_preload) %>%
+  mutate(visited_school=TRUE)
+
+#update sampling frame with school names
+df_updated <- df_updated %>%
+  mutate(temp_school_code=Code_Etablissement,
+         school_name_preload=`Nom Officiel de l'Etablissement`,
+         urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
+         public=if_else(private==1, "Private", "Public")) %>%
+  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
+         school_name_preload = str_squish(school_name_preload),
+         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
+  rename(old_school_code = temp_school_code) %>% 
+  mutate(school_code = paste(school_name_preload, "_", old_school_code)) %>%
+  group_by(school_code) %>%
+  mutate(count=row_number()) %>%
+  filter(count==1) %>%
+  select(-count)
+  #drop duplicates on school code. Remove duplicate entries
+
+#add visited schools 
+df_updated <- df_updated %>%
+  left_join(visited_schools)
+
+strata_weight_size <- df_updated %>%
+  filter(visited_school==TRUE) %>%
+  group_by(Province, private, rural) %>%
+  summarise(sample_size=n())
+
+
+weights_df <- df_updated %>%
+  left_join(strata_weight_size) %>%
+  mutate(
+    totalstudents=sum(total_students),
+  ) %>%
+  group_by(Province, private, rural ) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_students),
+         strata_school_prob=strata_size/totalstudents) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_students/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(weights_df, file=paste0(sampling_folder, "/GEPD_GAB_weights_revised_",Sys.Date(),".csv"))
+
+
+
+
+```
+
