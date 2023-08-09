@@ -214,8 +214,9 @@ Merge the school and PO data
 po_district_df <- main_po_data %>%
   left_join(po_coord_df) %>%
   filter(govt_tier=='District office (or equivalent)') %>%
-  group_by(ADM2_NAME, ADM2_CODE) %>%
-  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean)) %>%
+  haven::zap_labels() %>%
+    group_by(ADM2_NAME, ADM2_CODE) %>%
+  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean, na.rm=TRUE)) %>%
   as_tibble() %>%
   select(-geometry) %>%
   filter(!is.na(ADM2_NAME))
@@ -235,7 +236,83 @@ linked_school_data_csv <- linked_school_data %>%
   left_join(keyfile) %>%
   select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
 
-write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
+write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_school_data_",country,"_",year,".csv"))
+
+```
+
+Keep just the director responses.
+
+```{r directors}
+#district linkages
+
+#keep just the directors
+po_district_df <- main_po_data %>%
+  left_join(po_coord_df) %>%
+  filter(govt_tier=='District office (or equivalent)') %>%
+  filter(DEM1q12n==1) %>% # just the managers/directors
+    haven::zap_labels() %>%
+  group_by(ADM2_NAME, ADM2_CODE) %>%
+  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean, na.rm=TRUE)) %>%
+  as_tibble() %>%
+  select(-geometry) %>%
+  filter(!is.na(ADM2_NAME))
+
+
+
+linked_school_data <- main_school_data %>%
+  left_join(school_coord_df) %>%
+  left_join(po_district_df) 
+  #filter(!is.na(quality_bureaucracy))
+
+#write to csv
+linked_school_data_csv <- linked_school_data %>%
+  as_tibble() %>% 
+  ungroup() %>%
+  select(-geometry) %>%
+  left_join(keyfile) %>%
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
+
+write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_directors_school_data_",country,"_",year,".csv"))
+
+```
+
+Reweighted based on confidence of enumerator
+
+```{r enumconf}
+#district linkages
+
+#WEights based on confidence of enumerators
+#Did the respondent appear knowledgeable about the work environment, and their organization as a whole?
+# 1. Some knowledge of their own working environment, but not about the organization as a whole
+# 2. Expert knowledge about their working environment, but not about the organization as a whole
+# 3. Expert knowledge about both their own work and about the organization as a whole.
+
+po_district_df <- main_po_data %>%
+  left_join(po_coord_df) %>%
+  filter(govt_tier=='District office (or equivalent)') %>%
+  haven::zap_labels() %>%
+  group_by(ADM2_NAME, ADM2_CODE) %>%
+  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")), Hmisc::wtd.mean, weights=ENUMq4, na.rm=TRUE)) %>%
+  as_tibble() %>%
+  select(-geometry) %>%
+  filter(!is.na(ADM2_NAME))
+
+
+
+linked_school_data <- main_school_data %>%
+  left_join(school_coord_df) %>%
+  left_join(po_district_df) 
+  #filter(!is.na(quality_bureaucracy))
+
+#write to csv
+linked_school_data_csv <- linked_school_data %>%
+  as_tibble() %>% 
+  ungroup() %>%
+  select(-geometry) %>%
+  left_join(keyfile) %>%
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
+
+write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_enum_score_weighted_school_data_",country,"_",year,".csv"))
 
 ```
 

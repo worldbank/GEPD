@@ -29,7 +29,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 #Country name and year of survey
 country <-'PAK'
 country_name <- "Pakistan"
-province <- "ICT"
+province <- "KP"
 year <- '2022'
 
 #########################
@@ -69,10 +69,10 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
 ########################
 #move working directory to github main folder
 dir <- here()
-setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
+setwd(paste(dir, "Countries",country_name,year,province,"School/01_data/", sep="/"))
 # #launch file to access data from API
 need_api=0
-school_file<-"EPDash.dta"
+school_file<-"EPDashboard.dta"
 
 source('02_school_api.R', local=TRUE)
  

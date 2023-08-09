@@ -28,6 +28,7 @@ indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", tr
 
 indicators <- indicators %>%
   filter(Series!="---") %>%
+  select(-contains("...")) %>% 
   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
 
 #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
@@ -63,7 +64,12 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 
 #define function to create weights for summary statistics
 #load school code file
-school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.csv"))
+school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.csv")) %>% 
+  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
+         school_name_preload = str_squish(school_name_preload),
+         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
+  rename(old_school_code = school_code) %>% 
+  mutate(school_code = paste(school_name_preload, "_", temp_school_code))
 
 #Load original sample of schools
 #Load original sample of schools
@@ -76,8 +82,14 @@ data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentD
          school_name_preload=`Nom Officiel de l'Etablissement`,
          urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
          public=if_else(private==1, "Private", "Public")) %>%
-  left_join(school_codes) %>%
-  select(school_code,school_name_preload, Province, Département, private, public, rural ,urban_rural,
+  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
+         school_name_preload = str_squish(school_name_preload),
+         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
+  rename(old_school_code = temp_school_code) %>% 
+  mutate(school_code = paste(school_name_preload, "_", old_school_code)) %>% 
+  select(-school_name_preload) %>% 
+  left_join(school_codes, by = c("school_code")) %>%
+  select(school_code, Province, Département, private, public, rural ,urban_rural,
          ipw) 
 
 

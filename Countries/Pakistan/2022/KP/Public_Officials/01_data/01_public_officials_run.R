@@ -30,7 +30,7 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 #Country name and year of survey
 country <-'PAK'
 country_name <- "Pakistan"
-province <- "ICT"
+province <- "KP"
 year <- '2022'
 
 #########################

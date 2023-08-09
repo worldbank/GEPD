@@ -285,6 +285,23 @@ sample_df_200 <- df_updated_gepd_nmd %>%
 
 write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_KP_sample_200_",Sys.Date(),".csv"))
 
+weights_df_200 <- df_updated_gepd_nmd %>%
+  filter(!(Location=="NULL")) %>%
+  left_join(strata_df_200) %>%
+  mutate(
+    totalstudents=sum(total_enrollment),
+  ) %>%
+  group_by(Gender, Location) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+
+  mutate(strata_prob=(sample_size)*(total_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_KP_weights_200_",Sys.Date(),".csv"))
+
 ```
 
 ```{r country_map, echo=FALSE}

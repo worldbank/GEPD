@@ -19,9 +19,9 @@ library(patchwork)
 
 
 #set directory to bring in data
-country <-'RWA'
-country_name <- "Rwanda"
-year <- '2020'
+country <-'JOR'
+country_name <- "Jordan"
+year <- '2023'
 
 #directories
 project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
@@ -182,6 +182,7 @@ main_school_data <- st_join(school, # points
                             largest = TRUE) %>%
   select(school_code, order, everything())
 ```
+
 ```{r poplot}
 
 po_map <- ggplot() +
@@ -217,7 +218,7 @@ Merge the school and PO data
 po_district_df <- main_po_data %>%
   left_join(po_coord_df) %>%
   filter(govt_tier=='District office (or equivalent)') %>%
-    haven::zap_labels() %>%
+  haven::zap_labels() %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
   summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean, na.rm=TRUE)) %>%
   as_tibble() %>%
@@ -253,7 +254,7 @@ po_district_df <- main_po_data %>%
   left_join(po_coord_df) %>%
   filter(govt_tier=='District office (or equivalent)') %>%
   filter(DEM1q12n==1) %>% # just the managers/directors
-    haven::zap_labels() %>%
+  haven::zap_labels() %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
   summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean, na.rm=TRUE)) %>%
   as_tibble() %>%

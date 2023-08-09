@@ -132,13 +132,18 @@ indicator_names <- sapply(indicator_names, tolower)
 
 
 #read in school level file
-school_dta <- read_dta(file.path(download_folder, school_file))
+#read in school level file
+school_dta_1 <- read_dta(file.path(download_folder, "/version_1/", school_file))
+school_dta_2 <- read_dta(file.path(download_folder, "/version_2/", school_file))
 
 
+
+school_dta <- bind_rows(school_dta_1, school_dta_2) %>%
+  arrange(school_name_preload)
 
 
 #Add in school metadata
-school_metadta<-makeVlist(school_dta) %>%
+school_metadta<-makeVlist(school_dta_1) %>%
   mutate(indicator_tag=as.character(NA))
 
 
@@ -152,20 +157,23 @@ for (i in indicator_names ) {
 school_metadta<-school_metadta %>%
   left_join(indicators)
 
-# #bind version 18 and 17
-# school_dta <- bind_rows(school_dta)
-#
-# label(school_dta) = as.list(as.character(school_metadta$varlabel))
-#
-# school_dta %>%
-#   write_dta(file.path(download_folder, "EPDash.dta"))
+
+
+label(school_dta) = as.list(as.character(school_metadta$varlabel))
+
+school_dta %>%
+  write_dta(file.path(download_folder, "EPDash.dta"))
 
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_dta_1 <- read_dta(file.path(download_folder, "/version_1/", 'ecd_assessment.dta'))
+ecd_dta_2 <- read_dta(file.path(download_folder, "/version_2/", 'ecd_assessment.dta'))
+
+ecd_dta <- bind_rows( ecd_dta_1, ecd_dta_2) 
+
 #Add in ecd metadata
-ecd_metadta<-makeVlist(ecd_dta) %>%
+ecd_metadta<-makeVlist(ecd_dta_1) %>%
   mutate(indicator_tag='LCAP' )
 
 
@@ -173,45 +181,44 @@ ecd_metadta<-makeVlist(ecd_dta) %>%
 ecd_metadta<-ecd_metadta %>%
   left_join(indicators)
 
-# #bind version 18 and 17
-# ecd_dta <- bind_rows(ecd_dta)
-#
-# label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
-#
-# ecd_dta %>%
-#   write_dta(file.path(download_folder, "ecd_assessment.dta"))
+label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
+
+ecd_dta %>%
+ write_dta(file.path(download_folder, "ecd_assessment.dta"))
 
 
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+assess_4th_grade_dta_1 <- read_dta(file.path(download_folder, "/version_1/", 'fourth_grade_assessment.dta'))
+assess_4th_grade_dta_2 <- read_dta(file.path(download_folder, "/version_2/", 'fourth_grade_assessment.dta'))
+
+assess_4th_grade_dta <- bind_rows( assess_4th_grade_dta_1, assess_4th_grade_dta_2) 
 
 
 #Add in assessment metadata
-assess_4th_grade_metadta<-makeVlist(assess_4th_grade_dta) %>%
+assess_4th_grade_metadta<-makeVlist(assess_4th_grade_dta_1) %>%
   mutate(indicator_tag='LERN' )
 
 
 assess_4th_grade_metadta<-assess_4th_grade_metadta %>%
   left_join(indicators)
 
-# #bind version 18 and 17
-# assess_4th_grade_dta <- bind_rows(assess_4th_grade_dta)
-#
-# label(assess_4th_grade_dta) = as.list(as.character(assess_4th_grade_metadta$varlabel))
-#
-#
-# assess_4th_grade_dta %>%
-#   write_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
+
+label(assess_4th_grade_dta) = as.list(as.character(assess_4th_grade_metadta$varlabel))
+
+assess_4th_grade_dta %>%
+   write_dta(file.path(download_folder, "fourth_grade_assessment.dta"))
 
 
 
 #read in teacher questionnaire level file
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster.dta"))
-#teacher_questionnaire_17<-read_dta(file.path(paste(download_folder,'version_17', sep="/"), "questionnaire_roster.dta"))
+teacher_questionnaire_1 <- read_dta(file.path(download_folder, "/version_1/", 'questionnaire_roster.dta'))
+teacher_questionnaire_2 <- read_dta(file.path(download_folder, "/version_2/", 'questionnaire_roster.dta'))
+
+teacher_questionnaire <- bind_rows( teacher_questionnaire_1, teacher_questionnaire_2) 
 
 #Add in questionnaire metadata
-teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire) %>%
+teacher_questionnaire_metadta<-makeVlist(teacher_questionnaire_1) %>%
   mutate(indicator_tag=as.character(NA))
 
 
@@ -229,19 +236,23 @@ teacher_questionnaire_metadta<-teacher_questionnaire_metadta %>%
 # #teacher_questionnaire <- bind_rows(teacher_questionnaire, teacher_questionnaire_17)
 #
 #
-# label(teacher_questionnaire) = as.list(as.character(teacher_questionnaire_metadta$varlabel))
+label(teacher_questionnaire) = as.list(as.character(teacher_questionnaire_metadta$varlabel))
 #
 #
-# teacher_questionnaire %>%
-#   write_dta(file.path(download_folder, "questionnaire_roster.dta"))
+teacher_questionnaire %>%
+   write_dta(file.path(download_folder, "questionnaire_roster.dta"))
 
 
 
 #read in teacher absence file
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_dta_1 <- read_dta(file.path(download_folder, "/version_1/", 'TEACHERS.dta'))
+teacher_absence_dta_2 <- read_dta(file.path(download_folder, "/version_2/", 'TEACHERS.dta'))
+
+teacher_absence_dta <- bind_rows( teacher_absence_dta_1, teacher_absence_dta_2) 
+
 
 #Add in absemce metadata
-teacher_absence_metadta<-makeVlist(teacher_absence_dta) %>%
+teacher_absence_metadta<-makeVlist(teacher_absence_dta_1) %>%
   mutate(indicator_tag=as.character(NA))
 
 
@@ -257,19 +268,22 @@ teacher_absence_metadta<-teacher_absence_metadta %>%
 
 # #bind version 18 and 17
 #
-# label(teacher_absence_dta) = as.list(as.character(teacher_absence_metadta$varlabel))
+label(teacher_absence_dta) = as.list(as.character(teacher_absence_metadta$varlabel))
 #
 #
-# teacher_absence_dta %>%
-#   write_dta(file.path(download_folder, "TEACHERS.dta"))
+teacher_absence_dta %>%
+  write_dta(file.path(download_folder, "TEACHERS.dta"))
 
 
 
 #read in teacher assessment file
-teacher_assessment_dta<-read_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+teacher_assessment_dta_1 <- read_dta(file.path(download_folder, "/version_1/", 'teacher_assessment_answers.dta'))
+teacher_assessment_dta_2 <- read_dta(file.path(download_folder, "/version_2/", 'teacher_assessment_answers.dta'))
+
+teacher_assessment_dta <- bind_rows( teacher_assessment_dta_1, teacher_assessment_dta_2) 
 
 #Add in assessment metadata
-teacher_assessment_metadta<-makeVlist(teacher_assessment_dta) %>%
+teacher_assessment_metadta<-makeVlist(teacher_assessment_dta_1) %>%
   mutate(indicator_tag='CONT')
 
 
@@ -281,11 +295,11 @@ teacher_assessment_metadta<-teacher_assessment_metadta %>%
 # #bind version 18 and 17
 # teacher_assessment_dta <- bind_rows(teacher_assessment_dta)
 #
-# label(teacher_assessment_dta) = as.list(as.character(teacher_assessment_metadta$varlabel))
+label(teacher_assessment_dta) = as.list(as.character(teacher_assessment_metadta$varlabel))
 #
 #
-# teacher_assessment_dta %>%
-#   write_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
+teacher_assessment_dta %>%
+ write_dta(file.path(download_folder, "teacher_assessment_answers.dta"))
 
 school_metadta$varlabel<-as.character(school_metadta$varlabel)
 metadta<-bind_rows(school_metadta,  ecd_metadta, assess_4th_grade_metadta, teacher_questionnaire_metadta, teacher_assessment_metadta)
