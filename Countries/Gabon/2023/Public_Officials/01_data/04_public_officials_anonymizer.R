@@ -6,7 +6,7 @@ library(haven)
 library(tidyverse)
 library(here)
 library(digest)
-library(sdcMicro)
+#library(sdcMicro)
 
 ##################
 # Load the data
@@ -28,7 +28,7 @@ indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
 
 ind_dta_list<-c("final_indicator_data_BNLG" , "final_indicator_data_BMAC" , "final_indicator_data_BQBR" ,
                 "final_indicator_data_BIMP" , "final_indicator_data_ORG"  , "public_officials_dta_clean",
-                "public_officials_dta")
+                 "public_officials_dta")
 
 anon_dta_list<-c("public_officials_metadata")
 
@@ -46,8 +46,7 @@ data_list<-ind_dta_list
 # Code to anonymize
 ####################
 #create hashed school code
-public_officials_dta_short <- public_officials_dta_short %>%
-  mutate(id_code=row_number())
+public_officials_dta_short <- public_officials_dta_short 
 
 public_officials_dta_short$hashed_position <-as.character(lapply(public_officials_dta_short$position, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 public_officials_dta_short$hashed_office <-as.character(lapply(public_officials_dta_short$office_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))

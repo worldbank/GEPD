@@ -20,10 +20,11 @@ api_template_fun <- function(variables) {
   #Read in indicators.md file
   ###########################
   #Read in list of indicators
-  indicators <- read_csv(here::here('Indicators','indicators.csv'))
+  indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
   indicators <- indicators %>%
     filter(Series!="---") %>%
-    separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+    separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
+    rename(`Indicator.Name`= Indicator)
   
   
   

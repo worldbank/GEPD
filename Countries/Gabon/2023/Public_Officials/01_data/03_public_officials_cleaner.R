@@ -37,7 +37,10 @@ indicator_names <- indicators$indicator_tag
 
 
 #read in public officials interview file
-public_officials_dta<-read_dta(file.path(download_folder, po_file))
+public_officials_dta<-read_dta(file.path(download_folder, po_file)) %>%
+  mutate(id_code=row_number())
+
+
 public_officials_metadata<-makeVlist(public_officials_dta)
 
 vtable(public_officials_dta)
@@ -99,7 +102,7 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/School/", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School/", sep="/"))
 
 if (file.exists(paste(school_folder, "school_indicators_data_anon.RData", sep="/"))) {
   
@@ -210,7 +213,7 @@ public_officials_dta <- public_officials_dta %>%
 
 
 #list info that will be useful to keep in each indicator dataframe
-preamble_info <- c('interview__id', 'interview__key', 'office_preload', 'govt_tier',
+preamble_info <- c('interview__id', 'interview__key', 'id_code', 'office_preload', 'location', 'govt_tier',
                    'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
@@ -316,7 +319,9 @@ public_officials_dta_clean <-public_officials_dta_clean %>%
 
 public_officials_dta_short <-public_officials_dta_clean %>%
   dplyr::select(preamble_info, bureau_ind_nlg, bureau_ind_acm , bureau_ind_qb, bureau_ind_idm
-                , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) 
+                , constr_list, starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG')) %>% 
+  rename_with(~str_trunc(.,25)) 
+  
 
 
 #filter out the director of HR, which isn't specifically asked about indicator questions
@@ -329,8 +334,8 @@ public_officials_dta_clean <- public_officials_dta_clean %>%
 
 
 if (backup_onedrive=="yes") {
-  write.csv(public_officials_dta_clean, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.csv"))
-  write_dta(public_officials_dta_short, path = file.path(confidential_folder_onedrive, "public_officials_survey_data.dta"), version = 14)
+  write.csv(public_officials_dta_clean, file = file.path(confidential_folder, "public_officials_survey_data.csv"))
+  write_dta(public_officials_dta_short, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
 }
 
 
@@ -341,14 +346,14 @@ public_officials_dta_clean2 <- public_officials_dta_clean %>%
   mutate(pol_personnel_management=politicized_personnel_management ,
          pol_policy_making=politicized_policy_making ,
          pol_policy_implementation=politicized_policy_implementation) %>%
-  rename_with(~str_trunc(.,32)) %>%
+  rename_with(~str_trunc(.,25)) %>%
   janitor::clean_names()
 
 write_dta(public_officials_dta_clean2, path = file.path(confidential_folder, "public_officials_survey_data.dta"), version = 14)
 
 
 keep_info <- c('interview__id', 'office_preload', 'govt_tier',
-               'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
+                   'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon')
 
 ###############
 #Aggregate to office level
@@ -360,7 +365,7 @@ public_officials_office_level<- public_officials_dta_clean %>%
          starts_with('DEM'), starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM'), starts_with('ORG'), starts_with('ENUM'), motivation_relative_start ) %>%
   mutate(count=n() ) %>% 
   summarise(across(everything(),list(~if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))))
-
+  
 #convert variables to factor
 # public_officials_dta_clean<- public_officials_dta_clean %>%
 #   left_join(public_officials_metadata)
@@ -418,14 +423,14 @@ for (i in indicator_names ) {
   )
   
   if (i!="ORG") {
-    temp_df<-public_officials_dta_clean 
+  temp_df<-public_officials_dta_clean 
     if (ncol(temp_df) > 0) {
       temp_df<-temp_df %>%
         select(keep_info, get(paste('bureau_ind', tolower(i), sep="_")), starts_with('DEM'), starts_with(i))
-      assign(paste("final_indicator_data_",j, sep=""), temp_df )
-      
-      ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
-      
+     assign(paste("final_indicator_data_",j, sep=""), temp_df )
+     
+     ind_dta_list<-c(ind_dta_list, paste("final_indicator_data_",j, sep=""))
+    
     }
   } else if (i=="ORG") {
     temp_df<-public_officials_dta_hr
@@ -439,16 +444,16 @@ for (i in indicator_names ) {
     }
   }
   
-  
+
 }
 
-save(list=c(ind_dta_list, "public_officials_dta_short","public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
+save(list=c(ind_dta_list, "public_officials_dta_clean", 'public_officials_metadata', 'public_officials_dta_hr' ), file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
 
 
 #loop and produce list of data tables
 
 if (backup_onedrive=="yes") {
-  save(data_list, file = file.path(confidential_folder_onedrive, "public_officials_survey_data.RData"))
+  save(data_list, file = file.path(confidential_folder, "public_officials_survey_data.RData"))
 }
 
 

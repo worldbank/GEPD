@@ -455,44 +455,58 @@ school_dta<- school_dta %>%
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
          school_emis_preload=if_else(school_name_preload=='ECOLE PUBLIQUE RURALE ASSOK MEDZENG' ,'0901103006X507',school_emis_preload),
-         temp_school_code=if_else(!is.na(school_emis_preload),as.character(school_emis_preload), as.character(m1s0q2_code)),
+         #temp_school_code=if_else(!is.na(school_emis_preload),as.character(school_emis_preload), as.character(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
-  ## Get names and code for all the blank interviews
-  mutate(
+  
+  mutate(school_name_preload = case_when(
     
-    temp_school_code= if_else(school_info_correct==1, as.character(temp_school_code), as.character(m1s0q2_emis)),
-    school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name)),
-    #fix some school names
-    school_name_preload= str_remove_all(school_name_preload, '^"|"$'),
-    school_name_preload= gsub('""', '"', school_name_preload),
-    # clean up some manually entered values
-    school_name_preload = case_when(
-      school_emis_preload=='0302201009X502' ~ 'ECOLE PRIVEE CATHOLIQUE SAINT RUFFIN DE NZOGHE BANG',
-      school_emis_preload=='0202402005X505' ~ 'COMPLEXE SCOLAIRE PRIVE SAINT BILL',
-      school_emis_preload=='0101303165X513' ~ 'ECOLE PUBLIQUE COMMUNALE DE BAKELE',
-      school_emis_preload=='0202402001X510' ~ 'COMPLEXE SCOLAIRE NANETTE',
-      school_emis_preload=='0801402060X524' ~ 'ETABLISSEMENT SCOLAIRE PRIVE LE GUIDE',
-      school_emis_preload=='0402201007X514' ~ 'SAINTE FAMILLE DE FOUGAMOU',
-      school_emis_preload=='0106401054X506' ~ 'COMPLEXE SCOLAIRE BILINGUE LES THEOPHILES',
-      TRUE ~ school_name_preload
-    ),
-    temp_school_code = case_when(
-      school_emis_preload=='0302201009X502' ~ '0302201009X502',
-      school_emis_preload=='0202402005X505' ~ '0202402001X510',
-      school_emis_preload=='0101303165X513' ~ '0701401008X502',
-      school_emis_preload=='0202402001X510' ~ '0202402005X505',
-      school_emis_preload=='0801402060X524' ~ '0801402060X524',
-      school_emis_preload=='0402201007X514' ~ '0402201007X514',
-      school_emis_preload=='0106401054X506' ~ '0106401054X506',
-      TRUE ~ temp_school_code
-    )
-  ) %>%
+    interview__key == "06-80-44-02" ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LE CEP",
+    interview__key=="47-94-03-65" ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LE CEP",
+    TRUE ~ school_name_preload
+
+  )) %>% 
+  
+  ## Create new temp code that combined the EMIS code and the name
+  mutate(temp_school_code = paste(school_name_preload, "_", school_emis_preload)) %>% 
+  
+  # ## Get names and code for all the blank interviews
+  # mutate(
+  #   
+  #   temp_school_code= if_else(school_info_correct==1, as.character(temp_school_code), as.character(m1s0q2_emis)),
+  #   school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name)),
+  #   #fix some school names
+  #   school_name_preload= str_remove_all(school_name_preload, '^"|"$'),
+  #   school_name_preload= gsub('""', '"', school_name_preload),
+  #   # clean up some manually entered values
+  #   school_name_preload = case_when(
+  #     school_emis_preload=='0302201009X502' ~ 'ECOLE PRIVEE CATHOLIQUE SAINT RUFFIN DE NZOGHE BANG',
+  #     school_emis_preload=='0202402005X505' ~ 'COMPLEXE SCOLAIRE PRIVE SAINT BILL',
+  #     school_emis_preload=='0101303165X513' ~ 'ECOLE PUBLIQUE COMMUNALE DE BAKELE',
+  #     school_emis_preload=='0202402001X510' ~ 'COMPLEXE SCOLAIRE NANETTE',
+  #     school_emis_preload=='0801402060X524' ~ 'ETABLISSEMENT SCOLAIRE PRIVE LE GUIDE',
+  #     school_emis_preload=='0402201007X514' ~ 'SAINTE FAMILLE DE FOUGAMOU',
+  #     school_emis_preload=='0106401054X506' ~ 'COMPLEXE SCOLAIRE BILINGUE LES THEOPHILES',
+  #     TRUE ~ school_name_preload
+  #   ),
+  #   temp_school_code = case_when(
+  #     school_emis_preload=='0302201009X502' ~ '0302201009X502',
+  #     school_emis_preload=='0202402005X505' ~ '0202402001X510',
+  #     school_emis_preload=='0101303165X513' ~ '0701401008X502',
+  #     school_emis_preload=='0202402001X510' ~ '0202402005X505',
+  #     school_emis_preload=='0801402060X524' ~ '0801402060X524',
+  #     school_emis_preload=='0402201007X514' ~ '0402201007X514',
+  #     school_emis_preload=='0106401054X506' ~ '0106401054X506',
+  #     TRUE ~ temp_school_code
+  #   )
+  # ) %>%
   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
   filter(!is.na(temp_school_code)) %>%
   ungroup() %>%
   left_join(key) %>%
-  filter(!is.na(school_code))
+  filter(!is.na(temp_school_code)) %>% 
+  select(-school_code) %>% 
+  rename(school_code = temp_school_code)
 
 
 
