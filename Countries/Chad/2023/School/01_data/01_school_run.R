@@ -30,7 +30,7 @@ country_name <-'Chad'
 country <- "TCD"
 year <- '2023'
 api_user <- "GEPD_api_TCD"
-need_api=1
+need_api=0
 
 #########################
 # File paths #
@@ -73,7 +73,7 @@ dir <- here()
 setwd(paste(dir, "Countries",country_name,year,"School/01_data/", sep="/"))
 
 # #launch file to access data from API
-need_api=1
+need_api=0
 school_file<-"EPDash.dta"
 
 source('02_school_api.R', local=TRUE)

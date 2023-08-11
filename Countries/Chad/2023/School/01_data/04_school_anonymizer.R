@@ -71,6 +71,7 @@ currentDate<-c("2023-05-12")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sample_folder, '/GEPD_TCD_sample_', currentDate,  '.csv', sep="")
 ) %>%
+  filter(!(school_code == 223748 & IDEN == 'N DJAMENA 8')) %>% #drop school with duplicate school_code
   mutate(
          urban_rural=if_else(rural==0, "Urban", "Rural"),
          public=if_else(public==0, "Private", "Public")) %>%

@@ -128,8 +128,8 @@ makeVlist <- function(dta) {
 
 #read in public officials interview file
 #read in school level file
-public_officials_dta_1 <- read_dta(file.path(download_folder, "/version1/", po_file))
-public_officials_dta_2 <- read_dta(file.path(download_folder, "/version2/", po_file))
+#public_officials_dta_1 <- read_dta(file.path(download_folder, "/version1/", po_file))
+#public_officials_dta_2 <- read_dta(file.path(download_folder, "/version2/", po_file))
 public_officials_dta_3 <- read_dta(file.path(download_folder, "/version3/", po_file))
 public_officials_dta_4 <- read_dta(file.path(download_folder, "/version4/", po_file))
 

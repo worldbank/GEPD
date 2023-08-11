@@ -32,7 +32,7 @@ country_name <-'Gabon'
 country <- "GAB"
 year <- '2023'
 api_user <- "GEPD_api_GAB"
-backup_onedrive <- "yes"
+backup_onedrive <- "no"
 #########################
 # File paths #
 #########################
