@@ -3243,7 +3243,7 @@ PER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,yea
 country <- "JOR"
 year <- "2019"
 JOR_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
-  mutate(iso3c=country)
+  mutate(iso3c=paste(country, year, sep="-"))
 ########
 # Rwanda
 #######
@@ -3272,11 +3272,84 @@ year <- "2021"
 MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(-district)
+
+########
+# Sierra Leone
+#######
+#read in anonymized school data
+country <- "SLE"
+year <- "2022"
+SLE_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) 
+
+########
+# Niger
+#######
+#read in anonymized school data
+country <- "NER"
+year <- "2022"
+NER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(-public)
+
+########
+# Jordan 2023
+#######
+#read in anonymized school data
+country <- "JOR"
+year <- "2023"
+JOR_23_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
+  mutate(iso3c=paste(country, year, sep="-"))
+
+########
+# Gabon
+#######
+#read in anonymized school data
+country <- "GAB"
+year <- "2023"
+GAB_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         private=if_else(private==1,"Private", "Public")) %>%
+  select(-language_g1)
+
+########
+# Chad
+#######
+#read in anonymized school data
+country <- "TCD"
+year <- "2023"
+TCD_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=country) %>%
+  select(-language_g1)
+
+########
+# ICT
+#######
+#read in anonymized school data
+country <- "PAK"
+province <- "ICT"
+year <- "2022"
+ICT_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/",province,"/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=paste(country, province, sep="-") ) %>%
+  select(-language_g1)
+
+########
+# KP
+#######
+#read in anonymized school data
+country <- "PAK"
+province <- "KP"
+year <- "2022"
+KP_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/",province,"/School/data/ecd_dta_anon_anon.csv", sep="/")) %>%
+  mutate(iso3c=paste(country, province, sep="-") ) %>%
+  select(-language_g1)
+
 ########
 #combined
 ########
-combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
-  mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER"))) %>%
+combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df, SLE_g1_df, NER_g1_df,
+                            JOR_23_g1_df, GAB_g1_df, TCD_g1_df, ICT_g1_df, KP_g1_df) %>%
+  mutate(iso3c=factor(iso3c, levels=c("PAK-KP", "PAK-ICT", "TCD", "GAB", "JOR-2023", "NER", "SLE",  "MDG", "ETH", "RWA", "JOR-2019", "PER"))) %>%
   left_join(weights_df) %>%
   mutate(`Student Proficient`=if_else(ecd_student_knowledge>=80,"Yes","No"),
          Rural=case_when(
@@ -3409,64 +3482,6 @@ ggplot(combined_g1_mn, aes(x=Domain, y=Mean, color=country, shape=country)) +
   )
 ```
 
-
-```{r eval=FALSE, include=FALSE}
-
- ### 1st grade  -------------------
- 
- 
- ########
- # Peru
- #######
- #read in anonymized school data
- country <- "PER"
- year <- "2019"
- PER_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-   mutate(iso3c=country) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Jordan
- #######
- #read in anonymized school data
- country <- "JOR"
- year <- "2019"
- JOR_g1_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.dta", sep="/")) %>%
-   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Rwanda
- #######
- #read in anonymized school data
- country <- "RWA"
- year <- "2020"
- RWA_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Ethiopia
- #######
- #read in anonymized school data
- country <- "ETH"
- year <- "2020_2021"
- ETH_g1_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2020.csv", sep="/")) %>%
-   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ETH_g1_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon_2021.csv", sep="/")) %>%
-   mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Madagascar
- #######
- #read in anonymized school data
- country <- "MDG"
- year <- "2021"
- MDG_g1_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/ecd_dta_anon.csv", sep="/")) %>%
-   mutate(iso3c=country) %>%
-   select(-district) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- 
- ########
- #combined
- ########
- combined_g1_df <- bind_rows(PER_g1_df, JOR_g1_df, RWA_g1_df, ETH_g1_df_2020, ETH_g1_df_2021, MDG_g1_df) %>%
-   mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
-
-```
 
 The table below highlights student performance on specific items in the 1st grade assessment.
 
@@ -3793,6 +3808,22 @@ ETH_cont_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(coun
          teacher_id=m5sb_tnum) 
 ETH_teachers_df_2021 <- ETH_pedg_df_2021 %>%
   left_join(ETH_cont_df_2021) %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
+  select(-starts_with('s_'))
+
+####### 
+# Sierra Leone
+#######
+country <- "SLE"
+year <- "2022"
+RWA_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m4saq1_number) 
+RWA_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
+  mutate(iso3c=country,
+         teacher_id=m5sb_tnum)  %>% distinct(hashed_school_code, teacher_assessment_answers__id, .keep_all = TRUE)
+RWA_teachers_df <- RWA_pedg_df %>%
+  left_join(RWA_cont_df) %>%
   mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
   select(-starts_with('s_'))
 

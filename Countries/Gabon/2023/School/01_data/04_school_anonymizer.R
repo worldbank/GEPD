@@ -104,7 +104,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
 # Code to anonymize
 ####################
 #create hashed school code
-school_dta_short$hashed_school_code <-school_dta_short$school_code
+school_dta_short$hashed_school_code <-as.character(lapply(school_dta_short$school_code, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 school_dta_short$hashed_school_province <-as.character(lapply(school_dta_short$school_province_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 school_dta_short$hashed_school_district <-as.character(lapply(school_dta_short$school_district_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 
