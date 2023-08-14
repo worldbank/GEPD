@@ -3729,110 +3729,15 @@ reg_fun <- function(indicators) {
 
 ```{r pedgcont}
 #read in teacher pedagogy scores and link to content knowledge
-####### 
-# Peru
-#######
-country <- "PER"
-year <- "2019"
-PER_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m4saq1_number) 
-PER_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m5sb_tnum) 
-PER_teachers_df <- PER_pedg_df %>%
-  left_join(PER_cont_df) %>%
-  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
-  select(-starts_with('s_'))
-####### 
-# Jordan
-#######
-country <- "JOR"
-year <- "2019"
-JOR_teach_code_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.dta", sep="/")) %>%
-  filter(!is.na(m4saq1_number)) %>%
-  select(hashed_school_code, m4saq1_number, territory, governorate, ipw) 
-JOR_pedg_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.dta", sep="/")) %>%
-  left_join(JOR_teach_code_df) %>%
-  mutate(iso3c=country,
-         teacher_id=m4saq1_number) 
-JOR_cont_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.dta", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m5sb_tnum) 
-JOR_teachers_df <- JOR_pedg_df %>%
-  left_join(JOR_cont_df) %>%
-  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
-  select(-starts_with('s_'))
-####### 
-# Rwanda
-#######
-country <- "RWA"
-year <- "2020"
-RWA_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m4saq1_number) 
-RWA_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m5sb_tnum)  %>% distinct(hashed_school_code, teacher_assessment_answers__id, .keep_all = TRUE)
-RWA_teachers_df <- RWA_pedg_df %>%
-  left_join(RWA_cont_df) %>%
-  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
-  select(-starts_with('s_'))
-####### 
-# Ethiopia
-#######
-country <- "ETH"
-year <- "2020_2021"
-ETH_teach_code_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_anon.csv", sep="/")) %>%
-  filter(!is.na(m4saq1_number)) %>%
-  select(hashed_school_code, m4saq1_number, ipw) 
-ETH_pedg_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon_2020.csv", sep="/")) %>%
-  filter(!is.na(hashed_school_code) ) %>%
-  left_join(ETH_teach_code_df) %>%
-  mutate(iso3c=country,
-         teacher_id=m4saq1_number) 
-ETH_cont_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon_2020.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m5sb_tnum) 
-ETH_teachers_df_2020 <- ETH_pedg_df_2020 %>%
-  left_join(ETH_cont_df_2020) %>%
-  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
-  select(-starts_with('s_'))
-ETH_pedg_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon_2021.csv", sep="/")) %>%
-    filter(!is.na(hashed_school_code) ) %>%
-  left_join(ETH_teach_code_df) %>%
-  mutate(iso3c=country,
-         teacher_id=m4saq1_number) 
-ETH_cont_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon_2021.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m5sb_tnum) 
-ETH_teachers_df_2021 <- ETH_pedg_df_2021 %>%
-  left_join(ETH_cont_df_2021) %>%
-  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
-  select(-starts_with('s_'))
-
-####### 
-# Sierra Leone
-#######
-country <- "SLE"
-year <- "2022"
-RWA_pedg_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/final_indicator_data_PEDG_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m4saq1_number) 
-RWA_cont_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_assessment_dta_anon.csv", sep="/")) %>%
-  mutate(iso3c=country,
-         teacher_id=m5sb_tnum)  %>% distinct(hashed_school_code, teacher_assessment_answers__id, .keep_all = TRUE)
-RWA_teachers_df <- RWA_pedg_df %>%
-  left_join(RWA_cont_df) %>%
-  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) %>%
-  select(-starts_with('s_'))
 
 
 ######
 # Combined
 ######
-combined_teachers_df <- bind_rows(PER_teachers_df, JOR_teachers_df, RWA_teachers_df, ETH_teachers_df_2020, ETH_teachers_df_2021) %>%
-  mutate(iso3c=factor(iso3c, levels=c("ETH","RWA", "JOR", "PER")))
+
+combined_teachers_df <- read_dta(file=paste0(confidential_dir, "/General/LEGO_Teacher_Paper/5_output_data/GEPD_teacher_school_country_level.dta")) %>%
+  mutate(iso3c=factor(country, levels=c("NER", "SLE", "ETH","RWA", "JOR", "PER")))  %>%
+  mutate(content_knowledge=if_else(is.na(literacy_content_knowledge),math_content_knowledge, literacy_content_knowledge)) 
 
 
 haven::write_dta(combined_teachers_df,  paste0(confidential_dir, "General/combined_teacher_cont_pedg.dta"))
@@ -3872,69 +3777,6 @@ ggplot(combined_teachers_df, aes(x=teach_score, y=content_knowledge, color=iso3c
   )
 ```
 
-
-```{r echo=FALSE}
-
- 
- ######################################################
- ### Teaching breaking up -------------------
- 
- 
- ########
- # Peru
- #######
- #read in anonymized school data
- country <- "PER"
- year <- "2019"
- PER_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon.csv", sep="/")) %>%
-    mutate(iso3c=country) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Jordan
- #######
- #read in anonymized school data
- country <- "JOR"
- year <- "2019"
- JOR_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon.dta", sep="/")) %>%
-    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Rwanda
- #######
- #read in anonymized school data
- country <- "RWA"
- year <- "2020"
- RWA_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon.csv", sep="/")) %>%
-    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Ethiopia
- #######
- #read in anonymized school data
- country <- "ETH"
- year <- "2020_2021"
- ETH_df_2020 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon_2020.csv", sep="/")) %>%
-    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ETH_df_2021 <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_anon_2021.csv", sep="/")) %>%
-    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- # Madagascar
- #######
- #read in anonymized school data
- country <- "MDG"
- year <- "2021"
- MDG_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/teacher_questionnaire_dta_anon.csv", sep="/")) %>%
-    mutate(iso3c=country) %>%
-    select(-district) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
- ########
- 
- ########
- #combined
- ########
- combined_teacher_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df_2020, ETH_df_2021, MDG_df) %>%
-    mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
- 
-
-haven::write_dta(combined_teacher_df,  paste0(confidential_dir, "General/combined_teachers.dta"))
-#haven::write_dta(combined_teacher_df,  paste0(shared_loc, "Data/combined_teachers.dta"))  
-```
 
 
 
@@ -4197,7 +4039,7 @@ The table below breaks down the underlying school management policies.  Next the
  country <- "JOR"
  year <- "2019"
  JOR_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/")) %>%
-    mutate(iso3c=country)%>% mutate(across(.cols =  everything(), ~ as.character(.)))
+    mutate(iso3c=paste(country, year, sep="-")) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
  ########
  # Rwanda
  #######
@@ -4226,11 +4068,88 @@ The table below breaks down the underlying school management policies.  Next the
     select(-district) %>% mutate(across(.cols =  everything(), ~ as.character(.)))
  ########
  
+  ########
+ # Sierra Leone
+ #######
+ #read in anonymized school data
+ country <- "SLE"
+ year <- "2022"
+ SLE_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.)))
+ 
+ 
+  ########
+ # Niger
+ #######
+ #read in anonymized school data
+ country <- "NER"
+ year <- "2022"
+ NER_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.)))
+ 
+  ########
+ # Jordan 2023
+ #######
+ #read in anonymized school data
+ country <- "JOR"
+ year <- "2023"
+ JOR_23_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=paste(country, year, sep="-")) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.))) 
+ 
+ 
+  ########
+ # Gabon
+ #######
+ #read in anonymized school data
+ country <- "GAB"
+ year <- "2023"
+ GAB_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.))) 
+ 
+ 
+  ########
+ # Chad
+ #######
+ #read in anonymized school data
+ country <- "TCD"
+ year <- "2023"
+ TCD_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=country) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.)))  %>%
+  select(-public)
+ 
+   ########
+ # ICT
+ #######
+ #read in anonymized school data
+ country <- "PAK"
+ province <- "ICT"
+ year <- "2022"
+ ICT_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/",province,"/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=paste(country, province, sep="-")) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.)))  
+ 
+########
+ # KP
+ #######
+ #read in anonymized school data
+ country <- "PAK"
+ province <- "KP"
+ year <- "2022"
+ KP_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/",province,"/School/data/school_dta_short_anon.csv", sep="/")) %>%
+    mutate(iso3c=paste(country, province, sep="-")) %>%
+    mutate(across(.cols =  everything(), ~ as.character(.)))  
+ ########
+ 
  ########
  #combined
  ########
- combined_school_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df, MDG_df) %>%
-    mutate(iso3c=factor(iso3c, levels=c("MDG", "ETH", "RWA", "JOR", "PER")))
+ combined_school_df <- bind_rows(PER_df, JOR_df, RWA_df, ETH_df, MDG_df, SLE_df, NER_df, JOR_23_df, GAB_df, TCD_df, ICT_df, KP_df) %>%
+    mutate(iso3c=factor(iso3c, levels=c("PAK-KP", "PAK-ICT", "TCD", "GAB", "JOR-2023", "NER", "SLE", "MDG", "ETH", "RWA", "JOR-2019", "PER")))
  
  
  haven::write_dta(combined_school_df,  paste0(confidential_dir, "General/combined_school.dta"))
