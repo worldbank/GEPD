@@ -79,7 +79,7 @@ sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD
 data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_revised_', currentDate,  '.csv', sep="")
 )  %>% 
   left_join(school_codes, by = c("school_code")) %>%
-  select(school_code, Province, Département, private, public, rural ,urban_rural,
+  select(school_code, Province, private, public, rural ,urban_rural,
          ipw) 
 
 
@@ -93,9 +93,11 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   
   dataset %>%
     left_join(data_set_updated)  %>%
-    mutate(province=Province,
-           district=Département) %>%
-    mutate(ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw) ) 
+    mutate(province=Province) %>%
+    mutate(ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+           Province=if_else(is.na(Province), school_province_preload, Province),
+           private=if_else(is.na(private), median(private, na.rm=TRUE) ,private), #imputation
+           rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural))  #imputation
     
 }
 

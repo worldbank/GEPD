@@ -569,7 +569,7 @@ preamble_info <- c( 'interview__key', 'school_code',
                    'school_name_preload', 
                    'school_province_preload', 'school_district_preload', 'school_emis_preload', 'school_emis_preload',
                    'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                   'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq10'
+                   'survey_time', 'lat', 'lon' , 'total_enrolled' , 'm7saq10', 'm1saq4'
                    )
 
 drop_school_info <- c(
@@ -3171,7 +3171,7 @@ keep_info <-       c('school_code',
                      'school_name_preload', 
                      'school_province_preload', 'school_district_preload', 'school_emis_preload',
                      'school_info_correct', 'm1s0q2_name', 'm1s0q2_code', 'm1s0q2_emis',
-                     'survey_time', 'lat', 'lon', 'total_enrolled')
+                     'survey_time', 'lat', 'lon', 'total_enrolled', 'm1saq4')
 
 if (exists('final_school_data')) {
   rm('final_school_data')
