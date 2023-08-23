@@ -14,6 +14,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggthemes)
 library(patchwork)
+library(fastDummies)
 
 eth_map <- ne_countries(country="Ethiopia", scale = "medium", returnclass = "sf", type='map_units')
 
@@ -27,6 +28,7 @@ year <- '2020_2021'
 project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
 confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
 save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
+shared_folder <- 'C:\\Users\\wb469649\\WBG\\Daniel Rogger - Global Education Dashboard\\01_raw_data\\'
 
 # load the world bank admin boundaries
 load("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/WB_admin_boundaries.Rdata")
@@ -206,7 +208,33 @@ combined_map <- ggplot() +
 combined_map  
 ```
 
+```{r}
 
+#create dummies for survey time, enumerator, ENUMq1
+main_po_data <- main_po_data %>%
+  mutate(po_survey_length=case_when(
+    ENUMq1<20 ~ "under 20 min",
+    between(ENUMq1, 20,60) ~ "20-60 min",
+    ENUMq1>60 ~ "Over 60 min"
+  )) %>%
+  # get hour of survey
+  mutate(po_survey_time=lubridate::ymd_hms(survey_time),
+         po_survey_time=lubridate::hour(po_survey_time),
+         po_survey_time=case_when(
+           between(po_survey_time,8,12) ~ "Morning",
+           between(po_survey_time,12,17) ~ "Afternoon",
+           between(po_survey_time,17,21) ~ "Evening",
+           between(po_survey_time,21,24) ~ "Night",
+           between(po_survey_time,0,8) ~ "Night"
+         ))
+
+main_po_data <- fastDummies::dummy_cols(main_po_data, select_columns = 'enumerator_number')
+main_po_data <- main_po_data %>%
+  rename_at(vars(starts_with('enumerator_number_')), function(x) paste0(x,"_",country,"_",year))
+main_po_data <- fastDummies::dummy_cols(main_po_data, select_columns = 'po_survey_length')
+main_po_data <- fastDummies::dummy_cols(main_po_data, select_columns = 'po_survey_time')
+
+```
 Merge the school and PO data
 
 ```{r}
@@ -216,9 +244,8 @@ po_district_df <- main_po_data %>%
   filter(govt_tier=='District office (or equivalent)') %>%
   haven::zap_labels() %>%
     group_by(ADM2_NAME, ADM2_CODE) %>%
-  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean, na.rm=TRUE)) %>%
-  as_tibble() %>%
-  select(-geometry) %>%
+  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
+  summarise(across(everything(),mean, na.rm=TRUE)) %>%  as_tibble() %>%
   filter(!is.na(ADM2_NAME))
 
 
@@ -234,9 +261,10 @@ linked_school_data_csv <- linked_school_data %>%
   ungroup() %>%
   select(-geometry) %>%
   left_join(keyfile) %>%
-  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, everything()) 
 
 write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_school_data_",country,"_",year,".csv"))
+write_excel_csv(linked_school_data_csv, paste0(shared_folder, country,"/linked_po_school_data_",country,"_",year,".csv"))
 
 ```
 
@@ -252,9 +280,8 @@ po_district_df <- main_po_data %>%
   filter(DEM1q12n==1) %>% # just the managers/directors
     haven::zap_labels() %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
-  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")),mean, na.rm=TRUE)) %>%
-  as_tibble() %>%
-  select(-geometry) %>%
+  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
+  summarise(across(everything(),mean, na.rm=TRUE)) %>%  as_tibble() %>%
   filter(!is.na(ADM2_NAME))
 
 
@@ -270,9 +297,10 @@ linked_school_data_csv <- linked_school_data %>%
   ungroup() %>%
   select(-geometry) %>%
   left_join(keyfile) %>%
-  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, everything()) 
 
 write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_directors_school_data_",country,"_",year,".csv"))
+write_excel_csv(linked_school_data_csv, paste0(shared_folder, country,"/linked_po_directors_school_data_",country,"_",year,".csv"))
 
 ```
 
@@ -292,9 +320,8 @@ po_district_df <- main_po_data %>%
   filter(govt_tier=='District office (or equivalent)') %>%
   haven::zap_labels() %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
-  summarise(across(one_of(c(po_ind_list,"office_lat","office_lon")), Hmisc::wtd.mean, weights=ENUMq4, na.rm=TRUE)) %>%
-  as_tibble() %>%
-  select(-geometry) %>%
+  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_'), ENUMq4) %>%
+  summarise(across(everything(),Hmisc::wtd.mean, weights=ENUMq4, na.rm=TRUE)) %>%  as_tibble() %>%
   filter(!is.na(ADM2_NAME))
 
 
@@ -310,9 +337,10 @@ linked_school_data_csv <- linked_school_data %>%
   ungroup() %>%
   select(-geometry) %>%
   left_join(keyfile) %>%
-  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, colnames(po_district_df)) 
+  select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, everything()) 
 
 write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_enum_score_weighted_school_data_",country,"_",year,".csv"))
+write_excel_csv(linked_school_data_csv, paste0(shared_folder, country,"/linked_po_directors_school_data_",country,"_",year,".csv"))
 
 ```
 
