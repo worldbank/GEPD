@@ -14,7 +14,6 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggthemes)
 library(patchwork)
-library(fastDummies)
 
 eth_map <- ne_countries(country="Ethiopia", scale = "medium", returnclass = "sf", type='map_units')
 
@@ -244,8 +243,9 @@ po_district_df <- main_po_data %>%
   filter(govt_tier=='District office (or equivalent)') %>%
   haven::zap_labels() %>%
     group_by(ADM2_NAME, ADM2_CODE) %>%
-  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
-  summarise(across(everything(),mean, na.rm=TRUE)) %>%  as_tibble() %>%
+    select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
+  summarise(across(everything(),mean, na.rm=TRUE)) %>%
+  as_tibble() %>%
   filter(!is.na(ADM2_NAME))
 
 
@@ -280,8 +280,9 @@ po_district_df <- main_po_data %>%
   filter(DEM1q12n==1) %>% # just the managers/directors
     haven::zap_labels() %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
-  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
-  summarise(across(everything(),mean, na.rm=TRUE)) %>%  as_tibble() %>%
+    select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
+  summarise(across(everything(),mean, na.rm=TRUE)) %>%
+  as_tibble() %>%
   filter(!is.na(ADM2_NAME))
 
 
@@ -320,8 +321,9 @@ po_district_df <- main_po_data %>%
   filter(govt_tier=='District office (or equivalent)') %>%
   haven::zap_labels() %>%
   group_by(ADM2_NAME, ADM2_CODE) %>%
-  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_'), ENUMq4) %>%
-  summarise(across(everything(),Hmisc::wtd.mean, weights=ENUMq4, na.rm=TRUE)) %>%  as_tibble() %>%
+  select(one_of(po_ind_list,"office_lat","office_lon"), starts_with('enumerator_number_'), starts_with('po_survey_length_'), starts_with('po_survey_time_')) %>%
+  summarise(across(everything(),mean, na.rm=TRUE)) %>%
+  as_tibble() %>%
   filter(!is.na(ADM2_NAME))
 
 
@@ -340,7 +342,7 @@ linked_school_data_csv <- linked_school_data %>%
   select(hashed_school_code, ADM0_NAME, ADM1_NAME, ADM2_NAME, school_lat, school_lon, everything()) 
 
 write_excel_csv(linked_school_data_csv, paste0(confidential_folder, "/School/linked_po_enum_score_weighted_school_data_",country,"_",year,".csv"))
-write_excel_csv(linked_school_data_csv, paste0(shared_folder, country,"/linked_po_directors_school_data_",country,"_",year,".csv"))
+write_excel_csv(linked_school_data_csv, paste0(shared_folder, country,"/linked_po_enum_score_weighted_school_data_",country,"_",year,".csv"))
 
 ```
 
