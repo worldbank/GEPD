@@ -24,6 +24,8 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # 3. Merge this survey data with metadata to produce final data for EdStats upload
 
 
+iso3="JOR"
+
 ##########################
 #read in api_data function
 ##########################
@@ -85,6 +87,36 @@ wbopendat<-WDI(country="JO", indicator=ind_list, start=2000, end=2022, extra=T) 
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n())
+
+#add new learning poverty number
+g4_prof <- read_excel(path=paste0(gen_dir,'/lpv_edstats_1205.xls'), sheet='WDI_indicators') %>%
+  filter(countrycode==iso3) %>%
+  group_by(indicator) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(countrycode, indicator, year, value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = indicator,
+    values_from=value
+  )
+
+
+#read in UIS data on 4.1.1a
+uis_df <- read_csv(file='https://geo.uis.unesco.org/data/sdg-benchmarks.csv') %>%
+  filter(country_id==iso3) %>%
+  group_by(ind_nber) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(country_id, ind_nber, year, latest_value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = ind_nber,
+    values_from=latest_value,
+    values_fill=as.numeric(NA),
+    names_prefix = 'SDG'
+  ) %>%
+  mutate(across(starts_with('SDG'), as.numeric))
 
 #read in databases for indicators
 

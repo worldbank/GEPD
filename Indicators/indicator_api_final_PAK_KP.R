@@ -57,6 +57,7 @@ api_template <- api_template_fun()
 #specify path to data
 #Country name and year of survey
 country <-'PAK'
+iso3 <- 'PAK'
 country_name <- "Pakistan"
 province <- "KP"
 year <- '2022'
@@ -67,6 +68,7 @@ strata <- c('Gender', 'Location')
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),paste0("Data/",province))
+  gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
@@ -117,6 +119,37 @@ wbopendat<-WDI(country='PK', indicator=ind_list, start=2000, end=2023, extra=T) 
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n())
+
+#add new learning poverty number
+g4_prof <- read_excel(path=paste0(gen_dir,'/lpv_edstats_1205.xls'), sheet='WDI_indicators') %>%
+  filter(countrycode==iso3) %>%
+  group_by(indicator) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(countrycode, indicator, year, value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = indicator,
+    values_from=value
+  )
+
+
+#read in UIS data on 4.1.1a
+uis_df <- read_csv(file='https://geo.uis.unesco.org/data/sdg-benchmarks.csv') %>%
+  filter(country_id==iso3) %>%
+  group_by(ind_nber) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(country_id, ind_nber, year, latest_value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = ind_nber,
+    values_from=latest_value,
+    values_fill=as.numeric(NA),
+    names_prefix = 'SDG'
+  ) %>%
+  mutate(across(starts_with('SDG'), as.numeric))
+
 #read in databases for indicators
 
 load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))

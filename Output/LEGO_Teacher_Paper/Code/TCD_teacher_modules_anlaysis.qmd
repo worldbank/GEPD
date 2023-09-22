@@ -351,7 +351,8 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') ) %>%
+  select(-ends_with('_g2'))
 
   
 #add weights and anonymize
@@ -360,6 +361,23 @@ teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') %>%
 
 
 ```
+
+## G2 Pedagogy
+
+```{r pedg}
+
+teacher_pedagogy_g2 <- school_micro_raw %>%
+  select(preamble_info, starts_with('m9saq1'), ends_with('_g2') ) 
+
+  
+#add weights and anonymize
+teacher_pedagogy_micro_g2 <- df_add_weights('teacher_pedagogy_g2') %>%
+  select(-starts_with('interview__')) 
+  
+
+
+```
+
 
 
 

@@ -187,7 +187,7 @@ df_updated_gepd %>%
 # 
 # write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
 
-strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
+strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",'2023-07-05',".csv"))
 
 
 
@@ -335,6 +335,219 @@ write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_replac
 
 ```
 
+## August 28, 2023 Replacements
+
+23 schools fell into Tehsils that were judged to pose a risk to the enumerators, either because of war/conflict, other security issues, or very remote terrain.
+
+```{r}
+#| label: aug28replacements
+
+#read in the list of schools to be replaced
+bemis <- c( '09682'
+            ,'06924'
+            ,'06742'
+            ,'08356'
+            ,'08203'
+            ,'08246'
+            ,'08429'
+            ,'12845'
+            ,'07316'
+            ,'12236'
+            ,'14724'
+            ,'17545'
+            ,'07784'
+            ,'07803'
+            ,'11815'
+            ,'06118'
+            ,'03086'
+            ,'03092'
+            ,'11031'
+            ,'09406'
+            ,'03540'
+            ,'17131'
+            ,'14252'
+)
+
+tehsils <- c(
+  'MASHKAI'
+  ,'NOKUNDI'
+  ,'DERA BUGTI'
+  ,'PHELLAWAGH'
+  ,'SUI'
+  ,'GANDAKHA'
+  ,'GANDAWAH'
+  ,'BHAG'
+  ,'DHADAR'
+  ,'DASHT'
+  ,'DASHT SPEZAND'
+  ,'TUMP'
+  ,'NAL'
+  ,'ZEHRI'
+
+)
+
+
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_sample_200_","2023-07-05",".csv")) %>%
+  mutate(sample="Sampled School") %>%
+  select(-YearofNonFunctinal) %>%
+  filter(BemisCode %in% bemis)
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated_gepd %>%
+  left_join(sample_chosen) %>%
+  filter(!(Tehsil %in% tehsils))
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  #replace DERA BUGTI with KOHLU
+  mutate(District=case_when(
+    District=="DERA BUGTI" ~ "KOHLU",
+    TRUE ~ District
+  )) %>%
+  group_by( District) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(District) %>%
+  sample_n(2*mean(sampled_districts), weight=class_4) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(District,Location, BemisCode) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    mutate(District_sort=case_when(
+    District=="DERA BUGTI" ~ "KOHLU",
+    TRUE ~ District
+  )) %>%
+    arrange(District_sort,Location, BemisCode)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$`School Name`
+sample_replace$replaced_EmisCode=sample_replace2$BemisCode
+sample_replace$replaced_District=sample_replace2$District
+
+
+
+sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_security_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
+
+## September 18, 2023 Replacements
+
+Another round of replacements were needed, because of security issues.
+
+```{r}
+#| label: aug28replacements
+
+#read in the list of schools to be replaced
+bemis <- c( '08203',
+            '08429',
+            '08246',
+            '08356',
+            '02645',
+            '11103',
+            '02822',
+            '02597'
+
+  
+)
+
+tehsils <- c(
+  'MASHKAI'
+  ,'NOKUNDI'
+  ,'DERA BUGTI'
+  ,'PHELLAWAGH'
+  ,'SUI'
+  ,'GANDAKHA'
+  ,'GANDAWAH'
+  ,'BHAG'
+  ,'DHADAR'
+  ,'DASHT'
+  ,'DASHT SPEZAND'
+  ,'TUMP'
+  ,'NAL'
+  ,'ZEHRI'
+
+)
+
+
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_sample_200_","2023-08-28",".csv")) %>%
+  mutate(sample="Sampled School") %>%
+  select(-YearofNonFunctinal) %>%
+  filter(BemisCode %in% bemis)
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated_gepd %>%
+  left_join(sample_chosen) %>%
+  filter(!(Tehsil %in% tehsils))
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  #replace DERA BUGTI with KOHLU
+  mutate(District=case_when(
+    District=="DERA BUGTI" ~ "JHAL MAGSI",
+    District=="KOHLU" ~ "SIBI",
+    TRUE ~ District
+  )) %>%
+  group_by( District) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(District) %>%
+  sample_n(2*mean(sampled_districts), weight=class_4) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(District,Location, BemisCode) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    mutate(District_sort=case_when(
+    District=="DERA BUGTI" ~ "KOHLU",
+    TRUE ~ District
+  )) %>%
+    arrange(District_sort,Location, BemisCode)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$`School Name`
+sample_replace$replaced_EmisCode=sample_replace2$BemisCode
+sample_replace$replaced_District=sample_replace2$District
+
+
+
+sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_security_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
 
 
 # Sanity Checks

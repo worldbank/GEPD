@@ -122,16 +122,17 @@ api_template <- api_template %>%
   ######################################
 
   
+  
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
-      SE.PRM.PROE =-999,
-      SE.PRM.PROE.1 =-999,
-      SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
-      SE.PRM.TENR.1	 =wbopendat$SE.PRM.TENR
+      SE.LPV.PRIM	= g4_prof$SE.LPV.PRIM,
+      SE.LPV.PRIM.1	= g4_prof$SE.LPV.PRIM,
+      SE.LPV.PRIM.BMP	= 100-g4_prof$SE.LPV.PRIM.LD,
+      SE.LPV.PRIM.BMP.1	= 100-g4_prof$SE.LPV.PRIM.LD,
+      SE.PRM.PROE =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
+      SE.PRM.PROE.1 =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
+      SE.PRM.TENR	 =g4_prof$SE.LPV.PRIM.SD,
+      SE.PRM.TENR.1	 =g4_prof$SE.LPV.PRIM.SD
     )
   
   
@@ -254,7 +255,7 @@ api_template <- api_template %>%
       #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
       SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
       SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
+      SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Urban") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
 
       #(De Facto) Percent of classrooms with basic classroom furniture	
       SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All"),

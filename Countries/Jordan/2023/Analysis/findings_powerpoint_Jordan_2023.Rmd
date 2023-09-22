@@ -1,14 +1,6 @@
 ---
 title: "Global Education Policy Dashboard - Jordan 2023"
 author: "Education Global Practice, World Bank"
-output:
-  html_document:
-    fig_height: 8
-    fig_width: 10
-    toc: yes
-    theme: readable
-  word_document:
-    toc: yes
 ---
 
 ```{r setup, include=FALSE}

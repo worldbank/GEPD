@@ -47,7 +47,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source('R/api_template_fun.R', echo=TRUE)
 api_template <- api_template_fun()
 
-
+iso3='TCD'
 
 
 ##########################
@@ -63,6 +63,7 @@ api_template <- api_template_fun()
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
 
 data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/TCD/TCD_2023_GEPD/TCD_2023_GEPD_v01_M/Data"
+gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
 
 }else if (Sys.getenv("USERNAME") == "wb577189"){
   
@@ -89,6 +90,36 @@ wbopendat<-WDI(country='TD', indicator=ind_list, start=2000, end=2022, extra=T) 
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n())
+
+#add new learning poverty number
+g4_prof <- read_excel(path=paste0(gen_dir,'/lpv_edstats_1205.xls'), sheet='WDI_indicators') %>%
+  filter(countrycode==iso3) %>%
+  group_by(indicator) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(countrycode, indicator, year, value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = indicator,
+    values_from=value
+  )
+
+
+#read in UIS data on 4.1.1a
+uis_df <- read_csv(file='https://geo.uis.unesco.org/data/sdg-benchmarks.csv') %>%
+  filter(country_id==iso3) %>%
+  group_by(ind_nber) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(country_id, ind_nber, year, latest_value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = ind_nber,
+    values_from=latest_value,
+    values_fill=as.numeric(NA),
+    names_prefix = 'SDG'
+  ) %>%
+  mutate(across(starts_with('SDG'), as.numeric))
 
 #read in databases for indicators
 

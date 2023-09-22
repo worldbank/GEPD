@@ -11,7 +11,7 @@ if(Sys.info()["user"] == "wb577189"){
   
 } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
   
-  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/Policy_Survey/"
+  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data/Policy_Survey/"
   
   
 }
@@ -58,7 +58,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(a4),
-         teacher_salary=(8820/501.96)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=ET
+         teacher_salary=(300000*12/2469049)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.KN?locations=GA
 
 #teacher selection and deployment
 #

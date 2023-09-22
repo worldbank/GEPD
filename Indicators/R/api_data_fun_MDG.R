@@ -255,7 +255,7 @@ indicator_values_transpose <- indicator_values_transpose %>%
       #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
       SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
       SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
+      SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Urban") + 67*indicator_means(pens_etc, "school", "INPT",  "Urban"),
 
       #(De Facto) Percent of classrooms with basic classroom furniture	
       # SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All"),
