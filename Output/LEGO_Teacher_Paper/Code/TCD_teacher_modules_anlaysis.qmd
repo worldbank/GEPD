@@ -351,32 +351,215 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') ) %>%
-  select(-ends_with('_g2'))
-
-  
-#add weights and anonymize
-teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') %>%
-  select(-starts_with('interview__')) 
-
-
-```
-
-## G2 Pedagogy
-
-```{r pedg}
+  select(preamble_info, c('m4saq1':'m4scq15_lang')) %>%
+  mutate(GRADE=4)
 
 teacher_pedagogy_g2 <- school_micro_raw %>%
-  select(preamble_info, starts_with('m9saq1'), ends_with('_g2') ) 
+  select(preamble_info, c('m9saq1':'s2_c9_3_g2')  ) %>%
+  rename_at(vars(ends_with('_g2')), ~str_remove_all(.,"_g2")) %>%
+  rename(m4saq1=m9saq1,
+         m4saq1_number=m9saq1_number) %>%
+  mutate(GRADE=2)
+
+teacher_pedagogy_segments <- teacher_pedagogy  %>%
+    bind_rows(teacher_pedagogy_g2)
+  
+teach_dta <- teacher_pedagogy  %>%
+    bind_rows(teacher_pedagogy_g2) %>%
+  pivot_longer(
+    cols = c("s1_0_1_1":"s2_c9_3"),
+    names_to = c("school_clip", "behaviour"),
+    names_pattern = "(s[0-9])_(.*)",
+    values_to = "count"
+  ) %>% filter(!is.na(count)) %>% distinct(.)  %>% 
+
+    mutate(behaviour = paste0("s_", behaviour),
+           school_clip = if_else(school_clip =="s1", "1", "2"),
+           id=row_number(),
+           count = as.numeric(count)) %>% 
+    
+    pivot_wider(id_cols =c(id, school_code, school_clip, GRADE, m4saq1, m4saq1_number), names_from = behaviour, values_from = count) %>% select(-id) 
 
   
-#add weights and anonymize
-teacher_pedagogy_micro_g2 <- df_add_weights('teacher_pedagogy_g2') %>%
-  select(-starts_with('interview__')) 
+    ## We regroup by school and video segment
+  coalesce_by_column <- function(df) {
+    return(dplyr::coalesce(!!! as.list(df)))
+  }
   
+  teach_dta <- teach_dta %>% 
+    group_by(school_code, school_clip, GRADE) %>% 
+    summarise_all(coalesce_by_column) %>% 
+    #mutate(across(everything(), as.numeric)) %>% 
+    ungroup()
+  
+
+
+  #pull out school code from video clip name
+  teacher_pedagogy_segments <- teach_dta %>%
+    rename(clip = school_clip) %>% 
+    # filter(!is.na(school_code)) %>%
+    # mutate(
+    #        clip_temp=str_replace(school_clip," ", ""),
+    #        clip_temp=grepl('Segment1', clip_temp),
+    #        clip=if_else(clip_temp==TRUE, 1,2)
+    #          ) %>%
+    # select(-clip_temp, -video_length, -school_clip, -person, -enum_comments) %>%
+    select(school_code, clip, GRADE, everything()) 
+   # mutate(across(everything(), as.numeric))
+  
+  #recode scores to be numeric
+
+
+  low_medium_high <- c(
+    "s_0_1_2",
+    "s_0_2_2",
+    "s_0_3_2",
+    "s_a2_1",
+    "s_a2_2",
+    "s_a2_3",
+    "s_b3_1",
+    "s_b3_2",
+    "s_b3_3",
+    "s_b3_4",
+    "s_b5_1",
+    "s_b5_2",
+    "s_b6_1",
+    "s_b6_2",
+    "s_b6_3",
+    "s_c7_1",
+    "s_c7_2",
+    "s_c7_3",
+    "s_c8_1",
+    "s_c8_2",
+    "s_c8_3",
+    "s_c9_1",
+    "s_c9_2",
+    "s_c9_3")
+
+  low_medium_high_na <- c("s_a1_1",
+                          "s_a1_2",
+                          "s_a1_3",
+                          "s_a1_4",
+                          "s_b4_1",
+                          "s_b4_2",
+                          "s_b4_3"
+
+  )
+
+
+  yes_no <- c("s_0_1_1",
+              "s_0_2_1",
+              "s_0_3_1"
+  )
+
+  overall <- c('s_a1',
+               's_a2',
+               's_b3',
+               's_b4',
+               's_b5',
+               's_b6',
+               's_c7',
+               's_c8',
+               's_c9'
+  )
+
+
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate_at(vars(overall),~(if_else(. %in% c('1','2','3','4','5'),as.numeric(.),as.numeric(NA) ))) %>%
+    # mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(if_else(. %in% c('L','M','H','Y','N'),.,as.character(NA) ))) %>%
+    # mutate_at(vars(low_medium_high), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
+    # mutate_at(vars(low_medium_high_na), ~(if_else(. %in% c('L','M','H'),.,as.character(NA) ))) %>%
+    # mutate_at(vars(low_medium_high,low_medium_high_na,yes_no),~(str_replace_all(.,"[[:punct:]]",""))) %>%
+    # mutate_at(vars(low_medium_high), ~case_when(
+    #   .=="L" ~ 2,
+    #   .=="M" ~ 3,
+    #   .=="H" ~ 4,
+    #   TRUE ~ as.numeric(NA)
+    # )) %>%
+    # mutate_at(vars(low_medium_high_na), ~case_when(
+    #   .=="NA" ~ 1,
+    #   .=="L" ~ 2,
+    #   .=="M" ~ 3,
+    #   .=="H" ~ 4,
+    #   TRUE ~ as.numeric(NA)
+    # )) %>%
+    # mutate_at(vars(yes_no), ~case_when(
+    #   .=="N" ~ 0,
+    #   .=="Y" ~ 1,
+    #   TRUE ~ as.numeric(NA)
+    # )) %>%
+    mutate_at(vars(low_medium_high), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
+    mutate_at(vars(low_medium_high_na), ~(factor(., levels=c(1,2,3,4), labels=c("NA", "Low", "Medium", "High")))) %>%
+    mutate_at(vars(yes_no), ~(factor(.,levels=c(0,1), labels=c("No", "Yes"))))
+
+
+  #create sub-indicators from TEACH
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>% 
+    mutate(classroom_culture=rowMeans(select(.,s_a1, s_a2)),
+           instruction=rowMeans(select(.,s_b3, s_b4, s_b5, s_b6)),
+           socio_emotional_skills=rowMeans(select(.,s_c7, s_c8, s_c9))
+    ) %>%
+    mutate(teach_score=rowMeans(select(.,classroom_culture, instruction, socio_emotional_skills)))
+
+  # Time on task - First measure (Yes/No on "Teacher provides learning activites to most students")
+  # Generate a variable computing the proportion of times each teacher for each segment is providing a learning activity to students
+  # We are only taking into account teachers for which we have at least 2 snapshots observed
+
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(nb_tt1=3-(is.na(s_0_1_1) + is.na(s_0_2_1) + is.na(s_0_3_1))) %>%
+    mutate_at(vars(s_0_1_1, s_0_2_1, s_0_3_1), ~case_when(.=="Yes" ~ 1,
+                                                          .=="No" ~ 0,
+                                                          TRUE ~ NA_real_)) %>%
+    mutate(timeontask1=if_else(nb_tt1>=2, rowMeans(select(.,s_0_1_1, s_0_2_1, s_0_3_1), na.rm=TRUE), NA_real_))
+
+
+  #een tt_yes=rowmean(s_0_1_1_yes s_0_2_1_yes s_0_3_1_yes) if nb_tt1>=2
+  #replace tt_yes=tt_yes*100
+  #egen tt_no=rowmean(s_0_1_1_no s_0_2_1_no s_0_3_1_no) if nb_tt1>=2
+  #replace tt_no=tt_no*100
+
+  # Time on task - Second measure
+  # Proportion of classes where a low number of students are on task, a medium number of students are on task
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(tot_low=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "Low"),
+           tot_medium=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "Medium"),
+           tot_high=rowSums(select(.,s_0_1_2,s_0_2_2,s_0_3_2) == "High"))
+
+  # We count the number of snapshots observed (in case the observation lasted less than 15 minutes) and for which the teacher was providing a learning activity
+
+  # For each of the variables "Low", "Medium" and "High", we create our own mean (in case the observation lasted less than 15 minutes or teacher was not providing a learning activity)
+  # We are only taking into account teachers for which we have at least 2 snapshots observed
+
+  teacher_pedagogy_segments <- teacher_pedagogy_segments %>%
+    mutate(nb_tt2=3-(is.na(s_0_1_2) + is.na(s_0_2_2) + is.na(s_0_3_2)),
+           tt_low=if_else(nb_tt2 >= 2, 100*tot_low/nb_tt2, NA_real_),
+           tt_medium=if_else(nb_tt2 >= 2, 100*tot_medium/nb_tt2, NA_real_),
+           tt_high=if_else(nb_tt2 >= 2, 100*tot_high/nb_tt2, NA_real_))
+
+final_indicator_data_PEDG <- teacher_pedagogy_segments %>%
+    mutate(teach_score=(classroom_culture+instruction+socio_emotional_skills)/3,
+           teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+           classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+           instruction_prof=100*as.numeric(instruction>=3),
+           socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+    filter(!is.na(teach_score)) %>%
+    #write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    group_by(school_code, GRADE, m4saq1, m4saq1_number) %>%
+    mutate(number_segments=  sum(!is.na(teach_score))) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))
+  
+  
+#add weights and anonymize
+teacher_pedagogy_micro <- df_add_weights('final_indicator_data_PEDG') %>%
+  select(-starts_with('interview__')) 
 
 
 ```
+
+
+
+
 
 
 

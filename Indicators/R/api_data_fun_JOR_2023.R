@@ -131,8 +131,8 @@ api_template <- api_template %>%
       SE.LPV.PRIM.BMP.1	= 100-g4_prof$SE.LPV.PRIM.LD,
       SE.PRM.PROE =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
       SE.PRM.PROE.1 =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
-      SE.PRM.TENR	 =g4_prof$SE.LPV.PRIM.SD,
-      SE.PRM.TENR.1	 =g4_prof$SE.LPV.PRIM.SD
+      SE.PRM.TENR	 =100-g4_prof$SE.LPV.PRIM.SD,
+      SE.PRM.TENR.1	 =100-g4_prof$SE.LPV.PRIM.SD
     )
   
   
