@@ -1,7 +1,7 @@
 ---
 title: "Pakistan (Punjab) Sampling"
 author: "Brian Stacy"
-date: "7/8/2022"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -16,6 +16,7 @@ library(here)
 library(readxl)
 library(haven)
 library(flextable) 
+library(srvyr)
 
 #Country name
 country <-'PAK'
@@ -23,9 +24,9 @@ country_name <- "Pakistan"
 year <- '2022'
 province <- "Punjab"
 #specify name of sampling frame file.  This needs to be a csv file
-public_file_frame<-"Punjab Public School Sampling Frame.dta"
-private_file_frame<-"PSC Sampling Frame.dta"
-
+#ublic_file_frame<-"List of standalone primary schools with enrollment & teachers - as per Census 2022-23.xlsx"
+public_file_frame<-"Copy of List of primary portion schools - as per census 2022-23.xlsx"
+saber_frame <- 'SamplingData_Baseline.dta'
 
 set.seed(8473227)
 
@@ -90,79 +91,49 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 
 
 #read sample frame
-public_df=read_stata(paste(sampling_folder, public_file_frame, sep="/"))
-private_df=read_stata(paste(sampling_folder, private_file_frame, sep="/"))
+public_df=read_excel(paste(sampling_folder, public_file_frame, sep="/")) 
 
 df_raw<-public_df %>%
-    mutate(num_teachers=Teachers,
-            total_enrollment=enrollment,
-            total_katchi_enrollment=if_else(is.na(total_katchi_enrollment),0,total_katchi_enrollment),
-            total_katchi_enrollment_boys=if_else(is.na(eng_kachi_b),0,eng_kachi_b),
-            total_katchi_enrollment_girls=if_else(is.na(eng_kachi_g),0,eng_kachi_g),
-            total_ece_enrollment=if_else(is.na(total_ece_enrollment),0,total_ece_enrollment),
-            total_ece_enrollment_boys=if_else(is.na(ECEBoys),0,ECEBoys),
-            total_ece_enrollment_gils=if_else(is.na(ECEGirls),0,ECEGirls),
-            total_1st_enrollment=total_cls1_enrollment,
-            total_1st_enrollment_boys=eng_cls1_b,
-            total_1st_enrollment_girls=eng_cls1_g,       
-            total_4th_enrollment_boys=eng_cls3_b, # 4th grade boys variable is missing for some reason, so impute using grade 3
-            total_4th_enrollment_girls=eng_cls4_g,      
-            total_4th_enrollment=total_4th_enrollment_boys+total_4th_enrollment_girls,
-            total_5th_enrollment_boys=eng_cls5_b, 
-            total_5th_enrollment_girls=eng_cls5_g,      
-            total_5th_enrollment=total_5th_enrollment_boys+total_5th_enrollment_girls,      
-            rural=if_else(school_location=="Rural", 1,0))
+    mutate(
+            total_enrollment=total_t,
+            total_katchi_enrollment=k_t,
+            total_katchi_enrollment_boys=k_b,
+            total_katchi_enrollment_girls=k_g,
+            total_ece_enrollment=ece_t,
+            total_ece_enrollment_boys=ece_b,
+            total_ece_enrollment_gils=ece_g,
+            total_1st_enrollment=cls1_t,
+            total_1st_enrollment_boys=cls1_b,
+            total_1st_enrollment_girls=cls1_g,       
+            total_4th_enrollment_boys=cls4_b, 
+            total_4th_enrollment_girls=cls4_g,      
+            total_4th_enrollment=cls4_t,
+            total_5th_enrollment_boys=cls5_b, 
+            total_5th_enrollment_girls=cls5_g,      
+            total_5th_enrollment=cls5_t,      
+            rural=if_else(csl_area=="Rural", 1,0))
 
+# read in SABER/SDI sample
+saber_sample_df <- read_dta(paste(sampling_folder, saber_frame, sep="/"))
+
+#join the frames
+df_frame_joined_df <- df_raw %>%
+  left_join(saber_sample_df %>% filter(public==1), by=c('csl_emis_code'='emiscode'))
+
+districts <- df_frame_joined_df %>% group_by(sampled, csl_district, csl_area) %>% summarise(n=n())
 ```
 
-Basic summary stats of overall frame
-
-```{r}
-#level
-df_raw %>% 
-  group_by(school_level) %>% 
-  summarise(n=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Level') %>% 
-  autofit()
-
-#Tehsil
-df_raw %>% 
-  group_by(district) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by District') %>% 
-  autofit()
-
-#Gender
-df_raw %>% 
-  group_by(school_gender) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Gender') %>% 
-  autofit()
-
-#Urban/rural
-df_raw %>% 
-  group_by(rural) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Urban/Rural') %>% 
-  autofit()
 
 
-
-
-```
 
 
 ```{r}
 
-df_updated_gepd <- df_raw %>%
+df_updated_gepd <- df_frame_joined_df %>%
   filter(total_1st_enrollment>=3,
          total_4th_enrollment>=3) 
 
-df_updated <- df_raw %>%
+df_updated <- df_frame_joined_df %>%
   filter(total_ece_enrollment+total_katchi_enrollment>=3,
          total_1st_enrollment>=3,
          total_4th_enrollment>=3,
@@ -172,4 +143,257 @@ df_updated <- df_raw %>%
 Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
 
 However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(total_ece_enrollment+total_katchi_enrollment<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(total_5th_enrollment<3))` because of the grade 5 restriction.
+
+
+
+Basic summary stats of overall frame
+
+```{r}
+#level
+df_updated %>% 
+  group_by(csl_level) %>% 
+  summarise(n=n(),Students=sum(total_enrollment, na.rm = TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_updated %>% 
+  group_by(csl_district) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm = TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by District') %>% 
+  autofit()
+
+#Gender
+df_updated %>% 
+  group_by(csl_official_school_type) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm = TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+
+#Urban/rural
+df_updated %>% 
+  group_by(csl_area) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment, na.rm = TRUE)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+
+
+
+```
+
+# Sampling
+
+```{r eval=FALSE, include=FALSE}
+#set baseline for sampling frame.  Manual editing done in excel
+strata_df_200 <- df_updated %>%
+  filter(!is.na(total_enrollment)) %>%
+   group_by(csl_district,csl_area ) %>%
+   summarise(nstudents_district=sum(total_enrollment),
+                      total_district=n()
+ ) %>%
+   ungroup() %>%
+   mutate(sample_size=200*round(nstudents_district/sum(nstudents_district),2))
+
+write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_strata_200_",Sys.Date(),".csv"))
+```
+
+
+```{r large, echo=TRUE}
+
+
+# set the numbers of schools selected by strata (grade)
+strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Punjab_final_strata_200_2023-10-02.csv"))
+
+
+sample_df_200 <- df_updated %>%
+  mutate(sampled=if_else(is.na(sampled),0,sampled)) %>%
+  left_join(strata_df_200) %>%
+  mutate(sample_size=if_else(is.na(sample_size),0,sample_size)) %>%
+  ungroup() %>%
+  mutate(
+    totalstudents=sum(total_4th_enrollment),
+  ) %>%
+  group_by(csl_district,csl_area, sampled) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_4th_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = min(sample_size), weight= total_4th_enrollment) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+
+write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_sample_200_",Sys.Date(),".csv"))
+
+weights_df_200 <- df_updated %>%
+  mutate(sampled=if_else(is.na(sampled),0,sampled)) %>%
+  left_join(strata_df_200) %>%
+  mutate(sample_size=if_else(is.na(sample_size),0,sample_size)) %>%
+  ungroup() %>%
+  mutate(
+    totalstudents=sum(total_4th_enrollment),
+  ) %>%
+  group_by(csl_district,csl_area, sampled) %>%
+  mutate(strata_count=n(),
+         strata_size=sum(total_4th_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+
+  mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob))
+
+
+write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_weights_200_",Sys.Date(),".csv"))
+
+```
+
+## Evaluation of Sample Size
+
+Compare statistics when taking varying subsamples of the main sample of schools.
+
+```{r}
+student_data <- read_dta(paste(sampling_folder, '1.StudentData_BLvEL.dta', sep="/"))
+
+#get unique school ids
+school_ids <- unique(student_data$scode_original)
+sizes <- seq( 50,250, by = 10)
+# create a new vector containing sizes but repeated 100 times
+sizes <- rep(sizes, each = 100)
+
+# Create an empty data frame to store the results
+results_df <- data.frame(Size = numeric(0), Avg_Test_Score = numeric(0), Avg_Test_Score_se = numeric(0))
+
+#write a function to calculate the mean
+svy_size_experiment <- function(size) {
+  
+  #randomly sample from list of schools
+    school_id_sample <- sample(school_ids, size)
+    
+    srvy_df <- student_data %>%
+      filter(!is.na(BL_Weight)) %>%
+      filter(!is.na(m5_el_AllTest_TestScore)) %>%
+      filter(scode_original %in% school_id_sample) %>%
+      group_by(scode_original) %>%
+      summarise(m5_el_AllTest_TestScore=mean(m5_el_AllTest_TestScore),
+                BL_Weight=mean(BL_Weight)) %>%
+      ungroup() %>%
+      as_survey_design(
+                       weight=BL_Weight)
+  
+  results <- srvy_df %>% 
+    summarise(avg_test_score=survey_mean(`m5_el_AllTest_TestScore`))
+  
+   
+}
+
+## Loop through the sizes and apply the svy_size_experiment function
+for (size in sizes) {
+  result <- svy_size_experiment(size)
+  results_df <- rbind(results_df, data.frame(Size = size, Avg_Test_Score = result$avg_test_score,
+                      Avg_Test_Score_se=result$avg_test_score_se))
+}
+
+results_collapsed_df <- results_df %>%
+  group_by(Size) %>%
+  summarise(Avg_Test_Score=mean(Avg_Test_Score),
+            Avg_Test_Score_se=mean(Avg_Test_Score_se))
+
+ggplot(results_collapsed_df, aes(x=Size, y=Avg_Test_Score)) +
+  geom_point() +
+  geom_errorbar(aes(ymin=Avg_Test_Score-1.96*Avg_Test_Score_se,ymax=Avg_Test_Score+1.96*Avg_Test_Score_se)) +
+  theme_bw() +
+  expand_limits(y=c(0,1)) +
+  labs(
+    title=str_wrap('Mean Student Test Score Point Estimates and Std Errors from Punjab SABER under Different Sampling #s',50)
+  )
+
+
+
+```
+
+```{r, fig.height=6, fig.width=12}
+ggplot(results_collapsed_df, aes(x=Size, y=Avg_Test_Score_se)) +
+         geom_col(fill='darkred') +
+         geom_text(aes(label=paste0("Sample Size: ",round(Size,0), ", Std Error: ", round(Avg_Test_Score_se,3))), hjust=-0.5) +
+         coord_flip() +
+         theme_bw() +
+  labs(
+    title=str_wrap('Mean Student Test Score Std Errors from Punjab SABER under Different Sampling #s',150)
+  )
+```
+Do same for clean toilets
+
+```{r}
+principal_data <- read_dta(paste(sampling_folder, 'PrincipalData_BL_Anonymized.dta', sep="/"))
+
+#get unique school ids
+school_ids <- unique(principal_data$scode)
+sizes <- seq( 50,250, by = 10)
+# create a new vector containing sizes but repeated 100 times
+sizes <- rep(sizes, each = 100)
+
+# Create an empty data frame to store the results
+results_df <- data.frame(Size = numeric(0), toilet_clean = numeric(0), toilet_clean_se = numeric(0))
+
+#write a function to calculate the mean
+svy_size_experiment <- function(size) {
+  
+  #randomly sample from list of schools
+    school_id_sample <- sample(school_ids, size)
+    
+    srvy_df <- principal_data %>%
+      filter(!is.na(weight)) %>%
+      filter(!is.na(m2_b5)) %>%
+      filter(scode %in% school_id_sample) %>%
+      ungroup() %>%
+      as_survey_design(
+                       weight=weight)
+  
+  results <- srvy_df %>% 
+    summarise(toilet_clean=survey_mean(`m2_b5`))
+  
+   
+}
+
+## Loop through the sizes and apply the svy_size_experiment function
+for (size in sizes) {
+  result <- svy_size_experiment(size)
+  results_df <- rbind(results_df, data.frame(Size = size, toilet_clean = result$toilet_clean,
+                      toilet_clean_se=result$toilet_clean_se))
+}
+
+results_collapsed_df <- results_df %>%
+  group_by(Size) %>%
+  summarise(toilet_clean=mean(toilet_clean),
+            toilet_clean_se=mean(toilet_clean_se))
+
+ggplot(results_collapsed_df, aes(x=Size, y=toilet_clean)) +
+  geom_point() +
+  geom_errorbar(aes(ymin=toilet_clean-1.96*toilet_clean_se,ymax=toilet_clean+1.96*toilet_clean_se)) +
+  theme_bw() +
+  expand_limits(y=c(0,1)) +
+  labs(
+    title=str_wrap('Mean Clean Toilet Point Estimates and Std Errors from Punjab SABER under Different Sampling #s',50)
+  )
+
+
+
+```
+
+```{r, fig.height=6, fig.width=12}
+ggplot(results_collapsed_df, aes(x=Size, y=toilet_clean_se)) +
+         geom_col(fill='darkred') +
+         geom_text(aes(label=paste0("Sample Size: ",round(Size,0), ", Std Error: ", round(toilet_clean_se,3))), hjust=-0.5) +
+         coord_flip() +
+         theme_bw() +
+  labs(
+    title=str_wrap('Mean Clean Toilet Std Errors from Punjab SABER under Different Sampling #s',150)
+  )
+
+```
 

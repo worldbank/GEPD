@@ -34,6 +34,7 @@ library(ggalt)
 library(here)
 library(patchwork)
 library(DT)
+library(leaflet)
 #remotes::install_github("ricardo-bion/ggradar")
 library(ggradar)
 
@@ -168,7 +169,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 work_dir<- save_folder
 
 #load public official data
-#load(paste(work_dir, "/Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
+load(paste(work_dir, "/Public_Officials/public_officials_indicators_data_anon.RData", sep=""))
 
 #load school data for comparisons
 load(paste(work_dir, "/School/school_indicators_data_anon.RData", sep=""))
@@ -200,7 +201,7 @@ wrapper <- function(x, ...)
 
 ```{r cc, echo=FALSE, message=FALSE, warning=FALSE}
 #list countries
-countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE")
+countries <- c("GAB", "PER", "JOR", "RWA", "MDG", "ETH", "SLE", "TCD","NER")
 
 dir <- here()
 indicators_dir <- paste(dir, 'Indicators', sep="/")
@@ -210,8 +211,12 @@ out_dir <- paste(dir, 'Output', sep="/")
 indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 
 # read in indicator data
-SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
+GAB_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'GAB', ".csv")) %>%
   mutate(country="Gabon",
+         date='2023') 
+
+SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
+  mutate(country="Sierra Leone",
          date='2022') 
 
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
@@ -239,12 +244,19 @@ MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".cs
   mutate(country="Madagascar",
          date='2021') 
 
+TCD_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'TCD', ".csv")) %>%
+  mutate(country="Chad",
+         date='2023') 
+
+NER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'NER', ".csv")) %>%
+  mutate(country="Niger",
+         date='2023') 
 
 # Indicator names
 indicator_names_df <- PER_data %>%
   select(Series, `Indicator Name`)
 
-combined_df_raw <- bind_rows(SLE_data,PER_data,JOR_data, ETH_data, RWA_data, MDG_data)
+combined_df_raw <- bind_rows(GAB_data,PER_data,JOR_data, ETH_data, RWA_data, MDG_data, SLE_data, TCD_data, NER_data)
 
 
   
@@ -303,11 +315,13 @@ Jordan_col <- tab_color_df$Jordan
 Rwanda_col <- tab_color_df$Rwanda
 Ethiopia_col <- tab_color_df$Ethiopia
 Madagascar_col <- tab_color_df$Madagascar
-
+Niger_col <- tab_color_df$Niger
+Gabon_col <- tab_color_df$Gabon
+Chad_col <- tab_color_df$Chad
 
 #build table
 tab_df <- tab_df  %>%
-  select(`Indicator Name`,`Gabon`, Peru, Jordan, Rwanda, Ethiopia, Madagascar)
+  select(`Indicator Name`,`Gabon`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`, Niger, Chad)
 
 
 ovr_table <- flextable(tab_df) %>%
@@ -319,7 +333,7 @@ ovr_table <- flextable(tab_df) %>%
 #colors
 ovr_table <- ovr_table %>%
   bg(j = c('Gabon'),
-     bg = SLE_col) %>%
+     bg = Gabon_col) %>%
   bg(j = c('Peru'),
      bg = Peru_col) %>%
   bg(j = c('Jordan'),
@@ -329,7 +343,13 @@ ovr_table <- ovr_table %>%
   bg(j = c('Rwanda'),
      bg = Rwanda_col) %>%
   bg(j = c('Madagascar'),
-     bg = Madagascar_col)   
+     bg = Madagascar_col)  %>%
+  bg(j = c('Sierra Leone'),
+     bg = SLE_col) %>%
+  bg(j = c('Niger'),
+     bg = Niger_col) %>%
+  bg(j = c('Chad'),
+     bg = Chad_col) 
 
 
 ovr_table %>%
@@ -419,13 +439,13 @@ svymeantab <- function(data, strata) {
   get(data) %>%
     filter(!is.na(ipw)) %>%
     filter(!is.infinite(ipw)) %>%
-    select(one_of(indicators_list), province, private, urban_rural, ipw ) %>%
+    select(one_of(indicators_list), Province, private, rural, ipw ) %>%
     pivot_longer(cols=one_of(indicators_list),
                  names_to = 'indicators',
                  values_to='value') %>%
     as_survey_design(strata=strata,
                      weight=ipw) %>%
-    select(-c( 'province', 'private', 'urban_rural', 'ipw')) %>%
+    select(-c( 'Province', 'private', 'rural', 'ipw')) %>%
     group_by(indicators) %>%
     summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
     as_tibble() %>%
@@ -535,26 +555,28 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 # School Survey
     metadata<-metadta
     
-
+    school_dta_short_anon <- school_dta_short_anon %>%
+      mutate(province=Province,
+             urban_rural=if_else(rural==0, "Urban", "Rural"))
   
     sumstats_school <- school_dta_short_anon 
     
-    sumstats_school_df <- svymeantab('sumstats_school', strata=c('province', 'private', 'urban_rural'))
+    sumstats_school_df <- svymeantab('sumstats_school', strata=c('Province', 'private', 'rural'))
     
     #Now do breakdown by Urban/Rural
     #urban
     sumstats_school_urban <- school_dta_short_anon %>%
-      filter(urban_rural=="Urban") 
+      filter(rural==0) 
 
     
-    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=c('province', 'private'))
+    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=c('Province', 'private'))
     
     #rural
       sumstats_school_rural <- school_dta_short_anon  %>%
-        filter(urban_rural=="Rural") 
+        filter(rural==1) 
 
         
-      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=c('province', 'private'))
+      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=c('Province', 'private'))
 
     
     #now bind urban/rural with the main results
@@ -628,7 +650,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
       
       #add variable label
-      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=c('province', 'private', 'urban_rural')) %>%
+      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_urban=mean,
           ci_urban=ci
@@ -643,7 +665,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       
       
       #add variable label
-      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=c('province', 'private', 'urban_rural')) %>%
+      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_rural=mean,
           ci_rural=ci
@@ -693,8 +715,42 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
     
 ```
+## Sampling Overview
+
+```{r plain_map}
+
+attach(here(confidential_folder, "School/school_survey_data.RData"))
+
+school_map <- school_dta_short %>%
+  filter(!is.na(lat) & !is.na(lon))
+
+#create icons
+icons2 <- awesomeIcons(
+  icon = 'graduation-cap',
+  iconColor = 'white',
+  library = 'fa',
+  markerColor = 'blue'
+)
 
 
+map2 <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
+  addTiles()  %>%
+  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons2,
+                    popup = paste("Name: ", school_map$school_name_preload, " <br>",
+                                  "Province: ", school_map$school_province_preload, " <br>",
+                                  "District: ", school_map$school_district_preload, " <br>",
+                                  "EMIS Code: ", school_map$school_emis_preload, " <br>",
+                                  "<font color='red' > Outcomes ", " <br> <font color='black' >"
+
+
+                                  ) )  
+
+}
+
+
+map2(school_map)
+
+```
 
 # Practice Indicators
 
@@ -713,6 +769,8 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 learning_data_plot <- final_indicator_data_LERN_anon %>%
   bind_rows(final_indicator_data_LERN_F_anon, .id="Female") %>%
   bind_rows(final_indicator_data_LERN_M_anon, .id="Male") %>%
+      mutate(province=Province,
+             urban_rural=if_else(rural==0, "Urban", "Rural"))  %>%
   mutate(Gender=case_when(
     Female==1 ~ "All Students",
     Female==2 ~ "Female",
@@ -721,7 +779,7 @@ learning_data_plot <- final_indicator_data_LERN_anon %>%
     )) %>%
   select(-Female, -Male) %>%
   mutate(Type=if_else(urban_rural=="Rural", "Rural", "Urban")) %>%
-  filter(!is.na(Type))
+  filter(!is.na(Type)) 
 
 
 learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(wtd.mean(student_knowledge, ipw, na.rm=TRUE),1))
@@ -744,6 +802,17 @@ learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD =
                                       )) 
 
 ```
+
+```{r}
+crosstab <- assess_4th_grade_anon_anon %>%
+  select(hashed_school_code, student_number, math_student_proficient, literacy_student_proficient) 
+
+crosstab %>%
+  group_by(math_student_proficient,literacy_student_proficient) %>%
+  summarise(n=n())
+
+```
+
 
 
 
@@ -1044,7 +1113,9 @@ p1
 
 
 
-textbooks <- final_indicator_data_PKNW_anon %>%
+textbooks <- final_indicator_data_PKNW_anon %>% 
+      mutate(province=Province,
+             urban_rural=if_else(rural==0, "Urban", "Rural")) %>%
   left_join(final_indicator_data_INPT_anon) %>%
   left_join(school_dta_short_anon, by="hashed_school_code") %>%
   mutate(share_textbook=(m4scq5_inpt)/(m4scq4_inpt)) %>%
@@ -1133,7 +1204,7 @@ main_indicator_labels<-c(
     
     #score expert data (this requires a lot of hard coding and transcribing)
 
-    expert_dta_final<-haven::read_dta("c:/users/wb577189/OneDrive - WBG/GEPD/CNT/SLE/SLE_2022_GEPD/SLE_2022_GEPD_v01_M/Data/Policy_Survey/expert_dta_final.dta") 
+    expert_dta_final<-haven::read_dta(here(project_folder,"/CNT/GAB/GAB_2022_GEPD/GAB_2022_GEPD_v01_M/Data/Policy_Survey/expert_dta_final.dta") 
 
     expert_dta_radar <- expert_dta_final %>%
       select(colnames(data_radar))
@@ -1450,7 +1521,7 @@ teacher_discuss_df <- teacher_questionnaire_anon %>%
 
 
 
-```{r overall, eval=FALSE, include=FALSE}
+```{r overall, echo=FALSE}
 
 public_officials_dta_clean_anon <- public_officials_dta_clean_anon %>%
     filter(!is.na(govt_tier)) 
@@ -1461,10 +1532,10 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
-  mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'District Office',
-    govt_tier=='Ministry of Education '  ~ 'MBBSE/TSC'
-  )) %>%
+  # mutate(govt_tier=case_when(
+  #   govt_tier=='District office ' ~ 'District Office',
+  #   govt_tier=='Ministry of Education '  ~ 'MBBSE/TSC'
+  # )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
   pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
@@ -1648,22 +1719,22 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
   
     sumstats_school <- school_dta_short_anon 
     
-    sumstats_school_df <- svymeantab('sumstats_school', strata=c('province', 'private', 'urban_rural'))
+    sumstats_school_df <- svymeantab('sumstats_school', strata=c('Province', 'private', 'rural'))
     
     #Now do breakdown by Urban/Rural
     #urban
     sumstats_school_urban <- school_dta_short_anon %>%
-      filter(urban_rural=="Urban") 
+      filter(rural==0) 
 
     
-    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=c('province', 'private'))
+    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=c('Province', 'private'))
     
     #rural
       sumstats_school_rural <- school_dta_short_anon  %>%
-        filter(urban_rural=="Rural") 
+        filter(rural==1) 
 
         
-      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=c('province', 'private'))
+      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=c('Province', 'private'))
 
     
     #now bind urban/rural with the main results
@@ -1737,7 +1808,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
       
       #add variable label
-      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=c('province', 'private', 'urban_rural')) %>%
+      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_urban=mean,
           ci_urban=ci
@@ -1752,7 +1823,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       
       
       #add variable label
-      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=c('province', 'private', 'urban_rural')) %>%
+      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_rural=mean,
           ci_rural=ci

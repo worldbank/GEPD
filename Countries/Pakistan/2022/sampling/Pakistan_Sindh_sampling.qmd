@@ -24,8 +24,9 @@ country_name <- "Pakistan"
 year <- '2022'
 province <- "Sindh"
 #specify name of sampling frame file.  This needs to be a csv file
-file_frame<-"1st Draft Data ASC 2022-23.xlsx"
-frame_sheet <- "ASC"
+file_frame<-"Key Indicator (WB) with Class wise enrollment.xlsx"
+frame_sheet1 <- "Key Indicator"
+frame_sheet2 <- "Class wise enrollment"
 
 
 set.seed(89739)
@@ -80,7 +81,7 @@ Expert Survey: The Expert Survey will collect information to feed into the polic
 
 Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
-## KP Sampling
+## Sindh Sampling
 
 200 schools will be drawn.  The strata are the urban/rural status of the school and the gender of the school (male,female, mixed).  Schools from each of the 34 districts are selected.
 
@@ -90,20 +91,32 @@ Survey of Public Officials: The Survey of Public Officials will collect informat
 #| warning: false
 #read sample frame
 df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
-              sheet=frame_sheet) %>% 
+              sheet=frame_sheet1) 
+
+df_enrollment <- read_excel(paste(sampling_folder, file_frame, sep="/"),
+              sheet=frame_sheet2) %>%
+  rename(semis_code=`Semis Code`)
+
+df_combined <- df_raw %>%
+  left_join(df_enrollment) %>%
   mutate(
-    class_prep_rooms=ecce,    
-    class_primary_rooms=primary,
-    class_secondary_rooms=post_primary,
-    class_language = case_when(
-      sindhi_medium_enrolment==total_enrollment ~ "Sindhi School",
-      urdu_medium_enrolment==total_enrollment ~ "Urdu School",
-      TRUE ~ "Mixed or other"
-    )
+    total_enrollment=`Total`,
+    class_prep=`Katchi Female`+`Katchi Male`,                
+    class_1=`Class-I Male`+`Class-I Female`,                   
+    class_1_girls=`Class-I Female`,                   
+    class_1_boys=`Class-I Male`,                   
+    class_2=`Class-II Male`+`Class-II Female`,                   
+    class_3=`Class-III Male`+`Class-III Female`,                     
+    class_4=`Class-IV Male`+`Class-IV Female`,                     
+    class_4_girls=`Class-IV Female`,                    
+    class_4_boys=`Class-IV Male`,                    
+    class_5=`Class-V Male`+`Class-V Female`,                
+    class_6=`Class-VI Male`+`Class-VI Female`,
   )
 
+
 #keep open schools
-df_raw <- df_raw %>%
+df_combined <- df_combined %>%
   filter(status_detail !='Closed')
 
 ```
@@ -111,13 +124,22 @@ df_raw <- df_raw %>%
 
 ```{r}
 #| label: updateframe
-df_updated_gepd <- df_raw %>%
-  filter(class_primary_rooms>=1) 
+df_updated_gepd <- df_combined %>%
+  filter(class_1>=3,
+         class_4>=3) 
 
 
-df_updated <- df_raw %>%
-  filter(class_prep_rooms>=1,
-         class_primary_rooms>=1)
+df_updated <- df_combined %>%
+  filter(class_prep>=3,
+         class_1>=3,
+         class_4>=3,
+         class_5>=3)
+
+#how many students in grade 4 eliminated by various restrictions
+sum(df_combined$class_4, na.rm=TRUE)
+sum(df_updated_gepd$class_4, na.rm=TRUE)
+sum(df_updated$class_4, na.rm=TRUE)
+
 ```
 
 Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  The sampling frame does not have student counts by grade, but has the number primary classrooms, so a restriction is imposed to have at least one primary room.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
@@ -132,7 +154,7 @@ Basic summary stats of frame
 #| tbl-cap: Summary Statistics for Balochistan Raw Sampling Frame
 #level
 df_updated_gepd %>% 
-  group_by(SchoolLevel) %>% 
+  group_by(`School Level`) %>% 
   summarise(n=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Level') %>% 
@@ -140,7 +162,7 @@ df_updated_gepd %>%
 
 #Tehsil
 df_updated_gepd %>% 
-  group_by(District) %>% 
+  group_by(district) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by District') %>% 
@@ -148,7 +170,7 @@ df_updated_gepd %>%
 
 #Gender
 df_updated_gepd %>% 
-  group_by(Gender) %>% 
+  group_by(school_gender) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Gender') %>% 
@@ -156,7 +178,7 @@ df_updated_gepd %>%
 
 #Urban/rural
 df_updated_gepd %>% 
-  group_by(Location) %>% 
+  group_by(location) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Urban/Rural') %>% 
@@ -168,6 +190,21 @@ df_updated_gepd %>%
 ```
 
 # Sampling
+
+```{r}
+#get numbers to select from each district
+strata_df_200 <- df_updated_gepd %>%
+  filter(!(location=="NULL")) %>%
+  group_by(district,location ) %>%
+  summarise(nstudents_district=sum(class_4),
+                     total_district=n()
+) %>%
+  ungroup() %>%
+  mutate(sample_size=200*round(nstudents_district/sum(nstudents_district),2))
+
+write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Sindh_strata_200_",Sys.Date(),".csv"))
+```
+
 
 ## 200 schools
 ```{r large, echo=TRUE}
@@ -183,19 +220,19 @@ df_updated_gepd %>%
 # 
 # write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
 
-strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
+strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Sindh_strata_200_2023-10-12_rev.csv"))
 
 
 
 # set the numbers of schools selected by strata (grade)
 
-sample_df_200 <- df_updated %>%
+sample_df_200 <- df_updated_gepd %>%
   left_join(strata_df_200) %>%
   ungroup() %>%
   mutate(
     totalstudents=sum(class_4),
   ) %>%
-  group_by(District,Location) %>%
+  group_by(district,location) %>%
   mutate(strata_count=n(),
          strata_size=sum(class_4),
          strata_school_prob=strata_size/totalstudents) %>%
@@ -206,7 +243,7 @@ sample_df_200 <- df_updated %>%
 
 
 
-write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_sample_200_",Sys.Date(),".csv"))
+write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_Sindh_sample_200_",Sys.Date(),".csv"))
 
 weights_df_200 <- df_updated %>%
   left_join(strata_df_200) %>%
@@ -214,7 +251,7 @@ weights_df_200 <- df_updated %>%
   mutate(
     totalstudents=sum(total_enrollment),
   ) %>%
-  group_by(District,Location) %>%
+  group_by(district,location) %>%
   mutate(strata_count=n(),
          strata_size=sum(total_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
@@ -223,7 +260,7 @@ weights_df_200 <- df_updated %>%
          ipw=strata_school_prob*(1/strata_prob))
 
 
-write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_weights_200_",Sys.Date(),".csv"))
+write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Sindh_weights_200_",Sys.Date(),".csv"))
 
 ```
 
@@ -236,7 +273,7 @@ Basic summary stats of overall frame
 #| tbl-cap: Summary Statistics for Balochistan Selected Sample
 #level
 sample_df_200 %>% 
-  group_by(SchoolLevel) %>% 
+  group_by(`School Level`) %>% 
   summarise(n=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Level') %>% 
@@ -244,7 +281,7 @@ sample_df_200 %>%
 
 #Tehsil
 sample_df_200 %>% 
-  group_by(District) %>% 
+  group_by(district) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by District') %>% 
@@ -252,7 +289,7 @@ sample_df_200 %>%
 
 #Gender
 sample_df_200 %>% 
-  group_by(Gender) %>% 
+  group_by(school_gender) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Gender') %>% 
@@ -260,7 +297,7 @@ sample_df_200 %>%
 
 #Urban/rural
 sample_df_200 %>% 
-  group_by(Location) %>% 
+  group_by(location) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
   add_header_lines('Number of Schools by Urban/Rural') %>% 
@@ -282,17 +319,16 @@ Below is a list of replacement schools for each sampled school. Replacement scho
 
 
 #define sampled schools in sample dataset
-sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_sample_200_","2023-07-05",".csv")) %>%
-  mutate(sample="Sampled School") %>%
-  select(-YearofNonFunctinal)
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Sindh_sample_200_","2023-10-12",".csv")) %>%
+  mutate(sample="Sampled School") 
 
 #add sample schools back to original database
-data_set_updated_chosen <- df_updated %>%
+data_set_updated_chosen <- df_updated_gepd %>%
   left_join(sample_chosen) 
 
 #get list of tehsil
 sampled_districts <- sample_chosen %>%
-  group_by( District) %>% 
+  group_by( district) %>% 
   summarise(sampled_districts=n()
             )
 
@@ -301,31 +337,31 @@ sample_replace <- data_set_updated_chosen %>%
   left_join(sampled_districts) %>%
   filter(!is.na(sampled_districts)) %>%
   filter(is.na(sample)) %>%
-  group_by(District) %>%
+  group_by(district) %>%
   sample_n(2*mean(sampled_districts), weight=class_4) %>% #select two replacement schools
   mutate(sample='Replacement School') %>%
-  arrange(District,Location, BemisCode) 
+  arrange(district,location, semis_code) 
 
 sample_replace2 <- sample_chosen %>%
     bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
-    arrange(District,Location, BemisCode)  
+    arrange(district,location, semis_code)  
 
 
 #add in school info for school that will be replaced
 sample_replace$replaced_School_Name=sample_replace2$`School Name`
-sample_replace$replaced_EmisCode=sample_replace2$BemisCode
-sample_replace$replaced_District=sample_replace2$District
+sample_replace$replaced_EmisCode=sample_replace2$semis_code
+sample_replace$replaced_District=sample_replace2$district
 
 
 
 sample_replace %>%
-  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  select(`School Name`, semis_code, district, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
   DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
 
 sample_replace <- sample_replace %>%
-  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  select(`School Name`, semis_code, district, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
   
-write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Sindh_replacement_schools_', Sys.Date(),  '.csv', sep=""))
 
 
 
@@ -344,12 +380,11 @@ library(srvyr)
 #sanity check of the sampling weights and results
 # use weights to estimate population average of internet prevalence
 
-df_updated %>%
+df_updated_gepd %>%
   ungroup() %>%
-  summarise(total_teachers=mean(`Teacher Total`),
-            electricity=mean(ElectricityInSchool=='Yes'), 
-            gas=mean(GasInSchool=='Yes'),
-            drinking_water=mean(DrinkingWaterAtSchool=='Yes')) %>%
+  summarise(total_teachers=mean(total_teacher),
+            electricity=mean(electricity_availability=='Yes'), 
+            drinking_water=mean(water_available=='Yes')) %>%
   flextable() %>%
   add_header_lines("Population estimate")
 
@@ -358,12 +393,11 @@ df_updated %>%
 
 sample_df_200 %>%
   ungroup() %>%
-  as_survey_design(strata=c('District','Location'),
+  as_survey_design(strata=c('district','location'),
                    weight=ipw) %>%
-    summarise(total_teachers=survey_mean(`Teacher Total`),
-            electricity=survey_mean(ElectricityInSchool=='Yes'), 
-            gas=survey_mean(GasInSchool=='Yes'),
-            drinking_water=survey_mean(DrinkingWaterAtSchool=='Yes')
+    summarise(total_teachers=survey_mean(total_teacher),
+            electricity=survey_mean(electricity_availability=='Yes'), 
+            drinking_water=survey_mean(water_available=='Yes')
               ) %>%
   flextable() %>%
   add_header_lines("Estimate based on Schools Visited and Sampling Weights")
