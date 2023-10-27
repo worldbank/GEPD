@@ -27,9 +27,9 @@ library(GGally)
 library(modelsummary)
 library(flextable)
 #Country name
-country <-'NER'
-country_name <- "Niger"
-year <- '2022'
+country <-'GAB'
+country_name <- "Gabon"
+year <- '2023'
 
 
 
@@ -38,7 +38,7 @@ year <- '2022'
 #########################
 #The download_folder will be the location of where raw data is downloaded from the API
 #The save_folder will be the location of where cleaned data is stored
-file_name <- 'Policy_Survey-Niger.xlsx'
+file_name <- 'PolicySurvey - final.xlsx'
 
 
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
@@ -76,7 +76,7 @@ read_var <- function(var) {
 
 #start with teachers
 ##########################
-  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Teachers', .name_repair = 'universal') %>% 
+  expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Enseignants', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   group_by(Question..) %>%
   fill(Scores, .direction='downup') %>%
@@ -84,7 +84,9 @@ read_var <- function(var) {
 
 
 expert_dta_teachers_shaped<-data.frame(t(expert_dta_teachers[-1])) 
-colnames(expert_dta_teachers_shaped) <- expert_dta_teachers$Question..
+names <- expert_dta_teachers$Question..
+names[12] <- "A11.1"
+colnames(expert_dta_teachers_shaped) <- names
 
 #create indicators
 expert_dta_teachers_final <- expert_dta_teachers_shaped %>%
@@ -99,7 +101,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(A4),
-         teacher_salary=(1560/1816.2)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=SL
+         teacher_salary=(300000*12/2469049)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.KN?locations=GA
 
 #teacher selection and deployment
 #
@@ -122,7 +124,7 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 #Teacher Evaluation
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(evaluation_law=read_var(A10),
-         evaluation_law_school=read_var(A11),
+         evaluation_law_school=read_var(A11.1),
          evaluation_criteria=read_var(A12)/5,
          negative_evaluations=read_var(A14),
          positive_evaluations=read_var(A16)) %>%
@@ -172,7 +174,7 @@ expert_dta_teachers_final %>%
 ##############################
 # Inputs
 ##############################
-expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Inputs', .name_repair = 'universal') %>% 
+expert_dta_inputs <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Intrants', .name_repair = 'universal') %>% 
   fill(`Question..`) %>%
   group_by(Question..) %>%
   fill(Scores, .direction='downup') %>%  
@@ -237,7 +239,7 @@ expert_dta_inputs_final %>%
 ##############################
 # School Management
 ###############################
-expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'School_Management', .name_repair = 'universal') %>% 
+expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Management ecole', .name_repair = 'universal') %>% 
   fill(Question..) %>% 
   group_by(Question..) %>%
   fill(Scores, .direction='downup') %>%
@@ -245,7 +247,10 @@ expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, file_na
 
 
 expert_dta_school_management_shaped<-data.frame(t(expert_dta_school_management[-1]))
-colnames(expert_dta_school_management_shaped) <- expert_dta_school_management$Question..
+names <- expert_dta_school_management$Question..
+names[2:8] <- c("C1.1","C1.2","C1.3","C1.4","C1.5", "C1.6", "C1.7")
+names[9:16] <- c("C2.1","C2.2", "C2.3","C2.4", "C2.5", "C2.6", "C2.7", "C2.8")
+colnames(expert_dta_school_management_shaped) <- names
 
 #create indicators
 expert_dta_school_management_final <- expert_dta_school_management_shaped %>%
@@ -303,7 +308,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_monitor_law=read_var(C6),
          principal_monitor_criteria=read_var(C7)) %>%
-  mutate(principal_evaluation=1+principal_monitor_law+principal_monitor_criteria)
+  mutate(principal_evaluation=1+principal_monitor_law+(3/5)*principal_monitor_criteria)
 
 
 
@@ -334,7 +339,7 @@ expert_dta_school_management_final %>%
 ################################
 # Learners 
 ################################
-expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Learners', .name_repair = 'universal') %>% 
+expert_dta_learners <- readxl::read_xlsx(path=paste(expert_dir, file_name, sep="/"), sheet = 'Eleves', .name_repair = 'universal') %>% 
 fill(Question..) %>% 
   group_by(Question..) %>%
   fill(Scores, .direction='downup') %>%

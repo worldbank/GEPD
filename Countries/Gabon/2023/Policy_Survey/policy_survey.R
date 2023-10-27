@@ -245,7 +245,7 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(immunization=read_var(d6),
          healthcare_young_children=read_var(d7),
          deworming=read_var(d8),
-         antenatal_skilled_delivery=read_var(d9)-1) %>%
+         antenatal_skilled_delivery=read_var(d9)) %>%
   mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
 
 
@@ -253,7 +253,7 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
 expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(pre_primary_free_some=read_var(d10),
          developmental_standards=read_var(d11),
-         ece_qualifications=read_var(d12)-1,
+         ece_qualifications=read_var(d12),
          ece_in_service=read_var(d13)) %>%
   mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/3 + ece_in_service)
 

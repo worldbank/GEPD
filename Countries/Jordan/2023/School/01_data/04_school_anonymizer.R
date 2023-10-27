@@ -47,6 +47,7 @@ for (i in indicator_names ) {
   
 ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                "final_indicator_data_PEDG_M", "final_indicator_data_PEDG_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
                                 "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",

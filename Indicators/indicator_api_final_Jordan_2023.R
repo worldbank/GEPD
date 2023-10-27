@@ -64,6 +64,7 @@ api_template <- api_template_fun()
 
 #specify path to data
 data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/JOR/JOR_2023_GEPD/JOR_2023_GEPD_v01_M/Data/"
+gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
 
 
 

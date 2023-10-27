@@ -251,7 +251,7 @@ indicator_values_transpose <- indicator_values_transpose %>%
       #(De Facto) Percent of classrooms with a functional blackboard and chalk	
       SE.PRM.INPT.2   =100*indicator_means(blackboard_functional, "school", "INPT",  "All"),
       SE.PRM.INPT.2.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural"),
-      SE.PRM.INPT.3.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban"),
+      SE.PRM.INPT.2.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban"),
       #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
       SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All") + 67*indicator_means(pens_etc, "school", "INPT",  "All"),
       SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural") + 67*indicator_means(pens_etc, "school", "INPT",  "Rural"),

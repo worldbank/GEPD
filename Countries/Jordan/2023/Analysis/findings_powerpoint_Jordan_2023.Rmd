@@ -816,6 +816,98 @@ learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD =
 
 ```
 
+```{r}
+#student level regressions
+fixest::feols(
+  student_knowledge ~ student_male,
+  data=assess_4th_grade_anon_anon,
+  weights=assess_4th_grade_anon_anon$ipw,
+  cluster=c('hashed_school_code'),
+  se='cluster'
+) %>%
+  summary()
+
+fixest::feols(
+  student_knowledge ~ student_male,
+  data=assess_4th_grade_anon_anon,
+  cluster=c('hashed_school_code'),
+  se='cluster'
+) %>%
+  summary()
+
+fixest::feols(
+  math_student_knowledge ~ student_male,
+  data=assess_4th_grade_anon_anon,
+  weights=assess_4th_grade_anon_anon$ipw,
+  cluster=c('hashed_school_code'),
+  se='cluster'
+) %>%
+  summary()
+
+fixest::feols(
+  math_student_knowledge ~ student_male,
+  data=assess_4th_grade_anon_anon,
+  cluster=c('hashed_school_code'),
+  se='cluster'
+) %>%
+  summary()
+
+fixest::feols(
+  literacy_student_knowledge ~ student_male,
+  data=assess_4th_grade_anon_anon,
+  weights=assess_4th_grade_anon_anon$ipw,
+  cluster=c('hashed_school_code'),
+  se='cluster'
+) %>%
+  summary()
+
+fixest::feols(
+  literacy_student_knowledge ~ student_male,
+  data=assess_4th_grade_anon_anon,
+  cluster=c('hashed_school_code'),
+  se='cluster'
+) %>%
+  summary()
+
+```
+
+
+```{r}
+final_indicator_data_LERN_F_anon %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(
+    student_knowledge=survey_mean(student_knowledge, na.rm=TRUE),
+    student_proficient=survey_mean(student_proficient, na.rm=TRUE),
+    literacy_student_knowledge=survey_mean(literacy_student_knowledge, na.rm=TRUE),
+    math_student_knowledge=survey_mean(math_student_knowledge, na.rm=TRUE)
+  )
+
+final_indicator_data_LERN_M_anon %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(
+    student_knowledge=survey_mean(student_knowledge, na.rm=TRUE),
+    student_proficient=survey_mean(student_proficient, na.rm=TRUE),
+    literacy_student_knowledge=survey_mean(literacy_student_knowledge, na.rm=TRUE),
+    math_student_knowledge=survey_mean(math_student_knowledge, na.rm=TRUE)
+  )
+
+final_indicator_data_LERN_anon %>%
+  ungroup() %>%
+  filter(!is.na(ipw)) %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(
+    student_knowledge=survey_mean(student_knowledge, na.rm=TRUE),
+    student_proficient=survey_mean(student_proficient, na.rm=TRUE),
+    literacy_student_knowledge=survey_mean(literacy_student_knowledge, na.rm=TRUE),
+    math_student_knowledge=survey_mean(math_student_knowledge, na.rm=TRUE)
+  )
+```
+
 
 
 ## Breakdowns for Infrastructure/Inputs
@@ -1078,6 +1170,8 @@ region_content_long <-region_content %>%
 
     contMean <- summarise(group_by(region_content_long,  Type, Assessment), MD = round(weighted.mean(content_proficiency, ipw, na.rm=T),1))
 
+    contMedian <- summarise(group_by(region_content_long,  Type, Assessment), MD = round(weighted.median(content_proficiency, ipw, na.rm=T),1))
+    
   p1<-ggplot(contMean, aes(x=Assessment, y= MD, fill=Type)) + #now plot the output in a bar graph
     geom_col( position="dodge") +
     geom_text(data = contMean, aes(x=Assessment, y=MD, label=MD), 
@@ -1098,6 +1192,74 @@ region_content_long <-region_content %>%
 p1
 
 
+```
+```{r}
+
+options(survey.lonely.psu="adjust")
+
+final_indicator_data_CONT_F_anon %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata')) %>%
+  summarise(
+    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+  )
+
+final_indicator_data_CONT_M_anon %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata')) %>%
+  summarise(
+    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+  )
+
+final_indicator_data_CONT_anon %>%
+  ungroup() %>%
+  filter(!is.na(ipw)) %>%
+  as_survey_design(strata=c('strata')) %>%
+  summarise(
+    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+  )
+```
+
+```{r}
+
+options(survey.lonely.psu="adjust")
+
+final_indicator_data_CONT_F_anon %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(
+    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+  )
+
+final_indicator_data_CONT_M_anon %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(
+    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+  )
+
+final_indicator_data_CONT_anon %>%
+  ungroup() %>%
+  filter(!is.na(ipw)) %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(
+    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+  )
 ```
 
 

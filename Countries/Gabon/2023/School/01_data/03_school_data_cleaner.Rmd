@@ -866,6 +866,9 @@ plot(out)
   ##### Teacher Pedagogical Skill ###########
   #############################################
 
+teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta")) %>%
+  filter(!is.na(s_a1))
+
   #define variables for TEACH
   # label variables
 
@@ -917,10 +920,11 @@ plot(out)
 
 
 #read in teach data
-  teach_dta <- school_dta %>% 
-    select(school_code, starts_with("s1_"), starts_with("s2_")) %>% 
+  teach_dta <- teach_df %>% 
+    select(school_code, m2saq3, starts_with("s_"), starts_with("s2_")) %>% 
+    rename_with(.cols=starts_with("s_"),.fn=~gsub("s_","s1_",.x) ) %>%
   pivot_longer(
-    cols = c(2:87),
+    cols = c(3:89),
     names_to = c("school_clip", "behaviour"),
     names_pattern = "(s[0-9])_(.*)",
     values_to = "count"
@@ -931,7 +935,7 @@ plot(out)
            id=row_number(),
            count = as.numeric(count)) %>% 
     
-    pivot_wider(id_cols =c(id, school_code, school_clip), names_from = behaviour, values_from = count) %>% select(-id) 
+    pivot_wider(id_cols =c(id, school_code, m2saq3, school_clip), names_from = behaviour, values_from = count) %>% select(-id) 
 
   
     ## We regroup by school and video segment
@@ -940,7 +944,7 @@ plot(out)
   }
   
   teach_dta <- teach_dta %>% 
-    group_by(school_code, school_clip) %>% 
+    group_by(school_code,m2saq3, school_clip) %>% 
     summarise_all(coalesce_by_column) %>% 
     #mutate(across(everything(), as.numeric)) %>% 
     ungroup()
@@ -967,7 +971,7 @@ plot(out)
     #        clip=if_else(clip_temp==TRUE, 1,2)
     #          ) %>%
     # select(-clip_temp, -video_length, -school_clip, -person, -enum_comments) %>%
-    select(school_code, clip, everything()) 
+    select(school_code, m2saq3, clip, everything()) 
    # mutate(across(everything(), as.numeric))
   
   #recode scores to be numeric
@@ -1121,8 +1125,43 @@ plot(out)
     mutate(number_segments=  sum(!is.na(teach_score))) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
-
+# female
   
+final_indicator_data_PEDG_F<- school_dta %>%
+    select(preamble_info, m4saq1, m4saq1_number )  %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    select( -starts_with('interview'), -starts_with('enumerator')) %>%
+    left_join(teacher_pedagogy_segments) %>%
+    filter(m2saq3==1) %>%
+    mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+           classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+           instruction_prof=100*as.numeric(instruction>=3),
+           socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+    filter(!is.na(teach_score)) %>%
+    write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    group_by(school_code) %>%
+    mutate(number_segments=  sum(!is.na(teach_score))) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+# male
+  
+final_indicator_data_PEDG_M<- school_dta %>%
+    select(preamble_info, m4saq1, m4saq1_number )  %>%
+    group_by(school_code) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    select( -starts_with('interview'), -starts_with('enumerator')) %>%
+    left_join(teacher_pedagogy_segments) %>%
+    filter(m2saq3==0) %>%
+    mutate(teach_prof=100*as.numeric(teach_score>=3),                      #rate teacher as proficient in teach and the subcomponents if they score at least 3
+           classroom_culture_prof=100*as.numeric(classroom_culture>=3),
+           instruction_prof=100*as.numeric(instruction>=3),
+           socio_emotional_skills_prof=100*as.numeric(socio_emotional_skills>=3)) %>%
+    filter(!is.na(teach_score)) %>%
+    write_excel_csv(path = paste(confidential_folder, "teach_raw_data.csv", sep="/")) %>%
+    group_by(school_code) %>%
+    mutate(number_segments=  sum(!is.na(teach_score))) %>%
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))  
   
   write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
   
@@ -1257,8 +1296,8 @@ final_indicator_data_CONT <- teacher_assessment_dta %>%
 #Breakdown by Male/Female
 final_indicator_data_CONT_M <- teacher_assessment_dta %>%
   mutate(TEACHERS__id=g4_teacher_number) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(m2saq3==1) %>%
+  left_join(teach_df %>% select(school_code, teachers_id, m2saq3) %>% rename(TEACHERS__id=teachers_id), by=c('school_code', 'TEACHERS__id')) %>%
+  filter(m2saq3!=1) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
   mutate(content_knowledge=case_when(
@@ -1281,8 +1320,8 @@ final_indicator_data_CONT_M <- teacher_assessment_dta %>%
 
 final_indicator_data_CONT_F <- teacher_assessment_dta %>%
   mutate(TEACHERS__id=g4_teacher_number) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(m2saq3==2) %>%
+  left_join(teach_df %>% select(school_code, teachers_id, m2saq3) %>% rename(TEACHERS__id=teachers_id), by=c('school_code', 'TEACHERS__id')) %>%
+  filter(m2saq3==1) %>%
   group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
   mutate(content_knowledge=case_when(
@@ -3221,6 +3260,7 @@ for (i in indicator_names ) {
 
 ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                "final_indicator_data_PEDG_M", "final_indicator_data_PEDG_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
                                 "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",

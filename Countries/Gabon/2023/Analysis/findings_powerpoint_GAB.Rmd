@@ -309,7 +309,7 @@ tab_color_df <- combined_wide_color %>%
   filter(Series %in% variables) %>%
   arrange(factor(Series, levels=variables))
 
-SLE_col <- tab_color_df$`Gabon`
+SLE_col <- tab_color_df$`Sierra Leone`
 Peru_col <- tab_color_df$Peru
 Jordan_col <- tab_color_df$Jordan
 Rwanda_col <- tab_color_df$Rwanda
@@ -1137,6 +1137,140 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw)) +
 
 
 ```
+## Proportion of teacher speaking english
+
+```{r}
+#read in weights 
+weights_df <- read_csv(here(save_folder, "School", "data/school_weights_anon.csv" ))
+
+#read in module
+english_df <- read_dta(here(download_folder, "School","roster_english_t_gbn.dta")) %>%
+  pivot_wider(id_cols=c("interview__key","interview__id","questionnaire_roster__id"),
+                names_from = roster_english_t_gbn__id,
+                values_from=m3saq8_gbn)
+
+english_merge_df <- english_df %>%
+  left_join(distinct(teacher_questionnaire_anon %>% select(hashed_school_code, interview__key, questionnaire_roster__id, ipw, rural, province, private))) %>%
+  left_join(weights_df) %>%
+  mutate(teach_weight = ipw*teacher_obs_weight_component,
+         teach_weight=if_else(is.na(teach_weight), median(teach_weight, na.rm=TRUE),teach_weight),
+         province=if_else(is.na(province), "unknown", province),
+         rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural),
+         private=if_else(is.na(private), median(private, na.rm=TRUE),private))
+
+
+stats <- english_merge_df %>%
+  as_survey_design(
+    strata=c('province','private','rural'),
+    weights=teach_weight
+  ) %>%
+  summarise(
+    speak_perfectly=100*survey_mean(`1`==1),
+    speak_well=100*survey_mean(`1`==2),
+    speak_average=100*survey_mean(`1`==3),
+    speak_somewhat=100*survey_mean(`1`==4),
+    speak_notatall=100*survey_mean(`1`==5),
+
+    understand_perfectly=100*survey_mean(`2`==1),
+    understand_well=100*survey_mean(`2`==2),
+    understand_average=100*survey_mean(`2`==3),
+    understand_somewhat=100*survey_mean(`2`==4),
+    understand_notatall=100*survey_mean(`2`==5),
+    
+    write_perfectly=100*survey_mean(`3`==1),
+    write_well=100*survey_mean(`3`==2),
+    write_average=100*survey_mean(`3`==3),
+    write_somewhat=100*survey_mean(`3`==4),
+    write_notatall=100*survey_mean(`3`==5),
+    
+    read_perfectly=100*survey_mean(`4`==1),
+    read_well=100*survey_mean(`4`==2),
+    read_average=100*survey_mean(`4`==3),
+    read_somewhat=100*survey_mean(`4`==4),
+    read_notatall=100*survey_mean(`4`==5),
+  ) 
+
+stats_mean <- stats %>%
+  select(!ends_with('_se')) %>%
+  mutate(col='mean') %>%
+  select(col, everything())
+
+
+stats_se <- stats %>%
+  select(ends_with('_se')) %>%
+  rename_all(
+    ~gsub('_se','',.)
+  ) %>%
+  mutate(col='se') %>%
+  select(col, everything())
+
+stats_final <- stats_mean %>% bind_rows(stats_se)
+
+flextable(stats_final)
+```
+
+## Bullying
+
+```{r}
+
+#read in module
+bullying_df <- read_dta(here(download_folder, "School","roster_bullying_gbn.dta")) %>%
+  pivot_wider(id_cols=c("interview__key","interview__id","questionnaire_roster__id"),
+                names_from = roster_bullying_gbn__id,
+                values_from=m3saq9_gbn)
+
+bullying_merge_df <- bullying_df %>%
+  left_join(distinct(teacher_questionnaire_anon %>% select(hashed_school_code, interview__key, questionnaire_roster__id, ipw, rural, province, private))) %>%
+  left_join(weights_df) %>%
+  mutate(teach_weight = ipw*teacher_obs_weight_component,
+         teach_weight=if_else(is.na(teach_weight), median(teach_weight, na.rm=TRUE),teach_weight),
+         province=if_else(is.na(province), "unknown", province),
+         rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural),
+         private=if_else(is.na(private), median(private, na.rm=TRUE),private))
+
+
+stats <- bullying_merge_df %>%
+  as_survey_design(
+    strata=c('province','private','rural'),
+    weights=teach_weight
+  ) %>%
+  summarise(
+    stolen_onceaweek=100*survey_mean(`1`==1),
+    stolen_oncetwiceamonth=100*survey_mean(`1`==2),
+    stolen_fettimesyear=100*survey_mean(`1`==3),
+    stolen_never=100*survey_mean(`1`==4),
+    
+    hithurt_onceaweek=100*survey_mean(`2`==1),
+    hithurt_oncetwiceamonth=100*survey_mean(`2`==2),
+    hithurt_fettimesyear=100*survey_mean(`2`==3),
+    hithurt_never=100*survey_mean(`2`==4),
+    
+    threatened_onceaweek=100*survey_mean(`3`==1),
+    threatened_oncetwiceamonth=100*survey_mean(`3`==2),
+    threatened_fettimesyear=100*survey_mean(`3`==3),
+    threatened_never=100*survey_mean(`3`==4)
+  ) 
+
+stats_mean <- stats %>%
+  select(!ends_with('_se')) %>%
+  mutate(col='mean') %>%
+  select(col, everything())
+
+
+stats_se <- stats %>%
+  select(ends_with('_se')) %>%
+  rename_all(
+    ~gsub('_se','',.)
+  ) %>%
+  mutate(col='se') %>%
+  select(col, everything())
+
+stats_final <- stats_mean %>% bind_rows(stats_se)
+
+flextable(stats_final)
+```
+
+
 
 # Policies
 
@@ -1147,21 +1281,22 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw)) +
 - Generally, the policy environment, as indicated by the De Jure, is quite strong.  
 - However, teachers often report a different experience of the policies in practice.
 
-```{r radar, eval=FALSE, warning=FALSE, include=FALSE}
+```{r radar, echo=FALSE, warning=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
-                        'Teaching - Attraction',
-                         'Teaching - Selection & Deployment',
-                         'Teaching - Support', 
-                         'Teaching - Evaluation', 
-                         'Teaching - Monitoring & Accountability', 
-                         #'Teaching - Intrinsic Motivation', 
-                         # 'Inputs & Infrastructure - Monitoring',
-                         'School Management - Attraction' ,                   
-                         'School Management - Selection & Deployment'  ,      
-                         'School Management - Support' ,                      
-                         'School Management - Evaluation'
+                        'Enseignement - Attrait de la profession',
+                         'Enseignement - Recrutement & carrière',
+                         'Enseignement - Soutien' ,
+                         'Enseignement - Évaluation', 
+                         'Enseignement - Surveillance et reddition de comptes', 
+                         # "Enseignement - Motivation intrinsèque", 
+                         # "Intrants et infrastructure - suivi",
+                         'GESTION SCOLAIRE - Attrait de la profession' ,                   
+                         'GESTION SCOLAIRE - Recrutement & carrière' ,      
+                         'GESTION SCOLAIRE - Soutien' ,                      
+                         'GESTION SCOLAIRE - Évaluation'
+                         #GESTION SCOLAIRE - urveillance et reddition de comptes'
 
     )  
     
@@ -1204,7 +1339,7 @@ main_indicator_labels<-c(
     
     #score expert data (this requires a lot of hard coding and transcribing)
 
-    expert_dta_final<-haven::read_dta(here(project_folder,"/CNT/GAB/GAB_2022_GEPD/GAB_2022_GEPD_v01_M/Data/Policy_Survey/expert_dta_final.dta") 
+    expert_dta_final<-haven::read_dta(here(data_dir,"Policy_Survey/expert_dta_final.dta") )
 
     expert_dta_radar <- expert_dta_final %>%
       select(colnames(data_radar))
@@ -1227,7 +1362,7 @@ main_indicator_labels<-c(
             plot.extent.y.sf = 1.3,
             legend.text.size = 3
               ) +
-      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+      ggtitle(str_wrap('Graphique radar des leviers politiques de facto et de jure',50)) +
       theme_minimal()+
       theme(    axis.title = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
@@ -1248,7 +1383,7 @@ main_indicator_labels<-c(
 - Below are boxplots showing the 25th percentile, median, and 75th percentile ratings of teachers to these policy questions, along with outliers.  
 -  There is significant variation across teachers in how they understand or experience policies.
 
-```{r defacto, eval=FALSE, include=FALSE}
+```{r defacto, echo=FALSE}
 #get list of de facto indicators
 main_indicator_labels<-c( 
                         'Teaching - Attraction',
@@ -1325,7 +1460,7 @@ summary(datagap)
 
 
 
-```{r dejure_defacto_gap, eval=FALSE, include=FALSE}
+```{r dejure_defacto_gap, echo=FALSE}
 #calculate gap between de_jure and de_facto
 
 defacto_dejure<-data_radar %>%
