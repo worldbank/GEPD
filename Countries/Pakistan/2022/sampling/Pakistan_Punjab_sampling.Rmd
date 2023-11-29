@@ -26,7 +26,7 @@ province <- "Punjab"
 #specify name of sampling frame file.  This needs to be a csv file
 #ublic_file_frame<-"List of standalone primary schools with enrollment & teachers - as per Census 2022-23.xlsx"
 public_file_frame<-"Copy of List of primary portion schools - as per census 2022-23.xlsx"
-saber_frame <- 'SamplingData_Baseline.dta'
+saber_frame <- 'Panel_Sample_2021.xls'
 
 set.seed(8473227)
 
@@ -114,13 +114,13 @@ df_raw<-public_df %>%
             rural=if_else(csl_area=="Rural", 1,0))
 
 # read in SABER/SDI sample
-saber_sample_df <- read_dta(paste(sampling_folder, saber_frame, sep="/"))
+saber_sample_df <- read_excel(paste(sampling_folder, saber_frame, sep="/"))
 
 #join the frames
 df_frame_joined_df <- df_raw %>%
-  left_join(saber_sample_df %>% filter(public==1), by=c('csl_emis_code'='emiscode'))
+  left_join(saber_sample_df %>% mutate(saber_sampled="SABER school"), by=c('csl_emis_code'='EmisCode'))
 
-districts <- df_frame_joined_df %>% group_by(sampled, csl_district, csl_area) %>% summarise(n=n())
+districts <- df_frame_joined_df %>% group_by(saber_sampled, csl_district, csl_area) %>% summarise(n=n())
 ```
 
 
@@ -211,52 +211,120 @@ strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Punjab_final_strata_200
 
 
 sample_df_200 <- df_updated %>%
-  mutate(sampled=if_else(is.na(sampled),0,sampled)) %>%
+  mutate(saber_sampled=if_else(is.na(saber_sampled),"Not SABER",saber_sampled)) %>%
   left_join(strata_df_200) %>%
   mutate(sample_size=if_else(is.na(sample_size),0,sample_size)) %>%
   ungroup() %>%
   mutate(
     totalstudents=sum(total_4th_enrollment),
   ) %>%
-  group_by(csl_district,csl_area, sampled) %>%
+  group_by(csl_district,csl_area, saber_sampled) %>%
   mutate(strata_count=n(),
          strata_size=sum(total_4th_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
   sample_n(size = min(sample_size), weight= total_4th_enrollment) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
-         ipw=strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob),
+         strata=paste(csl_district,csl_area, saber_sampled, sep=" - "))
 
 
 
 write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_sample_200_",Sys.Date(),".csv"))
 
 weights_df_200 <- df_updated %>%
-  mutate(sampled=if_else(is.na(sampled),0,sampled)) %>%
+  mutate(saber_sampled=if_else(is.na(saber_sampled),"Not SABER",saber_sampled)) %>%
   left_join(strata_df_200) %>%
   mutate(sample_size=if_else(is.na(sample_size),0,sample_size)) %>%
   ungroup() %>%
   mutate(
     totalstudents=sum(total_4th_enrollment),
   ) %>%
-  group_by(csl_district,csl_area, sampled) %>%
+  group_by(csl_district,csl_area, saber_sampled) %>%
   mutate(strata_count=n(),
          strata_size=sum(total_4th_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
 
   mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
-         ipw=strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob),
+         strata=paste(csl_district,csl_area, saber_sampled, sep=" - "))
 
 
 write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_weights_200_",Sys.Date(),".csv"))
 
 ```
 
+
+# Replacement Schools
+
+Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 
+
+
+
+```{r}
+#| label: tbl-update_dataset_public
+#| tbl-cap: Sanity Checks
+
+
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Punjab_sample_200_","2023-10-31",".csv")) %>%
+  mutate(sample="Sampled School") 
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated_gepd %>%
+  left_join(sample_chosen) 
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  group_by( csl_district,csl_area) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(csl_district,csl_area) %>%
+    ungroup() %>%
+  mutate(
+    totalstudents=sum(total_4th_enrollment),
+  ) %>%
+  group_by(csl_district,csl_area) %>%
+  sample_n(2*mean(sampled_districts), weight=total_4th_enrollment) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(csl_district,csl_area, csl_school_name) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    arrange(csl_district,csl_area, csl_school_name)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$csl_school_name
+sample_replace$replaced_EmisCode=sample_replace2$csl_emis_code
+sample_replace$replaced_District=sample_replace2$csl_district
+
+
+
+sample_replace %>%
+  select(csl_school_name, csl_emis_code, csl_district, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(csl_school_name, csl_emis_code, csl_district, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Punjab_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+```
+
+
 ## Evaluation of Sample Size
 
 Compare statistics when taking varying subsamples of the main sample of schools.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 student_data <- read_dta(paste(sampling_folder, '1.StudentData_BLvEL.dta', sep="/"))
 
 #get unique school ids
@@ -316,7 +384,7 @@ ggplot(results_collapsed_df, aes(x=Size, y=Avg_Test_Score)) +
 
 ```
 
-```{r, fig.height=6, fig.width=12}
+```{r eval=FALSE, fig.height=6, fig.width=12, include=FALSE}
 ggplot(results_collapsed_df, aes(x=Size, y=Avg_Test_Score_se)) +
          geom_col(fill='darkred') +
          geom_text(aes(label=paste0("Sample Size: ",round(Size,0), ", Std Error: ", round(Avg_Test_Score_se,3))), hjust=-0.5) +
@@ -328,7 +396,7 @@ ggplot(results_collapsed_df, aes(x=Size, y=Avg_Test_Score_se)) +
 ```
 Do same for clean toilets
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 principal_data <- read_dta(paste(sampling_folder, 'PrincipalData_BL_Anonymized.dta', sep="/"))
 
 #get unique school ids
@@ -385,7 +453,7 @@ ggplot(results_collapsed_df, aes(x=Size, y=toilet_clean)) +
 
 ```
 
-```{r, fig.height=6, fig.width=12}
+```{r eval=FALSE, fig.height=6, fig.width=12, include=FALSE}
 ggplot(results_collapsed_df, aes(x=Size, y=toilet_clean_se)) +
          geom_col(fill='darkred') +
          geom_text(aes(label=paste0("Sample Size: ",round(Size,0), ", Std Error: ", round(toilet_clean_se,3))), hjust=-0.5) +
@@ -395,5 +463,51 @@ ggplot(results_collapsed_df, aes(x=Size, y=toilet_clean_se)) +
     title=str_wrap('Mean Clean Toilet Std Errors from Punjab SABER under Different Sampling #s',150)
   )
 
+```
+
+# Sanity Checks
+
+Below I will use the survey weights to estimate aspects of the school that are available in the sampling frame.  The population mean from the full sampling frame is compared to the estimated mean from the school sample using the sampling weights. Estimated means very far from the population mean can indicate there is something wrong with the weights or that the school sample is biased.
+
+The estimates based on the school weights are similar and within the confidence interval of those produced using the sampling frame.
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+df_raw %>%
+  ungroup() %>%
+  summarise(total_b=mean(total_b, na.rm = TRUE),
+            cls3_t=mean(cls3_t, na.rm = TRUE),
+            cls3_g=mean(cls3_g, na.rm = TRUE),
+            cls3_b=mean(cls3_b, na.rm = TRUE)) %>%
+  flextable() %>%
+  add_header_lines("Raw Sampling Frame Population estimate")
+
+df_updated_gepd %>%
+  ungroup() %>%
+  summarise(total_b=mean(total_b, na.rm = TRUE),
+            cls3_t=mean(cls3_t, na.rm = TRUE),
+            cls3_g=mean(cls3_g, na.rm = TRUE),
+            cls3_b=mean(cls3_b, na.rm = TRUE)) %>%
+  flextable() %>%
+  add_header_lines("Population estimate")
+
+
+
+
+sample_df_200 %>%
+  left_join(weights_df_200) %>%
+  ungroup() %>%
+  as_survey_design(strata=c('csl_district','csl_area', 'saber_sampled'),
+                   weight=ipw) %>%
+    summarise(total_b=survey_mean(total_b, na.rm = TRUE),
+            cls3_t=survey_mean(cls3_t, na.rm = TRUE),
+            cls3_g=survey_mean(cls3_g, na.rm = TRUE),
+            cls3_b=survey_mean(cls3_b, na.rm = TRUE)
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on Schools Visited and Sampling Weights")
 ```
 

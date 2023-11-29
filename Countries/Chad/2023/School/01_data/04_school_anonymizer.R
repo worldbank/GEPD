@@ -76,7 +76,7 @@ data_set_updated <- read_csv(paste(sample_folder, '/GEPD_TCD_sample_', currentDa
          urban_rural=if_else(rural==0, "Urban", "Rural"),
          public=if_else(public==0, "Private", "Public")) %>%
   select(school_code, Region, IDEN, public, rural ,urban_rural,
-         ipw) 
+         ipw, strata_prob) 
 
 
 

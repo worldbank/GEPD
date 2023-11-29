@@ -82,7 +82,7 @@ data_set_updated <- read_csv(paste(sample_folder, '/GEPD_JOR_weights_', currentD
          #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
          ) %>%
   select(school_code, strata, supervisory_authority, territory, urban_rural, rural, sample_status,
-         ipw) 
+         ipw, strata_prob) 
 
 
 

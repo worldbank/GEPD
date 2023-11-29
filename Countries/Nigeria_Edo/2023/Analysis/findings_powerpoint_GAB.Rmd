@@ -1,6 +1,12 @@
 ---
-title: "Global Education Policy Dashboard - Jordan 2023"
+title: "Global Education Policy Dashboard - Gabon 2023"
 author: "Education Global Practice, World Bank"
+output:
+  html_document:
+    fig_height: 8
+    fig_width: 10
+    toc: yes
+    theme: readable
 ---
 
 ```{r setup, include=FALSE}
@@ -20,16 +26,18 @@ library(ggridges)
 library(scales)
 library(ggtext)
 library(estimatr)
-library(survey)
-library(dplyr)
 library(srvyr)
-library(spatstat)
+#library(spatstat)
 library(Hmisc)
 library(ggpmisc)
 library(ggalt)
 library(here)
 library(patchwork)
 library(DT)
+library(leaflet)
+#remotes::install_github("ricardo-bion/ggradar")
+library(ggradar)
+
 # define stle for ggplot based on BBC plotting styles
 bbc_style <- function() {
   font <- "Helvetica"
@@ -115,7 +123,7 @@ Policy Survey:  The policy survey is conducted by an expert on the laws and regu
 Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
 Roadmap:  
-- Below is a set of tables and charts containing findings for the Jordan 2023 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
+- Below is a set of tables and charts containing findings for the Gabon 2023 Global Education Policy Dashboard survey. - We will start with breakdowns of our Practice indicators  
 - Then we will discuss findings of our Practice Indicators  
 - Finally we will conclude with findings for our Bureaucracy Indicators.  
 
@@ -125,14 +133,15 @@ Roadmap:
 ```{r data, message=FALSE, warning=FALSE, include=FALSE}
 
 #Country name
-country <-'JOR'
-country_name <- "Jordan"
+country <-'GAB'
+country_name <- "Gabon"
 year <- '2023'
 
 
 #set directory to bring in data
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/")
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
@@ -145,6 +154,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
+  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),"Data/")
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/", sep="/"))
@@ -191,67 +201,62 @@ wrapper <- function(x, ...)
 
 ```{r cc, echo=FALSE, message=FALSE, warning=FALSE}
 #list countries
-countries <- c("PER", "JOR", "RWA", "MDG", "ETH", "SLE", "NER")
+countries <- c("GAB", "PER", "JOR", "RWA", "MDG", "ETH", "SLE", "TCD","NER")
 
 dir <- here()
-indicators_dir <- paste(dir, '/Indicators', sep="/")
+indicators_dir <- paste(dir, 'Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
 #read in indicator metadata
 indicators <- read_csv(paste(dir,'Indicators/indicators.csv', sep = "/"))
 
-
 # read in indicator data
-JOR_2023_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR_2023', ".csv")) %>%
-  mutate(country="Jordan-2023",
+GAB_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'GAB', ".csv")) %>%
+  mutate(country="Gabon",
          date='2023') 
-
-NER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'NER', ".csv")) %>%
-  mutate(country="Niger",
-         date='2022') %>%
-  select(-year)
 
 SLE_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'SLE', ".csv")) %>%
   mutate(country="Sierra Leone",
-         date='2022') %>%
-  select(-year)
+         date='2022') 
 
 PER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'PER', ".csv")) %>%
   mutate(country="Peru",
-         date='2019') #%>%
-  #select(-year)
+         date='2019')
 
 RWA_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'RWA', ".csv")) %>%
   mutate(country="Rwanda",
-         date='2020') #%>%
-  #select(-year)
+         date='2020') 
 
 
 JOR_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'JOR', ".csv")) %>%
-  mutate(country="Jordan-2019",
-         date='2019') #%>%
-  #select(-year)
+  mutate(country="Jordan",
+         date='2019') 
 
 
 ETH_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'ETH_pooled', ".csv")) %>%
   mutate(country="Ethiopia",
-         date='2020-2021')  #%>%
-  #select(-year)
+         date='2020-2021')  
 
 # %>%
 #   rename(value=value_pooled)
 
 MDG_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'MDG', ".csv")) %>%
   mutate(country="Madagascar",
-         date='2021') #%>%
-  #select(-year)
+         date='2021') 
 
+TCD_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'TCD', ".csv")) %>%
+  mutate(country="Chad",
+         date='2023') 
+
+NER_data <- read_csv(paste0(indicators_dir, "/GEPD_Indicators_API_", 'NER', ".csv")) %>%
+  mutate(country="Niger",
+         date='2023') 
 
 # Indicator names
 indicator_names_df <- PER_data %>%
   select(Series, `Indicator Name`)
 
-combined_df_raw <- bind_rows(JOR_2023_data,JOR_data,NER_data, SLE_data,PER_data, ETH_data, RWA_data, MDG_data)
+combined_df_raw <- bind_rows(GAB_data,PER_data,JOR_data, ETH_data, RWA_data, MDG_data, SLE_data, TCD_data, NER_data)
 
 
   
@@ -304,19 +309,19 @@ tab_color_df <- combined_wide_color %>%
   filter(Series %in% variables) %>%
   arrange(factor(Series, levels=variables))
 
-Jordan_2023_col <- tab_color_df$`Jordan-2023`
-NER_col <- tab_color_df$`Niger`
 SLE_col <- tab_color_df$`Sierra Leone`
 Peru_col <- tab_color_df$Peru
-Jordan_col <- tab_color_df$`Jordan-2019`
+Jordan_col <- tab_color_df$Jordan
 Rwanda_col <- tab_color_df$Rwanda
 Ethiopia_col <- tab_color_df$Ethiopia
 Madagascar_col <- tab_color_df$Madagascar
-
+Niger_col <- tab_color_df$Niger
+Gabon_col <- tab_color_df$Gabon
+Chad_col <- tab_color_df$Chad
 
 #build table
 tab_df <- tab_df  %>%
-  select(`Indicator Name`,`Jordan-2023`, `Jordan-2019`, Niger,`Sierra Leone`, Peru, Rwanda, Ethiopia, Madagascar)
+  select(`Indicator Name`,`Gabon`, Peru, Jordan, Rwanda, Ethiopia, Madagascar, `Sierra Leone`, Niger, Chad)
 
 
 ovr_table <- flextable(tab_df) %>%
@@ -327,22 +332,24 @@ ovr_table <- flextable(tab_df) %>%
 
 #colors
 ovr_table <- ovr_table %>%
-  bg(j = c('Jordan-2023'),
-     bg = Jordan_2023_col) %>%
-  bg(j = c('Niger'),
-     bg = NER_col) %>%
-  bg(j = c('Sierra Leone'),
-     bg = SLE_col) %>%
+  bg(j = c('Gabon'),
+     bg = Gabon_col) %>%
   bg(j = c('Peru'),
      bg = Peru_col) %>%
-  bg(j = c('Jordan-2019'),
+  bg(j = c('Jordan'),
      bg = Jordan_col) %>%
   bg(j = c('Ethiopia'),
      bg = Ethiopia_col) %>%
   bg(j = c('Rwanda'),
      bg = Rwanda_col) %>%
   bg(j = c('Madagascar'),
-     bg = Madagascar_col)   
+     bg = Madagascar_col)  %>%
+  bg(j = c('Sierra Leone'),
+     bg = SLE_col) %>%
+  bg(j = c('Niger'),
+     bg = Niger_col) %>%
+  bg(j = c('Chad'),
+     bg = Chad_col) 
 
 
 ovr_table %>%
@@ -352,9 +359,8 @@ ovr_table %>%
 }
 ```
 
-Outcomes
 
-```{r outtab, echo=FALSE}
+```{r outtab}
 # Produce a table showing means by country for select practice indicators
 outcome_indicators <- c(
   'SE.GEPD.PRIM',
@@ -365,11 +371,7 @@ outcome_indicators <- c(
 country_tab_fn(outcome_indicators, 'GEPD Outcome Indicators') %>%
   add_footer_lines('Rwanda does not have an internationally comparable learning assessment to report on Learning Poverty.')
 ```
-
-Practices
-
-
-```{r ovltab, echo=FALSE}
+```{r ovltab}
 # Produce a table showing means by country for select practice indicators
 practice_indicators <- c(
   'SE.PRM.LERN',
@@ -388,9 +390,7 @@ practice_indicators <- c(
 country_tab_fn(practice_indicators, 'GEPD Practice Indicators')
 ```
 
-Policies
-
-```{r poltab, echo=FALSE}
+```{r poltab}
 # Produce a table showing means by country for select practice indicators
 policy_indicators <- c(
 'SE.PRM.TATT',
@@ -414,9 +414,8 @@ policy_indicators <- c(
 )
 country_tab_fn(policy_indicators, 'GEPD Policy Indicators')
 ```
-Politics
 
-```{r ptictab, echo=FALSE}
+```{r ptictab}
 # Produce a table showing means by country for select practice indicators
 politics_indicators <- c(
 'SE.PRM.BQBR',
@@ -433,22 +432,20 @@ country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
 
 ```{r dt, echo=FALSE, message=FALSE, warning=FALSE}
   
- 
 
 #function for creating these tables
 svymeantab <- function(data, strata) {
   
   get(data) %>%
-    mutate(weight=1/strata_prob) %>%
     filter(!is.na(ipw)) %>%
     filter(!is.infinite(ipw)) %>%
-    select(one_of(indicators_list), strata, ipw, weight ) %>%
+    select(one_of(indicators_list), Province, private, rural, ipw ) %>%
     pivot_longer(cols=one_of(indicators_list),
                  names_to = 'indicators',
                  values_to='value') %>%
     as_survey_design(strata=strata,
-                     weight=weight) %>%
-    select(-strata, -ipw, -weight) %>%
+                     weight=ipw) %>%
+    select(-c( 'Province', 'private', 'rural', 'ipw')) %>%
     group_by(indicators) %>%
     summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
     as_tibble() %>%
@@ -483,7 +480,6 @@ svymeantabpo <- function(data) {
     mutate(varlabel=indicator_labels) %>%
     select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)  
 }
-
 
 #create subset with just main indicators
     indicators_list<-c('student_proficient',
@@ -555,30 +551,32 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
                       indicator_labels=as.character(main_indicator_labels2))
 
 
-strat=c('strata')
 
 # School Survey
     metadata<-metadta
-
+    
+    school_dta_short_anon <- school_dta_short_anon %>%
+      mutate(province=Province,
+             urban_rural=if_else(rural==0, "Urban", "Rural"))
   
     sumstats_school <- school_dta_short_anon 
     
-    sumstats_school_df <- svymeantab('sumstats_school', strata=strat)
+    sumstats_school_df <- svymeantab('sumstats_school', strata=c('Province', 'private', 'rural'))
     
     #Now do breakdown by Urban/Rural
     #urban
     sumstats_school_urban <- school_dta_short_anon %>%
-      filter(urban_rural=="Urban") 
+      filter(rural==0) 
 
     
-    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=strat)
+    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=c('Province', 'private'))
     
     #rural
       sumstats_school_rural <- school_dta_short_anon  %>%
-        filter(urban_rural=="Rural") 
+        filter(rural==1) 
 
         
-      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=strat)
+      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=c('Province', 'private'))
 
     
     #now bind urban/rural with the main results
@@ -589,10 +587,10 @@ strat=c('strata')
 
 
   #public officials
-  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
+  #sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
   
   sumstats_df <- sumstats_school_df_final %>%
-    bind_rows(sumstats_public_officials_df) %>%
+    #bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
 
@@ -610,7 +608,7 @@ strat=c('strata')
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2023 - Urban/Rural",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Gabon 2023 - Urban/Rural",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Rural to Urban"),
           digits = 1, 
@@ -652,7 +650,7 @@ strat=c('strata')
 
       
       #add variable label
-      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=strat) %>%
+      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_urban=mean,
           ci_urban=ci
@@ -667,7 +665,7 @@ strat=c('strata')
       
       
       #add variable label
-      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=strat) %>%
+      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_rural=mean,
           ci_rural=ci
@@ -683,7 +681,7 @@ strat=c('strata')
       
     
       sumstats_df <- sumstats_school_df_final %>%
-        bind_rows(sumstats_public_officials_df) %>%
+        #bind_rows(sumstats_public_officials_df) %>%
         arrange(factor(varlabel, levels=main_indicator_labels2))
       
 
@@ -701,7 +699,7 @@ strat=c('strata')
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2023 - Public/Private Schools",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Gabon 2023 - Public/Private Schools",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Public to Private"),
           digits = 1, 
@@ -710,63 +708,49 @@ strat=c('strata')
     add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
   
 
-#Region
-  
-    #North
-    sumstats_school_north <- school_dta_short_anon %>%
-      filter(territory=="North") 
-
-    
-    sumstats_school_north_df <- svymeantab('sumstats_school_north', strata=strat)
-    
-    #Middle
-    sumstats_school_middle <- school_dta_short_anon %>%
-      filter(territory=="Middle") 
-
-    
-    sumstats_school_middle_df <- svymeantab('sumstats_school_middle', strata=strat)
-
-    # South
-    sumstats_school_south <- school_dta_short_anon %>%
-      filter(territory=="South") 
-
-    
-    sumstats_school_south_df <- svymeantab('sumstats_school_south', strata=strat)
-    
-    #now bind urban/rural with the main results
-    sumstats_school_df_final <- sumstats_school_df %>%
-      left_join((sumstats_school_north_df %>% rename(mean_north=mean, ci_north=ci))) %>%
-      left_join((sumstats_school_middle_df %>% rename(mean_middle=mean, ci_middle=ci))) %>%
-      left_join((sumstats_school_south_df %>% rename(mean_south=mean, ci_south=ci)))
-    
-
-
-  #public officials
-  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
-  
-  sumstats_df <- sumstats_school_df_final %>%
-    bind_rows(sumstats_public_officials_df) %>%
-    arrange(factor(varlabel, levels=main_indicator_labels2))
-  
-
-   
-   sumstats_df <- sumstats_df %>%
-     select(varlabel,  mean, ci, mean_north, ci_north, mean_middle, ci_middle, mean_south, ci_south)
-   
-
+# urban_rural1/urban_rural2 +
+#     plot_annotation(title = str_wrap('Differences in Dashboard Indicators Between Urban/Rural Schools',80))
 
   
-  sumstats_df %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2023 - Regions",
-          col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
-          , "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"),
-          digits = 1, 
-          escape=F) %>%
-    kable_styling("striped") %>%
-    add_header_above(c(" "=1, "Overall"=2,"North"=2,"Middle"=2,"South"=2 ))
+
+    
 ```
+## Sampling Overview
+
+```{r plain_map}
+
+attach(here(confidential_folder, "School/school_survey_data.RData"))
+
+school_map <- school_dta_short %>%
+  filter(!is.na(lat) & !is.na(lon))
+
+#create icons
+icons2 <- awesomeIcons(
+  icon = 'graduation-cap',
+  iconColor = 'white',
+  library = 'fa',
+  markerColor = 'blue'
+)
 
 
+map2 <- function(df_input) {    leaflet(df_input, height=1200, width=1020) %>% 
+  addTiles()  %>%
+  addAwesomeMarkers(lng=~lon, lat= ~lat, icon=icons2,
+                    popup = paste("Name: ", school_map$school_name_preload, " <br>",
+                                  "Province: ", school_map$school_province_preload, " <br>",
+                                  "District: ", school_map$school_district_preload, " <br>",
+                                  "EMIS Code: ", school_map$school_emis_preload, " <br>",
+                                  "<font color='red' > Outcomes ", " <br> <font color='black' >"
+
+
+                                  ) )  
+
+}
+
+
+map2(school_map)
+
+```
 
 # Practice Indicators
 
@@ -785,6 +769,8 @@ strat=c('strata')
 learning_data_plot <- final_indicator_data_LERN_anon %>%
   bind_rows(final_indicator_data_LERN_F_anon, .id="Female") %>%
   bind_rows(final_indicator_data_LERN_M_anon, .id="Male") %>%
+      mutate(province=Province,
+             urban_rural=if_else(rural==0, "Urban", "Rural"))  %>%
   mutate(Gender=case_when(
     Female==1 ~ "All Students",
     Female==2 ~ "Female",
@@ -793,7 +779,7 @@ learning_data_plot <- final_indicator_data_LERN_anon %>%
     )) %>%
   select(-Female, -Male) %>%
   mutate(Type=if_else(urban_rural=="Rural", "Rural", "Urban")) %>%
-  filter(!is.na(Type))
+  filter(!is.na(Type)) 
 
 
 learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD = round(wtd.mean(student_knowledge, ipw, na.rm=TRUE),1))
@@ -818,96 +804,15 @@ learning_dataMean <- summarise(group_by(learning_data_plot, Gender , Type), MD =
 ```
 
 ```{r}
-#student level regressions
-fixest::feols(
-  student_knowledge ~ student_male,
-  data=assess_4th_grade_anon_anon,
-  weights=assess_4th_grade_anon_anon$ipw,
-  cluster=c('hashed_school_code'),
-  se='cluster'
-) %>%
-  summary()
+crosstab <- assess_4th_grade_anon_anon %>%
+  select(hashed_school_code, student_number, math_student_proficient, literacy_student_proficient) 
 
-fixest::feols(
-  student_knowledge ~ student_male,
-  data=assess_4th_grade_anon_anon,
-  cluster=c('hashed_school_code'),
-  se='cluster'
-) %>%
-  summary()
-
-fixest::feols(
-  math_student_knowledge ~ student_male,
-  data=assess_4th_grade_anon_anon,
-  weights=assess_4th_grade_anon_anon$ipw,
-  cluster=c('hashed_school_code'),
-  se='cluster'
-) %>%
-  summary()
-
-fixest::feols(
-  math_student_knowledge ~ student_male,
-  data=assess_4th_grade_anon_anon,
-  cluster=c('hashed_school_code'),
-  se='cluster'
-) %>%
-  summary()
-
-fixest::feols(
-  literacy_student_knowledge ~ student_male,
-  data=assess_4th_grade_anon_anon,
-  weights=assess_4th_grade_anon_anon$ipw,
-  cluster=c('hashed_school_code'),
-  se='cluster'
-) %>%
-  summary()
-
-fixest::feols(
-  literacy_student_knowledge ~ student_male,
-  data=assess_4th_grade_anon_anon,
-  cluster=c('hashed_school_code'),
-  se='cluster'
-) %>%
-  summary()
+crosstab %>%
+  group_by(math_student_proficient,literacy_student_proficient) %>%
+  summarise(n=n())
 
 ```
 
-
-```{r}
-final_indicator_data_LERN_F_anon %>%
-  ungroup() %>%
-  as_survey_design(strata=c('strata'),
-                   weight=ipw) %>%
-  summarise(
-    student_knowledge=survey_mean(student_knowledge, na.rm=TRUE),
-    student_proficient=survey_mean(student_proficient, na.rm=TRUE),
-    literacy_student_knowledge=survey_mean(literacy_student_knowledge, na.rm=TRUE),
-    math_student_knowledge=survey_mean(math_student_knowledge, na.rm=TRUE)
-  )
-
-final_indicator_data_LERN_M_anon %>%
-  ungroup() %>%
-  as_survey_design(strata=c('strata'),
-                   weight=ipw) %>%
-  summarise(
-    student_knowledge=survey_mean(student_knowledge, na.rm=TRUE),
-    student_proficient=survey_mean(student_proficient, na.rm=TRUE),
-    literacy_student_knowledge=survey_mean(literacy_student_knowledge, na.rm=TRUE),
-    math_student_knowledge=survey_mean(math_student_knowledge, na.rm=TRUE)
-  )
-
-final_indicator_data_LERN_anon %>%
-  ungroup() %>%
-  filter(!is.na(ipw)) %>%
-  as_survey_design(strata=c('strata'),
-                   weight=ipw) %>%
-  summarise(
-    student_knowledge=survey_mean(student_knowledge, na.rm=TRUE),
-    student_proficient=survey_mean(student_proficient, na.rm=TRUE),
-    literacy_student_knowledge=survey_mean(literacy_student_knowledge, na.rm=TRUE),
-    math_student_knowledge=survey_mean(math_student_knowledge, na.rm=TRUE)
-  )
-```
 
 
 
@@ -980,7 +885,6 @@ inpt_urban_rural
 
       df_reg<-school_dta_short_anon
       
-    
           #add equations to plots
     eq_plot_txt <- function(data, inp, var) {
       eq <- lm_robust(inp ~ var, data=data, se_type='HC2')
@@ -1051,7 +955,7 @@ inpt_urban_rural
 - One of the best predictors of 4th grade student achievement, along with the 1st grade scores, is the teacher's pedagogical score  
 - The following plots the school level average of the 4th grade assessment scores on the teacher's pedagogical skill based on the Teach scale.  
 
-```{r teach_plot, eval=FALSE, include=FALSE}
+```{r teach_plot, echo=FALSE}
  #############################
     # Create database with just learning outcomes for regressions
     ##############################
@@ -1060,7 +964,7 @@ inpt_urban_rural
       df_reg<-school_dta_short_anon
       
 
-      
+
       
       regplots<- ggplot(data=df_reg, aes(x=teach_score, y=student_knowledge, weight=ipw, color="#0081a8")) +
         geom_point() +
@@ -1076,9 +980,11 @@ inpt_urban_rural
         labs(colour = "Indicator") +
         ylab(paste0("4th Grade Score")) +
         xlab(paste0("Teach Score")) +
-        stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-                     label.x.npc = "right", label.y.npc = 0.2,
-                     formula = 'y~x', parse = TRUE, size = 5)
+        geom_richtext(
+          aes(x=1,y=5,label = eq_plot_txt(df_reg, student_knowledge, teach_score), hjust=0.2)
+        ) 
+      
+
       
       
       regplots
@@ -1101,7 +1007,7 @@ inpt_urban_rural
 ```{r content_knowledge_region, echo=FALSE, warning=FALSE}
 
 region_content <- school_dta_short_anon %>%
-  mutate(Type=territory)
+  mutate(Type=urban_rural)
 
 
 
@@ -1171,14 +1077,10 @@ region_content_long <-region_content %>%
 
     contMean <- summarise(group_by(region_content_long,  Type, Assessment), MD = round(weighted.mean(content_proficiency, ipw, na.rm=T),1))
 
-    contMedian <- summarise(group_by(region_content_long,  Type, Assessment), MD = round(weighted.median(content_proficiency, ipw, na.rm=T),1))
-    
   p1<-ggplot(contMean, aes(x=Assessment, y= MD, fill=Type)) + #now plot the output in a bar graph
     geom_col( position="dodge") +
-    geom_text(data = contMean, aes(x=Assessment, y=MD, label=MD), 
-              position = position_dodge(width = 0.8), size = 3, hjust = 1) +
-    geom_text(data = contMean, aes(x=Assessment, y=0, label=Type), 
-              position = position_dodge(width = 0.8), size = 3, hjust = -0.25) +
+    geom_text(data = contMean, aes(x=Assessment, y=MD, label=paste(Type,MD,sep=": ")), 
+              position = position_dodge(width = 0.8), size = 4, hjust = -.1) +
   xlab(str_wrap("Subject", width=75))+
   ylab(str_wrap("Teacher Content Knowledge Proficiency",35)) +
   scale_fill_discrete(name="Territory") +
@@ -1186,81 +1088,16 @@ region_content_long <-region_content %>%
   coord_flip() +
   expand_limits(y=0:100) +
     theme_bw() +
-    ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Territory", 50)) +
+    ggtitle(str_wrap("Teacher Content Knowledge Proficiency by Subject & Urban/Rural Status", 50)) +
       theme(
-    legend.position="none"
+    legend.position="none",
+    axis.text.x = element_text(size=12),
+    axis.text.y = element_text(size=12)
+    
   ) 
 p1
 
 
-```
-```{r}
-
-options(survey.lonely.psu="adjust")
-
-final_indicator_data_CONT_F_anon %>%
-  ungroup() %>%
-  as_survey_design(strata=c('strata')) %>%
-  summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
-  )
-
-final_indicator_data_CONT_M_anon %>%
-  ungroup() %>%
-  as_survey_design(strata=c('strata')) %>%
-  summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
-  )
-
-final_indicator_data_CONT_anon %>%
-  ungroup() %>%
-  filter(!is.na(ipw)) %>%
-  as_survey_design(strata=c('strata')) %>%
-  summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
-  )
-```
-
-```{r}
-
-options(survey.lonely.psu="adjust")
-
-final_indicator_data_CONT_F_anon %>%
-  ungroup() %>%
-  as_survey_design(strata=c('strata'),
-                   weight=ipw) %>%
-  summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
-  )
-
-final_indicator_data_CONT_M_anon %>%
-  ungroup() %>%
-  as_survey_design(strata=c('strata'),
-                   weight=ipw) %>%
-  summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
-  )
-
-final_indicator_data_CONT_anon %>%
-  ungroup() %>%
-  filter(!is.na(ipw)) %>%
-  as_survey_design(strata=c('strata'),
-                   weight=ipw) %>%
-  summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
-  )
 ```
 
 
@@ -1276,7 +1113,9 @@ final_indicator_data_CONT_anon %>%
 
 
 
-textbooks <- final_indicator_data_PKNW_anon %>%
+textbooks <- final_indicator_data_PKNW_anon %>% 
+      mutate(province=Province,
+             urban_rural=if_else(rural==0, "Urban", "Rural")) %>%
   left_join(final_indicator_data_INPT_anon) %>%
   left_join(school_dta_short_anon, by="hashed_school_code") %>%
   mutate(share_textbook=(m4scq5_inpt)/(m4scq4_inpt)) %>%
@@ -1298,6 +1137,140 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw)) +
 
 
 ```
+## Proportion of teacher speaking english
+
+```{r}
+#read in weights 
+weights_df <- read_csv(here(save_folder, "School", "data/school_weights_anon.csv" ))
+
+#read in module
+english_df <- read_dta(here(download_folder, "School","roster_english_t_gbn.dta")) %>%
+  pivot_wider(id_cols=c("interview__key","interview__id","questionnaire_roster__id"),
+                names_from = roster_english_t_gbn__id,
+                values_from=m3saq8_gbn)
+
+english_merge_df <- english_df %>%
+  left_join(distinct(teacher_questionnaire_anon %>% select(hashed_school_code, interview__key, questionnaire_roster__id, ipw, rural, province, private))) %>%
+  left_join(weights_df) %>%
+  mutate(teach_weight = ipw*teacher_obs_weight_component,
+         teach_weight=if_else(is.na(teach_weight), median(teach_weight, na.rm=TRUE),teach_weight),
+         province=if_else(is.na(province), "unknown", province),
+         rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural),
+         private=if_else(is.na(private), median(private, na.rm=TRUE),private))
+
+
+stats <- english_merge_df %>%
+  as_survey_design(
+    strata=c('province','private','rural'),
+    weights=teach_weight
+  ) %>%
+  summarise(
+    speak_perfectly=100*survey_mean(`1`==1),
+    speak_well=100*survey_mean(`1`==2),
+    speak_average=100*survey_mean(`1`==3),
+    speak_somewhat=100*survey_mean(`1`==4),
+    speak_notatall=100*survey_mean(`1`==5),
+
+    understand_perfectly=100*survey_mean(`2`==1),
+    understand_well=100*survey_mean(`2`==2),
+    understand_average=100*survey_mean(`2`==3),
+    understand_somewhat=100*survey_mean(`2`==4),
+    understand_notatall=100*survey_mean(`2`==5),
+    
+    write_perfectly=100*survey_mean(`3`==1),
+    write_well=100*survey_mean(`3`==2),
+    write_average=100*survey_mean(`3`==3),
+    write_somewhat=100*survey_mean(`3`==4),
+    write_notatall=100*survey_mean(`3`==5),
+    
+    read_perfectly=100*survey_mean(`4`==1),
+    read_well=100*survey_mean(`4`==2),
+    read_average=100*survey_mean(`4`==3),
+    read_somewhat=100*survey_mean(`4`==4),
+    read_notatall=100*survey_mean(`4`==5),
+  ) 
+
+stats_mean <- stats %>%
+  select(!ends_with('_se')) %>%
+  mutate(col='mean') %>%
+  select(col, everything())
+
+
+stats_se <- stats %>%
+  select(ends_with('_se')) %>%
+  rename_all(
+    ~gsub('_se','',.)
+  ) %>%
+  mutate(col='se') %>%
+  select(col, everything())
+
+stats_final <- stats_mean %>% bind_rows(stats_se)
+
+flextable(stats_final)
+```
+
+## Bullying
+
+```{r}
+
+#read in module
+bullying_df <- read_dta(here(download_folder, "School","roster_bullying_gbn.dta")) %>%
+  pivot_wider(id_cols=c("interview__key","interview__id","questionnaire_roster__id"),
+                names_from = roster_bullying_gbn__id,
+                values_from=m3saq9_gbn)
+
+bullying_merge_df <- bullying_df %>%
+  left_join(distinct(teacher_questionnaire_anon %>% select(hashed_school_code, interview__key, questionnaire_roster__id, ipw, rural, province, private))) %>%
+  left_join(weights_df) %>%
+  mutate(teach_weight = ipw*teacher_obs_weight_component,
+         teach_weight=if_else(is.na(teach_weight), median(teach_weight, na.rm=TRUE),teach_weight),
+         province=if_else(is.na(province), "unknown", province),
+         rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural),
+         private=if_else(is.na(private), median(private, na.rm=TRUE),private))
+
+
+stats <- bullying_merge_df %>%
+  as_survey_design(
+    strata=c('province','private','rural'),
+    weights=teach_weight
+  ) %>%
+  summarise(
+    stolen_onceaweek=100*survey_mean(`1`==1),
+    stolen_oncetwiceamonth=100*survey_mean(`1`==2),
+    stolen_fettimesyear=100*survey_mean(`1`==3),
+    stolen_never=100*survey_mean(`1`==4),
+    
+    hithurt_onceaweek=100*survey_mean(`2`==1),
+    hithurt_oncetwiceamonth=100*survey_mean(`2`==2),
+    hithurt_fettimesyear=100*survey_mean(`2`==3),
+    hithurt_never=100*survey_mean(`2`==4),
+    
+    threatened_onceaweek=100*survey_mean(`3`==1),
+    threatened_oncetwiceamonth=100*survey_mean(`3`==2),
+    threatened_fettimesyear=100*survey_mean(`3`==3),
+    threatened_never=100*survey_mean(`3`==4)
+  ) 
+
+stats_mean <- stats %>%
+  select(!ends_with('_se')) %>%
+  mutate(col='mean') %>%
+  select(col, everything())
+
+
+stats_se <- stats %>%
+  select(ends_with('_se')) %>%
+  rename_all(
+    ~gsub('_se','',.)
+  ) %>%
+  mutate(col='se') %>%
+  select(col, everything())
+
+stats_final <- stats_mean %>% bind_rows(stats_se)
+
+flextable(stats_final)
+```
+
+
 
 # Policies
 
@@ -1308,21 +1281,22 @@ ggplot(data=textbooks, aes(x=m4scq5_inpt, y=m7sfq10_pknw)) +
 - Generally, the policy environment, as indicated by the De Jure, is quite strong.  
 - However, teachers often report a different experience of the policies in practice.
 
-```{r radar, eval=FALSE, warning=FALSE, include=FALSE}
+```{r radar, echo=FALSE, warning=FALSE}
 
 #get list of de facto indicators
 main_indicator_labels<-c( 
-                        'Teaching - Attraction',
-                         'Teaching - Selection & Deployment',
-                         'Teaching - Support', 
-                         'Teaching - Evaluation', 
-                         'Teaching - Monitoring & Accountability', 
-                         #'Teaching - Intrinsic Motivation', 
-                         # 'Inputs & Infrastructure - Monitoring',
-                         'School Management - Attraction' ,                   
-                         'School Management - Selection & Deployment'  ,      
-                         'School Management - Support' ,                      
-                         'School Management - Evaluation'
+                        'Enseignement - Attrait de la profession',
+                         'Enseignement - Recrutement & carrière',
+                         'Enseignement - Soutien' ,
+                         'Enseignement - Évaluation', 
+                         'Enseignement - Surveillance et reddition de comptes', 
+                         # "Enseignement - Motivation intrinsèque", 
+                         # "Intrants et infrastructure - suivi",
+                         'GESTION SCOLAIRE - Attrait de la profession' ,                   
+                         'GESTION SCOLAIRE - Recrutement & carrière' ,      
+                         'GESTION SCOLAIRE - Soutien' ,                      
+                         'GESTION SCOLAIRE - Évaluation'
+                         #GESTION SCOLAIRE - urveillance et reddition de comptes'
 
     )  
     
@@ -1364,16 +1338,16 @@ main_indicator_labels<-c(
 
     
     #score expert data (this requires a lot of hard coding and transcribing)
-    expert_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/JOR/JOR_2023_GEPD/JOR_2023_GEPD_v01_M/Data/Policy_Survey"
 
-
-    expert_dta_final<-haven::read_dta(paste(expert_dir, 'expert_dta_final.dta', sep="/")) 
+    expert_dta_final<-haven::read_dta(here(data_dir,"Policy_Survey/expert_dta_final.dta") )
 
     expert_dta_radar <- expert_dta_final %>%
       select(colnames(data_radar))
     
        data_radar<- data_radar %>%
       bind_rows(expert_dta_radar)
+       
+  
        
    #create radar plot
     ggradar(data_radar,
@@ -1388,7 +1362,7 @@ main_indicator_labels<-c(
             plot.extent.y.sf = 1.3,
             legend.text.size = 3
               ) +
-      ggtitle(str_wrap('Radar Plot of De-Facto and De-Jure Policy Levers',50)) +
+      ggtitle(str_wrap('Graphique radar des leviers politiques de facto et de jure',50)) +
       theme_minimal()+
       theme(    axis.title = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
@@ -1409,7 +1383,7 @@ main_indicator_labels<-c(
 - Below are boxplots showing the 25th percentile, median, and 75th percentile ratings of teachers to these policy questions, along with outliers.  
 -  There is significant variation across teachers in how they understand or experience policies.
 
-```{r defacto, eval=FALSE, include=FALSE}
+```{r defacto, echo=FALSE}
 #get list of de facto indicators
 main_indicator_labels<-c( 
                         'Teaching - Attraction',
@@ -1486,7 +1460,7 @@ summary(datagap)
 
 
 
-```{r dejure_defacto_gap, eval=FALSE, include=FALSE}
+```{r dejure_defacto_gap, echo=FALSE}
 #calculate gap between de_jure and de_facto
 
 defacto_dejure<-data_radar %>%
@@ -1693,11 +1667,10 @@ data_plot <- public_officials_dta_clean_anon %>%
   mutate(govt_tier=str_remove(govt_tier, "or equivalent")) %>%
   mutate(govt_tier=str_remove(govt_tier, "\\)")) %>%
     mutate(govt_tier=str_remove(govt_tier, "\\(")) %>%
-  mutate(govt_tier=case_when(
-    govt_tier=='District office ' ~ 'District Office',
-    govt_tier=='Regional office ' ~ 'Regional Office',
-    govt_tier=='Ministry of Education '  ~ 'MEN'
-  )) %>%
+  # mutate(govt_tier=case_when(
+  #   govt_tier=='District office ' ~ 'District Office',
+  #   govt_tier=='Ministry of Education '  ~ 'MBBSE/TSC'
+  # )) %>%
   group_by(govt_tier) %>%
   select(interview__id,  govt_tier, national_learning_goals, mandates_accountability, quality_bureaucracy, impartial_decision_making) %>%
   pivot_longer(cols=c("national_learning_goals", "mandates_accountability", 
@@ -1731,6 +1704,65 @@ dataMedian <- summarise(group_by(data_plot, indicators , govt_tier), MD = round(
   
 #more motivated question
 
+```
+
+
+```{r eval=FALSE, include=FALSE}
+demo_po_dist <- public_officials_dta_clean_anon %>% 
+  distinct(interview__id, .keep_all = T) %>% 
+  select(govt_tier, age, gender, years_current_position, years_current_org, years_civil_service, num_pub_sector_org, net_monthly_salary) %>% 
+  mutate(gender = case_when(
+    gender ==1 ~ "Male",
+    gender !=1 ~ "Female"
+    
+  )) %>% 
+  filter(govt_tier=="District office (or equivalent)") %>% 
+  rename(
+    
+    Age = age,
+    Gender = gender,
+    `Years in current position` = years_current_position,
+    `Years in current organisation` = years_current_org,
+    `Years in civil service` = years_civil_service,
+    `Number of public organisation worked in`=num_pub_sector_org
+
+  )
+
+demo_po_central <- public_officials_dta_clean_anon %>% 
+  distinct(interview__id, .keep_all = T) %>% 
+  select(govt_tier, age, gender, years_current_position, years_current_org, years_civil_service, num_pub_sector_org, net_monthly_salary) %>% 
+   mutate(gender = case_when(
+    gender ==1 ~ "Male",
+    gender !=1 ~ "Female"
+    
+  )) %>%
+  filter(govt_tier!="District office (or equivalent)")%>% 
+  rename(
+    
+    Age = age,
+    Gender = gender,
+    `Years in current position` = years_current_position,
+    `Years in current organisation` = years_current_org,
+    `Years in civil service` = years_civil_service,
+    `Number of public organisation worked in`=num_pub_sector_org
+
+  )
+
+
+
+library(miscset) # install from CRAN if required
+ggplotGrid(ncol = 2,
+  lapply(c("Age", "Gender", "`Years in current position`", "`Years in current organisation`", "`Years in civil service`", "`Number of public organisation worked in`"),
+    function(col) {
+        ggplot(demo_po_dist, aes_string(col)) + geom_bar() + coord_flip()
+    }))
+
+
+ggplotGrid(ncol = 2,
+  lapply(c("Age", "Gender", "`Years in current position`", "`Years in current organisation`", "`Years in civil service`", "`Number of public organisation worked in`"),
+        function(col) {
+        ggplot(demo_po_central, aes_string(col)) + geom_bar() + coord_flip() 
+    }))
 ```
 
 
@@ -1815,8 +1847,6 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 
 
-
-
 # School Survey
     metadata<-metadta
     
@@ -1824,22 +1854,22 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
   
     sumstats_school <- school_dta_short_anon 
     
-    sumstats_school_df <- svymeantab('sumstats_school', strata=strat)
+    sumstats_school_df <- svymeantab('sumstats_school', strata=c('Province', 'private', 'rural'))
     
     #Now do breakdown by Urban/Rural
     #urban
     sumstats_school_urban <- school_dta_short_anon %>%
-      filter(urban_rural=="Urban") 
+      filter(rural==0) 
 
     
-    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=strat)
+    sumstats_school_urban_df <- svymeantab('sumstats_school_urban', strata=c('Province', 'private'))
     
     #rural
       sumstats_school_rural <- school_dta_short_anon  %>%
-        filter(urban_rural=="Rural") 
+        filter(rural==1) 
 
         
-      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=strat)
+      sumstats_school_rural_df <- svymeantab('sumstats_school_rural', strata=c('Province', 'private'))
 
     
     #now bind urban/rural with the main results
@@ -1850,10 +1880,10 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
 
   #public officials
-  sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
+  #sumstats_public_officials_df <- svymeantabpo('public_officials_dta_clean_anon')
   
   sumstats_df <- sumstats_school_df_final %>%
-    bind_rows(sumstats_public_officials_df) %>%
+    #bind_rows(sumstats_public_officials_df) %>%
     arrange(factor(varlabel, levels=main_indicator_labels2))
   
 
@@ -1871,7 +1901,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2023 - Urban/Rural",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Gabon 2023 - Urban/Rural",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Rural to Urban"),
           digits = 1, 
@@ -1903,7 +1933,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       #Now do breakdown by non-public/public
       #private
       
-           
+          
         
       sumstats_school_nonprivate <- school_dta_short_anon %>%
         left_join(public_status) %>%
@@ -1913,7 +1943,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
 
       
       #add variable label
-      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=strat) %>%
+      sumstats_school_nonprivate_df <-  svymeantab('sumstats_school_nonprivate', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_urban=mean,
           ci_urban=ci
@@ -1928,7 +1958,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       
       
       #add variable label
-      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=strat) %>%
+      sumstats_school_private_df <-  svymeantab('sumstats_school_private', strata=c('Province', 'private', 'rural')) %>%
         rename(
           mean_rural=mean,
           ci_rural=ci
@@ -1944,7 +1974,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
       
     
       sumstats_df <- sumstats_school_df_final %>%
-        bind_rows(sumstats_public_officials_df) %>%
+        #bind_rows(sumstats_public_officials_df) %>%
         arrange(factor(varlabel, levels=main_indicator_labels2))
       
 
@@ -1962,7 +1992,7 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     mutate(ratio=cell_spec(
       round(ratio,2), background = spec_color(ratio,  alpha=0.4, option='cividis', direction=-1)
     )) %>%
-    kable(caption = "Summary Statistics of Dashboard Indicators - Jordan 2023 - Public/Private Schools",
+    kable(caption = "Summary Statistics of Dashboard Indicators - Gabon 2023 - Public/Private Schools",
           col.names = c("Indicator", "Mean", "95% Confident Interval", "Mean", "95% Confident Interval"
           , "Mean", "95% Confident Interval", "Ratio of Public to Private"),
           digits = 1, 
@@ -1971,7 +2001,13 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
     add_header_above(c(" "=1, "Overall"=2,"Public"=2,"Private"=2, " "=1))
   
 
+# urban_rural1/urban_rural2 +
+#     plot_annotation(title = str_wrap('Differences in Dashboard Indicators Between Urban/Rural Schools',80))
 
+  
+
+      
+ 
     
 ```
 

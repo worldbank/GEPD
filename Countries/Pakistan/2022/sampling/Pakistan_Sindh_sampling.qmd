@@ -209,17 +209,6 @@ write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Sindh_strata_
 ## 200 schools
 ```{r large, echo=TRUE}
 # get numbers to select from each district
-# strata_df_200 <- df_updated %>%
-#   filter(!(Location=="NULL")) %>%
-#   group_by(District,Location ) %>%
-#   summarise(nstudents_district=sum(class_4),
-#                      total_district=n()
-# ) %>%
-#   ungroup() %>%
-#   mutate(sample_size=200*round(nstudents_district/sum(nstudents_district),2))
-# 
-# write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
-
 strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Sindh_strata_200_2023-10-12_rev.csv"))
 
 
@@ -240,6 +229,10 @@ sample_df_200 <- df_updated_gepd %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(class_4/strata_size),
          ipw=strata_school_prob*(1/strata_prob))
+
+#pick one extra school that was not included by mistake
+sample_chosen <- sample_df_200 %>%
+  mutate(sample="Sampled School") 
 
 
 
@@ -388,13 +381,34 @@ df_updated_gepd %>%
   flextable() %>%
   add_header_lines("Population estimate")
 
+df_updated_gepd %>%
+  ungroup() %>%
+  summarise(total_teachers=wtd.mean(total_teacher, weight=class_4),
+            electricity=wtd.mean(electricity_availability=='Yes', weight=class_4), 
+            drinking_water=wtd.mean(water_available=='Yes', weight=class_4)) %>%
+  flextable() %>%
+  add_header_lines("Population estimate")
 
 
 
 sample_df_200 %>%
+  left_join(weights_df_200) %>%
   ungroup() %>%
   as_survey_design(strata=c('district','location'),
                    weight=ipw) %>%
+    summarise(total_teachers=survey_mean(total_teacher),
+            electricity=survey_mean(electricity_availability=='Yes'), 
+            drinking_water=survey_mean(water_available=='Yes')
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on Schools Visited and Sampling Weights")
+
+
+sample_df_200 %>%
+  left_join(weights_df_200) %>%
+  ungroup() %>%
+  as_survey_design(strata=c('district','location'),
+                   weight=(1/strata_prob)) %>%
     summarise(total_teachers=survey_mean(total_teacher),
             electricity=survey_mean(electricity_availability=='Yes'), 
             drinking_water=survey_mean(water_available=='Yes')

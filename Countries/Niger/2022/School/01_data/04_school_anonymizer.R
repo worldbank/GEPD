@@ -79,7 +79,7 @@ data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', cu
          #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
          ) %>%
   select(school_code, REGION,urban_rural,LIRE,ownership, public,
-         ipw) 
+         ipw, strata_prob) 
 
 
 

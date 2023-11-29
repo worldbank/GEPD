@@ -93,6 +93,7 @@ bbc_style <- function() {
     strip.text = ggplot2::element_text(size  = 22,  hjust = 0)
   )
 }
+options(survey.lonely.psu="adjust")
 
 ```
 
@@ -437,15 +438,17 @@ country_tab_fn(politics_indicators, 'GEPD Politics Indicators')
 svymeantab <- function(data, strata) {
   
   get(data) %>%
+    mutate(strata_prob=if_else(is.na(strata_prob), median(strata_prob, na.rm=TRUE),strata_prob)) %>%
+    mutate(weight=1/strata_prob) %>%
     filter(!is.na(ipw)) %>%
     filter(!is.infinite(ipw)) %>%
-    select(one_of(indicators_list), Province, private, rural, ipw ) %>%
+    select(one_of(indicators_list), Province, private, rural, weight ) %>%
     pivot_longer(cols=one_of(indicators_list),
                  names_to = 'indicators',
                  values_to='value') %>%
     as_survey_design(strata=strata,
-                     weight=ipw) %>%
-    select(-c( 'Province', 'private', 'rural', 'ipw')) %>%
+                     weight=weight) %>%
+    select(-c( 'Province', 'private', 'rural', 'weight')) %>%
     group_by(indicators) %>%
     summarise(mean=survey_mean(value, na.rm=T, vartype='ci')) %>%
     as_tibble() %>%
