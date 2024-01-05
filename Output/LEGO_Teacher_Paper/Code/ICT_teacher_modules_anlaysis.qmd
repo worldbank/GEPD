@@ -352,8 +352,10 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 
-teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+teacher_pedagogy <- school_dta %>%
+  select(preamble_info, subject_test, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') ) %>%
+  filter(!is.na(subject_test))
+
 
   
 #add weights and anonymize

@@ -360,8 +360,9 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 
-teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+teacher_pedagogy <- school_dta %>%
+  select(preamble_info, subject_test, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') ) %>%
+  filter(!is.na(subject_test))
 
   
 #add weights and anonymize
@@ -429,42 +430,42 @@ matches <- teacher_combined_df %>%
 
 teacher_combined_df %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_teacher_combined_modules.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_teacher_combined_modules.dta"))
 
 
 matches %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_teacher_modules_key.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_teacher_modules_key.dta"))
 
 #save input files
 school_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_school_modules.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_school_modules.dta"))
 
 teacher_absence_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_teacher_absence.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_teacher_absence.dta"))
 
 teacher_pedagogy_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_teacher_pedagogy.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_teacher_pedagogy.dta"))
 
 teacher_assessment_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_teacher_assessment.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_teacher_assessment.dta"))
 
 teacher_questionnaire_micro %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_teacher_questionnaire.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_teacher_questionnaire.dta"))
 
 assess_4th_grade_anon %>%
   select(-ends_with('nogiraffe')) %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_fourth_grade_assessment.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_fourth_grade_assessment.dta"))
 
 ecd_dta_anon %>%
   janitor::clean_names() %>%
-  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_first_grade_assessment.dta"))
+  write_dta(path=paste0(save_input_folder,"/",country,"_",year,"/", country,"_",year,"_first_grade_assessment.dta"))
 ```
 
 

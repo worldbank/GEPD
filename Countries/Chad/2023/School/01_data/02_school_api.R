@@ -130,10 +130,20 @@ indicator_names <- sapply(indicator_names, tolower)
 ############################
 
 
-#read in school level file
-school_dta <- read_dta(file.path(download_folder, school_file))
+school_dta <- read_dta(file.path(download_folder, "EPDash_cleaned.dta")) %>%
+  select(-starts_with("s1_")) %>%
+  select(-starts_with("s2_")) 
 
+#read in Teach file
+teach_dta <- read_dta(file.path(download_folder, "Teach/EPDash.dta")) %>%
+  mutate(m1s0q2_emis=as.numeric(m1s0q2_emis)) %>%
+  select(c("interview__key"),
+         starts_with("s1_"),
+         starts_with("s2_")
+  )
 
+school_dta <- school_dta %>%
+  left_join(teach_dta)
 
 
 #Add in school metadata
@@ -156,8 +166,8 @@ school_metadta<-school_metadta %>%
 #
 # label(school_dta) = as.list(as.character(school_metadta$varlabel))
 #
-# school_dta %>%
-#   write_dta(file.path(download_folder, "EPDash.dta"))
+school_dta %>%
+  write_dta(file.path(download_folder, "EPDash_final.dta"))
 
 
 

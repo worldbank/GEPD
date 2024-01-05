@@ -1204,7 +1204,10 @@ final_indicator_data_CONT_F_anon %>%
   summarise(
     content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
     literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE),
+    content_knowledge=survey_mean(content_knowledge, na.rm=TRUE),
+    literacy_content_knowledge=survey_mean(literacy_content_knowledge, na.rm=TRUE),
+    math_content_knowledge=survey_mean(math_content_knowledge, na.rm=TRUE)
   )
 
 final_indicator_data_CONT_M_anon %>%
@@ -1213,7 +1216,10 @@ final_indicator_data_CONT_M_anon %>%
   summarise(
     content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
     literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE),
+    content_knowledge=survey_mean(content_knowledge, na.rm=TRUE),
+    literacy_content_knowledge=survey_mean(literacy_content_knowledge, na.rm=TRUE),
+    math_content_knowledge=survey_mean(math_content_knowledge, na.rm=TRUE)
   )
 
 final_indicator_data_CONT_anon %>%
@@ -1223,7 +1229,10 @@ final_indicator_data_CONT_anon %>%
   summarise(
     content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
     literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE),
+    content_knowledge=survey_mean(content_knowledge, na.rm=TRUE),
+    literacy_content_knowledge=survey_mean(literacy_content_knowledge, na.rm=TRUE),
+    math_content_knowledge=survey_mean(math_content_knowledge, na.rm=TRUE)
   )
 ```
 
@@ -1236,9 +1245,16 @@ final_indicator_data_CONT_F_anon %>%
   as_survey_design(strata=c('strata'),
                    weight=ipw) %>%
   summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+    count=n(),
+    content_proficiency_mean=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency_mean=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency_mean=survey_mean(math_content_proficiency, na.rm=TRUE),
+    content_proficiency_median=survey_median(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency_median=survey_median(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency_median=survey_median(math_content_proficiency, na.rm=TRUE),    
+    content_knowledge_mean=survey_mean(content_knowledge, na.rm=TRUE),
+    literacy_content_knowledge_mean=survey_mean(literacy_content_knowledge, na.rm=TRUE),
+    math_content_knowledge_mean=survey_mean(math_content_knowledge, na.rm=TRUE)
   )
 
 final_indicator_data_CONT_M_anon %>%
@@ -1246,9 +1262,16 @@ final_indicator_data_CONT_M_anon %>%
   as_survey_design(strata=c('strata'),
                    weight=ipw) %>%
   summarise(
-    content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
-    literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+    count=n(),
+    content_proficiency_mean=survey_mean(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency_mean=survey_mean(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency_mean=survey_mean(math_content_proficiency, na.rm=TRUE),
+    content_proficiency_median=survey_median(content_proficiency, na.rm=TRUE),
+    literacy_content_proficiency_median=survey_median(literacy_content_proficiency, na.rm=TRUE),
+    math_content_proficiency_median=survey_median(math_content_proficiency, na.rm=TRUE),    
+    content_knowledge_mean=survey_mean(content_knowledge, na.rm=TRUE),
+    literacy_content_knowledge_mean=survey_mean(literacy_content_knowledge, na.rm=TRUE),
+    math_content_knowledge_mean=survey_mean(math_content_knowledge, na.rm=TRUE)
   )
 
 final_indicator_data_CONT_anon %>%
@@ -1259,7 +1282,10 @@ final_indicator_data_CONT_anon %>%
   summarise(
     content_proficiency=survey_mean(content_proficiency, na.rm=TRUE),
     literacy_content_proficiency=survey_mean(literacy_content_proficiency, na.rm=TRUE),
-    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE)
+    math_content_proficiency=survey_mean(math_content_proficiency, na.rm=TRUE),
+    content_knowledge=survey_mean(content_knowledge, na.rm=TRUE),
+    literacy_content_knowledge=survey_mean(literacy_content_knowledge, na.rm=TRUE),
+    math_content_knowledge=survey_mean(math_content_knowledge, na.rm=TRUE)
   )
 ```
 

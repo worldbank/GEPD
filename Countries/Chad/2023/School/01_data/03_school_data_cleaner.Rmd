@@ -428,29 +428,27 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
-vtable(school_dta)
-#rename a few key variables up front
+school_dta<-read_dta(file.path(download_folder, "EPDash_final.dta")) %>%
+  select(-starts_with("ENUM"))
+
 school_dta<- school_dta %>%
-  filter(!is.na(school_info_correct)) %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=m1s0q1_name ,
+         #enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
-         lat=m1s0q9__Latitude,
-         lon=m1s0q9__Longitude,
-         school_code=if_else(!is.na(school_emis_preload),as.numeric(school_emis_preload), as.numeric(m1s0q2_code)),
+         lat=m1s0q9__latitude,
+         lon=m1s0q9__longitude,
+         school_code=m1s0q2_emis,
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
   ## Get names and code for all the blank interviews
   mutate(
     
-    school_code= if_else(school_info_correct==1, as.numeric(school_code), as.numeric(m1s0q2_emis)),
-    school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name))
+    #school_code= if_else(school_info_correct==1, as.numeric(school_code), as.numeric(m1s0q2_emis)),
+    school_name_preload = m1s0q2_name
     
   ) %>%
   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
   filter(!is.na(school_code))
-
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
 
@@ -1248,7 +1246,7 @@ num_boys <- school_dta %>%
 final_indicator_data_ATTD_M<- school_data_INPT %>%
   left_join(num_boys) %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
-  mutate(student_attendance=m4scq4n_girls/m4scq13_girls) %>%
+  mutate(student_attendance=m4scq4n_girls/as.numeric(m4scq13_girls)) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
@@ -2087,6 +2085,8 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PKNW=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  %>%
+  mutate(across(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), #convert to binary if data not missing
+                ~if_else(is.na(.),as.numeric(NA),1))) %>%
   left_join(pknw_actual_combined) %>%
   mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
   mutate(add_triple_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T), m5s2q1c_number, m7_teach_count_pknw,0.8,1),

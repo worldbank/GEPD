@@ -254,9 +254,6 @@ school_dta<- school_dta %>%
   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
   filter(!is.na(temp_school_code)) %>%
   ungroup() %>%
-  left_join(key) %>%
-  filter(!is.na(temp_school_code)) %>% 
-  select(-school_code) %>% 
   mutate(school_code = school_emis_preload) %>% 
   
   ## VERY IMPORTANT FOR MATCHING LATER ON
@@ -280,7 +277,8 @@ school_dta<- school_dta %>%
   )) %>% 
   
   rename(old_school_code = school_code) %>% 
-  mutate(school_code = paste(school_name_preload, "_", old_school_code))
+  mutate(school_code = paste(school_name_preload, "_", old_school_code)) %>%
+    left_join(key) 
   
 
 
@@ -425,8 +423,10 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 
 
-teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+teacher_pedagogy <- school_dta %>%
+  select(preamble_info, subject_test, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') ) %>%
+  filter(!is.na(subject_test))
+
 
   
 #add weights and anonymize

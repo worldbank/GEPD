@@ -346,7 +346,9 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 ```{r pedg}
 
 
-pedagogy_key <- school_micro %>% 
+pedagogy_key <- school_dta %>%
+  select(preamble_info, subject_test, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') ) %>%
+  filter(!is.na(subject_test)) %>%
   select(school_code, m4saq1_number, m4saq1) %>%
   mutate(m4saq1_number=case_when(
     school_code== 230503216~ 4,
@@ -397,7 +399,7 @@ Grade 2 teacher pedagogy
 
 ```{r pedg2}
 
-teach_labels <- read_csv(paste0(here(),'/Data/Sierra Leone/2022/analysis/Teach_labels.csv' ))
+teach_labels <- read_csv(paste0(here(),'/Countries/Sierra Leone/2022/analysis/Teach_labels.csv' ))
 
 
   
@@ -477,7 +479,8 @@ teacher_pedagogy <- df_add_weights('final_indicator_data_PEDG_g2')
 
 
 #pedagogy_key
-pedagogy_key_g2 <- school_micro %>% 
+pedagogy_key_g2 <- school_dta %>%
+  filter(!is.na(m4saq1_number_g2)) %>%
   select(school_code, m4saq1_number_g2, m4saq1_g2) %>%
   mutate(m4saq1_number_g2=case_when(
     
