@@ -69,9 +69,23 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 currentDate<-c("2023-05-12")
 
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_TCD_sample_', currentDate,  '.csv', sep="")
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_TCD_weights_', currentDate,  '.csv', sep="")
 ) %>%
   filter(!(school_code == 223748 & IDEN == 'N DJAMENA 8')) %>% #drop school with duplicate school_code
+  filter(!(school_code==585 & TELEPHONE_ETABLISSEMENT!="63170595"),
+        !(school_code==773 & TELEPHONE_ETABLISSEMENT!="65941064"),
+       !(school_code==2132 & TELEPHONE_ETABLISSEMENT!="91379418"),
+     !(school_code==5737 & IPEP!='MATADJANA'),
+      !(school_code==5875 & IPEP!='MOUSSORO URBAIN'),
+      !(school_code==6699 & DPEN!='HADJER LAMIS'),
+        !(school_code==6950 & TELEPHONE_ETABLISSEMENT!="66031532/90684733"),
+         !(school_code==7404 & IPEP!='DABANSAKA URBAIN (MASSAGUET)'),
+        !(school_code==12380 & IPEP!='10EME ARROND N DJAMENA A'),
+            !(school_code==220586 & IPEP!='KALAÏT'),
+     !(school_code==221233 & IPEP!='DAGANA URBAIN'),
+     !(school_code==224357 & IPEP!='AM TIMAN URBAIN'), 
+     !(school_code==225988 & IPEP!='5EME ARROND N DJAMENA')
+         ) %>%
   mutate(
          urban_rural=if_else(rural==0, "Urban", "Rural"),
          public=if_else(public==0, "Private", "Public")) %>%
