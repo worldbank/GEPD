@@ -435,9 +435,9 @@ school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
          #enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
-         lat=m1s0q9__latitude,
-         lon=m1s0q9__longitude,
-         school_code=m1s0q2_emis,
+         lat=m1s0q9__Latitude,
+         lon=m1s0q9__Longitude,
+         school_code=as.numeric(m1s0q2_emis),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
   ## Get names and code for all the blank interviews
@@ -2085,7 +2085,7 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(n_mssing_PKNW=n_miss_row(.))  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  %>%
-  mutate(across(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), #convert to binary if data not missing
+  mutate(across(c(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), #convert to binary if data not missing
                 ~if_else(is.na(.),as.numeric(NA),1))) %>%
   left_join(pknw_actual_combined) %>%
   mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%

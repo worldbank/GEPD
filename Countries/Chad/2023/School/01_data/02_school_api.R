@@ -129,7 +129,6 @@ indicator_names <- sapply(indicator_names, tolower)
 #Because we switched versions of our survey in the middle, have to append version 17 databases
 ############################
 
-
 school_dta <- read_dta(file.path(download_folder, "EPDash_cleaned.dta")) %>%
   select(-starts_with("s1_")) %>%
   select(-starts_with("s2_")) 
