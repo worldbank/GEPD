@@ -161,18 +161,18 @@ public_officials_dta <- public_officials_dta %>%
          proportion_producement_political=IDM3q3,
          DEM1q13=as.numeric(DEM1q13)) %>%
   mutate(QB1q2= case_when(
-    between(abs(QB1q2-class_size)/class_size,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-    between(abs(QB1q2-class_size)/class_size,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-    between(abs(QB1q2-class_size)/class_size,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-    between(abs(QB1q2-class_size)/class_size,30,40) ~ 2, #between 30-40% of actual value gets 2 points
-    between(abs(QB1q2-class_size)/class_size,40,100) ~ 1 #between 40-10% of actual value gets 1 points
+    between(abs(QB1q2-class_size)/class_size,0,.10) ~ 5, #between 0-10% of actual value gets 5 points
+    between(abs(QB1q2-class_size)/class_size,.10,.20) ~ 4, #between 10-20% of actual value gets 4 points
+    between(abs(QB1q2-class_size)/class_size,.20,.30) ~ 3, #between 20-30% of actual value gets 3 points
+    between(abs(QB1q2-class_size)/class_size,.30,.40) ~ 2, #between 30-40% of actual value gets 2 points
+    between(abs(QB1q2-class_size)/class_size,.40,1.00) ~ 1 #between 40-10% of actual value gets 1 points
   ),
   QB1q1= case_when(
-    between(abs(QB1q1-absence)/absence,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-    between(abs(QB1q1-absence)/absence,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-    between(abs(QB1q1-absence)/absence,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-    between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
-    between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
+    between(abs(QB1q1-absence)/absence,0,.10) ~ 5, #between 0-10% of actual value gets 5 points
+    between(abs(QB1q1-absence)/absence,.10,.20) ~ 4, #between 10-20% of actual value gets 4 points
+    between(abs(QB1q1-absence)/absence,.20,.30) ~ 3, #between 20-30% of actual value gets 3 points
+    between(abs(QB1q1-absence)/absence,.30,.40) ~ 3, #between 30-40% of actual value gets 3 points
+    between(abs(QB1q1-absence)/absence,.40,1.00) ~ 1 #between 40-10% of actual value gets 1 points
   ),
   QB4q2= case_when(
     QB4q2>=120 ~ 5,
