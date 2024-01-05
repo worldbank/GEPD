@@ -1256,8 +1256,8 @@ final_indicator_data_ATTD_M<- school_data_INPT %>%
 
 final_indicator_data_ATTD_F<- school_data_INPT %>%
   left_join(num_boys) %>%
-  select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
-  mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-m4scq13_girls)) %>%
+  select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, as.numeric(m4scq13_girls) )  %>%
+  mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-as.numeric(m4scq13_girls))) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=if_else(student_attendance<0, 0,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
