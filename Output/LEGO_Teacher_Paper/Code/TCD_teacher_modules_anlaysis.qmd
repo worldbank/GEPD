@@ -192,9 +192,9 @@ school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
          #enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
-         lat=m1s0q9__latitude,
-         lon=m1s0q9__longitude,
-         school_code=m1s0q2_emis,
+         lat=m1s0q9__Latitude,
+         lon=m1s0q9__Longitude,
+         school_code=as.numeric(m1s0q2_emis),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
   ## Get names and code for all the blank interviews
@@ -352,12 +352,12 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 teacher_pedagogy <- school_dta %>%
   filter(!is.na(subject_test)) %>%
-  select(preamble_info, c('m4saq1':'m4scq15_lang')) %>%
+  select(preamble_info, c('m4saq1':'subject_test','s1_0_1_1':'s1_c9_3','s2_0_1_1':'s2_c9_3')) %>%
   mutate(GRADE=4)
 
 teacher_pedagogy_g2 <- school_dta %>%
   filter(!is.na(subject_test)) %>%
-  select(preamble_info, c('m9saq1':'s2_c9_3_g2')  ) %>%
+  select(preamble_info, c('m9saq1':'subject_test_g2','s1_0_1_1_g2':'s1_c9_3_g2','s2_0_1_1_g2':'s2_c9_3_g2')  ) %>%
   rename_at(vars(ends_with('_g2')), ~str_remove_all(.,"_g2")) %>%
   rename(m4saq1=m9saq1,
          m4saq1_number=m9saq1_number) %>%
