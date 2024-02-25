@@ -59,10 +59,10 @@ api_template <- api_template_fun()
 # Example:
 
 #specify path to data
-if(Sys.info()["user"] == "wb469649"){
+if(Sys.info()["user"] == "WB469649"){
   
-data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
-data_dir_2021 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
+data_dir_2020 <- "C:/Users/WB469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
+data_dir_2021 <- "C:/Users/WB469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
 
 }
 if(Sys.info()["user"] == "wb577189"){

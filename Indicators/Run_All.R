@@ -14,4 +14,6 @@ files <- list.files(pattern = "indicator_api_final")
 #run all files
 for (i in files) {
   source(i, local=TRUE, echo=TRUE)
+  rm()
+  
 }

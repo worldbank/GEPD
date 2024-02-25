@@ -98,7 +98,8 @@ indicator_stats <- function(name, indicator, dataset, tag,  unit) {
     as_survey_design(strata=strata,
                      weight=ipw) %>%
     ungroup() %>%
-    summarise(mean=survey_mean(value, na.rm=T, vartype=c('se', 'ci','var'))) %>%
+    summarise(mean=survey_mean(value, na.rm=T, vartype=c('se', 'ci','var')),
+              N=sum(!is.na(value))) %>%
     as_tibble() %>%
     mutate(Series=name) %>%
     select(Series, everything())

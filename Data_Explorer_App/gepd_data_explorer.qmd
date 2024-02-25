@@ -1,0 +1,361 @@
+---
+title: "GEDP Data Explorer"
+format: dashboard
+server: shiny
+---
+
+
+
+```{r}
+#| context: setup
+library(ggplot2)
+library(shiny)
+library(skimr)
+library(flextable)
+library(haven)
+library(tidyverse)
+library(Hmisc)
+library(modelsummary)
+library(glmnet)
+library(ggpubr)
+#set max upload size to 30MB
+options(shiny.maxRequestSize = 30*1024^2)
+
+#indicator descriptions
+  
+    ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient','student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
+                'student_attendance',
+                'presence_rate',  'absence_rate', 'sch_absence_rate', 
+                'content_proficiency', 'literacy_content_proficiency', 'math_content_proficiency', 'content_proficiency_70', 'content_proficiency_75', 'content_knowledge', 'math_content_knowledge', 'literacy_content_knowledge', 'grammar', 'cloze',  'read_passage', 'arithmetic_number_relations', 'geometry', 'interpret_data',
+                'teach_score','classroom_culture','instruction','socio_emotional_skills',
+                'teach_prof','classroom_culture_prof','instruction_prof','socio_emotional_skills_prof', 'timeontask1',
+                'ecd_student_knowledge', 'ecd_math_student_knowledge', 'ecd_literacy_student_knowledge', 'ecd_exec_student_knowledge', 'ecd_soc_student_knowledge',
+                'ecd_student_proficiency', 'ecd_math_student_proficiency', 'ecd_literacy_student_proficiency', 'ecd_exec_student_proficiency', 'ecd_soc_student_proficiency',
+                'inputs', 'blackboard_functional', 'pens_etc','textbooks', 'share_desk', 'used_ict', 'access_ict',
+                'infrastructure','drinking_water', 'functioning_toilet', 'internet', 'class_electricity','disability_accessibility',
+                'operational_management', 'vignette_1',  'vignette_2', 
+                'intrinsic_motivation', 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                'instructional_leadership', 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                'principal_knowledge_score', 'add_triple_digit_pknw', 'multiply_double_digit_pknw', 'complete_sentence_pknw', 'experience_pknw', 'textbooks_pknw', 'blackboard_pknw',
+                'principal_management', 'sch_goals_exist','sch_goals_clear','sch_goals_relevant','sch_goals_measured',
+                'teacher_attraction', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                'teacher_selection_deployment', 'teacher_selection','teacher_deployment',
+                'teacher_support', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                'teaching_evaluation', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                'teacher_monitoring','attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                'standards_monitoring',
+                'sch_monitoring', 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                'sch_management_clarity', 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                'sch_management_attraction', 'principal_satisfaction', 'principal_salary',
+                'sch_selection_deployment', 
+                'sch_support', 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                'principal_evaluation', 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                'national_learning_goals', 'targeting', 'monitoring', 'incentives', 'community_engagement',
+                'mandates_accountability' , 'coherence', 'transparency', 'accountability', 
+                'quality_bureaucracy', 'knowledge_skills', 'work_environment', 'merit', 'motivation_attitudes','motivation_relative_start',
+                'impartial_decision_making','politicized_personnel_management', 'politicized_policy_making', 'politicized_policy_implementation', 'employee_unions_as_facilitators'
+    )
+    
+    indicator_labels<-c("4th Grade Student Knowledge", "4th Grade Math Knowledge", "4th Grade Literacy Knowledge", "4th Grade Student Proficiency", "4th Grade Student Proficiency - No Lonely Giraffe","4th Grade Student Proficiency Literacy - No Lonely Giraffe", "4th Grade Student Proficiency Literacy", "4th Grade Student Proficiency Math","4th Grade Student Proficiency at 70% threshold",  "4th Grade Student Proficiency at 75% threshold",
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", "Teacher Classroom Absence Rate", "Teacher School Absence Rate", 
+                        "Teacher Content Proficiency", "Teacher Content Proficiency Literacy", "Teacher Content Proficiency Math", "Teacher Content Proficiency at 70% threshold", "Teacher Content Proficiency at 75% threshold", "Teacher Content Knowledge", "Teacher Math Content Knowledge", "Teacher Literacy Content Knowledge", 'Grammar', 'Cloze Task',  'Read Passage', 'Arithmetic & Number Relations', 'Geometry', 'Interpret Data',
+                        'Teacher Pedagogical Score','TEACH classroom culture score',' TEACH instruction score','TEACH socio-emotional score',
+                        'Teacher Pedagogical Skills','TEACH classroom culture Skills',' TEACH instruction Skills','TEACH socio-emotional skills', 'Teacher Fraction of Segments Where teacher provides learning activity',
+                        "1st Grade Assessment Score", "1st Grade Numeracy Score", "1st Grade Literacy Score", "1st Grade Executive Functioning Score", "1st Grade Socio-Emotional Score",
+                        "1st Grade Assessment Proficiency", "1st Grade Numeracy Proficiency", "1st Grade Literacy Proficiency", "1st Grade Executive Functioning Proficiency", "1st Grade Socio-Emotional Proficiency",
+                        "Inputs", "Functioning Blackboard", "Classroom Materials", "Textbooks", "Desks", "ICT Usage", "ICT Access",
+                        "Infrastructure", "Clean Drinking Water", "Functioning Toilets", "Internet", "Electricity", "Disability Accessibility", 
+                        "Operational Management", "Operational Management - Vignette 1",  "Operational Management - Vignette 2",
+                        "Teacher Intrinsic Motivation", 'acceptable_absent', 'students_deserve_attention', 'growth_mindset', 'motivation_teaching',
+                        "Instructional Leadership", 'classroom_observed', 'classroom_observed_recent', 'discussed_observation', 'feedback_observation', 'lesson_plan_w_feedback',
+                        'Principal Knowledge of School', 'Correct on # of Teachers correct on Triple Digit Addition', 'Correct on # of Teachers correct on Double Digit Multiplication', 'Correct on # of Teachers correct on Completing Sentence Question', 'Correct on # of Teachers Under 3 Years Experience', 'Correct on # of Students with Textbooks ', 'Correct on Functional Blackboard',
+                        'Principal Management Skills', 'school_goals_exist','school_goals_clear','school_goals_relevant','school_goals_measured',
+                        'Teacher Attraction (De Facto)', 'teacher_satisfied_job', 'teacher_satisfied_status', 'better_teachers_promoted' ,'teacher_bonus', 'salary_delays',
+                        'Teacher Selection & Deployment (De Facto)', 'teacher_selection','teacher_deployment',
+                        'Teacher Support (De Facto)', 'pre_service','practicum','in_service','opportunities_teachers_share',
+                        'Teacher Evaluation (De Facto)', 'formally_evaluated', 'evaluation_content', 'negative_consequences','positive_consequences',
+                        'Teacher Monitoring & Accountability (De Facto)', 'attendance_evaluated' , 'attendance_rewarded' , 'attendence_sanctions', 'miss_class_admin',
+                        'Inputs and Infrastructure Standards',
+                        "Inputs and Infrastructure Monitoring", 'monitoring_inputs','monitoring_infrastructure','parents_involved',
+                        "School Management Clarity of Functions", 'infrastructure_scfn','materials_scfn','hiring_scfn', 'supervision_scfn', 'student_scfn' , 'principal_hiring_scfn', 'principal_supervision_scfn',
+                        "School Management Attraction", 'principal_satisfaction', 'principal_salary',
+                        "School Management Selection & Deployment",
+                        "School Management Support", 'prinicipal_trained','principal_training','principal_used_skills','principal_offered',
+                        "School Management Evaluation", 'principal_formally_evaluated','principal_evaluation_multiple','principal_negative_consequences','principal_positive_consequences',
+                        "National Learning Goals", 'Targeting', 'Monitorinig', 'Incentives', 'Community Engagement',
+                        "Mandates and Accountability", 'Coherence', 'Transparency', 'Accountability of Public Officials',
+                        "Characteristics of Bureaucracy", 'Knowledge and Skills', 'Work Environment', 'Merit', 'Motivation and Attitudes', 'motivation_relative_start',
+                        "Impartial Decision Making", 'Politicized personnel management', 'Politicized policy-making', 'Politicized policy-implementation', 'Employee unions as facilitators'
+                        )
+  
+    #create subset with just main indicators
+    main_indicator_labels<-c("4th Grade Student Proficiency", 
+                        "Student Attendance Rate",
+                        "Teacher Classroom Presence Rate", 
+                        "Teacher Content Proficiency", 
+                        'Teacher Pedagogical Skills',
+                        "1st Grade Assessment Proficiency", 
+                        "Inputs", 
+                        "Infrastructure", 
+                        "Operational Management", 
+                        "Teacher Intrinsic Motivation", 
+                        "Instructional Leadership", 
+                        'Principal Knowledge of School',
+                        'Principal Management Skills', 
+                        'Teacher Attraction (De Facto)',
+                        'Teacher Selection & Deployment (De Facto)',
+                        'Teacher Support (De Facto)', 
+                        'Teacher Evaluation (De Facto)', 
+                        'Teacher Monitoring & Accountability (De Facto)', 
+                        "Inputs and Infrastructure Standards", 
+                        "Inputs and Infrastructure Monitoring", 
+                        "School Management Clarity of Functions", 
+                        "School Management Attraction", 
+                        "School Management Selection & Deployment",
+                        "School Management Support", 
+                        "School Management Evaluation",
+                         "National Learning Goals",
+                         "Mandates and Accountability",
+                         "Characteristics of Bureaucracy",
+                         "Impartial Decision Making"
+    )  
+    
+    indicators_list<-c('student_proficient',
+                       'student_attendance', 
+                       'presence_rate',
+                       'content_proficiency', 
+                       'teach_prof',
+                       'ecd_student_proficiency', 
+                       'inputs', 
+                       'infrastructure',
+                       'operational_management', 
+                       'instructional_leadership',
+                       'principal_knowledge_score',
+                       'principal_management', 
+                       'teacher_attraction', 
+                       'teacher_selection_deployment', 
+                       'teacher_support', 
+                       'teaching_evaluation', 
+                       'teacher_monitoring',
+                       'intrinsic_motivation', 
+                       'standards_monitoring',
+                       'sch_monitoring', 
+                       'sch_management_clarity',
+                       'sch_management_attraction', 
+                       'sch_selection_deployment', 
+                       'sch_support',
+                       'principal_evaluation',
+                        'national_learning_goals',
+                        'mandates_accountability',
+                        'quality_bureaucracy',
+                        'impartial_decision_making'
+    )
+    
+
+```
+
+# {.sidebar}
+
+Please locate the school, teacher, 1st grade, and 4th grade Stata files to upload. 
+
+
+```{r}
+#upload school file
+fileInput("school", "Upload School File",
+                multiple = TRUE,
+                accept = c("text/csv",
+                          "text/comma-separated-values,text/plain",
+                          ".csv",
+                          ".dta"))
+```
+
+```{r}
+#upload teacher file
+fileInput("teacher", "Upload Teacher File",
+                multiple = TRUE,
+                accept = c("text/csv",
+                          "text/comma-separated-values,text/plain",
+                          ".csv",
+                          ".dta"))
+```
+
+```{r}
+#upload 1st grade file
+fileInput("first_grade", "Upload 1st Grade File",
+                multiple = TRUE,
+                accept = c("text/csv",
+                          "text/comma-separated-values,text/plain",
+                          ".csv",
+                          ".dta"))
+```
+
+```{r}
+#upload 4th grade file
+fileInput("fourth_grade", "Upload 4th Grade File",
+                multiple = TRUE,
+                accept = c("text/csv",
+                          "text/comma-separated-values,text/plain",
+                          ".csv",
+                          ".dta"))
+```
+
+
+
+
+
+# Regression Model
+
+```{r}
+#output the model
+uiOutput('model')
+```
+
+# Scatterplot
+
+```{r}
+# select y variable from indicator_labels
+selectInput("y", "Y-axis", choices = indicator_labels, selected = "4th Grade Student Knowledge")
+
+#select x variable from indicator_labels
+selectInput("x", "X-axis", choices = indicator_labels, selected = "Teacher Pedagogical Score")
+
+#plot output
+plotOutput("scatterplot")
+```
+
+
+
+
+
+```{r}
+#| context: server
+
+#read in the school, teacher, 1st grade and 4th grade files
+school_dta <- reactive({
+  req(input$school)
+  temp <- read_dta(input$school$datapath)   
+       #keep just columns from ind_list
+ 
+  subset(temp, select = intersect(c('school_code', ind_list), colnames(temp)))
+
+
+  
+})
+
+teachers_dta <- reactive({
+  req(input$teacher)
+  temp <-  read_dta(input$teacher$datapath) 
+      #keep just columns from ind_list
+
+    subset(temp, select = intersect(c('school_code', ind_list), colnames(temp)))
+
+
+})
+
+first_grade <- reactive({
+  req(input$first_grade)
+  temp <- read_dta(input$first_grade$datapath) 
+      #keep just columns from ind_list
+
+    subset(temp, select = intersect(c('school_code', ind_list), colnames(temp)))
+
+
+})
+
+fourth_grade <- reactive({
+  req(input$fourth_grade)
+  temp <-  read_dta(input$fourth_grade$datapath) 
+      #keep just columns from ind_list
+
+    subset(temp, select = intersect(c('school_code', ind_list), colnames(temp)))
+
+
+})
+
+#collapse the teachers data to school level
+teachers_dta_collapsed <- reactive({
+
+  
+  teachers_dta() %>%
+    group_by(school_code)  %>%
+    #summarise across numeric variables
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+})
+
+#collapse the 1st grade data to school level
+first_grade_collapsed <- reactive({
+
+  
+  first_grade() %>%
+    group_by(school_code) %>%
+    #summarise across numeric variables
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+})
+
+#collapse the 4th grade data to school level
+fourth_grade_collapsed <- reactive({
+
+  
+  fourth_grade() %>%
+    group_by(school_code) %>%
+    #summarise across numeric variables
+    summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+})
+
+#merge the school, teacher, 1st grade and 4th grade data
+merged_data <- reactive({
+
+  left_join(school_dta(), teachers_dta_collapsed(), by = 'school_code') %>%
+    left_join(first_grade_collapsed(), by = 'school_code') %>%
+    left_join(fourth_grade_collapsed(), by = 'school_code')
+
+})
+
+# regression model
+model <- reactive({
+  lm(student_knowledge ~ student_attendance + presence_rate + content_knowledge + teach_score + ecd_student_proficiency + inputs + infrastructure + operational_management + instructional_leadership + principal_knowledge_score + principal_management + teacher_attraction + teacher_selection_deployment + teacher_support + teaching_evaluation + teacher_monitoring + intrinsic_motivation + standards_monitoring + sch_monitoring + sch_management_clarity + sch_management_attraction + sch_selection_deployment + sch_support + principal_evaluation , data = merged_data())
+})
+
+# output the model using modelsummary
+output$model <- renderUI({
+  modelsummary(model(),
+               estimate= "{estimate}{stars}",
+               notes="
+              ***=0.001 level
+              **=0.01 level
+              *=0.05 level
+              +=0.1 level",
+             #gof_map = gm,
+             escape = FALSE,
+             fmt = 2,
+               output='flextable',
+             title = 'OLS Regression of 4th Grade Student Knowledge on other indicators.') %>%
+      autofit() %>%
+      htmltools_value()
+})
+
+# scatterplot
+output$scatterplot <- renderPlot({
+  
+  #match index of input$x with indicator_list
+  x <- ind_list[match(input$x, indicator_labels)]
+  
+  y <- ind_list[match(input$y, indicator_labels)]
+  
+  ggplot(merged_data(), aes_string(x = x, y = y)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE) +
+    labs(title = "Scatterplot", x = input$x, y = input$y) +
+    theme_bw() +
+  stat_cor(label.y=5.0) +
+  stat_regline_equation(label.y=1.0)
+    #add Rsq to plot
+    
+})
+
+
+```

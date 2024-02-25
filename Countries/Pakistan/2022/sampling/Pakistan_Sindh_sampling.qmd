@@ -238,7 +238,7 @@ sample_chosen <- sample_df_200 %>%
 
 write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_Sindh_sample_200_",Sys.Date(),".csv"))
 
-weights_df_200 <- df_updated %>%
+weights_df_200 <- df_updated_gepd %>%
   left_join(strata_df_200) %>%
   ungroup() %>%
   mutate(
@@ -253,7 +253,9 @@ weights_df_200 <- df_updated %>%
          ipw=strata_school_prob*(1/strata_prob))
 
 
-write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Sindh_weights_200_",Sys.Date(),".csv"))
+write_excel_csv(weights_df_200 %>% 
+                  select(semis_code, school_name, district, taluka, location, shift, `School Level`, strata_prob, ipw)
+                  , file=paste0(sampling_folder, "/GEPD_Sindh_weights_200_",Sys.Date(),".csv"))
 
 ```
 
