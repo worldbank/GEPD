@@ -16,6 +16,8 @@ library(here)
 library(readxl)
 library(flextable) 
 library(leaflet)
+library(srvyr)
+
 #Country name
 country <-'PAK'
 country_name <- "Pakistan"
@@ -158,6 +160,88 @@ df_raw %>%
 
 ```
 
+### Original Sampling Frame
+
+Below are statistics of the original sampling frame.
+
+
+```{r}
+#| label: tbl_sumstats
+#| tbl-cap: Summary Statistics the Raw Sampling Frame
+
+#create list of indicators for 
+std_border = officer::fp_border(color="black", width = 1)
+
+#create a function to create standardized tables
+tab_fun <- function(data) {
+  
+  data <- get(data)
+  #region
+  region_tab <- data %>%
+    group_by(District) %>%
+    summarise(N=n(),
+              total_enrollment=sum(total_enrollment),
+              class_4=sum(class_4, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*total_enrollment/sum(total_enrollment),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="total_enrollment",
+      `Total 4th Grade Student Count`="class_4"
+    )
+  
+  #urban_rural
+  urban_tab <- data %>%
+    group_by(Location) %>%
+    summarise(N=n(),
+              student_count=sum(total_enrollment),
+              class_4=sum(class_4, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="student_count",
+      `Total 4th Grade Student Count`="class_4")
+  
+  #ownership
+  owner_tab <- data %>%
+    group_by(SchoolType) %>%
+    summarise(N=n(),
+              student_count=sum(total_enrollment),
+              class_4=sum(class_4, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="student_count",
+      `Total 4th Grade Student Count`="class_4") %>%
+    janitor::adorn_totals("row")
+  
+  
+  #combine all the tables into one
+  total_tab <- bind_rows(
+    #region_tab %>% rename(`Sub-group`=District) %>% mutate(group="District"),
+    urban_tab %>% rename(`Sub-group`=Location) %>% mutate(group="Urban/Rural")
+    #owner_tab %>% rename(`Sub-group`=SchoolType) %>% mutate(group="School Ownership")
+    )
+  
+  total_tab %>%
+    as_grouped_data(, group='group') %>%
+    as_flextable(hide_grouplabel=TRUE) %>%
+    theme_booktabs() %>%
+    align(i = ~ !is.na(group), align = "center") %>%
+    #bold and increase font size for group
+    bold(i = ~ !is.na(group)) %>%
+    fontsize(i = ~ !is.na(group), size = 12) %>%
+    autofit() 
+}
+
+tab_fun('df_raw')
+```
+
 ```{r}
 
 df_updated_gepd <- df_raw %>%
@@ -170,7 +254,8 @@ df_updated_gepd_nmd <- df_raw %>%
   filter(!(District %in% NDM_list))
 
 
-df_updated <- df_raw %>%
+df_updated <- df_raw  %>%
+  filter(!(District %in% NDM_list)) %>%
   filter(class_prep>=3,
          class_1>=3,
          class_4>=3,
@@ -190,9 +275,22 @@ df_updated_gepd %>%
   mutate(share=students/total_students_g4)
 ```
 
-<!-- Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible. -->
+ Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd_nmd)` schools eligible. 
 
-<!-- However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(class_prep<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(class_5<3))` because of the grade 5 restriction. -->
+However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd_nmd %>% filter(class_prep<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd_nmd %>% filter(class_5<3))` because of the grade 5 restriction.
+
+```{r}
+#| label: tbl_gepd_updated_set
+#| tbl-cap: Summary Statistics in the Updated Sampling Frame
+#| echo: true
+
+
+tab_fun('df_updated_gepd_nmd')
+```
+
+
+
+
 
 
 ```{r eval=FALSE, include=FALSE}
@@ -283,6 +381,7 @@ sample_df_200 <- df_updated_gepd_nmd %>%
          ipw=strata_school_prob*(1/strata_prob))
 
 
+  
 write_excel_csv(sample_df_200, file=paste0(sampling_folder, "/GEPD_KP_sample_200_",Sys.Date(),".csv"))
 
 weights_df_200 <- df_updated_gepd_nmd %>%
@@ -321,6 +420,104 @@ leaflet(data=sample_df_200) %>%
                                   "Tehsil: ", sample_df_200$District, " <br>",
                                   "EMIS: ", sample_df_200$EmisCode)) %>%
   addLegend(position="bottomright", pal=pal, values=~sample_df_200$Gender, title="Schools to visit")
+```
+
+
+In what is next, we produce a table of summary statistics using the sampling weights to see if we can match the original sampling frame. Overall, the statistics produced using the sample weights are similar to the original sampling frame.
+
+```{r}
+#| label: tbl_sample
+#| tbl-cap: Weighted Summary Statistics of Sampled Schools to Match to Original Sampling Frame
+
+#regions
+region_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('Gender', 'Location'),
+                   weight=school_weight)  %>%
+  group_by(District) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment),
+            g4_student_count=survey_total(class_4, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(District=District)
+
+#urban/rural
+urban_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('Gender', 'Location'),
+                   weight=school_weight)  %>%
+  group_by(Location) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment),
+            g4_student_count=survey_total(class_4, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(`Urban/Rural`=Location)
+
+#ownership
+owner_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('Gender', 'Location'),
+                   weight=school_weight)  %>%
+  group_by(SchoolType) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment),
+            g4_student_count=survey_total(class_4, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  #round to nearest 1 decimal place
+  janitor::adorn_totals("row")    %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(`School Ownership`=SchoolType)
+
+
+#combine all the tables into one
+total_tab <- bind_rows(
+  #region_tab_sample %>% rename(`Sub-group`="District") %>% mutate(group="District"),
+  urban_tab_sample %>% rename(`Sub-group`="Urban/Rural") %>% mutate(group="Urban/Rural")
+  #owner_tab_sample %>% rename(`Sub-group`="School Ownership") %>% mutate(group="School Ownership")
+  )
+
+total_tab %>%
+  as_grouped_data(, group='group') %>%
+  as_flextable(hide_grouplabel=TRUE) %>%
+  theme_booktabs() %>%
+  align(i = ~ !is.na(group), align = "center") %>%
+  #bold and increase font size for group
+  bold(i = ~ !is.na(group)) %>%
+  fontsize(i = ~ !is.na(group), size = 12) %>%
+  autofit() 
+
 ```
 
 ## 175 schools
@@ -450,3 +647,5 @@ write_excel_csv(sample_replace, paste(sampling_folder, '/sample_replacement_scho
 
 
 ```
+
+

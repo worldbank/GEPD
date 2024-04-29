@@ -41,12 +41,12 @@ set.seed(8473227)
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/")
-  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/sampling", sep="/"))
   
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
 
   project_folder  <- paste0("C:/Users/",str_to_lower(Sys.getenv("USERNAME")),"/OneDrive - WBG/GEPD/CNT/")
-  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/Sampling", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data",province,"/sampling", sep="/"))
   
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -186,6 +186,85 @@ df_updated %>%
 
 ```
 
+### Original Sampling Frame
+
+Below are statistics of the original sampling frame.
+
+
+```{r}
+#| label: tbl_sumstats
+#| tbl-cap: Summary Statistics the Raw Sampling Frame
+
+#create list of indicators for 
+std_border = officer::fp_border(color="black", width = 1)
+
+#create a function to create standardized tables
+tab_fun <- function(data) {
+  
+  data <- get(data)
+  #region
+  region_tab <- data %>%
+    group_by(csl_district) %>%
+    summarise(N=n(),
+              total_enrollment=sum(total_enrollment, na.rm=TRUE),
+              class_4=sum(total_4th_enrollment, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*total_enrollment/sum(total_enrollment),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="total_enrollment",
+      `Total 4th Grade Student Count`="class_4"
+    )
+  
+  #urban_rural
+  urban_tab <- data %>%
+    group_by(csl_area) %>%
+    summarise(N=n(),
+              student_count=sum(total_enrollment, na.rm=TRUE),
+              class_4=sum(total_4th_enrollment, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="student_count",
+      `Total 4th Grade Student Count`="class_4")
+  
+
+  
+  
+  #combine all the tables into one
+  total_tab <- bind_rows(
+    #region_tab %>% rename(`Sub-group`=csl_district) %>% mutate(group="District"),
+    urban_tab %>% rename(`Sub-group`=csl_area) %>% mutate(group="Urban/Rural")
+    )
+  
+  total_tab %>%
+    as_grouped_data(, group='group') %>%
+    as_flextable(hide_grouplabel=TRUE) %>%
+    theme_booktabs() %>%
+    align(i = ~ !is.na(group), align = "center") %>%
+    #bold and increase font size for group
+    bold(i = ~ !is.na(group)) %>%
+    fontsize(i = ~ !is.na(group), size = 12) %>%
+    autofit() 
+}
+
+tab_fun('df_raw')
+```
+
+
+Next are statistics for the frame excluding schools that don't meet GEPD requirements.
+
+```{r}
+#| label: tbl_gepd_updated_set
+#| tbl-cap: Summary Statistics in the Updated Sampling Frame
+#| echo: true
+
+
+tab_fun('df_updated')
+```
 # Sampling
 
 ```{r eval=FALSE, include=FALSE}
@@ -202,12 +281,37 @@ strata_df_200 <- df_updated %>%
 write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_strata_200_",Sys.Date(),".csv"))
 ```
 
+```{r}
+sample_df_200 <- df_updated %>%
+  mutate(saber_sampled=if_else(is.na(saber_sampled),"Not SABER",saber_sampled)) %>%
+  left_join(strata_df_200) %>%
+  mutate(sample_size=if_else(is.na(sample_size),0,sample_size)) %>%
+  ungroup() %>%
+  mutate(
+    totalstudents=sum(total_4th_enrollment),
+  ) %>%
+  group_by(csl_district, csl_area,saber_sampled) %>%
+  mutate(
+         strata_count=n(),
+         strata_size=sum(total_4th_enrollment),
+         strata_school_prob=strata_size/totalstudents) %>%
+  sample_n(size = min(sample_size), weight= total_4th_enrollment) %>%
+  ungroup() %>%
+  mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
+         ipw=strata_school_prob*(1/strata_prob),
+         strata=paste(csl_district,csl_area, saber_sampled, sep=" - "))
+
+```
 
 ```{r large, echo=TRUE}
 
 
 # set the numbers of schools selected by strata (grade)
-strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Punjab_final_strata_200_2023-10-02.csv"))
+strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Punjab_final_strata_200_2023-10-02.csv")) %>%
+  group_by(csl_area) %>%
+  mutate(sample_size_tot=sum(sample_size)) %>%
+  ungroup()
+#strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Punjab_strata_200_",Sys.Date(),".csv"))
 
 
 sample_df_200 <- df_updated %>%
@@ -218,13 +322,15 @@ sample_df_200 <- df_updated %>%
   mutate(
     totalstudents=sum(total_4th_enrollment),
   ) %>%
-  group_by(csl_district,csl_area, saber_sampled) %>%
-  mutate(strata_count=n(),
+  group_by(csl_area) %>%
+  mutate(
+         strata_count=n(),
          strata_size=sum(total_4th_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
+  group_by(csl_district,csl_area,saber_sampled) %>%
   sample_n(size = min(sample_size), weight= total_4th_enrollment) %>%
   ungroup() %>%
-  mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
+  mutate(strata_prob=(sample_size_tot)*(total_4th_enrollment/strata_size),
          ipw=strata_school_prob*(1/strata_prob),
          strata=paste(csl_district,csl_area, saber_sampled, sep=" - "))
 
@@ -240,20 +346,94 @@ weights_df_200 <- df_updated %>%
   mutate(
     totalstudents=sum(total_4th_enrollment),
   ) %>%
-  group_by(csl_district,csl_area, saber_sampled) %>%
-  mutate(strata_count=n(),
+  group_by(csl_area) %>%
+  mutate(
+         strata_count=n(),
          strata_size=sum(total_4th_enrollment),
          strata_school_prob=strata_size/totalstudents) %>%
-
-  mutate(strata_prob=(sample_size)*(total_4th_enrollment/strata_size),
+  ungroup() %>%
+  mutate(strata_prob=(sample_size_tot)*(total_4th_enrollment/strata_size),
          ipw=strata_school_prob*(1/strata_prob),
          strata=paste(csl_district,csl_area, saber_sampled, sep=" - "))
+
+  
 
 
 write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Punjab_weights_200_",Sys.Date(),".csv"))
 
 ```
 
+
+In what is next, we produce a table of summary statistics using the sampling weights to see if we can match the original sampling frame. Overall, the statistics produced using the sample weights are similar to the original sampling frame.
+
+```{r}
+#| label: tbl_sample
+#| tbl-cap: Weighted Summary Statistics of Sampled Schools to Match to Original Sampling Frame
+
+#regions
+region_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('strata'),
+                   weight=school_weight)  %>%
+  group_by(csl_district) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment, na.rm=TRUE),
+            g4_student_count=survey_total(total_4th_enrollment, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(District=csl_district)
+
+#urban/rural
+urban_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('strata'),
+                   weight=school_weight)  %>%
+  group_by(csl_area) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment, na.rm=TRUE),
+            g4_student_count=survey_total(total_4th_enrollment, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(`Urban/Rural`=csl_area)
+
+
+#combine all the tables into one
+total_tab <- bind_rows(
+  #region_tab_sample %>% rename(`Sub-group`="District") %>% mutate(group="District"),
+  urban_tab_sample %>% rename(`Sub-group`="Urban/Rural") %>% mutate(group="Urban/Rural")
+  )
+
+total_tab %>%
+  as_grouped_data(, group='group') %>%
+  as_flextable(hide_grouplabel=TRUE) %>%
+  theme_booktabs() %>%
+  align(i = ~ !is.na(group), align = "center") %>%
+  #bold and increase font size for group
+  bold(i = ~ !is.na(group)) %>%
+  fontsize(i = ~ !is.na(group), size = 12) %>%
+  autofit() 
+
+```
 
 # Replacement Schools
 
