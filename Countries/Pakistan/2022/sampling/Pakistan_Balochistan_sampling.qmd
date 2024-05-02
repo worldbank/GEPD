@@ -472,9 +472,9 @@ sample_replace$replaced_District=sample_replace2$District
 
 
 
-sample_replace %>%
-  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
-  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+# sample_replace %>%
+#   select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+#   DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
 
 sample_replace <- sample_replace %>%
   select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
