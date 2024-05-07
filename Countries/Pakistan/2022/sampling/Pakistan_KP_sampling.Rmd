@@ -2,7 +2,7 @@
 title: "Pakistan (KP) Sampling"
 author: "Brian Stacy"
 date: "7/11/2022"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -503,7 +503,26 @@ total_tab %>%
 ```
 
 
+Table. Number of Schools Selected in the Sample by District
 
+```{r}
+#| label: tbl_sample_district
+
+#number of schools by district in a flextabe
+sample_df_200 %>%
+  group_by(District) %>%
+  summarise(n=n(),
+            total_enrollment=sum(total_enrollment),
+            class_4=sum(class_4, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(share=total_enrollment/sum(total_enrollment)) %>%
+  flextable() %>%
+  add_header_lines('Number of Schools by District') %>%
+  autofit()
+
+
+
+```
 
 # Replacement Schools
 

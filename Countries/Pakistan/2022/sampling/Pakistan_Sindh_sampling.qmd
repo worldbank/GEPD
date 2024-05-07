@@ -3,7 +3,7 @@ title: "Pakistan (Sindh) Sampling"
 author: "Brian Stacy"
 date: "7/5/2023"
 format:
-  html: 
+  docx: 
       embed-resources: true
 execute: 
   echo: false
@@ -454,6 +454,26 @@ sample_df_200 %>%
 
 
 ```
+
+Table. Number of Schools Selected in the Sample by District
+
+```{r}
+#| label: tbl_sample_district
+#| tbl-cap: Number of Schools Selected in the Sample by District
+#number of schools by district in a flextabe
+sample_df_200 %>%
+  group_by(district) %>%
+  summarise(n=n()) %>%
+  rename(
+    `Number of Schools`="n"
+  ) %>%
+  flextable() %>%
+  add_header_lines("Number of Schools Selected in the Sample by District") %>%
+  autofit()
+
+
+```
+
 # Replacement Schools
 
 Below is a list of replacement schools for each sampled school. Replacement schools were randomly selected among the set of schools in the district, not including the orginally sampled schools. Each row contains the school name, location, and other information for each replacement school.  In the final 5 columns of the database is the school code, school name, region, and district of the originally sampled school for which this school serves as a replacement. 

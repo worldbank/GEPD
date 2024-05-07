@@ -3,7 +3,7 @@ title: "Pakistan (Balochistan) Sampling"
 author: "Brian Stacy"
 date: "7/5/2023"
 format:
-  html: 
+  docx: 
       embed-resources: true
 execute: 
   echo: false
@@ -421,6 +421,26 @@ sample_df_200 %>%
   autofit()
 
 
+
+
+```
+
+Table. Number of Schools Selected in the Sample by District
+
+```{r}
+#| label: tbl_sample_district
+#| tbl-cap: Number of Schools by District in the Sample
+
+#number of schools by district in a flextabe
+sample_df_200 %>%
+  group_by(District) %>%
+  summarise(n=n()) %>%
+  rename(
+    `Number of Schools`="n"
+  ) %>%
+  flextable() %>%
+  add_header_lines('Number of Schools by District') %>%
+  autofit()
 
 
 ```

@@ -2,7 +2,7 @@
 title: "Pakistan (Punjab) Sampling"
 author: "Brian Stacy"
 date: "`r Sys.Date()`"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -412,6 +412,26 @@ total_tab %>%
   bold(i = ~ !is.na(group)) %>%
   fontsize(i = ~ !is.na(group), size = 12) %>%
   autofit() 
+
+```
+
+
+Table. Number of Schools Selected in the Sample by District
+
+```{r}
+#| label: tbl_sample_district
+
+#number of schools by district in a flextabe
+sample_df_200 %>%
+  group_by(csl_district) %>%
+  summarise(N=n()) %>%
+  rename(
+    District=csl_district,
+    `Number of Schools`=N
+  ) %>%
+  flextable() %>%
+  add_header_lines('Number of Schools by District') %>%
+  autofit()
 
 ```
 
