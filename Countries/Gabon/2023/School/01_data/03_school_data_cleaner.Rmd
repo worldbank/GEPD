@@ -47,18 +47,9 @@ need_api=1
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data_2024/", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-
-}else if (Sys.getenv("USERNAME") == "wb577189"){
-  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
-  
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
-
 
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
@@ -445,17 +436,7 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-## Adding the urban/rural variables
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentDate,  '.csv', sep="")
-) %>%
-  mutate(school_code_bis=Code_Etablissement,
-         school_name_preload=`Nom Officiel de l'Etablissement`,
-         urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
-         public=if_else(private==1, "Private", "Public")) %>% 
-  select(ipw:public) %>% 
-  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
-         school_name_preload = str_squish(school_name_preload),
-         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT"))
+
 
 
 ##School
@@ -468,89 +449,17 @@ school_dta<- school_dta %>%
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_emis_preload=if_else(school_name_preload=='ECOLE PUBLIQUE RURALE ASSOK MEDZENG' ,'0901103006X507',school_emis_preload),
+         
          #temp_school_code=if_else(!is.na(school_emis_preload),as.character(school_emis_preload), as.character(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
-  
-  mutate(school_name_preload = case_when(
-    
-    interview__key == "06-80-44-02" ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LE CEP",
-    interview__key=="47-94-03-65" ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LE CEP",
-    TRUE ~ school_name_preload
-
-  )) %>% 
-  
-  ## Create new temp code that combined the EMIS code and the name
-  mutate(temp_school_code = paste(school_name_preload, "_", school_emis_preload)) %>% 
-  
-  # ## Get names and code for all the blank interviews
-  # mutate(
-  #   
-  #   temp_school_code= if_else(school_info_correct==1, as.character(temp_school_code), as.character(m1s0q2_emis)),
-  #   school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name)),
-  #   #fix some school names
-  #   school_name_preload= str_remove_all(school_name_preload, '^"|"$'),
-  #   school_name_preload= gsub('""', '"', school_name_preload),
-  #   # clean up some manually entered values
-  #   school_name_preload = case_when(
-  #     school_emis_preload=='0302201009X502' ~ 'ECOLE PRIVEE CATHOLIQUE SAINT RUFFIN DE NZOGHE BANG',
-  #     school_emis_preload=='0202402005X505' ~ 'COMPLEXE SCOLAIRE PRIVE SAINT BILL',
-  #     school_emis_preload=='0101303165X513' ~ 'ECOLE PUBLIQUE COMMUNALE DE BAKELE',
-  #     school_emis_preload=='0202402001X510' ~ 'COMPLEXE SCOLAIRE NANETTE',
-  #     school_emis_preload=='0801402060X524' ~ 'ETABLISSEMENT SCOLAIRE PRIVE LE GUIDE',
-  #     school_emis_preload=='0402201007X514' ~ 'SAINTE FAMILLE DE FOUGAMOU',
-  #     school_emis_preload=='0106401054X506' ~ 'COMPLEXE SCOLAIRE BILINGUE LES THEOPHILES',
-  #     TRUE ~ school_name_preload
-  #   ),
-  #   temp_school_code = case_when(
-  #     school_emis_preload=='0302201009X502' ~ '0302201009X502',
-  #     school_emis_preload=='0202402005X505' ~ '0202402001X510',
-  #     school_emis_preload=='0101303165X513' ~ '0701401008X502',
-  #     school_emis_preload=='0202402001X510' ~ '0202402005X505',
-  #     school_emis_preload=='0801402060X524' ~ '0801402060X524',
-  #     school_emis_preload=='0402201007X514' ~ '0402201007X514',
-  #     school_emis_preload=='0106401054X506' ~ '0106401054X506',
-  #     TRUE ~ temp_school_code
-  #   )
-  # ) %>%
-  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
-  filter(!is.na(temp_school_code)) %>%
-  ungroup() %>%
-  left_join(key) %>%
-  filter(!is.na(temp_school_code)) %>% 
-  select(-school_code) %>% 
-  mutate(school_code = school_emis_preload) %>% 
-  
-  ## VERY IMPORTANT FOR MATCHING LATER ON
-  
- mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
-         school_name_preload = str_squish(school_name_preload),
-         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
-  
-  ##Manual cleaning for the 12 schools that don't match on names
-  mutate(school_name_preload = case_when(
-    
-    temp_school_code == "ECOLE MARTIN LUTHER KING _ 0101301088X506" ~ "ECOLE BILINGUE MARTIN LUTHER KING",
-   temp_school_code == "COMPLEXE SCOLAIRE FRANCO-ARABE A OZANGUE _ 0101305188x524" ~ "ECOLE PUBLIQUE D OZANGUE",
-   temp_school_code =="COMPLEXE SCOLAIRE LA MAISON DE DAVID 3 _ 0101301002X504" ~ "COMPLEXE SCOLAIRE MAISON DE DAVID 3",
-   temp_school_code == "COMPLEXE SCOLAIRE LES OLIVIER VERDOYANT _ 0101306005X510" ~ "OLIVIERS VERDOYANTS",
-   temp_school_code == "COMPLEXE SCOLAIRE REHMA _ " ~ "COMPLEXE SCOLAIRE LA PATIENCE RIMA",
-   temp_school_code == "ECOLE PRIVEE LAÏC BILINGUE LES ECLAIREURS _ " ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LES LEADERS",
-   temp_school_code == "ECOLE PRIVEE LAÏQUE  LA CONQUÊTE _ "~ "COMPLEXE SCOLAIRE PRIVE LA CONQUETE DU PETIT CHEMINOT",
-   T ~ school_name_preload
-    
-  )) %>% 
-  
-  left_join(data_set_updated, by=c("school_name_preload")) %>% 
-  rename(old_school_code = school_code) %>% 
-  mutate(school_code = paste(school_name_preload, "_", old_school_code))
+  #drop closed schools
+  filter(m1s0q1==1)
   
 
-rm(data_set_updated)
+  
 
-
-
+  
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
@@ -865,10 +774,7 @@ plot(out)
  #############################################
   ##### Teacher Pedagogical Skill ###########
   #############################################
-
-teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta")) %>%
-  filter(!is.na(s_a1))
-
+teach_df <- read_dta(file.path(download_folder, "TEACH.dta"))
   #define variables for TEACH
   # label variables
 
@@ -920,11 +826,12 @@ teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta"
 
 
 #read in teach data
-  teach_dta <- teach_df %>% 
-    select(school_code, m2saq3, starts_with("s_"), starts_with("s2_")) %>% 
+  teach_dta <- school_dta %>% 
+    select(school_code, starts_with("s1_"), starts_with("s2_")) %>% 
+    filter(!is.na(s1_a1)) %>%
     rename_with(.cols=starts_with("s_"),.fn=~gsub("s_","s1_",.x) ) %>%
   pivot_longer(
-    cols = c(3:89),
+    cols = c(3:88),
     names_to = c("school_clip", "behaviour"),
     names_pattern = "(s[0-9])_(.*)",
     values_to = "count"
@@ -935,7 +842,7 @@ teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta"
            id=row_number(),
            count = as.numeric(count)) %>% 
     
-    pivot_wider(id_cols =c(id, school_code, m2saq3, school_clip), names_from = behaviour, values_from = count) %>% select(-id) 
+    pivot_wider(id_cols =c(id, school_code, school_clip), names_from = behaviour, values_from = count) %>% select(-id) 
 
   
     ## We regroup by school and video segment
@@ -944,7 +851,7 @@ teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta"
   }
   
   teach_dta <- teach_dta %>% 
-    group_by(school_code,m2saq3, school_clip) %>% 
+    group_by(school_code, school_clip) %>% 
     summarise_all(coalesce_by_column) %>% 
     #mutate(across(everything(), as.numeric)) %>% 
     ungroup()
@@ -971,7 +878,7 @@ teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta"
     #        clip=if_else(clip_temp==TRUE, 1,2)
     #          ) %>%
     # select(-clip_temp, -video_length, -school_clip, -person, -enum_comments) %>%
-    select(school_code, m2saq3, clip, everything()) 
+    select(school_code, clip, everything()) 
    # mutate(across(everything(), as.numeric))
   
   #recode scores to be numeric
@@ -1129,7 +1036,8 @@ teach_df <- read_dta(file=here(confidential_folder, "data/GAB_teacher_level.dta"
   
 final_indicator_data_PEDG_F<- school_dta %>%
     select(preamble_info, m4saq1, m4saq1_number )  %>%
-    group_by(school_code) %>%
+    mutate(TEACHERS__id=g4_teacher_number) %>%
+    left_join(teach_df %>% select(school_code, teachers_id, m2saq3) %>% rename(TEACHERS__id=teachers_id), by=c('school_code', 'TEACHERS__id'))    group_by(school_code) %>%
     summarise_all(~first(na.omit(.))) %>%
     select( -starts_with('interview'), -starts_with('enumerator')) %>%
     left_join(teacher_pedagogy_segments) %>%
@@ -1148,7 +1056,8 @@ final_indicator_data_PEDG_F<- school_dta %>%
   
 final_indicator_data_PEDG_M<- school_dta %>%
     select(preamble_info, m4saq1, m4saq1_number )  %>%
-    group_by(school_code) %>%
+  mutate(TEACHERS__id=g4_teacher_number) %>%
+  left_join(teach_df %>% select(school_code, teachers_id, m2saq3) %>% rename(TEACHERS__id=teachers_id), by=c('school_code', 'TEACHERS__id'))    group_by(school_code) %>%
     summarise_all(~first(na.omit(.))) %>%
     select( -starts_with('interview'), -starts_with('enumerator')) %>%
     left_join(teacher_pedagogy_segments) %>%
@@ -1648,7 +1557,9 @@ plot(out)
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))
+ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta")) %>%
+  #drop students that don't consent
+  filter(m6s1q4==1)
 
 ecd_dta_metadata <- makeVlist(ecd_dta)
 
@@ -3476,22 +3387,21 @@ school_gdp <- as.data.frame(school_gdp) %>%
 
 
 #read in saved metadata
-metadta <- read_excel(path=file.path(download_folder, "metadata.xlsx"))
+#metadta <- read_excel(path=file.path(download_folder, "metadata.xlsx"))
 
 #saves the following in R and stata format
 
 data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 
                #'school_dta_short_imp', 
                'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-               "indicators", 'metadta', 
+               "indicators",  
                #'school_gdp', 
                'assess_4th_grade_anon', 'ecd_dta_anon')
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 
 save(list=c(ind_dta_list,"school_dta_short", 
             #'school_dta_short_imp', 
-            "indicators", 'metadta'  
-            #'school_gdp' 
+            "indicators"            #'school_gdp' 
             ), file = file.path(confidential_folder, "school_indicators_data.RData"))
 
 

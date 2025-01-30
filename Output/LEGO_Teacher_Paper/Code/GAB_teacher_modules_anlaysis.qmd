@@ -51,12 +51,13 @@ school_file <-'EPDash.dta'
 
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/"
-  download_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
-  sampling_folder <-file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
-  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
+  project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data_2024/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  
+  save_input_folder <- file.path(paste0('C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/',"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0('C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/',"General/LEGO_Teacher_Paper/5_output_data"))
 
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
@@ -167,25 +168,23 @@ attach(paste0(confidential_folder,"/school_survey_data.RData"))
 currentDate<-c("2023-08-09")
 
 #load school code file
-school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.csv")) %>% 
+school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.csv")) %>%
   mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
          school_name_preload = str_squish(school_name_preload),
-         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
-  rename(old_school_code = school_code) %>% 
+         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>%
+  rename(old_school_code = school_code) %>%
   mutate(school_code = paste(school_name_preload, "_", temp_school_code))
 
-sample_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_revised_', currentDate,  '.csv', sep="")
 )  %>% 
-  left_join(school_codes %>% select(-school_name_preload), by = c("school_code")) %>%
+  #left_join(school_codes %>% select(-school_name_preload), by = c("school_code")) %>%
   select(school_code,school_name_preload, Province, Département, private, public, rural ,urban_rural,
          ipw) 
 
 
 
 
-
-key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 ```
 
 ## School File
@@ -198,6 +197,7 @@ key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 
 ##School
 school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
+vtable(school_dta)
 #rename a few key variables up front
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
@@ -205,82 +205,22 @@ school_dta<- school_dta %>%
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_emis_preload=if_else(school_name_preload=='ECOLE PUBLIQUE RURALE ASSOK MEDZENG' ,'0901103006X507',school_emis_preload),
+         
          #temp_school_code=if_else(!is.na(school_emis_preload),as.character(school_emis_preload), as.character(m1s0q2_code)),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
-  
-  mutate(school_name_preload = case_when(
-    
-    interview__key == "06-80-44-02" ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LE CEP",
-    interview__key=="47-94-03-65" ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LE CEP",
-    TRUE ~ school_name_preload
-
-  )) %>% 
-  
-  ## Create new temp code that combined the EMIS code and the name
-  mutate(temp_school_code = paste(school_name_preload, "_", school_emis_preload)) %>% 
-  
-  # ## Get names and code for all the blank interviews
-  # mutate(
-  #   
-  #   temp_school_code= if_else(school_info_correct==1, as.character(temp_school_code), as.character(m1s0q2_emis)),
-  #   school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name)),
-  #   #fix some school names
-  #   school_name_preload= str_remove_all(school_name_preload, '^"|"$'),
-  #   school_name_preload= gsub('""', '"', school_name_preload),
-  #   # clean up some manually entered values
-  #   school_name_preload = case_when(
-  #     school_emis_preload=='0302201009X502' ~ 'ECOLE PRIVEE CATHOLIQUE SAINT RUFFIN DE NZOGHE BANG',
-  #     school_emis_preload=='0202402005X505' ~ 'COMPLEXE SCOLAIRE PRIVE SAINT BILL',
-  #     school_emis_preload=='0101303165X513' ~ 'ECOLE PUBLIQUE COMMUNALE DE BAKELE',
-  #     school_emis_preload=='0202402001X510' ~ 'COMPLEXE SCOLAIRE NANETTE',
-  #     school_emis_preload=='0801402060X524' ~ 'ETABLISSEMENT SCOLAIRE PRIVE LE GUIDE',
-  #     school_emis_preload=='0402201007X514' ~ 'SAINTE FAMILLE DE FOUGAMOU',
-  #     school_emis_preload=='0106401054X506' ~ 'COMPLEXE SCOLAIRE BILINGUE LES THEOPHILES',
-  #     TRUE ~ school_name_preload
-  #   ),
-  #   temp_school_code = case_when(
-  #     school_emis_preload=='0302201009X502' ~ '0302201009X502',
-  #     school_emis_preload=='0202402005X505' ~ '0202402001X510',
-  #     school_emis_preload=='0101303165X513' ~ '0701401008X502',
-  #     school_emis_preload=='0202402001X510' ~ '0202402005X505',
-  #     school_emis_preload=='0801402060X524' ~ '0801402060X524',
-  #     school_emis_preload=='0402201007X514' ~ '0402201007X514',
-  #     school_emis_preload=='0106401054X506' ~ '0106401054X506',
-  #     TRUE ~ temp_school_code
-  #   )
-  # ) %>%
-  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
-  filter(!is.na(temp_school_code)) %>%
-  ungroup() %>%
-  mutate(school_code = school_emis_preload) %>% 
-  
-  ## VERY IMPORTANT FOR MATCHING LATER ON
-  
- mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
-         school_name_preload = str_squish(school_name_preload),
-         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
-  
-  ##Manual cleaning for the 12 schools that don't match on names
-  mutate(school_name_preload = case_when(
-    
-    temp_school_code == "ECOLE MARTIN LUTHER KING _ 0101301088X506" ~ "ECOLE BILINGUE MARTIN LUTHER KING",
-   temp_school_code == "COMPLEXE SCOLAIRE FRANCO-ARABE A OZANGUE _ 0101305188x524" ~ "ECOLE PUBLIQUE D OZANGUE",
-   temp_school_code =="COMPLEXE SCOLAIRE LA MAISON DE DAVID 3 _ 0101301002X504" ~ "COMPLEXE SCOLAIRE MAISON DE DAVID 3",
-   temp_school_code == "COMPLEXE SCOLAIRE LES OLIVIER VERDOYANT _ 0101306005X510" ~ "OLIVIERS VERDOYANTS",
-   temp_school_code == "COMPLEXE SCOLAIRE REHMA _ " ~ "COMPLEXE SCOLAIRE LA PATIENCE RIMA",
-   temp_school_code == "ECOLE PRIVEE LAÏC BILINGUE LES ECLAIREURS _ " ~ "COMPLEXE SCOLAIRE PRIVE BILINGUE LES LEADERS",
-   temp_school_code == "ECOLE PRIVEE LAÏQUE  LA CONQUÊTE _ "~ "COMPLEXE SCOLAIRE PRIVE LA CONQUETE DU PETIT CHEMINOT",
-   T ~ school_name_preload
-    
-  )) %>% 
-  
-  rename(old_school_code = school_code) %>% 
-  mutate(school_code = paste(school_name_preload, "_", old_school_code)) %>%
-    left_join(key) 
+  #drop closed schools
+  filter(m1s0q1==1) %>%
+  left_join(school_codes)
   
 
+#create hashed school code
+school_dta$hashed_school_code <-as.character(lapply(school_dta$school_code, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
+school_dta$hashed_school_province <-as.character(lapply(school_dta$school_province_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
+school_dta$hashed_school_district <-as.character(lapply(school_dta$school_district_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
+
+
+  
 
 
 

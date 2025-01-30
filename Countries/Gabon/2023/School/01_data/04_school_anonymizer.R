@@ -96,6 +96,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     left_join(data_set_updated)  %>%
     mutate(province=Province) %>%
     mutate(ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+           strata_prob=if_else(is.na(strata_prob), median(strata_prob, na.rm=T), strata_prob),
            Province=if_else(is.na(Province), school_province_preload, Province),
            private=if_else(is.na(private), median(private, na.rm=TRUE) ,private), #imputation
            rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural))  #imputation

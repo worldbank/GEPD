@@ -1323,7 +1323,8 @@ plot(out)
 #############################################
 
 #read in 4th grade assessment level file
-assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta")) 
+assess_4th_grade_dta<-read_dta(file.path(download_folder, "fourth_grade_assessment.dta"))  %>%
+  filter(!is.na(m8s1q3))
 
 #Add school preamble info
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
@@ -1543,7 +1544,10 @@ plot(out)
 
 
 #read in ecd level file
-ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta")) 
+ecd_dta<-read_dta(file.path(download_folder, "ecd_assessment.dta"))  %>%
+  #drop missing sex
+  filter(!is.na(m6s1q3)) %>%
+  filter(m6s1q4==1) #only include students with consent
 
 ecd_dta_metadata <- makeVlist(ecd_dta)
 

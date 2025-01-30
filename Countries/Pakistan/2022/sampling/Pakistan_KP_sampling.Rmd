@@ -113,52 +113,7 @@ NDM_list <- c('BAJAUR','MOHMAND','ORAKZAI',
 
 ```
 
-Basic summary stats of overall frame
 
-```{r}
-#level
-df_raw %>% 
-  group_by(Level) %>% 
-  summarise(n=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Level') %>% 
-  autofit()
-
-#Tehsil
-df_raw %>% 
-  group_by(District) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by District') %>% 
-  autofit()
-
-#Gender
-df_raw %>% 
-  group_by(Gender) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Gender') %>% 
-  autofit()
-
-#Urban/rural
-df_raw %>% 
-  group_by(Location) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Urban/Rural') %>% 
-  autofit()
-
-#Level
-df_raw %>% 
-  group_by(Level) %>% 
-  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Type') %>% 
-  autofit()
-
-
-
-```
 
 ### Original Sampling Frame
 
@@ -262,6 +217,52 @@ df_updated <- df_raw  %>%
          class_5>=3)
 ```
 
+Basic summary stats of restricted frame
+
+```{r}
+#level
+df_updated_gepd_nmd %>% 
+  group_by(Level) %>% 
+  summarise(n=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_updated_gepd_nmd %>% 
+  group_by(District) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by District') %>% 
+  autofit()
+
+#Gender
+df_updated_gepd_nmd %>% 
+  group_by(Gender) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+
+#Urban/rural
+df_updated_gepd_nmd %>% 
+  group_by(Location) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Urban/Rural') %>% 
+  autofit()
+
+#Level
+df_updated_gepd_nmd %>% 
+  group_by(Level) %>% 
+  summarise(Schools=n(),Students=sum(total_enrollment)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Type') %>% 
+  autofit()
+
+
+
+```
 
 ```{r}
 #calcualte largest NDM districts.  
@@ -515,7 +516,10 @@ sample_df_200 %>%
             total_enrollment=sum(total_enrollment),
             class_4=sum(class_4, na.rm=TRUE)) %>%
   ungroup() %>%
-  mutate(share=total_enrollment/sum(total_enrollment)) %>%
+  rename(
+    `Total Student Count`="total_enrollment",
+    `Total 4th Grade Student Count`="class_4"
+  ) %>%
   flextable() %>%
   add_header_lines('Number of Schools by District') %>%
   autofit()

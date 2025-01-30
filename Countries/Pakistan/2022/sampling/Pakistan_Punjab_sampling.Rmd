@@ -146,7 +146,7 @@ However, there is interest in interviewing pre-primary students and students in 
 
 
 
-Basic summary stats of overall frame
+Basic summary stats of restricted frame
 
 ```{r}
 #level
@@ -424,10 +424,13 @@ Table. Number of Schools Selected in the Sample by District
 #number of schools by district in a flextabe
 sample_df_200 %>%
   group_by(csl_district) %>%
-  summarise(N=n()) %>%
+  summarise(N=n(),
+            total_students=sum(total_enrollment, na.rm = TRUE)
+            ) %>%
   rename(
     District=csl_district,
-    `Number of Schools`=N
+    `Number of Schools`=N,
+    `Total Students`=total_students
   ) %>%
   flextable() %>%
   add_header_lines('Number of Schools by District') %>%

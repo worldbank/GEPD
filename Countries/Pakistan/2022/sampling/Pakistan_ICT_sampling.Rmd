@@ -2,7 +2,7 @@
 title: "Pakistan (ICT) Sampling"
 author: "Brian Stacy"
 date: "7/8/2022"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -90,33 +90,7 @@ df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
 
 ```
 
-Basic summary stats of overall frame
 
-```{r}
-#level
-df_raw %>% 
-  group_by(Institutions_Level) %>% 
-  summarise(n=n(),Students=sum(Grand_total)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Level') %>% 
-  autofit()
-
-#Tehsil
-df_raw %>% 
-  group_by(Tehsil) %>% 
-  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Tehsil') %>% 
-  autofit()
-
-#Gender
-df_raw %>% 
-  group_by(Gender) %>% 
-  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Gender') %>% 
-  autofit()
-```
 
 ```{r}
 
@@ -136,6 +110,34 @@ df_updated <- df_raw %>%
 Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
 
 However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(Kachi<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(Class_5<3))` because of the grade 5 restriction.
+
+Basic summary stats of restricted frame
+
+```{r}
+#level
+df_updated %>% 
+  group_by(Institutions_Level) %>% 
+  summarise(n=n(),Students=sum(Grand_total)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_updated %>% 
+  group_by(Tehsil) %>% 
+  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Tehsil') %>% 
+  autofit()
+
+#Gender
+df_updated %>% 
+  group_by(Gender) %>% 
+  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+```
 
 Below are statistics of the original sampling frame.
 
@@ -352,7 +354,28 @@ total_tab %>%
 
 ```
 
+Table. Number of Schools Selected in the Sample by District
+
+```{r}
+#| label: tbl_sample_district
+
+#number of schools by district in a flextabe
+
 ## Select Schools for Pilot
+sample_df %>% 
+  group_by(Tehsil) %>% 
+  summarise(n=n(),
+            total_students=sum(Class_4_boys+Class_4_girls, na.rm=TRUE)) %>%
+  ungroup() %>%
+  rename(
+    `Total Number of Schools`="n",
+    `Total Student Count`="total_students"
+  ) %>%
+  flextable() %>% 
+  add_header_lines('Number of Schools Selected by District') %>% 
+  autofit()
+
+```
 
 20 schools will be randomly selected using the same procedure for the pilot.  The schools selected for the pilot will not overlap with selected sample of 100.
 

@@ -131,8 +131,8 @@ api_template <- api_template %>%
       SE.LPV.PRIM.1	= g4_prof$SE.LPV.PRIM,
       SE.LPV.PRIM.BMP	= 100-g4_prof$SE.LPV.PRIM.LD,
       SE.LPV.PRIM.BMP.1	= 100-g4_prof$SE.LPV.PRIM.LD,
-      SE.PRM.PROE =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
-      SE.PRM.PROE.1 =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
+      #SE.PRM.PROE =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
+      #SE.PRM.PROE.1 =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
       SE.PRM.TENR	 =100-g4_prof$SE.LPV.PRIM.SD,
       SE.PRM.TENR.1	 =100-g4_prof$SE.LPV.PRIM.SD
     )
@@ -148,7 +148,7 @@ api_template <- api_template %>%
     mutate(
       SE.PRM.LERN     = indicator_means(student_proficient, "school", "LERN",  "All"),
       SE.PRM.LERN.1   = indicator_means(student_proficient, "school", "LERN",  "All"),
-      SE.PRM.LERN.1.F = indicator_means(student_proficient, "school", "LERN",  "Female"),
+      SE.PRM.LERN.1.F = indicator_means(student_proficient, "school", "LERN",  "Male"),
       SE.PRM.LERN.1.M = indicator_means(student_proficient, "school", "LERN",  "Male"),
       SE.PRM.LERN.1.R = indicator_means(student_proficient, "school", "LERN",  "Rural"),
       SE.PRM.LERN.1.U = indicator_means(student_proficient, "school", "LERN",  "Urban"),

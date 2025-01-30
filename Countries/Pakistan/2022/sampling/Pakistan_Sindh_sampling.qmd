@@ -149,13 +149,13 @@ Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade st
 However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(class_prep<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(class_5<3))` because of the grade 5 restriction. 
 
 
-Basic summary stats of frame
+Basic summary stats of restricted frame
 
 ```{r}
 #| label: tbl-sumstats
-#| tbl-cap: Summary Statistics for Balochistan Raw Sampling Frame
+#| tbl-cap: Summary Statistics for Balochistan restricted Sampling Frame
 #level
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(`School Level`) %>% 
   summarise(n=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -163,7 +163,7 @@ df_updated_gepd %>%
   autofit()
 
 #Tehsil
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(district) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -171,7 +171,7 @@ df_updated_gepd %>%
   autofit()
 
 #Gender
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(school_gender) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -179,7 +179,7 @@ df_updated_gepd %>%
   autofit()
 
 #Urban/rural
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(location) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -463,9 +463,11 @@ Table. Number of Schools Selected in the Sample by District
 #number of schools by district in a flextabe
 sample_df_200 %>%
   group_by(district) %>%
-  summarise(n=n()) %>%
+  summarise(n=n(),
+            total_enrollment=sum(total_enrollment, na.rm=TRUE)) %>%
   rename(
-    `Number of Schools`="n"
+    `Number of Schools`="n",
+    `Number of Students`="total_enrollment"
   ) %>%
   flextable() %>%
   add_header_lines("Number of Schools Selected in the Sample by District") %>%
