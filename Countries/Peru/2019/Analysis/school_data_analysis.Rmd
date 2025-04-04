@@ -781,7 +781,7 @@ stargazer(linear.1,   title="Linear/Logit Model of Student Learning on Indicator
 
 ```{r include=FALSE}
 #inpute missings using mice
-imputed_Data <- mice(data = school_dta_indicators, m = 5, method = "rf", maxit = 50, seed = 500)
+imputed_Data <- mice(data = school_dta_indicators, m = 5, method = "rf", maxit = 1, seed = 500)
 completeData <- complete(imputed_Data,2)
 
 ```

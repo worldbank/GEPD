@@ -134,13 +134,13 @@ Roadmap:
 #set directory to bring in data
   if(Sys.info()["user"] == "wb577189"){
 
-    work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/anonymized/"
 
 
     
   } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
     
-    work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/anonymized/"
 
     
   }

@@ -76,7 +76,7 @@ school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.cs
 #Load original sample of schools
 currentDate<-c("2023-08-09")
 
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_revised_', currentDate,  '.csv', sep="")
 )  %>% 
   left_join(school_codes, by = c("school_code")) %>%

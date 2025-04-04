@@ -90,13 +90,13 @@ bbc_style <- function() {
 
  if(Sys.info()["user"] == "wb577189"){
 
-    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_RAW/Data/anonymized/"
 
 
     
   } else if (Sys.info()["user"] == "wb469649") {
     
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/confidential/"
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_RAW/Data/confidential/"
 
     
   }
@@ -110,9 +110,9 @@ load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", 
 load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
 
 #load set of districts that match to schools
-office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/sampling/office_list.csv")
+office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_RAW/Data/sampling/office_list.csv")
 
-auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/raw/School/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
+auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_RAW/Data/raw/School/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
   mutate(district=str_to_upper(district)) %>%
   select(district,region)
 

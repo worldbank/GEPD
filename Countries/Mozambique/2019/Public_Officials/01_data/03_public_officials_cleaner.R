@@ -100,14 +100,14 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
 
 if (exists(paste(school_folder, "school_indicators_data.RData", sep="/"))) {
   
   load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
   
   currentDate<-c("2019-10-31")
-  sample_frame_name <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"/Data/Sampling/school_sample_",currentDate,".RData", sep=""))
+  sample_frame_name <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"/Data/Sampling/school_sample_",currentDate,".RData", sep=""))
   
   load(sample_frame_name)
   

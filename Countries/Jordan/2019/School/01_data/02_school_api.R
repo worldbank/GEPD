@@ -143,7 +143,7 @@ school_metadta<-school_metadta %>%
 #bind version 18 and 17
 school_dta <- bind_rows(school_dta, school_dta_17) 
 
-label(school_dta) = as.list(as.character(school_metadta$varlabel))
+#label(school_dta) = as.list(as.character(school_metadta$varlabel))
 
 school_dta %>%
   write_dta(file.path(download_folder, "EPDash.dta"))
@@ -165,7 +165,7 @@ ecd_metadta<-ecd_metadta %>%
 #bind version 18 and 17
 ecd_dta <- bind_rows(ecd_dta, ecd_dta_17)
 
-label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
+#label(ecd_dta) = as.list(as.character(ecd_metadta$varlabel))
 
 ecd_dta %>%
   write_dta(file.path(download_folder, "ecd_assessment.dta"))
@@ -188,7 +188,7 @@ assess_4th_grade_metadta<-assess_4th_grade_metadta %>%
 #bind version 18 and 17
 assess_4th_grade_dta <- bind_rows(assess_4th_grade_dta, assess_4th_grade_dta_17)
 
-label(assess_4th_grade_dta) = as.list(as.character(assess_4th_grade_metadta$varlabel))
+#label(assess_4th_grade_dta) = as.list(as.character(assess_4th_grade_metadta$varlabel))
 
 
 assess_4th_grade_dta %>%
@@ -219,7 +219,7 @@ teacher_questionnaire_metadta<-teacher_questionnaire_metadta %>%
 #teacher_questionnaire <- bind_rows(teacher_questionnaire, teacher_questionnaire_17)
 
 
-label(teacher_questionnaire) = as.list(as.character(teacher_questionnaire_metadta$varlabel))
+#label(teacher_questionnaire) = as.list(as.character(teacher_questionnaire_metadta$varlabel))
 
 
 teacher_questionnaire %>%
@@ -247,7 +247,7 @@ teacher_absence_metadta<-teacher_absence_metadta %>%
 
 #bind version 18 and 17
 
-label(teacher_absence_dta) = as.list(as.character(teacher_absence_metadta$varlabel))
+#label(teacher_absence_dta) = as.list(as.character(teacher_absence_metadta$varlabel))
 
 
 teacher_absence_dta %>%
@@ -272,7 +272,7 @@ teacher_assessment_metadta<-teacher_assessment_metadta %>%
 #bind version 18 and 17
 teacher_assessment_dta <- bind_rows(teacher_assessment_dta, teacher_assessment_dta_17)
 
-label(teacher_assessment_dta) = as.list(as.character(teacher_assessment_metadta$varlabel))
+#label(teacher_assessment_dta) = as.list(as.character(teacher_assessment_metadta$varlabel))
 
 
 teacher_assessment_dta %>%

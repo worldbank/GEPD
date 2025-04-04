@@ -125,13 +125,13 @@ Roadmap:
 
  if(Sys.info()["user"] == "wb577189"){
 
-    work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_RAW/Data/anonymized/"
 
 
     
   } else if (Sys.info()["user"] == "wb469649") {
     
-work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/anonymized/"
+work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_RAW/Data/anonymized/"
 
     
   }

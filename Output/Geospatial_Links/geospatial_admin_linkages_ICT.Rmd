@@ -27,8 +27,8 @@ year <- '2022'
 
 #directories
 project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
-save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
+confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
+save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
 shared_folder <- 'C:\\Users\\wb469649\\WBG\\Daniel Rogger - Global Education Dashboard\\01_raw_data\\'
 
 # load the world bank admin boundaries

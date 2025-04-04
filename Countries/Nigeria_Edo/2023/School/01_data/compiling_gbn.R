@@ -1,6 +1,6 @@
 
 ## Set directory
-setwd("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_RAW/Data/raw/School")
+setwd("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_RAW/Data/raw/School")
 
 ## List the files searching for dta format
 
@@ -28,19 +28,19 @@ lapply(seq_along(lst1), function(i) write_dta(lst1[[i]], paste(getwd(),
 
  ##Final clean up
 
-key <- read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_RAW/Data/raw/School/key/GEPD_GABON_DATA.dta")
+key <- read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_RAW/Data/raw/School/key/GEPD_GABON_DATA.dta")
 
 var <- names(key)
 
-school_final <-  read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_RAW/Data/raw/School/EPDash.dta") %>% 
+school_final <-  read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_RAW/Data/raw/School/EPDash.dta") %>% 
   select(-ends_with("_preload")) %>% 
   left_join(key) %>% 
   relocate(interview__key, ends_with("_preload"))
 
-write_dta(school_final,path = "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_RAW/Data/raw/School/EPDash.dta")
-write_dta(not_included,path = "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_RAW/Data/raw/School/to_verify.dta")
+write_dta(school_final,path = "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_RAW/Data/raw/School/EPDash.dta")
+write_dta(not_included,path = "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_RAW/Data/raw/School/to_verify.dta")
 
-# not_included <- key %>% anti_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_RAW/Data/raw/School/EPDash.dta") %>% 
+# not_included <- key %>% anti_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_RAW/Data/raw/School/EPDash.dta") %>% 
 #                                     select(-ends_with("_preload")))
 
 

@@ -123,7 +123,7 @@ Roadmap:
 
 #set directory to bring in data
 
-work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/NGR/NGR_2022_GEPD/NGR_2022_GEPD_v01_RAW/Data/anonymized/"
+work_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/NGR/NGR_2022_GEPD/NGR_2022_GEPD_v02_RAW/Data/anonymized/"
 
 #load public official data
  load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))

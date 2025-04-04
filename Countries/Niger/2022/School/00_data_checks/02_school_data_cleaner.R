@@ -329,14 +329,14 @@ preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'te
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(school_absence_rate=100*case_when(
-    m2sbq6_efft==6 | teacher_available==2 ~ 1,
+    m2sbq6_efft==6,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absence_rate=100*case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
+    m2sbq6_efft==6 | m2sbq6_efft==5 ,
     m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
@@ -2250,8 +2250,8 @@ if (extra_info=='yes') {
   #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
   #https://academic.oup.com/aje/article/179/6/764/107562
   impdata<-mice::mice(school_dta_short, m=1,
-                      method='rf',
-                      maxit = 50, seed = 500)
+                      method='mean',
+                      maxit = 1, seed = 500)
   
   school_dta_short_imp <- mice::complete(impdata, 1)
   

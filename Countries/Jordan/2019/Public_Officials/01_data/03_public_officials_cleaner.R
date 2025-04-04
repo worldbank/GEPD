@@ -100,12 +100,12 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
 
 load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
 
 currentDate<-c("2019-10-11")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
@@ -279,8 +279,8 @@ if (impute=='yes') {
   #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
   #https://academic.oup.com/aje/article/179/6/764/107562
   impdata<-mice::mice(select(public_officials_dta_clean,starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), , m=1,
-                      method='rf',
-                      maxit = 50, seed = 500)
+                      method='mean',
+                      maxit = 1, seed = 500)
   
   public_officials_dta_imp <- mice::complete(impdata, 1) 
   

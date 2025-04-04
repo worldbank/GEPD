@@ -104,7 +104,7 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School/", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/School/", sep="/"))
 
 
 if (file.exists(paste(school_folder, "school_indicators_data_anon.RData", sep="/"))) {

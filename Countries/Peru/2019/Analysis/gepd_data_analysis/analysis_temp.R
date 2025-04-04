@@ -3,7 +3,7 @@ library(skimr)
 library(srvyr)
 library(DT)
 library(Hmisc)
-load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_RAW/Data/anonymized/School/school_indicators_data_anon.RData")
+load("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v02_RAW/Data/anonymized/School/school_indicators_data_anon.RData")
 
 
 

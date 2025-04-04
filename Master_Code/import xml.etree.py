@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 
-#read xml file at C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.xml
-xml_str= open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.xml', 'r').read()
+#read xml file at C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.xml
+xml_str= open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.xml', 'r').read()
 
 root = ET.fromstring(xml_str)
 
@@ -15,11 +15,11 @@ for var in root.findall('.//var'):
     table_str += f'|  {name} | {files} | {intrvl} | {label} |\n'
 
 #save results as markdown file
-with open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.md', 'w') as f:
+with open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.md', 'w') as f:
     f.write(table_str)
 
 # Data
-xml_str = open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\School\version_1\Questionnaire\ddi_data_short.xml', 'r').read()
+xml_str = open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\School\version_1\Questionnaire\ddi_data_short.xml', 'r').read()
 
 
 root = ET.fromstring(xml_str)
@@ -33,15 +33,15 @@ for fileDscr in root.findall('.//fileDscr'):
 print(table_str)
 
 #save results as markdown file
-with open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\School\version_1\Questionnaire\ddi_data_short.md', 'w') as f:
+with open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\School\version_1\Questionnaire\ddi_data_short.md', 'w') as f:
     f.write(table_str)
     
     
 # Survey of Public Officials
 
 
-#read xml file at C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.xml
-xml_str= open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\Public_Officials\Questionnaire\ddi_short.xml', 'r').read()
+#read xml file at C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\School\version_1\Questionnaire\ddi_short.xml
+xml_str= open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\Public_Officials\Questionnaire\ddi_short.xml', 'r').read()
 
 root = ET.fromstring(xml_str)
 
@@ -55,6 +55,6 @@ for var in root.findall('.//var'):
     table_str += f'|  {name} | {files} | {intrvl} | {label} |\n'
 
 #save results as markdown file
-with open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v01_RAW\Data\raw\Public_Officials\Questionnaire\ddi_short.md', 'w') as f:
+with open(r'C:\Users\wb469649\WBG\HEDGE Files - HEDGE Documents\GEPD-Confidential\CNT\GAB\GAB_2023_GEPD\GAB_2023_GEPD_v02_RAW\Data\raw\Public_Officials\Questionnaire\ddi_short.md', 'w') as f:
     f.write(table_str)
 

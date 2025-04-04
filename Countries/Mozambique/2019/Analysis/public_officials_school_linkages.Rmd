@@ -87,16 +87,16 @@ bbc_style <- function() {
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v01_RAW/Data/confidential/"
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v02_RAW/Data/confidential/"
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
 
 #load school data
-school_dta_short<-read_dta(paste('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v01_RAW/Data/SDI 2018/', "school_indicators_data.dta", sep=""))
+school_dta_short<-read_dta(paste('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v02_RAW/Data/SDI 2018/', "school_indicators_data.dta", sep=""))
 
 #load set of districts that match to schools
-office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v01_RAW/Data/sampling/district_sample_10region_18ugel2019-10-31.csv") %>%
+office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/MOZ/MOZ_2019_GEPD/MOZ_2019_GEPD_v02_RAW/Data/sampling/district_sample_10region_18ugel2019-10-31.csv") %>%
   mutate(District=if_else(District=="Homo�ne", "Homoine", District )) %>% #fix a few district names
   mutate(District=if_else(District=="Alto Mol�cu�", "Alto Molocue", District )) 
   

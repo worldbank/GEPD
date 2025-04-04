@@ -124,11 +124,11 @@ bbc_style <- function() {
 #set directory to bring in data
  if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
 
-    work_dir  <- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/confidential/"
+    work_dir  <- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_RAW/Data/confidential/"
     
  } else if (Sys.info()["user"] == "wb577189"){
 
-    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_RAW/Data/confidential/"
+    work_dir<- "C:/Users/wb577189/OneDrive - WBG/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_RAW/Data/confidential/"
 
 
     

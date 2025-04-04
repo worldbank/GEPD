@@ -204,7 +204,7 @@ teacher_questionnaire <- teacher_questionnaire %>%
                          TRUE ~ NA_real_)) %>%
   mutate(grade=factor(grade, levels=c(1,2,3,4,5,6), labels=c("Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Multigrade")))
 
-label(teacher_questionnaire$grade) <- "Grade"
+#label(teacher_questionnaire$grade) <- "Grade"
 
 
 
@@ -317,7 +317,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
                          TRUE ~ NA_real_)) %>%
   mutate(grade=factor(grade, levels=c(1,2,3,4,5,6), labels=c("Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Multigrade")))
 
-label(teacher_absence_dta$grade) <- "Grade"
+#label(teacher_absence_dta$grade) <- "Grade"
 
 #list additional info that will be useful to keep in each indicator dataframe
 preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'teacher_number', 
@@ -328,14 +328,14 @@ preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'te
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(sch_absence_rate=100*case_when(
-    m2sbq6_efft==6 | teacher_available==2 ~ 1,
+    m2sbq6_efft==6,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absence_rate=100*case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
+    m2sbq6_efft==6 | m2sbq6_efft==5 ,
     m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
@@ -2251,6 +2251,21 @@ teacher_assessment_weights <-school_dta %>%
          teacher_obs_weight_component=numEligible4th) %>%
   select(school_code, teacher_weight_component,teacher_obs_weight_component)
 
+teacher_consent <- teacher_questionnaire %>% 
+  group_by(school_code) %>% 
+  summarise(teacher_consent=sum(m3s0q1==1, na.rm=T)) 
+
+teacher_questionnaire_weights <-school_dta %>%
+  select(school_code,  numEligible4th ) %>%
+  left_join(teacher_consent) %>%
+  group_by(school_code) %>%
+  summarise(numEligible4th=max(numEligible4th, na.rm=T)) %>%
+  mutate(teacher_weight_component=if_else(numEligible4th>=5,
+                                          numEligible4th/5,
+                                          1),
+         teacher_obs_weight_component=numEligible4th) %>%
+  select(school_code, teacher_weight_component,teacher_obs_weight_component)
+
 g1_stud_weights<-school_dta %>%
   select(school_code,  m6_class_count ) %>%
   group_by(school_code) %>%
@@ -2263,6 +2278,7 @@ g1_stud_weights<-school_dta %>%
 school_weights <- g4_stud_weights %>%
   left_join(teacher_absence_weights) %>%
   left_join(teacher_assessment_weights) %>%
+  left_join(teacher_questionnaire_weights) %>%
   left_join(g1_stud_weights)
 
 
@@ -2335,14 +2351,14 @@ if (extra_info=='yes') {
 
 #Load original sample of schools
 currentDate<-c("2019-10-11")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
 
 
 #open the raster
-raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
+raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
 
 gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
 
@@ -2376,8 +2392,8 @@ school_gdp <- as.data.frame(school_gdp) %>%
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
 impdata<-mice::mice(school_dta_short, m=1,
-           method='rf',
-           maxit = 50, seed = 500)
+           method='mean',
+           maxit = 1, seed = 500)
 
 school_dta_short_imp <- mice::complete(impdata, 1)
 
