@@ -1732,7 +1732,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(
-    vignette_1_resp=if_else((m7sbq1_opmn==0 & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
+    vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq4_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
     vignette_1_finance=case_when(
       m7sbq2_opmn==1 ~ 0.5,
       (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,
@@ -1749,7 +1749,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   #give total score for this vignette
   mutate(vignette_1=vignette_1_resp+vignette_1_finance+vignette_1_address) %>% 
   mutate(vignette_2_resp=if_else(m7scq1_opmn==98, 0, 0.5), # no one responsible that is known
-         vignette_2_finance=if_else(m7scq1_opmn==1,0,0.5),      #parents are forced to buy textbooks          
+         vignette_2_finance=if_else((m7scq1_opmn==1| m7scq1_opmn==98),0,0.5),      #parents are forced to buy textbooks          
          #give partial credit based on how quickly it will be solved <1 month, 1-3, 3-6, 6-12, >1 yr
          vignette_2_address=case_when(
            m7scq2_opmn==1 ~ 1,
