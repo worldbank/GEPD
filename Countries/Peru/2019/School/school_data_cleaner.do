@@ -209,7 +209,7 @@ gen         teacher_other_subj=m2saq8__97==1 if !missing(m2saq8__97)
 gen school_absence_rate = (m2sbq6_efft==6 | teacher_available==2 ) if !missing(m2sbq6_efft)
 replace school_absence_rate=100*school_absence_rate
 *generate absence variables
-gen absence_rate = 100 if m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 
+gen absence_rate = 100 if m2sbq6_efft==6 | m2sbq6_efft==5  ~ 1|  teacher_available==2 
 replace absence_rate = 0 if m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4 
 
 *generate principal absence_rate

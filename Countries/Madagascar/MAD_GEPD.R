@@ -952,7 +952,7 @@ first_grade<- first_grade %>%
     group_by(s_ecole_code) %>%
     summarise_all(~first(na.omit(.))) %>%
     mutate(
-      vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq4_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
+      vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq1_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
       vignette_1_finance=case_when(
         m7sbq2_opmn==1 ~ 0.5,
         (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,

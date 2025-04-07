@@ -319,14 +319,14 @@ preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'te
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(school_absence_rate=100*case_when(
-    m2sbq6_efft==6,
+    m2sbq6_efft==6 ~ 1,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absence_rate=100*case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 ,
+    m2sbq6_efft==6 | m2sbq6_efft==5  ~ 1,
     m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
@@ -1231,7 +1231,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(
-    vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq4_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
+    vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq1_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
     vignette_1_finance=case_when(
       m7sbq2_opmn==1 ~ 0.5,
       (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,
