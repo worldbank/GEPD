@@ -713,86 +713,153 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          student_male=bin_var(m8s1q3,1),
   )
 
+
 #####################
 #create one copy of each dataframe that never gets touched and is carried forward to public folder
 #####################
 assess_4th_grade_dta_raw <- assess_4th_grade_dta
 
-
-# create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
-# This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
-# In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
-# Score this so that if there is a deviation from what 80% of the class says, then it is wrong.
-call_out_scorer <- function(var, pctl) {
-  1-abs(var - quantile(var, pctl, na.rm=T))
+# Create a function to process the "circle items" questions
+process_circle_items <- function(data, prefix) {
+  # Calculate number of items circled by each student
+  data <- data %>%
+    rowwise() %>%
+    mutate(
+      number_items = sum(c_across(starts_with(paste0(prefix, "__"))), na.rm = TRUE)
+    )
+  
+  # For each school, identify which items were most commonly circled
+  school_patterns <- data %>%
+    group_by(school_code) %>%
+    #if ends in __99, score it as zero. This is a code for no response
+    mutate(across(starts_with(paste0(prefix, "__99")), ~0)) %>%
+    dplyr::summarize(across(starts_with(paste0(prefix, "__")), ~mean(. == 1, na.rm = TRUE))) %>%
+    pivot_longer(
+      cols = starts_with(paste0(prefix, "__")),
+      names_to = "item",
+      values_to = "share"
+    ) %>%
+    # Extract item number from the variable name
+    mutate(item_num = as.integer(str_extract(item, "(?<=__)\\d+"))) %>%
+    filter(!is.na(item_num)) %>%  # Remove any non-numeric items like "__99"
+    arrange(school_code, desc(share))
+  
+  # Define correct items according to the manual
+  if(prefix == "m8saq2_id") {
+    correct_items <- c(3, 4, 6)  # h, F, v letters
+  } else if(prefix == "m8saq3_id") {
+    correct_items <- c(2, 6, 7)  # respect, greet and fruit words
+  } else if(prefix == "m8sbq1_number_sense") {
+    correct_items <- c(1, 3, 4)  # 4, 23, 55 numbers
+  }
+  
+  # For each school, determine the top 3 most frequently circled items
+  top_items_by_school <- school_patterns %>%
+    group_by(school_code) %>%
+    mutate(rank = row_number()) %>%
+    filter(rank <= 3) %>%
+    arrange(school_code, rank)
+  
+  # Identify schools with strong consensus (80%+ agreement on 3 items)
+  school_consensus <- top_items_by_school %>%
+    filter(share >= 0.8) %>%
+    group_by(school_code) %>%
+    dplyr::summarize(
+      consensus_count = n(),
+      correct_match = sum(item_num %in% correct_items),
+      perfect_match = consensus_count == 3 && correct_match == 3,
+      strong_match = consensus_count >= 1 && correct_match >= 1
+    )
+  
+  # Get the list of consensus items for each school
+  consensus_items <- top_items_by_school %>%
+    filter(share >= 0.8 | rank <= 3) %>%
+    group_by(school_code) %>%
+    dplyr::summarize(
+      consensus_items = list(item_num),
+      has_consensus = any(share >= 0.8)
+    )
+  
+  # Calculate scores using a simpler approach without nested sapply
+  result <- data %>%
+    left_join(consensus_items, by = "school_code") %>%
+    rowwise() %>%
+    mutate(
+      # Initialize counters
+      correct_identified = 0,
+      incorrect_identified = 0
+    )
+    
+  # Use a for loop instead of nested sapply
+  for (i in 1:nrow(result)) {
+    items <- result$consensus_items[[i]]
+    correct_count <- 0
+    
+    if (length(items) > 0) {
+      # Check each item
+      for (item in items) {
+        var_name <- paste0(prefix, "__", item)
+        if (var_name %in% colnames(data) && !is.na(result[[var_name]][i]) && result[[var_name]][i] == 1) {
+          correct_count <- correct_count + 1
+        }
+      }
+    }
+    
+    result$correct_identified[i] <- correct_count
+    result$incorrect_identified[i] <- result$number_items[i] - correct_count
+  }
+  
+  # Calculate final scores
+  result <- result %>%
+    mutate(
+      final_score = pmin(1, (correct_identified/ length(consensus_items))),
+      final_score = pmax(0, final_score)  # Ensure score is not negative
+    )
+  
+  return(result$final_score)
 }
-# #old scoring code:
-# mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
-#        m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
-#        m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
-#        m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-#        m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)) 
 
+# Apply the function to process each of the circle items questions
+m8saq2_id_scores <- process_circle_items(assess_4th_grade_dta, "m8saq2_id")
+m8saq3_id_scores <- process_circle_items(assess_4th_grade_dta, "m8saq3_id")
+m8sbq1_number_sense_scores <- process_circle_items(assess_4th_grade_dta, "m8sbq1_number_sense")
 
-#create a dataset with observations with issues based on enumerator calling out items
-assess_4th_grade_dta_issues <- assess_4th_grade_dta %>%
+# Add scores back to the dataset
+assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(
-         m8saq2_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])), 
-         m8saq3_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])),
-         m8sbq1_number_sense_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])))   %>%
-  filter(m8saq2_id_tot>3 | m8saq3_id_tot>3 | m8sbq1_number_sense_tot>3) 
+    m8saq2_id = m8saq2_id_scores,
+    m8saq3_id = m8saq3_id_scores,
+    m8sbq1_number_sense = m8sbq1_number_sense_scores
+  ) %>%
+  # Remove individual item columns to avoid confusion
+  select(-starts_with("m8saq2_id__"), -starts_with("m8saq3_id__"), -starts_with("m8sbq1_number_sense__"))
 
-# assess_4th_grade_dta_issues %>%
-#   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues.csv"))
-
-# assess_4th_grade_dta_issues %>%
-#   group_by(school_code) %>%
-#   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-#   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
-
-
-
-#recode assessment variables to be 1 if student got it correct and zero otherwise
-assess_4th_grade_dta<- assess_4th_grade_dta %>%
+# Recode assessment variables to be 1 if student got it correct and zero otherwise
+assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate_at(vars(starts_with("m8saq5"), 
                  starts_with("m8saq6"),
                  starts_with("m8sbq2"),
                  starts_with("m8sbq3"),
                  starts_with("m8sbq4"),
                  starts_with("m8sbq5"),
-                 starts_with("m8sbq6"),
-  ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq4_id=if_else(m8saq4_id==5,4, as.numeric(m8saq4_id))) %>% #fix case where some enumerators recorded the pre-filled answer.
-  mutate(m8saq7a_gir=bin_var(m8saq7a_gir, 3),
-         m8saq7b_gir=bin_var(m8saq7b_gir, 3),
-         m8saq7c_gir=bin_var(m8saq7c_gir, 2),
-         m8saq7d_gir=bin_var(m8saq7d_gir, 3),
-         m8saq7e_gir=bin_var(m8saq7e_gir, 4),
-         m8saq7f_gir=bin_var(m8saq7f_gir, 1),
-         m8saq7g_gir=bin_var(m8saq7g_gir, 2),
-         m8saq7h_gir=bin_var(m8saq7h_gir, 2),
-         m8saq7i_gir=bin_var(m8saq7i_gir, 4),
-         m8saq7j_gir=bin_var(m8saq7j_gir, 1),
-         m8saq7k_gir=bin_var(m8saq7k_gir, 3)) %>% #grade lonely giraffe question
-  group_by(school_code) %>%
-  mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
-            ~call_out_scorer(.,0.8)) %>%
-  ungroup() %>%
-  mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
-  mutate(m8saq2_id=if_else(m8saq2_id<0,0,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=if_else(m8saq3_id<0,0,m8saq3_id)) %>%
-  mutate(m8saq2_id=if_else(m8saq2_id>1,1,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=if_else(m8saq3_id>1,1,m8saq3_id)) %>%
-  mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
-         m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-         m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
-    mutate( 
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense<0,0,m8sbq1_number_sense)) %>%
-    mutate(
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense>1,1,m8sbq1_number_sense)) %>%
-  select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
-
+                 starts_with("m8sbq6")), ~bin_var(.,1)) %>%
+  # Fix special cases
+  mutate(m8saq4_id = if_else(m8saq4_id == 5, 4, as.numeric(m8saq4_id))) %>% # Fix case where some enumerators recorded the pre-filled answer
+  mutate(m8saq7a_gir = bin_var(m8saq7a_gir, 3),
+         m8saq7b_gir = bin_var(m8saq7b_gir, 3),
+         m8saq7c_gir = bin_var(m8saq7c_gir, 2),
+         m8saq7d_gir = bin_var(m8saq7d_gir, 3),
+         m8saq7e_gir = bin_var(m8saq7e_gir, 4),
+         m8saq7f_gir = bin_var(m8saq7f_gir, 1),
+         m8saq7g_gir = bin_var(m8saq7g_gir, 2),
+         m8saq7h_gir = bin_var(m8saq7h_gir, 2),
+         m8saq7i_gir = bin_var(m8saq7i_gir, 4),
+         m8saq7j_gir = bin_var(m8saq7j_gir, 1),
+         m8saq7k_gir = bin_var(m8saq7k_gir, 3)) %>%  # Grade lonely giraffe question
+  mutate(
+    m8saq4_id = if_else(m8saq4_id != 99, m8saq4_id / 4, 0),
+    m8saq7_word_choice = bin_var(m8saq7_word_choice, 2)
+  )
 
 ####Literacy####
 #calculate # of literacy items
@@ -833,6 +900,7 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
          math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
+
 
 
 #save  4th grade data at student level anonymized
