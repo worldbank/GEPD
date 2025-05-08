@@ -1868,8 +1868,8 @@ final_indicator_data_PKNW <- management_dta %>%
          multiply_double_digit_pknw=principal_scorer(multiply_double_digit_pknw_shr, m5s2q1e_number ,0.8,1.2),
          complete_sentence_pknw=principal_scorer(complete_sentence_pknw_shr, m5s1q1f_grammer, 0.8,1.2),
 
-         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, 0.8,1.2),
-         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt,0.8,3),
+         experience_pknw=principal_scorer(exper_guess, teacher_count_experience_less3, 0.8,1.2),
+         textbooks_pknw=principal_scorer(m7sfq10_pknw, s_m4ab_04,0.8,3),
          blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
   mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
   mutate(principal_knowledge_score=case_when(
