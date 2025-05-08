@@ -2151,7 +2151,7 @@ pknw_actual_combined <- pknw_actual_school_inpts %>%
 # if principal is within 1 student/teacher, then score as 1, 0 otherwise
 principal_scorer <- function(var_guess, var_actual,  margin1, margin2) {
   if_else(
-    var_guess >= (var_actual * margin1) & var_guess <= (var_actual * margin1),
+    var_guess >= (var_actual * margin1) & var_guess <= (var_actual * margin2),
     1,
     0)
 }
@@ -2166,11 +2166,16 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  %>%
   left_join(pknw_actual_combined) %>%
   mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
-  mutate(add_triple_digit_pknw=principal_scorer(rowMeans(select(.,starts_with('m7sfq5_pknw')), na.rm=T), m5s2q1c_number,0.8,1.2),
-         multiply_double_digit_pknw=principal_scorer(rowMeans(select(.,starts_with('m7sfq6_pknw')), na.rm=T), m5s2q1e_number ,0.8,1.2),
-         complete_sentence_pknw=principal_scorer(rowMeans(select(.,starts_with('m7sfq7_pknw')), na.rm=T), m5s1q1f_grammer, 0.8,1.2),
+  mutate(
+  add_triple_digit_pknw_shr=rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T)/m7_teach_count_pknw,
+           multiply_double_digit_pknw_shr=rowSums(select(.,starts_with('m7sfq6_pknw')), na.rm=T)/m7_teach_count_pknw,
+           complete_sentence_pknw_shr=rowSums(select(.,starts_with('m7sfq7_pknw')), na.rm=T)/m7_teach_count_pknw,    
+    add_triple_digit_pknw=principal_scorer(add_triple_digit_pknw_shr, m5s2q1c_number,0.8,1.2),
+         multiply_double_digit_pknw=principal_scorer(multiply_double_digit_pknw_shr, m5s2q1e_number ,0.8,1.2),
+         complete_sentence_pknw=principal_scorer(complete_sentence_pknw_shr, m5s1q1f_grammer, 0.8,1.2),
+
          experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, 0.8,1.2),
-         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt, ,0.8,3),
+         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt,0.8,3),
          blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
   mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
   mutate(principal_knowledge_score=case_when(

@@ -67,7 +67,7 @@ strata <- c('Tehsil', 'Gender')
 #set directory to bring in data
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),paste0("Data/",province))
+  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_M", sep="_"),paste0("Data/",province))
   gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
@@ -81,7 +81,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
-  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),paste0("Data/",province))
+  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_M"),paste0("Data/",province))
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))

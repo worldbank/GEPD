@@ -62,12 +62,12 @@ iso3='GAB'
 
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
 
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data"
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data"
 gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
 
 }else if (Sys.getenv("USERNAME") == "wb577189"){
   
-  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data"
+  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data"
 }
 
 
@@ -107,20 +107,20 @@ g4_prof <- read_excel(path=paste0(gen_dir,'/lpv_edstats_1205.xls'), sheet='WDI_i
 
 
 #read in UIS data on 4.1.1a
-uis_df <- read_csv(file='https://geo.uis.unesco.org/data/sdg-benchmarks.csv') %>%
-  filter(country_id==iso3) %>%
-  group_by(ind_nber) %>%
-  arrange(as.numeric(year)) %>%
-  filter(row_number()==n()) %>%
-  select(country_id, ind_nber, year, latest_value) %>%
-  ungroup() %>%
-  pivot_wider(
-    names_from = ind_nber,
-    values_from=latest_value,
-    values_fill=as.numeric(NA),
-    names_prefix = 'SDG'
-  ) %>%
-  mutate(across(starts_with('SDG'), as.numeric))
+# uis_df <- read_csv(file='https://geo.uis.unesco.org/data/sdg-benchmarks.csv') %>%
+#   filter(country_id==iso3) %>%
+#   group_by(ind_nber) %>%
+#   arrange(as.numeric(year)) %>%
+#   filter(row_number()==n()) %>%
+#   select(country_id, ind_nber, year, latest_value) %>%
+#   ungroup() %>%
+#   pivot_wider(
+#     names_from = ind_nber,
+#     values_from=latest_value,
+#     values_fill=as.numeric(NA),
+#     names_prefix = 'SDG'
+#   ) %>%
+#   mutate(across(starts_with('SDG'), as.numeric))
 
 #read in databases for indicators
 

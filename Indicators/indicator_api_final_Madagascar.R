@@ -64,13 +64,13 @@ api_template <- api_template_fun()
 #specify path to data
 if (str_to_lower(Sys.info()["user"]) == "wb469649") {
   
-  data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/"
+  data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_M/Data/"
   data_dir_conf<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/anonymized"
   
   
 } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
   
-  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/"
+  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_M/Data/"
   data_dir_conf <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/anonymized"
 }
 

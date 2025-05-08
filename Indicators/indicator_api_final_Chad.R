@@ -62,12 +62,12 @@ iso3='TCD'
 
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
 
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/TCD/TCD_2023_GEPD/TCD_2023_GEPD_v01_M/Data"
+data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/TCD/TCD_2023_GEPD/TCD_2023_GEPD_v02_M/Data"
 gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
 
 }else if (Sys.getenv("USERNAME") == "wb577189"){
   
-  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/TCD/TCD_2023_GEPD/TCD_2023_GEPD_v01_M/Data"
+  data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/TCD/TCD_2023_GEPD/TCD_2023_GEPD_v02_M/Data"
 }
 
 

@@ -1608,68 +1608,74 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
   
 
   
-  #first create a database containing actual values for each question for the principal
-  pknw_actual_cont <- final_indicator_data_CONT %>%
-    select(school_code, m5_teach_count, m5_teach_count_math, m5s2q1c_number, m5s2q1e_number, m5s1q1f_grammer ) 
-  
-  pknw_actual_exper <- teacher_questionnaire %>%
-    select(school_code, m3sb_tnumber, m3sb_troster,m3saq5, m3saq6 ) %>%
-    mutate(experience=(2019-m3saq5)) %>%
-    filter(experience <3) %>% 
-    group_by(school_code) %>%
-    summarise(teacher_count_experience_less3=n())
-  
-  pknw_actual_school_inpts <- final_indicator_data_INPT %>%
-    select(school_code, blackboard_functional, m4scq5_inpt, m4scq4_inpt)
-  
-  pknw_actual_combined <- pknw_actual_school_inpts %>%
-    left_join(pknw_actual_cont) %>%
-    left_join(pknw_actual_exper) %>%
-    mutate(teacher_count_experience_less3=if_else(is.na(teacher_count_experience_less3), as.numeric(0), as.numeric(teacher_count_experience_less3)),
-           m5s2q1c_number=m5s2q1c_number*m5_teach_count,
-           m5s2q1e_number=m5s2q1e_number*m5_teach_count,
-           m5s1q1f_grammer=m5s1q1f_grammer*m5_teach_count)
-  
-  
-  #create function to compare principal responses to actual
-  # if principal is within 1 student/teacher, then score as 1, 0 otherwise
-  principal_scorer <- function(var_guess, var_actual, var_total, margin1, margin2) {
-    if_else(
-      ((1-abs(var_guess-var_actual)/var_total>= as.numeric(margin1)) | (var_guess-var_actual <= as.numeric(margin2))),
-      1,
-      0)
-  }
-  
-  
-  
-  final_indicator_data_PKNW <- school_data_PKNW %>% 
-    group_by(school_code) %>%
-    select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, m7_teach_count_pknw, m7saq10) %>%
-    summarise_all(~first(na.omit(.))) %>%
-    mutate(n_mssing_PKNW=n_miss_row(.))  %>%
-    select( -starts_with('interview'), -starts_with('enumerator'))  %>%
-    left_join(pknw_actual_combined) %>%
-    mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
-    mutate(add_triple_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T), m5s2q1c_number, m7_teach_count_pknw,0.8,1),
-           multiply_double_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq6_pknw')), na.rm=T), m5s2q1e_number, m7_teach_count_pknw,0.8,1),
-           complete_sentence_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq7_pknw')), na.rm=T), m5s1q1f_grammer, m7_teach_count_pknw,0.8,1),
-           experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, m7_teach_count_pknw,0.8,1),
-           textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt, m4scq4_inpt,0.8,3),
-           blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
-    mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
-    mutate(principal_knowledge_score=case_when(
-      principal_knowledge_avg ==1 ~ 5,
-      (principal_knowledge_avg >=5/6 & principal_knowledge_avg<1) ~ 4,
-      (principal_knowledge_avg >=4/6 & principal_knowledge_avg<5/6) ~ 3,
-      (principal_knowledge_avg >=3/6 & principal_knowledge_avg<4/6) ~ 2,
-      (principal_knowledge_avg <3/6 ) ~ 1  )
-    ) %>%
-    select(school_code, starts_with('m7sfq5_pknw'),m5s2q1c_number, starts_with('m7sfq6_pknw'), m5s2q1e_number, starts_with('m7sfq7_pknw'), m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
-           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
-    select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
-           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10) %>%
-    left_join(school_data_preamble_short) %>%
-    select(keep_info, everything())  
+
+#first create a database containing actual values for each question for the principal
+pknw_actual_cont <- final_indicator_data_CONT %>%
+  select(school_code, m5_teach_count, m5_teach_count_math, m5s2q1c_number, m5s2q1e_number, m5s1q1f_grammer ) 
+
+pknw_actual_exper <- teacher_questionnaire %>%
+  select(school_code, m3sb_tnumber, m3sb_troster,m3saq5, m3saq6 ) %>%
+  mutate(experience=(2021-m3saq5)) %>%
+  filter(experience <3) %>% 
+  group_by(school_code) %>%
+  summarise(teacher_count_experience_less3=n())
+
+pknw_actual_school_inpts <- final_indicator_data_INPT %>%
+  select(school_code, blackboard_functional, m4scq5_inpt, m4scq4_inpt)
+
+pknw_actual_combined <- pknw_actual_school_inpts %>%
+  left_join(pknw_actual_cont) %>%
+  left_join(pknw_actual_exper) %>%
+  mutate(teacher_count_experience_less3=if_else(is.na(teacher_count_experience_less3), as.numeric(0), as.numeric(teacher_count_experience_less3)),
+         m5s2q1c_number=m5s2q1c_number,
+         m5s2q1e_number=m5s2q1e_number,
+         m5s1q1f_grammer=m5s1q1f_grammer)
+
+
+#create function to compare principal responses to actual
+# if principal is within 1 student/teacher, then score as 1, 0 otherwise
+principal_scorer <- function(var_guess, var_actual,  margin1, margin2) {
+  if_else(
+    var_guess >= (var_actual * margin1) & var_guess <= (var_actual * margin2),
+    1,
+    0)
+}
+
+
+
+final_indicator_data_PKNW <- school_data_PKNW %>%
+  group_by(school_code) %>%
+  select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, m7_teach_count_pknw, m7saq10) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(n_mssing_PKNW=n_miss_row(.))  %>%
+  select( -starts_with('interview'), -starts_with('enumerator'))  %>%
+  left_join(pknw_actual_combined) %>%
+  mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
+  mutate(
+  add_triple_digit_pknw_shr=rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T)/m7_teach_count_pknw,
+           multiply_double_digit_pknw_shr=rowSums(select(.,starts_with('m7sfq6_pknw')), na.rm=T)/m7_teach_count_pknw,
+           complete_sentence_pknw_shr=rowSums(select(.,starts_with('m7sfq7_pknw')), na.rm=T)/m7_teach_count_pknw,    
+    add_triple_digit_pknw=principal_scorer(add_triple_digit_pknw_shr, m5s2q1c_number,0.8,1.2),
+         multiply_double_digit_pknw=principal_scorer(multiply_double_digit_pknw_shr, m5s2q1e_number ,0.8,1.2),
+         complete_sentence_pknw=principal_scorer(complete_sentence_pknw_shr, m5s1q1f_grammer, 0.8,1.2),
+
+         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, 0.8,1.2),
+         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt,0.8,3),
+         blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
+  mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
+  mutate(principal_knowledge_score=case_when(
+    principal_knowledge_avg ==1 ~ 5,
+    (principal_knowledge_avg >=5/6 & principal_knowledge_avg<1) ~ 4,
+    (principal_knowledge_avg >=4/6 & principal_knowledge_avg<5/6) ~ 3,
+    (principal_knowledge_avg >=3/6 & principal_knowledge_avg<4/6) ~ 2,
+    (principal_knowledge_avg <3/6 ) ~ 1  )
+  ) %>%
+  select(school_code, starts_with('m7sfq5_pknw'),m5s2q1c_number, starts_with('m7sfq6_pknw'), m5s2q1e_number, starts_with('m7sfq7_pknw'), m5s1q1f_grammer, m7sfq9_pknw_filter, teacher_count_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, 
+         multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
+  select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
+         multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10)
+
+
   
   
   #Breakdowns by Male/Female
