@@ -61,13 +61,17 @@ api_template <- api_template_fun()
 #specify path to data
 if(Sys.info()["user"] == "wb469649"){
   
-data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
-data_dir_2021 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
+data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/"
+data_dir_2021 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_M/Data/"
 
 }
 if(Sys.info()["user"] == "wb577189"){
   data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
   data_dir_2021 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
+}
+if(Sys.info()["user"] == "wb631589"){
+  data_dir_2020 <- "C:/Users/wb631589//OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/"
+  data_dir_2021 <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_M/Data/"
 }
 
 #pull data for learning poverty from wbopendata
@@ -125,7 +129,6 @@ finance_df_final <- finance_df_shaped %>%
   filter(rowname=='Scores') %>%
   select(-rowname)
 
-
 source('R/api_data_fun_ETH.R', echo=TRUE)
 
 
@@ -155,16 +158,19 @@ gc()
 rm(list = ls())
 
 #specify path to data
-data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
-data_dir_2021 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
+
+data_dir_2020 <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/"
+data_dir_2021 <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_M/Data/"
 
 #attach saved results for 2021
 attach(paste0(data_dir_2021, "/School/school_indicators_data_anon.Rdata"))
-school_dta_2021 <- school_dta_short_anon
+school_dta_2021 <- school_dta_short_anon %>%
+  mutate(ipw = sample/count) 
 
 #attach saved results for 2020
 attach(paste0(data_dir_2020, "/School/school_indicators_data_anon.Rdata"))
-school_dta_2020 <- school_dta_short_anon 
+school_dta_2020 <- school_dta_short_anon %>%
+  mutate(ipw = sample/count) 
 
 #combine the data
 combine_gepd_data <- school_dta_2020 %>%
@@ -182,16 +188,35 @@ wgt_share_2021 <- wgt_2021/wgt_pooled
 
 
 #now combine the data into one spreadsheet
-api_final_2020 <- read_csv('GEPD_Indicators_API_ETH_2020.csv') %>%
-  rename(value_2020=value)
+#remove Ns from the survey of public officials
+api_final_2020 <- read_csv('GEPD_Indicators_API_ETH_2020.csv')
+
+api_final_2020 <- api_final_2020 %>%
+  mutate(
+    po_vars = if_else(
+      str_detect(Series, "^(SE\\.PRM\\.BIMP|SE\\.PRM\\.BMAC|SE\\.PRM\\.BNLG|SE\\.PRM\\.BQBR)"),
+      1,
+      0
+    )
+  )
+
+api_final_2020 <- api_final_2020 %>%
+  rename(value_2020=value) %>%
+         mutate(n_2020 = if_else(po_vars != 1, N, NA)) %>%
+  select(-mean_se, -mean_low, -mean_upp, -mean_var)
 
 api_final_2021 <- read_csv('GEPD_Indicators_API_ETH_2021.csv') %>%
-  rename(value_2021=value)
+  rename(value_2021=value,
+         n_2021 = N) %>%
+  select(-mean_se, -mean_low, -mean_upp, -mean_var, -"Indicator Name", -"Source", -"Source Organization")
+
 
 api_final_pooled <- api_final_2020 %>%
-  left_join(api_final_2021) %>%
+  left_join(api_final_2021, by = "Series") %>%
   mutate(value_pooled=value_2020*wgt_share_2020 + value_2021*wgt_share_2021,
-         value=value_pooled)
+         value=value_pooled,
+         n_pooled = n_2020 + n_2021,
+         N = n_pooled)
 
 #Tags
 practice_tags <- "SE.PRM.PROE|SE.LPV.PRIM|SE.PRM.LERN|SE.PRM.TENR|SE.PRM.EFFT|SE.PRM.CONT|SE.PRM.ATTD|SE.PRM.LCAP|SE.PRM.PEDG|SE.LPV"
@@ -202,7 +227,7 @@ api_metadata_fn <- function(cntry, yr) {
     rename(Indicator.Name='Indicator Name') %>%
     filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
-    select(Series, `Indicator Name`, value) %>%
+    select(Series, `Indicator Name`, value, N) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(
@@ -220,7 +245,7 @@ api_metadata_fn <- function(cntry, yr) {
     rename(Indicator.Name='Indicator Name') %>%
     filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
-    select(Series, `Indicator Name`, value) %>%
+    select(Series, `Indicator Name`, value, N) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(

@@ -55,7 +55,19 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
                                 "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
                                 "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
-                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F",
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F",
+                                "final_indicator_data_CONT_micro_F", "final_indicator_data_CONT_micro_M",
+                                "final_indicator_data_CONT_micro", "final_indicator_data_EFFT_micro_F", 
+                                "final_indicator_data_EFFT_micro_M", "final_indicator_data_EFFT_micro", 
+                                "final_indicator_data_LCAP_micro_F", "final_indicator_data_LCAP_micro_M", 
+                                "final_indicator_data_LCAP_micro", "final_indicator_data_LERN_micro_F", 
+                                "final_indicator_data_LERN_micro_M", "final_indicator_data_LERN_micro", 
+                                "final_indicator_data_TATT_micro", "final_indicator_data_TEVL_micro", 
+                                "final_indicator_data_TINM_micro", "final_indicator_data_TMNA_micro", 
+                                "final_indicator_data_TSDP_micro", "final_indicator_data_TSUP_micro",
+                                "final_indicator_data_ILDR_micro_M", "final_indicator_data_ILDR_micro_F",
+                                "final_indicator_data_ILDR_micro"))
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
@@ -89,17 +101,40 @@ region_list<-school_dta_short$school_address_preload
 zone_list<-school_dta_short$school_province_preload
 woreda_list<-school_dta_short$school_district_preload
 
-#create weights for each school
-data_set_updated <- data_set_updated %>%
-  mutate(N_sch=n()) %>% #get total number of schools
-  #now calculate probability of selecting woreda
-  group_by(Region, Zone, Woreda) %>%
-  mutate(N_school_woreda=n(),
-         N_students_woreda=sum(grd4_total,na.rm=T)) %>%
-  group_by(Region) %>%
-  mutate(strat_total=sum(grd4_total, na.rm=T),
-         N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
-         N_sch_strata=n()) #stratum weights (three schools selected)
+# #create weights for each school
+# data_set_updated <- data_set_updated %>%
+#   mutate(N_sch=n()) %>% #get total number of schools
+#   #now calculate probability of selecting woreda
+#   group_by(Region, Zone, Woreda) %>%
+#   mutate(N_school_woreda=n(),
+#          N_students_woreda=sum(grd4_total,na.rm=T)) %>%
+#   group_by(Region) %>%
+#   mutate(strat_total=sum(grd4_total, na.rm=T),
+#          N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
+#          N_sch_strata=n()) #stratum weights (three schools selected)
+# 
+# df_weights_function <- function(dataset,scode, snumber, prov) {
+#   scode<-enquo(scode)  
+#   snumber<-enquo(snumber)
+#   prov<-enquo(prov)
+#   
+#   dataset %>%
+#     mutate(!! scode := as.numeric(.data$school_code)) %>%
+#     left_join(weights_df %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list)  %>% filter(Zone %in% zone_list)  %>% filter(Woreda %in% woreda_list)  %>% filter(Program==1)) %>%
+#     left_join(data_set_updated %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list) %>% filter(Zone %in% zone_list)   %>% filter(Woreda %in% woreda_list) %>% filter(Program==1))  %>%
+#     mutate(
+#            N_schools=N_sch,
+#            N_schools_strata=N_sch_strata,
+#            N_selected_strata=N_sel_strata,
+#            school_weights=ipw,
+#            ipw=ipw*!! snumber,
+#            ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
+#     mutate(province=Region,
+#            urban_rural=Location
+#            ) %>%
+#     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
+#                                                         names(data_set_updated) == "owner" )])))
+# }
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
@@ -107,23 +142,38 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   prov<-enquo(prov)
   
   dataset %>%
-    mutate(!! scode := as.numeric(.data$school_code)) %>%
-    left_join(weights_df %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list)  %>% filter(Zone %in% zone_list)  %>% filter(Woreda %in% woreda_list)  %>% filter(Program==1)) %>%
-    left_join(data_set_updated %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list) %>% filter(Zone %in% zone_list)   %>% filter(Woreda %in% woreda_list) %>% filter(Program==1))  %>%
-    mutate(
-           N_schools=N_sch,
-           N_schools_strata=N_sch_strata,
-           N_selected_strata=N_sel_strata,
-           school_weights=ipw,
-           ipw=ipw*!! snumber,
-           ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
+    left_join(data_set_updated)  %>%
     mutate(province=Region,
-           urban_rural=Location
-           ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
-                                                        names(data_set_updated) == "owner" )])))
+           urban_rural=Location) 
 }
 
+#merge with the sample data
+sample <- read.csv(paste0(project_folder, "/", country, "/", country, "_", year, "_", "GEPD", "/", country, "_", year, "_", "GEPD_v02_RAW", "/", "Data/sampling/", "Ethiopia_weights.csv"))
+
+data_set_updated <- sample %>%
+  mutate(
+    school_code = Code_School,
+    strata_count = paste0(Woreda, Region, Zone, Location)
+  )
+
+
+#for sampled school that can potentially have more than 1 match, keep the relevant ones 
+data_set_updated <- data_set_updated %>%
+  filter(!(school_code == 100008 & School_Name == "Chaba"),
+         !(school_code == 500033 & (School_Name == "Bonga")),
+         !(school_code == 500069 & (School_Name == "Bejit" | School_Name == "Dhadhin")),
+         !(school_code == 500077 & (School_Name == "Lucy Acadamy" | School_Name == "Setema" | School_Name == "Cali bakow")))
+
+
+#there are still 5 schools 407814 550446 601254 601499 700084 with double listings due to program, just average the weight for them. Even though not ideal, 
+#doing this to save time given that all other sampled schools are unique at the school code level
+data_set_updated <- data_set_updated %>%
+  group_by(school_code) %>%
+  summarise(sample = mean(sample),
+            count = mean(count),
+            strata_count = first(strata_count),
+            Region = first(Region),
+            Location = first(Location))
 
 ####################
 # Code to anonymize
@@ -238,3 +288,4 @@ for (i in data_list ) {
 }
 
 save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_M/Data/School/school_indicators_data_anon.RData"))

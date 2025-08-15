@@ -25,15 +25,15 @@ makeVlist <- function(dta) {
          varlabel = varlabels, vallabel = vallabels) 
 }
 
-
-#Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- indicators$indicator_tag
+# 
+# #Read in list of indicators
+# indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+# indicators <- indicators %>%
+#   filter(Series!="---") %>%
+#   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+# 
+# #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+# indicator_names <- indicators$indicator_tag
 
 # #Get a list of enumerator names and IDs
 # enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
@@ -65,8 +65,8 @@ bin_var <- function(var, val) {
 #rename a few key variables up front
 public_officials_dta<- public_officials_dta %>%
   # left_join(enumerator_id) %>%
-  mutate(enumerator_name=enumerator_code  ,
-         enumerator_number=as.double(m1s0q1_number_other) ,
+  mutate(enumerator_name=Enumerator  ,
+         # enumerator_number=as.double(m1s0q1_number_other) ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
@@ -104,28 +104,25 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,year,"Data/clean/School", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/School/", sep="/"))
 
-if (exists(paste(school_folder, "school_indicators_data.RData", sep="/"))) {
+if (exists(paste(school_folder, "school_indicators_data_anon.RData", sep="/"))) {
   
-  load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
+  sample <- read.csv(paste0(project_folder, "/", country, "/", country, "_", year, "_", "GEPD", "/", country, "_", year, "_", "GEPD_v02_RAW", "/", "Data/sampling/", "Ethiopia_weights.csv"))
   
-  currentDate<-c("2019-10-31")
-  sample_frame_name <- file.path(paste(project_folder,country,'/',year,"/Data/Sampling/school_sample_",currentDate,".RData", sep=""))
-  
-  load(sample_frame_name)
+  sample <- sample %>%
+    mutate(school_code = Code_School)
   
   #compare data collected to original sample
   school_dta_short <- school_dta_short %>%
     mutate(codigo=as.numeric(school_code_preload)) %>%
-    left_join(data_set_updated) %>%
-    mutate( school_ipw=weights) %>%
-    mutate(school_ipw=if_else(is.na(school_ipw), median(school_ipw, na.rm=T), school_ipw)*orig_n_students) %>%
-    mutate(school_ipw=school_ipw/sum(school_ipw, na.rm = T))
+    left_join(sample) %>%
+    mutate( school_ipw=ipw) 
   
   weights<-school_dta_short %>%
     group_by(school_code) %>%
     summarise(school_ipw=mean(school_ipw))
+  
   
   final_indicator_data_INPT <- final_indicator_data_INPT %>%
     left_join(weights) %>%
@@ -155,6 +152,16 @@ if (exists(paste(school_folder, "school_indicators_data.RData", sep="/"))) {
 attitude_fun_rev  <- function(x) {
   case_when(
     x==99 ~ as.numeric(NA),
+    x==5 ~ 1,
+    x==4 ~ 2.33,
+    x==2 ~ 3.67,
+    x==1 ~ 5
+  )
+}
+
+attitude_fun_rev_2  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
     x==1 ~ 5,
     x==2 ~ 4,
     x==3 ~ 3,
@@ -164,11 +171,16 @@ attitude_fun_rev  <- function(x) {
 }
 
 #create list of these variables
-var_rev_list<-c('QB2q2',  'QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4q4f', 'QB4q4g',
+var_rev_list<-c('QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4q4f', 'QB4q4g',
                 'IDM1q1', 'IDM1q2' )
 
+var_rev_list_2 <-c('QB2q2')
+
 public_officials_dta <- public_officials_dta %>%
-  mutate_at(var_rev_list, attitude_fun_rev)
+  mutate(across(all_of(var_rev_list), attitude_fun_rev))
+
+public_officials_dta <- public_officials_dta %>%
+  mutate(across(all_of(var_rev_list_2), attitude_fun_rev_2))
 
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
@@ -187,19 +199,17 @@ public_officials_dta <- public_officials_dta %>%
          proportion_producement_political=IDM3q3,
          DEM1q13=as.numeric(DEM1q13)) %>%
   mutate(QB1q2= case_when(
-    between(abs(QB1q2-class_size)/class_size,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-    between(abs(QB1q2-class_size)/class_size,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-    between(abs(QB1q2-class_size)/class_size,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-    between(abs(QB1q2-class_size)/class_size,30,40) ~ 2, #between 30-40% of actual value gets 2 points
-    between(abs(QB1q2-class_size)/class_size,40,100) ~ 1 #between 40-10% of actual value gets 1 points
-  ),
+    between((abs((QB1q2-class_size)/class_size)),0,0.1) ~ 5, #between 0-10% of actual value gets 5 points
+    between((abs((QB1q2-class_size)/class_size)),0.1,0.2) ~ 4, #between 10-20% of actual value gets 4 points
+    between((abs((QB1q2-class_size)/class_size)),0.2,0.3) ~ 3, #between 20-30% of actual value gets 3 points
+    between((abs((QB1q2-class_size)/class_size)),0.3,0.4) ~ 2, #between 30-40% of actual value gets 2 points
+    abs((QB1q2 - class_size) / class_size) > 0.4 ~ 1),
   QB1q1= case_when(
-    between(abs(QB1q1-absence)/absence,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-    between(abs(QB1q1-absence)/absence,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-    between(abs(QB1q1-absence)/absence,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-    between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
-    between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
-  ),
+    between(abs(QB1q1-absence)/absence,0,0.10) ~ 5, #between 0-10% of actual value gets 5 points
+    between(abs(QB1q1-absence)/absence,0.10,0.20) ~ 4, #between 10-20% of actual value gets 4 points
+    between(abs(QB1q1-absence)/absence,0.20,0.30) ~ 3, #between 20-30% of actual value gets 3 points
+    between(abs(QB1q1-absence)/absence,0.30,0.40) ~ 2, #between 30-40% of actual value gets 3 points
+    abs((QB1q1 - absence) / absence) > 0.4 ~ 1),
   QB4q2= case_when(
     QB4q2>=120 ~ 5,
     QB4q2>=110 ~ 4,
@@ -237,7 +247,7 @@ public_officials_dta <- public_officials_dta %>%
 
 #list info that will be useful to keep in each indicator dataframe
 preamble_info <- c('interview__id', 'interview__key', 'office_preload', 'govt_tier',
-                   'enumerator_name', 'enumerator_number', 'survey_time', 'lat', 'lon', 'consent',
+                   'enumerator_name', 'survey_time', 'lat', 'lon', 'consent',
                    'occupational_category', 'professional_service', 'sub_professional_service', 'admin', 'position',
                    'responsible_finance_planning', 'responsible_hiring_teachers', 'responsible_monitoring_performance','responsible_none',
                    'education','gender', 'director_hr')

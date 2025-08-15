@@ -1,4 +1,5 @@
-# Purpose:  Run file for high frequency and data quality checks for the survey of public officials
+
+#launch file to access data from API# Purpose:  Run file for high frequency and data quality checks for the survey of public officials
 # Author: Brian Stacy
 # This file will run four R scripts in order.
 # Each file can be run independently, but you will be prompted for certain paths that may not be specified
@@ -28,8 +29,8 @@ here() #"C:/Users/wb469649/Documents/Github/GEPD"
 
 
 #Country name
-country <-'RWA'
-country_name <- "Rwanda"
+country <-'ETH'
+country_name <- "Ethiopia"
 year <- '2020'
 #########################
 # File paths #
@@ -57,6 +58,13 @@ if (Sys.getenv("USERNAME") == "wb469649"){
   backup_onedrive="yes"
   save_folder_onedrive <- file.path(paste("C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/Public_Officials", sep="/"))
   
+} else if (Sys.getenv("USERNAME") == "wb631589" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/Public_Officials/mydata-2020-03-23", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
+  backup_onedrive="no"
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
@@ -75,8 +83,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 po_file<-"public_officials_final.dta"
 
 
-#launch file to access data from API
-source('02_public_officials_api.R', local=TRUE)
+# source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data
 source('03_public_officials_cleaner.R', local=TRUE)
