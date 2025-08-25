@@ -136,11 +136,15 @@ rm(list = ls())
 work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/"
 
     
-  }
+  } else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+    
+work_dir<- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_M/Data/"
+}
 
 
 #load school data for comparisons
 load(paste(work_dir, "School/school_indicators_data_anon.RData", sep=""))
+
 
 #get list of data frames and add _2021 as suffix
 frames_2021 <- names(which(unlist(eapply(.GlobalEnv,is.data.frame))))
@@ -176,6 +180,7 @@ wrapper <- function(x, ...)
   paste(strwrap(x, ...), collapse = "\n")
 }
 
+
 ```
 
 ```{r data2020}
@@ -193,8 +198,15 @@ wrapper <- function(x, ...)
     
 data_dir_2020 <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_M/Data/"
 
+
+  } else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
     
-  }
+data_dir_2020<- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/"
+data_dir_2020_confidential <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_RAW/Data/confidential"
+work_dir_confidential <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_RAW/Data/confidential"
+
+
+}
 
 #attach saved results for 2020
 load(paste0(data_dir_2020, "/School/school_indicators_data_anon.Rdata"))
@@ -217,6 +229,92 @@ for (x in frames_2021) {
 
 
 
+ if(Sys.info()["user"] == "wb577189"){
+
+save(list = frames_2021,
+  file = "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+
+    
+  } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
+    
+save(list = frames_2021,
+  file = "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
+    
+  } else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+
+save(list = frames_2021,
+  file = "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v02_M/Data/School/school_indicators_data_anon.Rdata")
+    
+}
+
+########################################
+#added by VF -- do the same thing but for the data that has not been anon yet
+rm(list = ls())
+
+if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+    
+work_dir_confidential <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_RAW/Data/confidential/"
+data_dir_2020_confidential <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_RAW/Data/confidential"
+
+}
+
+load(paste(work_dir_confidential, "School/school_indicators_data.RData", sep=""))
+
+
+#get list of data frames and add _2021 as suffix
+frames_2021_confidential <- names(which(unlist(eapply(.GlobalEnv,is.data.frame))))
+
+for (x in frames_2021_confidential) {
+  
+  t <- get(x)
+  assign(paste0(x,"_2021"), t )
+  
+}
+
+
+#load public official data
+load(paste(work_dir_confidential, "Public_Officials/public_officials_indicators_data.RData", sep=""))
+
+#Create a function which will generate new binary variable using case_when, but 
+#if value is misisng it will generate binary variable to be missing
+#This is done a lot so will create function for it.
+#e.g. school_absent=case_when(
+#         m2sbq6_efft==6  ~ 1,
+#         m2sbq6_efft!=6   ~ 0,
+#         is.na(m2sbq6_efft) ~ as.numeric(NA))
+bin_var <- function(var, val) {
+  case_when(
+    var==val  ~ 1,
+    var!=val   ~ 0,
+    is.na(var) ~ as.numeric(NA))
+}
+
+#create function to wrap text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+
+#attach saved results for 2020
+load(paste0(data_dir_2020_confidential, "/School/school_indicators_data.Rdata"))
+
+# Go through all dataframes and append 2020 and 2021 data together
+for (x in frames_2021_confidential) {
+  
+  t <- get(x)
+  t_2021 <- get(paste0(x,"_2021"))
+  
+  t <- t %>%
+    mutate(date=2020) %>%
+    select(-one_of('grade')) %>%
+    bind_rows(t_2021) %>%
+    mutate(date=if_else(is.na(date),2021,date)) 
+  
+  assign(x, t )
+  
+}
+
 
 
  if(Sys.info()["user"] == "wb577189"){
@@ -230,8 +328,14 @@ save(list = frames_2021,
 save(list = frames_2021,
   file = "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_M/Data/School/school_indicators_data_anon.Rdata")
     
-  }
+  } else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
 
+save(list = frames_2021_confidential,
+  file = "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v02_RAW/Data/confidential/School/school_indicators_data.Rdata")
+    
+}
+
+#same thing for 2020
 
 
 ```
@@ -313,7 +417,8 @@ labels_df_2<-data.frame(indicators=as.character(indicators_list),
                       indicator_labels=as.character(main_indicator_labels2))
 
 
-load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_survey_data.Rdata")
+#load("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v01_RAW/Data/confidential/School/school_survey_data.Rdata")
+load("C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/ETH/ETH_2020_2021_GEPD/ETH_2020_2021_GEPD_v02_RAW/Data/confidential/School/school_survey_data.Rdata")
 
 ## Get the teacher gender
 teach_gender <- teacher_roster %>% select(1:7, starts_with("school")) %>% 

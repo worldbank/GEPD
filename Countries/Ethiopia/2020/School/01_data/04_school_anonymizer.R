@@ -99,7 +99,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   prov<-enquo(prov)
   
   dataset %>%
-    left_join(data_set_updated)  %>%
+    left_join(data_set_updated, by = "school_code")  %>%
     mutate(province=Region,
            urban_rural=Location) 
 }
@@ -117,6 +117,10 @@ data_set_updated <- sample %>%
 data_set_updated <- data_set_updated %>%
   filter(!(school_code == 100308 & School_Name == "Dukie"),
          !(school_code == 500135 & (School_Name == "Majeti" | School_Name == "Fejej")))
+
+data_set_updated <- data_set_updated %>%
+  mutate(
+    school_code = if_else(school_code == 500135 & School_Name == "Ruqi", 5001350, school_code))
 
 #there are still 3 schools 102812 202973 226977 with double listings due to program, just average the weight for them. Even though not ideal, 
 #doing this to save time given that all other sampled schools are unique at the school code level
@@ -190,9 +194,11 @@ for (i in data_list ) {
     
     #add hashed school code if needed
     if ("school_code" %in% colnames(temp)) {
+      if (i != "school_dta_short") {
       temp <- temp %>%
-        left_join(key) %>%
+        left_join(key, by = "school_code") %>%
         select(hashed_school_code, hashed_school_province, hashed_school_district, everything())
+      }
     }
     
     

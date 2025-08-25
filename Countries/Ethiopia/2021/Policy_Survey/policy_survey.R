@@ -14,6 +14,8 @@ if(Sys.info()["user"] == "wb577189"){
   expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/Policy_Survey"
   
   
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb631589") {
+  expert_dir<- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v02_M/Data/Policy_Survey"
 }
 #read in data
 
@@ -80,10 +82,10 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(evaluation_law=read_var(A11),
          evaluation_law_school=read_var(A12),
-         evaluation_criteria=read_var(A13)/5,
+         evaluation_criteria=read_var(A13),
          negative_evaluations=read_var(A15),
          positive_evaluations=read_var(A17)) %>%
-  mutate(teaching_evaluation=1+evaluation_law/4 + evaluation_law_school/4+evaluation_criteria/2+
+  mutate(teaching_evaluation=evaluation_law + evaluation_law_school+evaluation_criteria/5+
            negative_evaluations+positive_evaluations) 
 
 #Teacher Monitoring
@@ -146,7 +148,12 @@ expert_dta_school_management <- readxl::read_xlsx(path=paste(expert_dir, 'Final 
 
 
 expert_dta_school_management_shaped<-data.frame(t(expert_dta_school_management[-1]))
-colnames(expert_dta_school_management_shaped) <- expert_dta_school_management$Question..
+#colnames(expert_dta_school_management_shaped) <- expert_dta_school_management$Question..
+
+names <- expert_dta_school_management$Question..
+names[2:8] <- c("C1.1","C1.2","C1.3","C1.4","C1.5", "C1.6", "C1.7")
+names[9:16] <- c("C2.1","C2.2", "C2.3","C2.4", "C2.5", "C2.6", "C2.7", "C2.8")
+colnames(expert_dta_school_management_shaped) <- names
 
 #create indicators
 expert_dta_school_management_final <- expert_dta_school_management_shaped %>%
@@ -203,7 +210,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_monitor_law=read_var(C6),
          principal_monitor_criteria=read_var(C7)) %>%
-  mutate(principal_evaluation=1+principal_monitor_law+principal_monitor_criteria)
+  mutate(principal_evaluation=1+principal_monitor_law+(3/5)*principal_monitor_criteria)
 
 ################################
 # Learners 
@@ -238,17 +245,23 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(immunization=read_var(D6),
          healthcare_young_children=read_var(D7),
          deworming=read_var(D8),
-         antenatal_skilled_delivery=read_var(D9)-1) %>%
-  mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
+         antenatal_skilled_delivery=read_var(D9),
+         antenatal_skilled_delivery = case_when(
+           antenatal_skilled_delivery == 3 ~ 1,
+           antenatal_skilled_delivery == 2 ~ 0.5,
+           antenatal_skilled_delivery == 0 ~ 0,
+           TRUE ~ antenatal_skilled_delivery
+         )) %>%
+  mutate(health_programs=1+(immunization + healthcare_young_children + deworming + antenatal_skilled_delivery))
 
 
 #ECE programs
 expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(pre_primary_free_some=read_var(D10),
          developmental_standards=read_var(D11),
-         ece_qualifications=read_var(D12)-1,
+         ece_qualifications=read_var(D12),
          ece_in_service=read_var(D13)) %>%
-  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/3 + ece_in_service)
+  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/5 + ece_in_service)
 
 # financial capacity
 expert_dta_learners_final <- expert_dta_learners_final %>%

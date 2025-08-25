@@ -202,7 +202,7 @@ api_final_2020 <- api_final_2020 %>%
 
 api_final_2020 <- api_final_2020 %>%
   rename(value_2020=value) %>%
-         mutate(n_2020 = if_else(po_vars != 1, N, NA)) %>%
+         mutate(n_2020 = if_else(po_vars != 1, N, 0)) %>%
   select(-mean_se, -mean_low, -mean_upp, -mean_var)
 
 api_final_2021 <- read_csv('GEPD_Indicators_API_ETH_2021.csv') %>%
