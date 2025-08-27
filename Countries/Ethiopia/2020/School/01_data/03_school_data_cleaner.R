@@ -1638,13 +1638,11 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
            m3sdq18_ildr__2==1 ~ "Professional Development",
            m3sdq18_ildr__3==1 ~ "Monitoring",
            m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
-         discussion_30_min=bin_var(m3sdq20_ildr,3),
-         discussion_30_min_indicator = ifelse((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3), 1, 0), #adding this to be consistent with what we have in the new workflow
+         discussion_30_min = ifelse((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3), 1, 0), #adding this to be consistent with what we have in the new workflow
          discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>=2),1,0), #make sure there was discussion and lasted more than 10 min
-         feedback_observation=if_else((m3sdq21_ildr==1),1,0), #got feedback and was specific
+         feedback_observation = if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq21_ildr==1),1,0),
          lesson_plan=if_else(m3sdq23_ildr==1,1,0),
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
-  mutate(feedback_observation=if_else(m3sdq15_ildr==1 & m3sdq19_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
   group_by(interview__key) %>%
@@ -1654,6 +1652,7 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
   select(-preamble_info_teacher_drop_ildr  )  %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
+#making changes to some of these indicators as discussed with Maryam on 08282025
 final_indicator_data_ILDR_micro <- teacher_questionnaire_ILDR %>%
   mutate(n_mssing_ILDR=n_miss_row(.)) %>%
   mutate(classroom_observed=bin_var(m3sdq15_ildr,1),
@@ -1663,13 +1662,11 @@ final_indicator_data_ILDR_micro <- teacher_questionnaire_ILDR %>%
            m3sdq18_ildr__2==1 ~ "Professional Development",
            m3sdq18_ildr__3==1 ~ "Monitoring",
            m3sdq18_ildr__97==1 ~ m3sdq18_other_ildr ),
-         discussion_30_min=bin_var(m3sdq20_ildr,3),
-         discussion_30_min_indicator = ifelse((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3), 1, 0), #adding this to be consistent with what we have in the new workflow
+         discussion_30_min = ifelse((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr==3), 1, 0), #adding this to be consistent with what we have in the new workflow
          discussed_observation=if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq20_ildr>=2),1,0), #make sure there was discussion and lasted more than 10 min
-         feedback_observation=if_else((m3sdq21_ildr==1),1,0), #got feedback and was specific
+         feedback_observation = if_else((classroom_observed==1 & m3sdq19_ildr==1 & m3sdq21_ildr==1),1,0),
          lesson_plan=if_else(m3sdq23_ildr==1,1,0),
          lesson_plan_w_feedback=if_else((m3sdq23_ildr==1 & m3sdq24_ildr==1),1,0)) %>%
-  mutate(feedback_observation=if_else(m3sdq15_ildr==1 & m3sdq19_ildr==1, feedback_observation, 0)) %>% #fix an issue where teachers that never had classroom observed arent asked this question.
   mutate(instructional_leadership=1+0.5*classroom_observed + 0.5*classroom_observed_recent + discussed_observation + feedback_observation + lesson_plan_w_feedback) %>%
   mutate(instructional_leadership=if_else(classroom_observed==1,instructional_leadership, 1.5 + lesson_plan_w_feedback )) %>%
   # group_by(interview__key) %>%
@@ -2401,13 +2398,79 @@ final_indicator_data_IMON <- school_data_IMON %>%
 #############################################
 
 school_data_SCFN <- school_data_PKNW %>%
-  mutate(infrastructure_scfn=if_else((m7sfq15a_pknw__0==1 | m7sfq15a_pknw__98==1),0,1),
-         materials_scfn=if_else((m7sfq15b_pknw__0==1 | m7sfq15b_pknw__98==1),0,1),
-         hiring_scfn=if_else((m7sfq15c_pknw__0==1 | m7sfq15c_pknw__98==1),0,1),
-         supervision_scfn=if_else((m7sfq15d_pknw__0==1 | m7sfq15d_pknw__98==1),0,1),
-         student_scfn=if_else((m7sfq15e_pknw__0==1 | m7sfq15e_pknw__98==1),0,1),
-         principal_hiring_scfn=if_else((m7sfq15f_pknw__0==1 | m7sfq15f_pknw__98==1),0,1),
-         principal_supervision_scfn=if_else((m7sfq15g_pknw__0==1 | m7sfq15g_pknw__98==1),0,1)
+  group_by(school_code) %>%
+  summarise_all(~first(na.omit(.))) %>%
+  mutate(
+    infrastructure_scfn = if_else(
+      (m7sfq15a_pknw__1 == 1 | m7sfq15a_pknw__2 == 1 | m7sfq15a_pknw__3 == 1 | m7sfq15a_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15a_pknw__0 == 1 | m7sfq15a_pknw__98 == 1 |
+           (m7sfq15a_pknw__1 == 0 & m7sfq15a_pknw__2 == 0 & m7sfq15a_pknw__3 == 0 & m7sfq15a_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    ),
+    materials_scfn= if_else(
+      (m7sfq15b_pknw__1 == 1 | m7sfq15b_pknw__2 == 1 | m7sfq15b_pknw__3 == 1 | m7sfq15b_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15b_pknw__0 == 1 | m7sfq15b_pknw__98 == 1 |
+           (m7sfq15b_pknw__1 == 0 & m7sfq15b_pknw__2 == 0 & m7sfq15b_pknw__3 == 0 & m7sfq15b_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    ),
+    hiring_scfn=if_else(
+      (m7sfq15c_pknw__1 == 1 | m7sfq15c_pknw__2 == 1 | m7sfq15c_pknw__3 == 1 | m7sfq15c_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15c_pknw__0 == 1 | m7sfq15c_pknw__98 == 1 |
+           (m7sfq15c_pknw__1 == 0 & m7sfq15c_pknw__2 == 0 & m7sfq15c_pknw__3 == 0 & m7sfq15c_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    ),
+    supervision_scfn=if_else(
+      (m7sfq15d_pknw__1 == 1 | m7sfq15d_pknw__2 == 1 | m7sfq15d_pknw__3 == 1 | m7sfq15d_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15d_pknw__0 == 1 | m7sfq15d_pknw__98 == 1 |
+           (m7sfq15d_pknw__1 == 0 & m7sfq15d_pknw__2 == 0 & m7sfq15d_pknw__3 == 0 & m7sfq15d_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    ),
+    student_scfn=if_else(
+      (m7sfq15e_pknw__1 == 1 | m7sfq15e_pknw__2 == 1 | m7sfq15e_pknw__3 == 1 | m7sfq15e_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15e_pknw__0 == 1 | m7sfq15e_pknw__98 == 1 |
+           (m7sfq15e_pknw__1 == 0 & m7sfq15e_pknw__2 == 0 & m7sfq15e_pknw__3 == 0 & m7sfq15e_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    ),
+    principal_hiring_scfn=if_else(
+      (m7sfq15f_pknw__1 == 1 | m7sfq15f_pknw__2 == 1 | m7sfq15f_pknw__3 == 1 | m7sfq15f_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15f_pknw__0 == 1 | m7sfq15f_pknw__98 == 1 |
+           (m7sfq15f_pknw__1 == 0 & m7sfq15f_pknw__2 == 0 & m7sfq15f_pknw__3 == 0 & m7sfq15f_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    ),
+    principal_supervision_scfn=if_else(
+      (m7sfq15g_pknw__1 == 1 | m7sfq15g_pknw__2 == 1 | m7sfq15g_pknw__3 == 1 | m7sfq15g_pknw__4 == 1),
+      1,
+      if_else(
+        (m7sfq15g_pknw__0 == 1 | m7sfq15g_pknw__98 == 1 |
+           (m7sfq15g_pknw__1 == 0 & m7sfq15g_pknw__2 == 0 & m7sfq15g_pknw__3 == 0 & m7sfq15g_pknw__4 == 0)),
+        0,
+        NA_real_   
+      )
+    )
   ) %>%
   mutate(sch_management_clarity=1+
            (infrastructure_scfn+materials_scfn)/2+
@@ -2415,6 +2478,8 @@ school_data_SCFN <- school_data_PKNW %>%
            student_scfn +
            (principal_hiring_scfn+ principal_supervision_scfn)/2
   )
+
+
 final_indicator_data_SCFN <- school_data_SCFN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%

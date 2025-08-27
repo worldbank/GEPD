@@ -824,11 +824,11 @@ api_template <- api_template %>%
               SE.PRM.ILDR.4.R = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "Rural", i),
               SE.PRM.ILDR.4.U = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "Urban", i),
               #(De Facto) Percent of teachers reporting that the discussion was over 30 minutes	
-              SE.PRM.ILDR.5   = 100*indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "All", i),  
-              SE.PRM.ILDR.5.F = 100*indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Female", i),
-              SE.PRM.ILDR.5.M = 100*indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Male", i),
-              SE.PRM.ILDR.5.R = 100*indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Rural", i),
-              SE.PRM.ILDR.5.U = 100*indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Urban", i),
+              SE.PRM.ILDR.5   = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "All", i),  
+              SE.PRM.ILDR.5.F = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Female", i),
+              SE.PRM.ILDR.5.M = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Male", i),
+              SE.PRM.ILDR.5.R = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Rural", i),
+              SE.PRM.ILDR.5.U = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Urban", i),
               #(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion	
               SE.PRM.ILDR.6   = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "All", i),  
               SE.PRM.ILDR.6.F = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "Female", i),
@@ -882,11 +882,11 @@ api_template <- api_template %>%
                SE.PRM.ILDR.4.R = indicator_means(discussed_observation, "school", "ILDR_micro",  "Rural", i),
                SE.PRM.ILDR.4.U = indicator_means(discussed_observation, "school", "ILDR_micro",  "Urban", i),
                #(De Facto) Percent of teachers reporting that the discussion was over 30 minutes	
-               SE.PRM.ILDR.5   = indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "All", i),  
-               SE.PRM.ILDR.5.F = indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Female", i),
-               SE.PRM.ILDR.5.M = indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Male", i),
-               SE.PRM.ILDR.5.R = indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Rural", i),
-               SE.PRM.ILDR.5.U = indicator_means(discussion_30_min_indicator, "school", "ILDR_micro",  "Urban", i),
+               SE.PRM.ILDR.5   = indicator_means(discussion_30_min, "school", "ILDR_micro",  "All", i),  
+               SE.PRM.ILDR.5.F = indicator_means(discussion_30_min, "school", "ILDR_micro",  "Female", i),
+               SE.PRM.ILDR.5.M = indicator_means(discussion_30_min, "school", "ILDR_micro",  "Male", i),
+               SE.PRM.ILDR.5.R = indicator_means(discussion_30_min, "school", "ILDR_micro",  "Rural", i),
+               SE.PRM.ILDR.5.U = indicator_means(discussion_30_min, "school", "ILDR_micro",  "Urban", i),
                #(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion	
                SE.PRM.ILDR.6   = indicator_means(feedback_observation, "school", "ILDR_micro",  "All", i),  
                SE.PRM.ILDR.6.F = indicator_means(feedback_observation, "school", "ILDR_micro",  "Female", i),
@@ -1399,8 +1399,8 @@ api_template <- api_template %>%
               #changed the variable used in 3 because the other one was not corrected and inconsistent with the new workflow
               SE.PRM.IMON.3  =  100*indicator_means(system_in_place		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
               SE.PRM.IMON.4  =  100*indicator_means(m1scq7_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
-              SE.PRM.IMON.5  =  100*indicator_means(bin_var(m1scq10_imon,1)		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-              SE.PRM.IMON.6  =  100*indicator_means(m1scq11_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
+              SE.PRM.IMON.5  =  100*indicator_means(parents_involved_infr		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
+              SE.PRM.IMON.6  =  100*indicator_means(system_in_place_infr		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
               SE.PRM.IMON.7  =-999, #(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?                          
               SE.PRM.IMON.8  =-999, #(De Jure) Number of basic inputs clearly articulated as needing to be monitored                                          
               SE.PRM.IMON.9  =-999, #(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?                  
@@ -1418,10 +1418,10 @@ api_template <- api_template %>%
                SE.PRM.IMON.1  =  indicator_means(m1scq1_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
                SE.PRM.IMON.10 = NA, #(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored                         
                SE.PRM.IMON.2  =  indicator_means(parents_involved		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-               SE.PRM.IMON.3  =  indicator_means(m1scq5_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
+               SE.PRM.IMON.3  =  indicator_means(system_in_place		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
                SE.PRM.IMON.4  =  indicator_means(m1scq7_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
-               SE.PRM.IMON.5  =  indicator_means(bin_var(m1scq10_imon,1)		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-               SE.PRM.IMON.6  =  indicator_means(m1scq11_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
+               SE.PRM.IMON.5  =  indicator_means(parents_involved_infr		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
+               SE.PRM.IMON.6  =  indicator_means(system_in_place_infr		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
                SE.PRM.IMON.7  = NA, #(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?                          
                SE.PRM.IMON.8  = NA, #(De Jure) Number of basic inputs clearly articulated as needing to be monitored                                          
                SE.PRM.IMON.9  = NA, #(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?                  
