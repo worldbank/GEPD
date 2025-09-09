@@ -32,9 +32,13 @@ ind_dta_list<-c("final_indicator_data_BNLG" , "final_indicator_data_BMAC" , "fin
 
 anon_dta_list<-c("public_officials_metadata")
 
+final_indicator_data_BIMP <- final_indicator_data_BIMP %>%
+  mutate(pol_policy_implementation=politicized_policy_implementation) %>%
+  select(-politicized_policy_implementation)
 
-
-
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  mutate(pol_policy_implementation=politicized_policy_implementation) %>%
+  select(-politicized_policy_implementation)
 
 data_list<-ind_dta_list
 
@@ -185,7 +189,7 @@ for (i in data_list ) {
       
       #public_officials_dta$net_monthly_salary<-addNoise(public_officials_dta, variables=c('DEM1q14n'), noise=110)$xm
       temp <- temp %>%
-        select(-DEM1q14n)
+        select(-DEM1q14n) 
       
     }
     
@@ -205,3 +209,4 @@ for (i in data_list ) {
 }
 
 save(list=anon_dta_list, file = file.path(save_folder, "public_officials_indicators_data_anon.RData"))
+save(list=anon_dta_list, file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v02_M/Data/Public_Officials/public_officials_indicators_data_anon.RData"))

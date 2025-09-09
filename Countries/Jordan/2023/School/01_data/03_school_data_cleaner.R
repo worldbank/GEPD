@@ -2468,7 +2468,7 @@ graded_data <- "no"
   final_school_data <- final_school_data %>%
     left_join(school_data_preamble_short) %>%
     select(all_of(keep_info), one_of(ind_list), everything()) %>%
-    left_join(school_weights)
+    left_join(school_weights) 
   
   
   
