@@ -165,12 +165,12 @@ data_dir_2021 <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2021_GEPD/ET
 #attach saved results for 2021
 attach(paste0(data_dir_2021, "/School/school_indicators_data_anon.Rdata"))
 school_dta_2021 <- school_dta_short_anon %>%
-  mutate(ipw = sample/count) 
+  mutate(ipw = school_weight) 
 
 #attach saved results for 2020
 attach(paste0(data_dir_2020, "/School/school_indicators_data_anon.Rdata"))
 school_dta_2020 <- school_dta_short_anon %>%
-  mutate(ipw = sample/count) 
+  mutate(ipw = school_weight) 
 
 #combine the data
 combine_gepd_data <- school_dta_2020 %>%

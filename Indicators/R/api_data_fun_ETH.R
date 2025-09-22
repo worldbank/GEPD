@@ -44,7 +44,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
     #4th grade assessment
     if (tag == "LERN_micro") {
       stat_df <- stat_df %>%
-        mutate(school_weight = sample/count,
+        mutate(school_weight = school_weight,
                g4_comb_weight=school_weight*g4_stud_weight_component,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight)) %>%
@@ -77,7 +77,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
     if (tag == "EFFT_micro") {
       stat_df <- stat_df %>%
         mutate(
-          school_weight =  sample/count,
+          school_weight =  school_weight,
           VALUE = !!variable_quo
         ) %>%
         filter(!is.na(school_weight),
@@ -106,7 +106,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
     #teacher questionnaire 
     if (tag %in% c("ILDR_micro", "TATT_micro", "TSDP_micro", "TSUP_micro", "TEVL_micro", "TMNA_micro", "TINM_micro")) {
       stat_df <- stat_df %>%
-        mutate(school_weight =  sample/count,
+        mutate(school_weight = school_weight,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight)) %>%
         filter(!is.na(teacher_weight_component)) %>%
@@ -135,7 +135,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
     #teacher content knowledge
     if (tag %in% c("CONT_micro")) {
       stat_df <- stat_df %>%
-        mutate(school_weight =  sample/count,
+        mutate(school_weight = school_weight,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight)) %>%
         filter(!is.na(teacher_weight_component)) %>%
@@ -166,7 +166,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
       
       stat_df <- stat_df %>%
         mutate(
-          school_weight =  sample/count,
+          school_weight = school_weight,
           teachers_id = 1,
           VALUE = !!variable_quo
         ) %>%
@@ -193,7 +193,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
     #first grade assessment 
     if (tag == "LCAP_micro") {
       stat_df <- stat_df %>%
-        mutate(school_weight =  sample/count,
+        mutate(school_weight = school_weight,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight)) %>%
         filter(!is.na(g1_stud_weight_component)) %>%
@@ -222,7 +222,7 @@ indicator_means <- function(variable, dataset, tag,  unit, stat) {
     #all school categories
     if (tag %in% c("INPT", "INFR", "ATTD", "OPMN", "PKNW", "PMAN", "ISTD", "IMON", "SCFN", "SATT", "SSLD", "SSUP", "SEVL", "school_dta_anon")) {
       stat_df <- stat_df %>%
-        mutate(school_weight =  sample/count,
+        mutate(school_weight = school_weight,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight)) %>%
         filter(!is.infinite(school_weight)) %>%

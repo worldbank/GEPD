@@ -67,6 +67,15 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
   save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb631589" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/"
+  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
+
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
@@ -82,27 +91,39 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 #function to attach weights
 
+# df_weights_function <- function(dataset,scode, snumber, prov) {
+#   scode<-enquo(scode)  
+#   snumber<-enquo(snumber)
+#   prov<-enquo(prov)
+#   
+#   dataset %>%
+#     mutate(!! scode := as.numeric(.data$school_code)) %>%
+#     left_join(weights_df %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list)  %>% filter(Zone %in% zone_list)  %>% filter(Woreda %in% woreda_list)  %>% filter(Program==1)) %>%
+#     left_join(data_set_updated %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list) %>% filter(Zone %in% zone_list)   %>% filter(Woreda %in% woreda_list) %>% filter(Program==1))  %>%
+#     mutate(
+#            N_schools=N_sch,
+#            N_schools_strata=N_sch_strata,
+#            N_selected_strata=N_sel_strata,
+#            school_weights=ipw,
+#            ipw=ipw*!! snumber,
+#            ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
+#     mutate(province=Region,
+#            urban_rural=Location
+#            ) %>%
+#     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
+#                                                         names(data_set_updated) == "owner" )])))
+# }
+
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
   snumber<-enquo(snumber)
   prov<-enquo(prov)
   
   dataset %>%
-    mutate(!! scode := as.numeric(.data$school_code)) %>%
-    left_join(weights_df %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list)  %>% filter(Zone %in% zone_list)  %>% filter(Woreda %in% woreda_list)  %>% filter(Program==1)) %>%
-    left_join(data_set_updated %>% filter(Admin_Code %in% emis_list) %>% filter(Region %in% region_list) %>% filter(Zone %in% zone_list)   %>% filter(Woreda %in% woreda_list) %>% filter(Program==1))  %>%
-    mutate(
-           N_schools=N_sch,
-           N_schools_strata=N_sch_strata,
-           N_selected_strata=N_sel_strata,
-           school_weights=ipw,
-           ipw=ipw*!! snumber,
-           ipw=if_else(is.na(ipw),mean(ipw, na.rm=T), ipw)) %>%
+    left_join(data_set_updated)  %>%
     mutate(province=Region,
-           urban_rural=Location
-           ) %>%
-    select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "Location" | names(data_set_updated) == "Region" | 
-                                                        names(data_set_updated) == "owner" )])))
+           urban_rural=Location, 
+           school_weight = 1/(sample/count)) 
 }
 
 
@@ -175,34 +196,102 @@ load(paste0(confidential_folder,"/school_survey_data.RData"))
 #read in the file on school weights
 #Load original sample of schools
 currentDate<-c("2020-02-14")
-sample_folder <- file.path(paste(project_folder,"CNT",country,paste(country,'2021',"GEPD", sep="_"),paste(country,'2021',"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,"CNT",country,paste(country,'2021',"GEPD", sep="_"),paste(country,'2021',"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
-weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
-  select(-sample) #variable name causes conflict
-load(sample_frame_name)
+weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep=""))
+school_info <- read.csv(paste0("C:/Users/wb631589/OneDrive - WBG/Dashboard (Team Folder)/Country_Work/Ethiopia/2020/Data/Sampling/Primary_schools_STATA/Primary_schools_ETH.csv"))
 
-#get list of schools from interview data
-emis_list<-school_dta_short$school_emis_preload
-code_list<-school_dta_short$school_code
-region_list<-school_dta_short$school_address_preload
-zone_list<-school_dta_short$school_province_preload
-woreda_list<-school_dta_short$school_district_preload
 
-#create weights for each school
+data_set_updated <- weights_df %>%
+  mutate(
+    school_code = Code_School,
+    strata_count = paste0(Woreda, Region, Zone, Location)
+  )
+
 data_set_updated <- data_set_updated %>%
-  mutate(N_sch=n()) %>% #get total number of schools
-  #now calculate probability of selecting woreda
-  group_by(Region, Zone, Woreda) %>%
-  mutate(N_school_woreda=n(),
-         N_students_woreda=sum(grd4_total,na.rm=T)) %>%
-  group_by(Region) %>%
-  mutate(strat_total=sum(grd4_total, na.rm=T),
-         N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
-         N_sch_strata=n()) #stratum weights (three schools selected)
+  mutate(
+    school_code = if_else(school_code == 500135 & School_Name == "Ruqi", 5001350, school_code))
 
+#for sampled school that can potentially have more than 1 match, keep the relevant ones 
+data_set_updated <- data_set_updated %>%
+  filter(!(school_code == 100008 & School_Name == "Chaba"),
+         !(school_code == 500033 & (School_Name == "Bonga")),
+         !(school_code == 500069 & (School_Name == "Bejit" | School_Name == "Dhadhin")),
+         !(school_code == 500077 & (School_Name == "Lucy Acadamy" | School_Name == "Setema" | School_Name == "Cali bakow")))
+
+
+data_set_updated <- data_set_updated %>%
+  filter(!(school_code == 100308 & School_Name == "Dukie"),
+         !(school_code == 500135 & (School_Name == "Majeti" | School_Name == "Fejej")))
+
+#get the grade 4 student count to know what schools to keep in case we have multiple programs
+school_info <- school_info %>%
+  filter(Grade == "Grade 4") %>%
+  mutate(total_students = M+F) %>%
+  group_by(Code_School, Region, Woreda, School_Name, Program) %>%
+  summarise(grd4_total = sum(total_students)) %>%
+  ungroup()
+
+
+#for schools that have multiple programs, keep the program with the maximum student count
+data_set_updated <- data_set_updated %>%
+  left_join(school_info) %>%
+  mutate(grd4_total = replace_na(grd4_total, 0L),
+         tie_break = if_else(as.character(Program) == "1", 1L, 2L)) %>%
+  group_by(Code_School, Region, Woreda, School_Name) %>%
+  # keep the row with max grd4_total; if multiple, pick the one with smallest tie_break
+  slice_max(grd4_total, with_ties = TRUE) %>%
+  arrange(tie_break) %>%
+  slice_head(n = 1) %>%
+  ungroup() %>%
+  select(-tie_break)
+
+#there are still 5 schools 407814 550446 601254 601499 700084 with double listings due to program, just average the weight for them. Even though not ideal, 
+#doing this to save time given that all other sampled schools are unique at the school code level
+data_set_updated <- data_set_updated %>%
+  group_by(school_code) %>%
+  summarise(sample = mean(sample),
+            count = mean(count),
+            strata_count = first(strata_count),
+            Region = first(Region),
+            Location = first(Location))
+
+# data_set_updated <- data_set_updated %>%
+#   mutate(school_weight= 1/(sample/count))
+
+# %>%
+#   select(-sample) #variable name causes conflict
+# load(sample_frame_name)
+# 
+# #get list of schools from interview data
+# emis_list<-school_dta_short$school_emis_preload
+# code_list<-school_dta_short$school_code
+# region_list<-school_dta_short$school_address_preload
+# zone_list<-school_dta_short$school_province_preload
+# woreda_list<-school_dta_short$school_district_preload
+# 
+# #create weights for each school
+# data_set_updated <- data_set_updated %>%
+#   mutate(N_sch=n()) %>% #get total number of schools
+#   #now calculate probability of selecting woreda
+#   group_by(Region, Zone, Woreda) %>%
+#   mutate(N_school_woreda=n(),
+#          N_students_woreda=sum(grd4_total,na.rm=T)) %>%
+#   group_by(Region) %>%
+#   mutate(strat_total=sum(grd4_total, na.rm=T),
+#          N_sel_strata=sum(as.numeric(sample=="Sampled School"),na.rm=T),
+#          N_sch_strata=n()) #stratum weights (three schools selected)
 
 
 key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
+
+#remove two duplicates schools since the information is consistent for them both 
+key <- key %>%
+  group_by(school_code) %>%
+  fill(everything(), .direction = "downup") %>%
+  ungroup() %>%
+  distinct(school_code, .keep_all = TRUE) 
+
 ```
 
 ## School File
@@ -213,12 +302,37 @@ key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 #read in school level file
 ###########################
 
+#in the raw data, there seems to be 2 schools were the data were collected in 2020 and 2021. okay to keep school 306356 because the one coming from 2020 seems to be fully empty. for the other school, for now let's assign two different school codes before the collapse
+school_dta <- school_dta %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+
+school_dta_short <- school_dta_short %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+
+school_weights  <- school_weights %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+
+module_cols <- paste0("modules__", 1:8)  # modules_1 to modules_8
+
+for (i in 1:8) {
+  module <- paste0("modules__", i)
+  dupl_var <- paste0("dupl_", i)
+  
+  school_dta <- school_dta %>%
+    group_by(school_code, .data[[module]]) %>%
+    mutate(!!dupl_var := n() > 1) %>%
+    ungroup()
+}
+
 school_micro_raw <- school_dta %>%
   group_by(school_code) %>%
+  mutate(across(where(is.character), ~ na_if(.x, ""))) %>%  # turn "" into NA
   fill(everything(), .direction='downup') %>%
   slice(1) %>% 
   ungroup()
-
 
 var.list <- sapply(school_dta, function(x) attr(x,"label"))
 var.labels= unlist(var.list)
@@ -233,7 +347,22 @@ school_micro_comb <- school_micro_raw %>%
   select(colnames(school_data_preamble), ind_list, everything())
 
 #add weights and anonymize
-school_micro <- df_add_weights('school_micro_comb')                   
+school_micro <- df_add_weights('school_micro_comb')  
+
+#now for the school that was repeated in both years, assign the same school weight and strata variables since this is our best guess
+school_micro <- school_micro %>% 
+  mutate(hashed_school_code = if_else(school_code == 4097322020, "55f7525b6c88fcbf", hashed_school_code),
+         hashed_school_province = if_else(school_code == 4097322020, "d3e706fdb56e5000", hashed_school_province),
+         hashed_school_district = if_else(school_code == 4097322020, "c5d330755961900a", hashed_school_district),
+         sample = if_else(school_code == 4097322020, 12, sample), 
+         count = if_else(school_code == 4097322020, 1703, count),
+         strata_count = if_else(school_code == 4097322020, "Kindo DidayeSNNPWolaytaRural", strata_count),
+         Region = if_else(school_code == 4097322020, "SNNP", Region),
+         Location = if_else(school_code == 4097322020, "Rural", Location),
+         province = if_else(school_code == 4097322020, "SNNP", province),
+         urban_rural = if_else(school_code == 4097322020, "Rural", urban_rural),
+         school_weight = if_else(school_code == 4097322020, 142, school_weight)
+)
 
 #school_micro <- Hmisc::upData(school_micro, labels = var.labels)
 
@@ -274,22 +403,68 @@ school_data_preamble <- school_dta %>%
 
 ```{r}
 
+#for this one repeated school, change the school code 
+teacher_questionnaire <- teacher_questionnaire %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+
 
 #Add school preamble info
 teacher_questionnaire <- teacher_questionnaire %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) %>%
+  #for those that are duplicated based on the teacher number, change the number to questionnaire id if it is possible
+  mutate(m3sb_tnumber = if_else(school_code == 100008  & m3sb_tnumber == 7 & m3sb_troster == "Rebeka Tujar", 4, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 104432  & m3sb_tnumber == 3 & m3sb_troster == "Asimarechi Bekalu", 2, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 108797  & m3sb_tnumber == 6 & m3sb_troster == "Melese Bayih", 2, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 108974  & m3sb_tnumber == 6 & m3sb_troster == "Maritu Belay", 5, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 201295  & m3sb_tnumber == 3 & m3sb_troster == "Gudeta Aliy", 2, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 201462  & m3sb_tnumber == 14 & m3sb_troster == "Mohammed  Abdulay", 4, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 207363  & m3sb_tnumber == 3 & m3sb_troster == "ABDI UMER", 1, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 208402  & m3sb_tnumber == 4 & m3sb_troster == "Umer Dereje", 3, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 305813  & m3sb_tnumber == 2 & m3sb_troster == "Nasir Ahmed", 1, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 305813  & m3sb_tnumber == 3 & m3sb_troster == "Abdi Umer", 7, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 305973  & m3sb_tnumber == 3 & m3sb_troster == "Bashir Farah", 1, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 400926  & m3sb_tnumber == 18 & m3sb_troster == "Habtamu Beyene", 1, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 401185  & m3sb_tnumber == 6 & m3sb_troster == "Yakobe Handesa", 5, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 407814  & m3sb_tnumber == 4 & m3sb_troster == "sewunet aserese", 3, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 500135  & m3sb_tnumber == 2 & m3sb_troster == "ZINET EBRAHIME", 6, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 550264  & m3sb_tnumber == 4 & m3sb_troster == "2.Aliyi Mehmad", 2, m3sb_tnumber),
+         m3sb_tnumber = if_else(school_code == 550323  & m3sb_tnumber == 8 & m3sb_troster == "EDEMALEM ENEYEW", 3, m3sb_tnumber)) %>%
   group_by(school_code,m3sb_tnumber) %>%
   fill(everything(), .direction='downup') %>%
   slice(1) %>% 
   ungroup()
 
 
-
-
 #add weights and anonymize
 teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
   select(-starts_with('interview__'), -c('lat','lon'))              
+
+
+#now for the school that was repeated in both years, assign the same school weight and strata variables since this is our best guess
+teacher_questionnaire_micro <- teacher_questionnaire_micro %>% 
+  mutate(hashed_school_code = if_else(school_code == 4097322020, "55f7525b6c88fcbf", hashed_school_code),
+         hashed_school_province = if_else(school_code == 4097322020, "d3e706fdb56e5000", hashed_school_province),
+         hashed_school_district = if_else(school_code == 4097322020, "c5d330755961900a", hashed_school_district),
+         sample = if_else(school_code == 4097322020, 12, sample), 
+         count = if_else(school_code == 4097322020, 1703, count),
+         strata_count = if_else(school_code == 4097322020, "Kindo DidayeSNNPWolaytaRural", strata_count),
+         Region = if_else(school_code == 4097322020, "SNNP", Region),
+         Location = if_else(school_code == 4097322020, "Rural", Location),
+         province = if_else(school_code == 4097322020, "SNNP", province),
+         urban_rural = if_else(school_code == 4097322020, "Rural", urban_rural),
+         school_weight = if_else(school_code == 4097322020, 142, school_weight)
+)
+
+#merge in teacher weights
+teacher_assessment_weights <- school_weights %>%
+  select(school_code, teacher_weight_component)
+
+
+teacher_questionnaire_micro <- teacher_questionnaire_micro %>%
+  left_join(teacher_assessment_weights, by = "school_code")
+
 
 ```
 
@@ -304,10 +479,35 @@ teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
 
 teacher_absence_dta <- teacher_absence_final 
 
+teacher_absence_dta <- teacher_absence_dta %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
 
 #add weights and anonymize
 teacher_absence_micro <- df_add_weights('teacher_absence_dta')       %>%
   select(-starts_with('interview__'), -c('lat','lon'))    
+
+teacher_absence_micro <- teacher_absence_micro %>% 
+  mutate(hashed_school_code = if_else(school_code == 4097322020, "55f7525b6c88fcbf", hashed_school_code),
+         hashed_school_province = if_else(school_code == 4097322020, "d3e706fdb56e5000", hashed_school_province),
+         hashed_school_district = if_else(school_code == 4097322020, "c5d330755961900a", hashed_school_district),
+         sample = if_else(school_code == 4097322020, 12, sample), 
+         count = if_else(school_code == 4097322020, 1703, count),
+         strata_count = if_else(school_code == 4097322020, "Kindo DidayeSNNPWolaytaRural", strata_count),
+         Region = if_else(school_code == 4097322020, "SNNP", Region),
+         Location = if_else(school_code == 4097322020, "Rural", Location),
+         province = if_else(school_code == 4097322020, "SNNP", province),
+         urban_rural = if_else(school_code == 4097322020, "Rural", urban_rural),
+         school_weight = if_else(school_code == 4097322020, 142, school_weight)
+)
+
+#merge in teacher weights
+teacher_absence_weights <- school_weights %>%
+  select(school_code, teacher_abs_weight)
+
+
+teacher_absence_micro <- teacher_absence_micro %>%
+  left_join(teacher_absence_weights, by = "school_code")
 
 
 ```
@@ -318,9 +518,35 @@ teacher_absence_micro <- df_add_weights('teacher_absence_dta')       %>%
 ```{r teacherassess}
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
 
+teacher_assessment_dta <- teacher_assessment_dta %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+
 #add weights and anonymize
 teacher_assessment_micro <- df_add_weights('teacher_assessment_dta')         %>%
   select(-starts_with('interview__'), -c('lat','lon'))          
+
+teacher_assessment_micro <- teacher_assessment_micro %>% 
+  mutate(hashed_school_code = if_else(school_code == 4097322020, "55f7525b6c88fcbf", hashed_school_code),
+         hashed_school_province = if_else(school_code == 4097322020, "d3e706fdb56e5000", hashed_school_province),
+         hashed_school_district = if_else(school_code == 4097322020, "c5d330755961900a", hashed_school_district),
+         sample = if_else(school_code == 4097322020, 12, sample), 
+         count = if_else(school_code == 4097322020, 1703, count),
+         strata_count = if_else(school_code == 4097322020, "Kindo DidayeSNNPWolaytaRural", strata_count),
+         Region = if_else(school_code == 4097322020, "SNNP", Region),
+         Location = if_else(school_code == 4097322020, "Rural", Location),
+         province = if_else(school_code == 4097322020, "SNNP", province),
+         urban_rural = if_else(school_code == 4097322020, "Rural", urban_rural),
+         school_weight = if_else(school_code == 4097322020, 142, school_weight)
+)
+
+#merge in teacher weights
+teacher_assessment_weights <- school_weights %>%
+  select(school_code, teacher_weight_component)
+
+
+teacher_assessment_micro <- teacher_assessment_micro %>%
+  left_join(teacher_assessment_weights, by = "school_code")
 
 
 ```
@@ -331,9 +557,6 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta')         %>%
 
 ```{r pedg}
 
-
-
-  
 teacher_pedagogy <- final_indicator_data_PEDG %>%
   left_join(school_data_preamble) %>%
   left_join(school_micro_comb %>% select(school_code, starts_with('m4saq1'))) %>%
@@ -341,6 +564,7 @@ teacher_pedagogy <- final_indicator_data_PEDG %>%
 
 #add weights and anonymize
 teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') 
+
 
 ```
 
@@ -376,8 +600,6 @@ print(paste0(pct,"% of teachers assessed for pedagogy are successfully matched")
 
 
 
-
-
 # now teacher content
 teacher_combined_df <- teacher_combined_df %>%
   left_join(teacher_assessment_micro %>% mutate(TEACHERS__id=m5sb_tnum), na_matches='never') %>%
@@ -401,6 +623,13 @@ matches <- teacher_combined_df %>%
 ```
 
 ```{r}
+
+g4_weights <- school_weights %>%
+  select(school_code, g4_stud_weight_component)
+
+g1_weights <- school_weights %>%
+  select(school_code, g1_stud_weight_component)
+
 
 teacher_combined_df %>%
   janitor::clean_names() %>%
@@ -433,12 +662,30 @@ teacher_questionnaire_micro %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))
 
-assess_4th_grade_anon %>%
+assess_4th_grade_anon <- df_add_weights('assess_4th_grade_anon') 
+
+assess_4th_grade_anon <- assess_4th_grade_anon%>%
+  left_join(g4_weights)
+
+assess_4th_grade_anon <- assess_4th_grade_anon %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+         
+assess_4th_grade_anon <- assess_4th_grade_anon %>%
   select(-ends_with('nogiraffe')) %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_fourth_grade_assessment.dta"))
 
-ecd_dta_anon %>%
+ecd_dta_anon <- df_add_weights('ecd_dta_anon') 
+
+ecd_dta_anon <- ecd_dta_anon%>%
+  left_join(g1_weights)
+
+ecd_dta_anon <- ecd_dta_anon %>%
+  mutate(
+         school_code  = if_else(school_code == 409732 & date == 2020, 4097322020, school_code))
+
+ecd_dta_anon <- ecd_dta_anon %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_first_grade_assessment.dta"))
 

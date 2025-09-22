@@ -106,12 +106,22 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
 
 #merge with the sample data
 sample <- read.csv(paste0(project_folder, "/", country, "/", country, "_", year, "_", "GEPD", "/", country, "_", year, "_", "GEPD_v02_RAW", "/", "Data/sampling/", "Ethiopia_weights.csv"))
+school_info <- read.csv(paste0("C:/Users/wb631589/OneDrive - WBG/Dashboard (Team Folder)/Country_Work/Ethiopia/2020/Data/Sampling/Primary_schools_STATA/Primary_schools_ETH.csv"))
 
 data_set_updated <- sample %>%
   mutate(
     school_code = Code_School,
     strata_count = paste0(Woreda, Region, Zone, Location)
   )
+
+#get the grade 4 student count to know what schools to keep in case we have multiple programs
+school_info <- school_info %>%
+  filter(Grade == "Grade 4") %>%
+  mutate(total_students = M+F) %>%
+  group_by(Code_School, Region, Woreda, School_Name, Program) %>%
+  summarise(grd4_total = sum(total_students)) %>%
+  ungroup()
+
 
 #for sampled school that can potentially have more than 1 match, keep the relevant ones 
 data_set_updated <- data_set_updated %>%
@@ -122,6 +132,19 @@ data_set_updated <- data_set_updated %>%
   mutate(
     school_code = if_else(school_code == 500135 & School_Name == "Ruqi", 5001350, school_code))
 
+#for schools that have multiple programs, keep the program with the maximum student count
+data_set_updated <- data_set_updated %>%
+  left_join(school_info) %>%
+  mutate(grd4_total = replace_na(grd4_total, 0L),
+         tie_break = if_else(as.character(Program) == "1", 1L, 2L)) %>%
+  group_by(Code_School, Region, Woreda, School_Name) %>%
+  # keep the row with max grd4_total; if multiple, pick the one with smallest tie_break
+  slice_max(grd4_total, with_ties = TRUE) %>%
+  arrange(tie_break) %>%
+  slice_head(n = 1) %>%
+  ungroup() %>%
+  select(-tie_break)
+
 #there are still 3 schools 102812 202973 226977 with double listings due to program, just average the weight for them. Even though not ideal, 
 #doing this to save time given that all other sampled schools are unique at the school code level
 data_set_updated <- data_set_updated %>%
@@ -131,6 +154,9 @@ data_set_updated <- data_set_updated %>%
             strata_count = first(strata_count),
             Region = first(Region),
             Location = first(Location))
+
+data_set_updated <- data_set_updated %>%
+  mutate(school_weight= 1/(sample/count))
 # 
 # #create weights for each school
 # data_set_updated <- data_set_updated %>%
@@ -209,7 +235,7 @@ for (i in data_list ) {
     
     #Scrub names, geocodes
     temp <- temp %>%
-      select(-starts_with('school_'), -one_of('m1s0q2_name', 'm1s0q2_code','m1s0q2_emis')) %>% # drop school names and address
+      select(-starts_with('school_'), school_weight, -one_of('m1s0q2_name', 'm1s0q2_code','m1s0q2_emis')) %>% # drop school names and address
       select(-starts_with('m1s0q9')) %>%
       select(-one_of('survey_time', 'lat','lon')) %>% #drop geo-codes
       select(-one_of('total_enrolled', 'm7saq8','m7saq10')) %>% 
