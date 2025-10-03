@@ -60,8 +60,8 @@ api_template <- api_template_fun()
 
 # Example:
 
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/NER/NER_2022_GEPD/NER_2022_GEPD_v01_M/Data/"
 
+data_dir <- "C:/Users/wb631589/OneDrive - WBG//GEPD/CNT/NER/NER_2022_GEPD/NER_2022_GEPD_v02_M/Data/"
 
 
 

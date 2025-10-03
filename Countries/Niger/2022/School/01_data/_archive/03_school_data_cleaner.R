@@ -948,8 +948,6 @@ graded_data <- "no"
   #   group_by(school_code) %>%
   #   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
   #   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
-  # 
-  
   
   #recode assessment variables to be 1 if student got it correct and zero otherwise
   assess_4th_grade_dta<- assess_4th_grade_dta %>%
@@ -973,23 +971,8 @@ graded_data <- "no"
            m8saq7i_gir=bin_var(m8saq7i_gir, 4),
            m8saq7j_gir=bin_var(m8saq7j_gir, 1),
            m8saq7k_gir=bin_var(m8saq7k_gir, 3)) %>% #grade lonely giraffe question
-    group_by(school_code) %>%
-    mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
-              ~call_out_scorer(.,0.8)) %>%
-    ungroup() %>%
-    mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
-           m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)) %>%
-    mutate(m8saq2_id=if_else(m8saq2_id<0,0,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-           m8saq3_id=if_else(m8saq3_id<0,0,m8saq3_id)) %>%
-    mutate(m8saq2_id=if_else(m8saq2_id>1,1,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-           m8saq3_id=if_else(m8saq3_id>1,1,m8saq3_id)) %>%
     mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
-           m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-           m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
-    mutate( 
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense<0,0,m8sbq1_number_sense)) %>%
-    mutate(
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense>1,1,m8sbq1_number_sense)) %>%
+           m8saq7_word_choice=bin_var(m8saq7_word_choice,2)) %>%
     select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
   
   

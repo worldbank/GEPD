@@ -67,6 +67,14 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
   save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb631589" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/"
+  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
@@ -187,24 +195,24 @@ key <- read_csv(file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash_STATA_Clean.dta")) %>%
-  select(-starts_with("ENUM"))
+# school_dta<-read_dta(file.path(download_folder, "EPDash_STATA_Clean.dta")) %>%
+#   select(-starts_with("ENUM"))
 
 #vtable(school_dta)
 #rename a few key variables up front
-school_dta<- school_dta %>%
-  mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=m1s0q1_name ,
-         survey_time=m1s0q8,
-         lat=m1s0q9__Latitude,
-         lon=m1s0q9__Longitude,
-         m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
-         total_enrolled=m1saq7) %>%
-  select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
-  mutate(school_code=as.numeric(school_code)) %>%
-  filter(!is.na(school_code))
+# school_dta<- school_dta %>%
+#   mutate(enumerator_name_other= m1s0q1_name_other  ,
+#          enumerator_number=m1s0q1_name ,
+#          survey_time=m1s0q8,
+#          lat=m1s0q9__Latitude,
+#          lon=m1s0q9__Longitude,
+#          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
+#          total_enrolled=m1saq7) %>%
+#   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
+#   mutate(school_code=as.numeric(school_code)) %>%
+#   filter(!is.na(school_code))
 
-
+school_dta <- school_dta
 
 school_micro_raw <- school_dta %>%
   group_by(school_code) %>%
@@ -267,20 +275,29 @@ school_data_preamble <- school_dta %>%
 
 ```{r}
 
-teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster_Clean.dta")) %>%
-  select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code"))
-
-
-#Add school preamble info
-teacher_questionnaire <- teacher_questionnaire %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info, everything())
+# teacher_questionnaire<-read_dta(file.path(download_folder, "questionnaire_roster_Clean.dta")) %>%
+#   select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code"))
+# 
+# 
+# #Add school preamble info
+# teacher_questionnaire <- teacher_questionnaire %>%
+#   left_join(school_data_preamble) %>%
+#   select(preamble_info, everything())
+teacher_questionnaire <- teacher_questionnaire 
 
 
 
 #add weights and anonymize
 teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
-  select(-starts_with('interview__'), -c('lat','lon'))              
+  select(-starts_with('interview__'), -c('lat','lon'))        
+
+#merge in teacher weights
+teacher_assessment_weights <- school_weights %>%
+  select(school_code, teacher_weight_component)
+
+teacher_questionnaire_micro <- teacher_questionnaire_micro %>%
+  left_join(key) %>%
+  left_join(teacher_assessment_weights, by = "school_code")
 
 ```
 
@@ -292,27 +309,33 @@ teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
 #read in teacher roster file
 ############################
 
-teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS_Clean.dta")) %>%
-  select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code"))
+# teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS_Clean.dta")) %>%
+#   select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code"))
+teacher_absence_dta <- teacher_absence_final
 
 
-#Add school preamble info
-teacher_absence_dta <- teacher_absence_dta %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info, everything()) 
+# #Add school preamble info
+# teacher_absence_dta <- teacher_absence_dta %>%
+#   left_join(school_data_preamble) %>%
+#   select(preamble_info, everything()) 
 
-#merge on derived indicators
+# #merge on derived indicators
 teacher_absence_dta_comb <- teacher_absence_dta %>%
-  left_join(
-    teacher_absence_final %>%
-      select(school_code, TEACHERS__id, contains(ind_list))
-  ) %>%
-  distinct(school_code, TEACHERS__id, .keep_all = TRUE)
+  # left_join(
+  #   teacher_absence_final %>%
+  #     select(school_code, TEACHERS__id, contains(ind_list))
+  # ) %>%
+distinct(school_code, TEACHERS__id, .keep_all = TRUE)
 
 #add weights and anonymize
 teacher_absence_micro <- df_add_weights('teacher_absence_dta_comb')       %>%
   select(-starts_with('interview__'), -c('lat','lon'))             
 
+teacher_absence_weights <- school_weights %>%
+  select(school_code, abs_weight_component) 
+
+teacher_absence_micro <- teacher_absence_micro %>%
+  left_join(teacher_absence_weights, by = "school_code")
 
 ```
 
@@ -321,24 +344,32 @@ teacher_absence_micro <- df_add_weights('teacher_absence_dta_comb')       %>%
 
 ```{r teacherassess}
 #read in data from difference questionnaire.  This was done because the exams were graded back in the central office.
-teacher_assessment_dta_raw <- read_dta(file.path(download_folder, "teacher_assessment_answers_Clean.dta")) %>%
-  select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code")) %>%
-  left_join(school_data_preamble) %>%
-  select(preamble_info, everything()) 
-
-#merge on derived indicators
-teacher_assessment_dta_comb <- teacher_assessment_dta_raw %>%
-  left_join(
-    teacher_assessment_dta %>%
-      select(school_code, teacher_assessment_answers__id, contains(ind_list))
-  ) %>%
-  distinct(school_code, teacher_assessment_answers__id, .keep_all = TRUE)
-
+# teacher_assessment_dta_raw <- read_dta(file.path(download_folder, "teacher_assessment_answers_Clean.dta")) %>%
+#   select(-c("school_name_preload", "school_province_preload", "school_district_preload", "school_emis_preload", "m1s0q2_name", "m1s0q2_code", "m1s0q2_emis", "school_code")) %>%
+#   left_join(school_data_preamble) %>%
+#   select(preamble_info, everything()) 
+# 
+# #merge on derived indicators
+# teacher_assessment_dta_comb <- teacher_assessment_dta_raw %>%
+#   left_join(
+#     teacher_assessment_dta %>%
+#       select(school_code, teacher_assessment_answers__id, contains(ind_list))
+#   ) %>%
+#   distinct(school_code, teacher_assessment_answers__id, .keep_all = TRUE)
+teacher_assessment_dta_comb <- teacher_assessment_dta
 
 #add weights and anonymize
 teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')         %>%
   select(-starts_with('interview__'), -c('lat','lon'))          
 
+#merge in teacher weights
+teacher_assessment_weights <- school_weights %>%
+  select(school_code, teacher_weight_component)
+
+
+teacher_assessment_micro <- teacher_assessment_micro %>%
+  left_join(key) %>%
+  left_join(teacher_assessment_weights, by = "school_code")
 
 ```
 
@@ -348,25 +379,47 @@ teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')       
 
 ```{r pedg}
 
+teacher_pedagogy <- final_indicator_data_PEDG 
 
-
-
-teacher_pedagogy <- school_micro_raw %>%
-  select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
+# teacher_pedagogy <- school_micro_raw %>%
+#   select(preamble_info, starts_with('m4saq1'), starts_with('s1'), starts_with('s2'),starts_with('m4s') )
 
   
 #add weights and anonymize
 teacher_pedagogy_micro <- df_add_weights('teacher_pedagogy') %>%
   select(-starts_with('interview__')) 
 
+# #merge in teacher weigths 
+# teacher_assessment_weights <- school_weights %>%
+#   select(school_code, teacher_obs_weight_component)
+# 
+# teacher_pedagogy_micro <- teacher_pedagogy_micro %>%
+#   left_join(teacher_assessment_weights, by = "school_code")
 
 ```
 
 
 
 ```{r}
-#join the assessment, pedagogy, and questionnaire info to the roster
 
+#add the weights to g1 and g4 student assessments 
+#add student weights to the g4 and g1 datasets
+g4_weights <- school_weights %>%
+  select(school_code, g4_stud_weight_component)
+
+assess_4th_grade_anon <- assess_4th_grade_anon %>%
+  left_join(g4_weights, by = "school_code")
+
+g1_weights <- school_weights %>%
+  select(school_code, g1_stud_weight_component)
+
+ecd_dta_anon <- ecd_dta_anon %>%
+  left_join(key)
+
+ecd_dta_anon <- ecd_dta_anon %>%
+  left_join(g1_weights, by = "school_code")
+
+#join the assessment, pedagogy, and questionnaire info to the roster
 #start with teacher questionnaire
 teacher_combined_df <- teacher_absence_micro %>%
   left_join(teacher_questionnaire_micro %>% mutate(TEACHERS__id=m3sb_tnumber), na_matches='never') %>%
@@ -411,7 +464,7 @@ print(paste0(pct,"% of teachers assessed for content knowledge are successfully 
 
 ```{r}
 matches <- teacher_combined_df %>%
-  select(school_code, grade_joined, TEACHERS__id, m2saq2, m5sb_tnum, m5sb_troster, m3sb_tnumber, m3sb_troster,m4saq1_number, m4saq1)
+  select(school_code, TEACHERS__id, m2saq2, m5sb_tnum, m5sb_troster, m3sb_tnumber, m3sb_troster,m4saq1_number, m4saq1)
 
 
 ```

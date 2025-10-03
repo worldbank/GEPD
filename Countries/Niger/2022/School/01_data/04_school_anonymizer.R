@@ -53,7 +53,19 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
                                 "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
                                 "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
-                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F",
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F",
+                                "final_indicator_data_CONT_micro_F", "final_indicator_data_CONT_micro_M",
+                                "final_indicator_data_CONT_micro", "final_indicator_data_EFFT_micro_F", 
+                                "final_indicator_data_EFFT_micro_M", "final_indicator_data_EFFT_micro", 
+                                "final_indicator_data_LCAP_micro_F", "final_indicator_data_LCAP_micro_M", 
+                                "final_indicator_data_LCAP_micro", "final_indicator_data_LERN_micro_F", 
+                                "final_indicator_data_LERN_micro_M", "final_indicator_data_LERN_micro", 
+                                "final_indicator_data_TATT_micro", "final_indicator_data_TEVL_micro", 
+                                "final_indicator_data_TINM_micro", "final_indicator_data_TMNA_micro", 
+                                "final_indicator_data_TSDP_micro", "final_indicator_data_TSUP_micro",
+                                "final_indicator_data_ILDR_micro_M", "final_indicator_data_ILDR_micro_F",
+                                "final_indicator_data_ILDR_micro"))
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
@@ -79,11 +91,7 @@ data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', cu
          #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
          ) %>%
   select(school_code, REGION,urban_rural,LIRE,ownership, public,
-         ipw) 
-
-
-
-
+         ipw, strata_prob, strata_count) 
 
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
@@ -214,3 +222,4 @@ for (i in data_list ) {
 }
 
 save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/NER/NER_2022_GEPD/NER_2022_GEPD_v02_M/Data/School/school_indicators_data_anon.RData"))
