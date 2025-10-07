@@ -18,7 +18,6 @@ school_dis <- school_dta %>%
   group_by(school_code) %>%
   summarise(across(starts_with('m4scq'),mean, na.rm=TRUE))
 
-
 final_school_data <- final_school_data %>%
   select(-starts_with('m4scq')) %>%
   left_join(school_dis, by='school_code',suffix=c("",".y")) %>%
@@ -55,7 +54,18 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
                                 "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
                                 "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
-                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F",
+                                "final_indicator_data_CONT_micro_F", "final_indicator_data_CONT_micro_M",
+                                "final_indicator_data_CONT_micro", "final_indicator_data_EFFT_micro_F", 
+                                "final_indicator_data_EFFT_micro_M", "final_indicator_data_EFFT_micro", 
+                                "final_indicator_data_LCAP_micro_F", "final_indicator_data_LCAP_micro_M", 
+                                "final_indicator_data_LCAP_micro", "final_indicator_data_LERN_micro_F", 
+                                "final_indicator_data_LERN_micro_M", "final_indicator_data_LERN_micro", 
+                                "final_indicator_data_TATT_micro", "final_indicator_data_TEVL_micro", 
+                                "final_indicator_data_TINM_micro", "final_indicator_data_TMNA_micro", 
+                                "final_indicator_data_TSDP_micro", "final_indicator_data_TSUP_micro",
+                                "final_indicator_data_ILDR_micro_M", "final_indicator_data_ILDR_micro_F",
+                                "final_indicator_data_ILDR_micro"))
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
@@ -75,6 +85,8 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #Load original sample of schools
 
 
+
+
 #Load original sample of schools
 currentDate<-c("2022-10-07")
 sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
@@ -85,14 +97,19 @@ data_set_updated <- read_csv(paste(sample_folder, '/school_weights_revised_', cu
     is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
     TRUE ~ ipw)
     ) %>%
+  #copying and adjusting brian's code for the updated weights
+  mutate(strata_prob=case_when(
+    is.na(strata_prob) ~ median(strata_prob, na.rm=TRUE),
+    strata_prob == 0 ~ median(strata_prob, na.rm=TRUE),
+    TRUE ~ strata_prob)
+  ) %>%
   ungroup() %>%
   mutate(school_code=idemis_code,
          urban_rural=if_else(accessibility=="Easily accessible", "Urban", "Rural"),
          private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")) %>%
+  filter(!is.na(school_code)) %>%
   select(school_code, sch_owner, idregion, iddistrict,accessibility,school_districthq_distance, urban_rural,sch_owner,private,
-         ipw) 
-
-
+         ipw, strata_prob, strata_count) 
 
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
@@ -104,6 +121,9 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(province=idregion           ) 
 }
 
+
+school_dta_new <- school_dta %>%
+  left_join(data_set_updated)  
 
 ####################
 # Code to anonymize
@@ -222,3 +242,4 @@ for (i in data_list ) {
 }
 
 save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/SLE/SLE_2022_GEPD/SLE_2022_GEPD_v02_M/Data/School/school_indicators_data_anon.RData"))

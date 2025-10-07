@@ -10,7 +10,7 @@ library(here)
 # User Inputs for API #
 ######################################
 # Here you need to indicate the path where you replicated the folder structures on your own computer
-here() #"C:/Users/wb469649/Documents/Github/GEPD"
+here() #"C:/Users/wb631589/OneDrive - WBG/Documents/GitHub/GEPD"
 if (need_api==1) {
 #user credentials
 #Check whether password.R file is in Github repo
