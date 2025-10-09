@@ -26,14 +26,14 @@ makeVlist <- function(dta) {
 }
 
 
-#Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- indicators$indicator_tag
+# #Read in list of indicators
+# indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+# indicators <- indicators %>%
+#   filter(Series!="---") %>%
+#   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+# 
+# #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+# indicator_names <- indicators$indicator_tag
 
 # #Get a list of enumerator names and IDs
 # enumerator_id <- readxl::read_excel(path=file.path(download_folder, "[Enumerator_ID]Survey of Public Officials - Rwanda.xlsx")) %>%
@@ -104,24 +104,21 @@ public_officials_dta<- public_officials_dta %>%
 # Read in School Data for comparison to public officials answers
 ###############################
 
-school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School/", sep="/"))
+school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/School/", sep="/"))
 
-
-if (file.exists(paste(school_folder, "school_indicators_data_anon.RData", sep="/"))) {
-  
   load(file=paste(school_folder, "school_indicators_data_anon.RData", sep="/"))
   
+  final_indicator_data_INPT_anon <- final_indicator_data_INPT_anon %>%
+    mutate(weight = ipw)
+  
+  school_dta_short_anon <- school_dta_short_anon %>%
+    mutate(weight = ipw) 
 
-
-
-  class_size <- weighted.mean(final_indicator_data_INPT_anon$s_m4ab_01, w=final_indicator_data_INPT_anon$ipw, na.rm=TRUE)
+  class_size <- weighted.mean(final_indicator_data_INPT_anon$s_m4ab_01, w=final_indicator_data_INPT_anon$weight, na.rm=TRUE)
   
   #need to adjust this
-  absence <- weighted.mean(school_dta_short_anon$sch_absence_rate, w=school_dta_short_anon$ipw, na.rm=TRUE) 
-} else {
-  class_size <-25
-  absence <- 10
-}
+  absence <- weighted.mean(school_dta_short_anon$sch_absence_rate, w=school_dta_short_anon$weight, na.rm=TRUE) 
+
 ############################
 #Clean up idiosyncratic variables
 #############################
@@ -131,6 +128,18 @@ if (file.exists(paste(school_folder, "school_indicators_data_anon.RData", sep="/
 attitude_fun_rev  <- function(x) {
   case_when(
     x==99 ~ as.numeric(NA),
+    x==998 ~ as.numeric(NA),
+    x==5 ~ 1,
+    x==4 ~ 2.33,
+    x==2 ~ 3.67,
+    x==1 ~ 5
+  )
+}
+
+attitude_fun_rev_2  <- function(x) {
+  case_when(
+    x==99 ~ as.numeric(NA),
+    x==998 ~ as.numeric(NA),
     x==1 ~ 5,
     x==2 ~ 4,
     x==3 ~ 3,
@@ -140,11 +149,16 @@ attitude_fun_rev  <- function(x) {
 }
 
 #create list of these variables
-var_rev_list<-c('QB2q2',  'QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4q4f', 'QB4q4g',
-                'IDM1q1', 'IDM1q2' )
+var_rev_list<-c('QB4q4a', 'QB4q4b', 'QB4q4c', 'QB4q4d', 'QB4q4e', 'QB4q4f', 'QB4q4g',
+                'IDM1q1', 'IDM1q2')
+
+var_rev_list_2 <-c('QB2q2')
 
 public_officials_dta <- public_officials_dta %>%
-  mutate_at(var_rev_list, attitude_fun_rev)
+  mutate(across(all_of(var_rev_list), attitude_fun_rev))
+
+public_officials_dta <- public_officials_dta %>%
+  mutate(across(all_of(var_rev_list_2), attitude_fun_rev_2))
 
 #scale some variables that ask integers as 1-5 (e.g. motivation)
 public_officials_dta <- public_officials_dta %>%
@@ -163,19 +177,17 @@ public_officials_dta <- public_officials_dta %>%
          proportion_producement_political=IDM3q3,
          DEM1q13=as.numeric(DEM1q13)) %>%
   mutate(QB1q2= case_when(
-    between(abs(QB1q2-class_size)/class_size,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-    between(abs(QB1q2-class_size)/class_size,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-    between(abs(QB1q2-class_size)/class_size,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-    between(abs(QB1q2-class_size)/class_size,30,40) ~ 2, #between 30-40% of actual value gets 2 points
-    between(abs(QB1q2-class_size)/class_size,40,100) ~ 1 #between 40-10% of actual value gets 1 points
-  ),
+    between((abs((QB1q2-class_size)/class_size)),0,0.1) ~ 5, #between 0-10% of actual value gets 5 points
+    between((abs((QB1q2-class_size)/class_size)),0.1,0.2) ~ 4, #between 10-20% of actual value gets 4 points
+    between((abs((QB1q2-class_size)/class_size)),0.2,0.3) ~ 3, #between 20-30% of actual value gets 3 points
+    between((abs((QB1q2-class_size)/class_size)),0.3,0.4) ~ 2, #between 30-40% of actual value gets 2 points
+    abs((QB1q2 - class_size) / class_size) > 0.4 ~ 1),
   QB1q1= case_when(
-    between(abs(QB1q1-absence)/absence,0,10) ~ 5, #between 0-10% of actual value gets 5 points
-    between(abs(QB1q1-absence)/absence,10,20) ~ 4, #between 10-20% of actual value gets 4 points
-    between(abs(QB1q1-absence)/absence,20,30) ~ 3, #between 20-30% of actual value gets 3 points
-    between(abs(QB1q1-absence)/absence,30,40) ~ 3, #between 30-40% of actual value gets 3 points
-    between(abs(QB1q1-absence)/absence,40,100) ~ 1 #between 40-10% of actual value gets 1 points
-  ),
+    between(abs(QB1q1-absence)/absence,0,0.10) ~ 5, #between 0-10% of actual value gets 5 points
+    between(abs(QB1q1-absence)/absence,0.10,0.20) ~ 4, #between 10-20% of actual value gets 4 points
+    between(abs(QB1q1-absence)/absence,0.20,0.30) ~ 3, #between 20-30% of actual value gets 3 points
+    between(abs(QB1q1-absence)/absence,0.30,0.40) ~ 2, #between 30-40% of actual value gets 3 points
+    abs((QB1q1 - absence) / absence) > 0.4 ~ 1),
   QB4q2= case_when(
     QB4q2>=120 ~ 5,
     QB4q2>=110 ~ 4,

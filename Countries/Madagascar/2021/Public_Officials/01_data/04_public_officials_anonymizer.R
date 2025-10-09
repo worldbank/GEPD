@@ -206,3 +206,5 @@ for (i in data_list ) {
 }
 
 save(list=anon_dta_list, file = file.path(save_folder, "public_officials_indicators_data_anon.RData"))
+save(list=anon_dta_list, file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_M/Data/Public_Officials/public_officials_indicators_data_anon.RData"))
+

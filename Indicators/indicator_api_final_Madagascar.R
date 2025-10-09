@@ -72,6 +72,10 @@ if (str_to_lower(Sys.info()["user"]) == "wb469649") {
   
   data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_M/Data/"
   data_dir_conf <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/anonymized"
+} else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+  
+  data_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_M/Data/"
+  data_dir_conf <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/anonymized"
 }
 
 

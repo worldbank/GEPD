@@ -67,6 +67,14 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
   save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 
+} else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb631589" ){
+  #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/"
+  download_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/School", sep="/"))
+  sampling_folder <-file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,"/CNT/",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_input_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/3_input_data"))
+  save_output_folder <- file.path(paste0(project_folder,"General/LEGO_Teacher_Paper/5_output_data"))
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
@@ -285,7 +293,6 @@ teacher_questionnaire <- teacher_questionnaire_dta %>%
 
 
 
-
 #add weights and anonymize
 teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')     %>%
   left_join(key) %>%
@@ -384,6 +391,11 @@ teacher_combined_df <- teacher_roster_micro %>%
   left_join(teacher_questionnaire_micro %>% mutate(TEACHERS__id=m3sb_tnumber) , na_matches='never') %>%
   group_by(school_code,TEACHERS__id) %>%
   slice(1) 
+
+new <- teacher_combined_df %>%
+  group_by(school_code,TEACHERS__id) %>%
+  filter(n() > 1) %>%
+  ungroup()
 
 
 sum(!is.na(teacher_combined_df$m3sb_tnumber))
