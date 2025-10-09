@@ -45,7 +45,18 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_OPMN_M", "final_indicator_data_OPMN_F",
                                 "final_indicator_data_ILDR_M", "final_indicator_data_ILDR_F",
                                 "final_indicator_data_PKNW_M", "final_indicator_data_PKNW_F",
-                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F"))
+                                "final_indicator_data_PMAN_M", "final_indicator_data_PMAN_F",
+                                "final_indicator_data_CONT_micro_F", "final_indicator_data_CONT_micro_M",
+                                "final_indicator_data_CONT_micro", "final_indicator_data_EFFT_micro_F", 
+                                "final_indicator_data_EFFT_micro_M", "final_indicator_data_EFFT_micro", 
+                                "final_indicator_data_LCAP_micro_F", "final_indicator_data_LCAP_micro_M", 
+                                "final_indicator_data_LCAP_micro", "final_indicator_data_LERN_micro_F", 
+                                "final_indicator_data_LERN_micro_M", "final_indicator_data_LERN_micro", 
+                                "final_indicator_data_TATT_micro", "final_indicator_data_TEVL_micro", 
+                                "final_indicator_data_TINM_micro", "final_indicator_data_TMNA_micro", 
+                                "final_indicator_data_TSDP_micro", "final_indicator_data_TSUP_micro",
+                                "final_indicator_data_ILDR_micro_M", "final_indicator_data_ILDR_micro_F",
+                                "final_indicator_data_ILDR_micro"))
 
 
 data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
@@ -80,16 +91,18 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
     mutate(allocate=if_else(is.na(allocate), as.numeric(median(allocate, na.rm=T)), as.numeric(allocate))) %>%
     mutate(weights=n()/allocate) %>%
     mutate(unity=1) %>%
-    ungroup() 
+    ungroup() %>%
+    mutate(strata_count = paste0(district, urban_rural),
+           urban_rural = str_to_title(urban_rural))
   
   
   dataset %>%
     mutate(!! scode := as.numeric(.data$school_code)) %>%
     left_join(data_set_updated) %>%
     mutate(rural=urban_rural=="RURAL") %>%
-    mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))*!! snumber ) %>%
+    mutate(ipw=if_else(is.na(.data$weights), as.numeric(median(.data$weights, na.rm=T)), as.numeric(.data$weights))) %>%
     select(-one_of(colnames(data_set_updated[, -which(names(data_set_updated) == "urban_rural" | names(data_set_updated) == "district" | names(data_set_updated) == "province" 
-                                                      | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
+                                                      | names(data_set_updated) == "strata_count" | names(data_set_updated) == "total_2018_enrollment" | names(data_set_updated) == "region" | names(data_set_updated) == "weights"  )])))
 }
 
 
@@ -122,6 +135,24 @@ for (i in data_list ) {
     print(i)
     #add hashed school code if needed
     if ("school_code" %in% colnames(temp)) {
+      temp <- temp %>% 
+        left_join(key, by = "school_code") 
+      
+      if ("hashed_school_code.x" %in% colnames(temp)) {
+        temp <- temp %>% 
+          mutate(hashed_school_code = hashed_school_code.x)
+      }
+      
+      if ("hashed_school_province.x" %in% colnames(temp)) {
+        temp <- temp %>% 
+          mutate(hashed_school_province = hashed_school_province.x)
+      }
+      
+      if ("hashed_school_district.x" %in% colnames(temp)) {
+        temp <- temp %>% 
+          mutate(hashed_school_district = hashed_school_district.x)
+      }
+      
       temp <- temp %>%
         left_join(key) %>%
         select(hashed_school_code, hashed_school_province, hashed_school_district, everything())
@@ -226,4 +257,4 @@ for (i in data_list ) {
 }
 
 save(list=c(anon_dta_list, 'metadta', 'indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
-
+save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_M/Data///School/school_indicators_data_anon.RData"))

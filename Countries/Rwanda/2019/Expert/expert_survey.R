@@ -1,8 +1,10 @@
 library(tidyverse)
 library(haven)
 #score expert data (this requires a lot of hard coding and transcribing)
-expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/Expert_Survey"
+#expert_dir <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD/CNT//RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_M/Data/Expert_Survey"
 #read in data
+
+expert_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_M/Data/Expert_Survey"
 
 #define function to help clean this data read in (variable read in as factor, so this fixes this)
 read_var <- function(var) {
@@ -15,7 +17,11 @@ read_var <- function(var) {
 expert_dta_teachers <- readxl::read_xlsx(path=paste(expert_dir, 'PolicySurvey_Rwanda_final.xlsx', sep="/"), sheet = 'Teachers', .name_repair = 'universal') 
 
 expert_dta_teachers_shaped<-data.frame(t(expert_dta_teachers[-1]))
-colnames(expert_dta_teachers_shaped) <- expert_dta_teachers$Question..
+
+names <- expert_dta_teachers$Question..
+
+names[12] <- "A11.1"
+colnames(expert_dta_teachers_shaped) <- names
 
 #create indicators
 expert_dta_teachers_final <- expert_dta_teachers_shaped %>%
@@ -54,10 +60,10 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(evaluation_law=read_var(A10),
          evaluation_law_school=read_var(A11),
-         evaluation_criteria=read_var(A12),
+         evaluation_criteria=5, #adjusting it manually to match the scoring logic from the updated workflow
          negative_evaluations=read_var(A14),
          positive_evaluations=read_var(A16)) %>%
-  mutate(teaching_evaluation=1+evaluation_law/4 + evaluation_law_school/4+evaluation_criteria/2+
+  mutate(teaching_evaluation=evaluation_law + evaluation_law_school+evaluation_criteria/5+
            negative_evaluations+positive_evaluations) 
 
 #Teacher Monitoring
@@ -150,8 +156,8 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 ##### School School Management Selection and Deployment
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_rubric=read_var(A4),
-         principal_factors=read_var(A5)) %>%
-  mutate(sch_selection_deployment=1+principal_rubric+principal_factors)
+         principal_factors=4) %>% #adjusting it manually to be consistent with what we have in the updated workflow
+  mutate(sch_selection_deployment=1+principal_rubric+(3/5)*principal_factors)
   
 # school management support
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
@@ -170,8 +176,8 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 # school management evaluation
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_monitor_law=read_var(A6),
-         principal_monitor_criteria=read_var(A7)) %>%
-  mutate(principal_evaluation=1+principal_monitor_law+principal_monitor_criteria)
+         principal_monitor_criteria=5) %>% #adjusting it manually to be consistent with the updated scoring logic
+  mutate(principal_evaluation=1+principal_monitor_law+(3/5)*principal_monitor_criteria)
 
 ################################
 # Learners 
@@ -191,8 +197,8 @@ attr(expert_dta_learners_final, "variable.labels") <- expert_dta_learners$Questi
 
 #nutrition
 expert_dta_learners_final <- expert_dta_learners_final %>%
-  mutate(iodization=read_var(A1),
-         iron_fortification=read_var(A2),
+  mutate(iodization=4/4, #adjusted it manually to be consistent with what we have in the other countries, same below
+         iron_fortification=4/4,
          breastfeeding=read_var(A3),
          school_feeding=read_var(A5)) %>%
   mutate(nutrition_programs=1+iodization + iron_fortification + breastfeeding + school_feeding)
@@ -202,17 +208,22 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(immunization=read_var(A6),
          healthcare_young_children=read_var(A7),
          deworming=read_var(A8),
-         antenatal_skilled_delivery=read_var(A9)) %>%
-  mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
+         antenatal_skilled_delivery=read_var(A9),
+         antenatal_skilled_delivery = case_when(
+        antenatal_skilled_delivery == 2 ~ 1,
+        antenatal_skilled_delivery == 1 ~ 0.5,
+        TRUE ~ antenatal_skilled_delivery
+      )) %>%
+  mutate(health_programs=1+(immunization + healthcare_young_children + deworming + antenatal_skilled_delivery))
 
 
 #ECE programs
 expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(pre_primary_free_some=read_var(A10),
          developmental_standards=read_var(A11),
-         ece_qualifications=read_var(A12),
+         ece_qualifications=3, #manually adjusting to make it consistent with the scoring we have in the other countries
          ece_in_service=read_var(A13)) %>%
-  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/3 + ece_in_service)
+  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/5 + ece_in_service)
 
 # financial capacity
 expert_dta_learners_final <- expert_dta_learners_final %>%

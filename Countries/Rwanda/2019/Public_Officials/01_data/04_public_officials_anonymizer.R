@@ -13,27 +13,43 @@ library(sdcMicro)
 ##################
 
 load(file = file.path(confidential_folder, "public_officials_indicators_data.RData"))
-
-
-#generate list of datasets to anonnymize
-#Read in list of indicators
-indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
-
-indicators <- indicators %>%
-  filter(Series!="---") %>%
-  separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
-
-#Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
-indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
-
-ind_dta_list<-c("final_indicator_data_BNLG" , "final_indicator_data_BMAC" , "final_indicator_data_BQBR" ,
-                "final_indicator_data_BIMP" , "final_indicator_data_ORG"  , "public_officials_dta_clean",
-                 "public_officials_dta")
+# 
+# 
+# #generate list of datasets to anonnymize
+# #Read in list of indicators
+# indicators <- read_delim(here::here('Indicators','indicators.md'), delim="|", trim_ws=TRUE)
+# 
+# indicators <- indicators %>%
+#   filter(Series!="---") %>%
+#   separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE)
+# 
+# #Get list of indicator tags, so that we are able to select columns from our dataframe using these indicator tags that were also programmed into Survey Solutions
+# indicator_names <- c("NLG", "ACM", "QB", "IDM", "ORG")
+# 
+# ind_dta_list<-c("final_indicator_data_BNLG" , "final_indicator_data_BMAC" , "final_indicator_data_BQBR" ,
+#                 "final_indicator_data_BIMP" , "final_indicator_data_ORG"  , "public_officials_dta_clean",
+#                  "public_officials_dta")
 
 anon_dta_list<-c("public_officials_metadata")
 
 
+final_indicator_data_BIMP <- final_indicator_data_BIMP %>%
+  mutate(pol_policy_implementation=politicized_policy_implementation) %>%
+  select(-politicized_policy_implementation)
 
+public_officials_dta_clean <- public_officials_dta_clean %>%
+  mutate(pol_policy_implementation=politicized_policy_implementation,
+  resp_monitoring_performance = responsible_monitoring_performance, 
+  share_reported_underperformance = proportion_reported_underperformance) %>%
+  select(-politicized_policy_implementation) %>%
+  select(-responsible_monitoring_performance) %>%
+  select(-proportion_reported_underperformance) 
+
+public_officials_dta <- public_officials_dta %>%
+  mutate(resp_monitoring_performance = responsible_monitoring_performance, 
+         share_reported_underperformance = proportion_reported_underperformance) %>%
+  select(-responsible_monitoring_performance) %>%
+  select(-proportion_reported_underperformance) 
 
 
 data_list<-ind_dta_list
@@ -205,3 +221,4 @@ for (i in data_list ) {
 }
 
 save(list=anon_dta_list, file = file.path(save_folder, "public_officials_indicators_data_anon.RData"))
+save(list=anon_dta_list, file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_M/Data//Public_Officials/public_officials_indicators_data_anon.RData"))
