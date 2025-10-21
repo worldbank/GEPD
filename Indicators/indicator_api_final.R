@@ -59,7 +59,7 @@ api_template <- api_template_fun()
 # Example:
 
 #specify path to data
-data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_M/Data/"
+data_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v02_M/Data/"
 
 
 
@@ -123,7 +123,7 @@ api_metadata_fn <- function(cntry, yr) {
     rename(Indicator.Name='Indicator Name') %>%
     filter(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name)) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
-    select(Series, `Indicator Name`, value) %>%
+    select(Series, `Indicator Name`, value, N) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(
@@ -141,7 +141,7 @@ api_metadata_fn <- function(cntry, yr) {
     rename(Indicator.Name='Indicator Name') %>%
     filter(!(grepl(practice_tags, Series) | grepl("Percent", Indicator.Name))) %>%
     rename(  'Indicator Name'=Indicator.Name) %>%
-    select(Series, `Indicator Name`, value) %>%
+    select(Series, `Indicator Name`, value, N) %>%
     mutate(value=if_else(value==-999,as.numeric(NA),as.numeric(value))) %>%
     mutate(
       value_metadata=case_when(
