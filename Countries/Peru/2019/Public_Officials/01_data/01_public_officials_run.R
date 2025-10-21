@@ -57,6 +57,14 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
   backup_onedrive="yes"
   save_folder_onedrive <- file.path(paste("C:/Users/wb550666/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/", country_name,year,"Data/clean/Public_Officials", sep="/"))
   
+} else if (Sys.getenv("USERNAME") == "wb631589"){
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT"
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/Public_Officials", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/Public_Officials", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/Public_Officials", sep="/"))
+  
+  backup_onedrive="no"
+  
 } else {
   download_folder <- choose.dir(default = "", caption = "Select folder to open data downloaded from API")
   save_folder <- choose.dir(default = "", caption = "Select folder to save final data")
@@ -72,10 +80,12 @@ if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649")
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #launch file to access data from API
-source('02_public_officials_api.R', local=TRUE)
+# source('02_public_officials_api.R', local=TRUE)
 
 #launch file to clean data
 source('03_public_officials_cleaner.R', local=TRUE)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+source('04_public_officials_anonymizer.R', local=TRUE)
 
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
