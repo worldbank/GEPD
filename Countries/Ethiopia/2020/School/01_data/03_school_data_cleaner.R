@@ -1343,7 +1343,7 @@ ecd_dta_anon <- ecd_dta %>%
   select(school_code, interview__key, ecd_student_number, ecd_student_age, ecd_student_male, 
          ecd_student_knowledge, ecd_math_student_knowledge, ecd_literacy_student_knowledge, ecd_soc_student_knowledge, ecd_exec_student_knowledge,
          ecd_student_proficiency, ecd_math_student_proficiency, ecd_literacy_student_proficiency, ecd_soc_student_proficiency, ecd_exec_student_proficiency,
-         math_items, lit_items, soc_items, exec_items)
+         math_items, lit_items, soc_items, exec_items, m6s1kg)
 
 
 save(ecd_dta_anon, ecd_dta_metadata, 

@@ -124,7 +124,7 @@ school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD
   school_dta_short <- school_dta_short %>%
     mutate(codigo=as.numeric(school_code_preload)) %>%
     left_join(sample) %>%
-    mutate( school_ipw=ipw) 
+    mutate( school_ipw=1/ipw) 
   
   weights<-school_dta_short %>%
     group_by(school_code) %>%
