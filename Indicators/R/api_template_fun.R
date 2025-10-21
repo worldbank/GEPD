@@ -23,19 +23,19 @@ api_template_fun <- function(variables) {
   if (Sys.getenv("USERNAME") == "wb577189"){
     
     indicators <- read.csv('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info.csv')
-  }else {
-    
-    indicators <- read_csv(here::here('Indicators','GEPD_Indicators_Info.csv'))
-    
-    
+    indicators <- indicators %>%
+      filter(Series!="---") %>%
+      separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
+      rename(`Indicator.Name`= Indicator)
+  } else if (Sys.getenv("USERNAME") == "wb631589") {
+    indicators <- read.csv('C:/Users/wb631589/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info.csv')
+    indicators <- indicators %>%
+      filter(Series!="---") %>%
+      separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
+      rename(`Indicator.Name`= Indicator)
+    } else {
   }
-  indicators <- indicators %>%
-    filter(Series!="---") %>%
-    separate(Series, c(NA, NA, "indicator_tag"), remove=FALSE) %>% 
-    rename(`Indicator.Name`= Indicator)
-  
-  
-  
+
   indicator_names <-  indicators$indicator_tag
   indicator_names <- sapply(indicator_names, tolower)
   
@@ -47,7 +47,10 @@ api_template_fun <- function(variables) {
   if (Sys.getenv("USERNAME") == "wb577189"){
     
     indicator_choices <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators_choices.md', delim="|", trim_ws=TRUE)
-  }else {
+  } else if (Sys.getenv("USERNAME") == "wb631589"){
+    
+    indicator_choices <- read_delim('C:/Users/wb631589/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators_choices.md', delim="|", trim_ws=TRUE)
+  } else {
   indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
   }
   indicator_choices <- indicator_choices %>%
@@ -64,7 +67,10 @@ api_template_fun <- function(variables) {
   if (Sys.getenv("USERNAME") == "wb577189"){
     
     indicator_choices <- read_delim('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators_choices.md', delim="|", trim_ws=TRUE)
-  }else {
+  } else if (Sys.getenv("USERNAME") == "wb631589"){
+    
+    indicator_choices <- read_delim('C:/Users/wb631589/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/indicators_choices.md', delim="|", trim_ws=TRUE)
+  } else {
     indicator_choices <- read_delim(here::here('Indicators','indicators_choices.md'), delim="|", trim_ws=TRUE)
   }
   
@@ -90,7 +96,10 @@ api_template_fun <- function(variables) {
   if (Sys.getenv("USERNAME") == "wb577189"){
     
     subquestions <- read_excel('C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions')
-  }else {
+  } else if (Sys.getenv("USERNAME") == "wb631589"){
+    
+    subquestions <- read_excel('C:/Users/wb631589/OneDrive - WBG/Documents/GitHub/GEPD/Indicators/GEPD_Indicators_Info_v5.xlsx', sheet='SubQuestions')
+  } else {
     subquestions<-read_excel(here::here('Indicators','GEPD_Indicators_Info_v5.xlsx'), sheet='SubQuestions') 
   }
   
@@ -105,7 +114,7 @@ api_template_fun <- function(variables) {
   
   
   df_defacto_dejure <- df %>%
-    filter(grepl("Policy Lever", Indicator.Name )) %>%
+    filter(grepl("Policy Lever",  Subtitle)) %>%
     select(Series, Indicator.Name ) %>%
     mutate('De Facto' = "DF",
            'De Jure' = "DJ") %>%
@@ -132,8 +141,8 @@ api_template_fun <- function(variables) {
       'Subquestion_16', 'Subquestion_17', 'Subquestion_18',
       'Subquestion_19', 'Subquestion_20'),
       values_to='short_desc') %>%
-    filter(short_desc!="") %>%
-    filter(short_desc!="Overall") %>%
+    filter(trimws(short_desc) != "") %>%
+  filter(short_desc!="Overall") %>%
     pivot_longer(cols=c(    "Column_2", "Column_3", "Column_4","Column_5", "Column_6"),
                  values_to='urban_rural_gender',
                  names_to = 'urban_rural_gender_name')  %>%
