@@ -1,3 +1,14 @@
+library(tidyverse)
+library(haven)
+library(stringr)
+library(Hmisc)
+library(survey)
+library(here)
+library(readxl)
+library(srvyr)
+library(writexl)
+
+options(survey.lonely.psu = "adjust")
 
 indicator_means <- function(variable, dataset, tag,  unit) {
   
@@ -110,7 +121,9 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- as.data.frame(t(as.matrix(api_template))) 
   
-  colnames(indicator_values_transpose) <- api_template$Series 
+  colnames(indicator_values_transpose) <- api_template$Series
+  colnames(indicator_values_transpose) <- gsub(" ", "", api_template$Series)
+  
   
   indicator_values_transpose <- indicator_values_transpose %>%
     filter(rownames(indicator_values_transpose)=="value")
@@ -515,7 +528,7 @@ api_template <- api_template %>%
       #(De Jure) Is there a well-established career path for teachers?	
       SE.PRM.TATT.7  = -999     ,
       #(De Facto) Percent of teachers that report salary delays in the past 12 months	
-      SE.PRM.TATT.8  = 100*indicator_means(salary_delays		, "school", "TATT",  "All"),  
+      SE.PRM.TATT.8  = 100*indicator_means(m3seq6_tatt		, "school", "TATT",  "All"),  
       #(De Facto) Policy Lever (Teaching) - Attraction	
       SE.PRM.TATT.DF =indicator_means(teacher_attraction		, "school", "TATT",  "All") ,
       #(De Jure) Policy Lever (Teaching) - Attraction	
@@ -558,7 +571,7 @@ api_template <- api_template %>%
   #Policy Lever (Teaching) - Support                                                                                        
   SE.PRM.TSUP.1  =expert_df$practicum ,
   #(De Jure) Practicum required as part of pre-service training                                                             
-  SE.PRM.TSUP.2 = 100-100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.2 = 100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP",  "All"),
   #(De Facto) Percent reporting they completed a practicum as part of pre-service training                                  
   SE.PRM.TSUP.3  = 100*indicator_means(m3sdq3_tsup		, "school", "TSUP",  "All"),
   #(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program                
@@ -589,7 +602,7 @@ api_template <- api_template %>%
       SE.PRM.TEVL.2 =expert_df$evaluation_law_school, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools                    
       SE.PRM.TEVL.3 = 100*indicator_means(formally_evaluated		, "school", "TEVL",  "All"),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
       SE.PRM.TEVL.4 =expert_df$evaluation_criteria, #(De Jure) The criteria to evaluate teachers is clear                                                                     
-      SE.PRM.TEVL.5 = indicator_means(m3sbq8_tmna__1	+m3sbq8_tmna__2 + m3sbq8_tmna__3 + m3sbq8_tmna__4 + m3sbq8_tmna__5 + m3sbq8_tmna__6 + m3sbq8_tmna__7 + m3sbq8_tmna__8 + m3sbq8_tmna__97		, "school", "TEVL",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
+      SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator, "school", "TEVL",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
       SE.PRM.TEVL.6 = 100*indicator_means(negative_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
       SE.PRM.TEVL.7 = 100*indicator_means(positive_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
       SE.PRM.TEVL.8 =expert_df$negative_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more negative evaluations                         
@@ -619,7 +632,7 @@ api_template <- api_template %>%
       SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
       SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
       SE.PRM.TINM.10 =indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
-      SE.PRM.TINM.11 = indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
+      SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
       SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
       SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
       SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
@@ -640,11 +653,11 @@ api_template <- api_template %>%
     mutate(
       SE.PRM.ISTD  =  indicator_means(standards_monitoring		, "school", "ISTD",  "All"), #Policy Lever (Inputs & Infrastructure) - Standards                                                                       
       SE.PRM.ISTD.1  =expert_df$textbook_policy, #(De Jure) Is there a policy in place to require that students have access to the prescribed textbooks?                   
-      SE.PRM.ISTD.10 =  100*indicator_means(m1scq14_imon__4		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
+      SE.PRM.ISTD.10 =  100*indicator_means(m1scq14_imon__3		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have access to drinking water?              
       SE.PRM.ISTD.11 =expert_df$toilet_policy, #(De Jure) Is there a policy in place to require that schools have functioning toilets?                                   
       SE.PRM.ISTD.12 =  100*indicator_means(m1scq14_imon__1		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that schools have functioning toilets?                   
       SE.PRM.ISTD.13 =expert_df$disability_policy, #(De Jure) Is there a policy in place to require that schools are accessible to children with special needs?              
-      SE.PRM.ISTD.14 =  100*indicator_means(m1scq14_imon__3		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
+      SE.PRM.ISTD.14 =  100*indicator_means(m1scq14_imon__4		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is there a policy in place to require that schools are accessible to children with speci~
       SE.PRM.ISTD.2  =  100*indicator_means(m1scq13_imon__2		, "school", "ISTD",  "All"),#(De Facto) Do you know if there is a policy in place to require that students have access to the prescribed textbooks?   
       SE.PRM.ISTD.3  =expert_df$connectivity_program, #(De Jure) Is there a national connectivity program?                                                                      
       SE.PRM.ISTD.4  =  -999,#(De Facto) Do you know if there is a national connectivity program?                                                      
@@ -663,13 +676,13 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
       SE.PRM.IMON  =  indicator_means(sch_monitoring		, "school", "IMON",  "All"),    #Policy Lever (Inputs & Infrastructure) - Monitoring                                                                      
-      SE.PRM.IMON.1  =  indicator_means(m1scq1_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
+      SE.PRM.IMON.1  =  100*indicator_means(m1scq1_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
       SE.PRM.IMON.10 =-999, #(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored                         
-      SE.PRM.IMON.2  =  indicator_means(parents_involved		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-      SE.PRM.IMON.3  =  indicator_means(m1scq5_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
-      SE.PRM.IMON.4  =  indicator_means(m1scq7_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
-      SE.PRM.IMON.5  =  indicator_means(bin_var(m1scq10_imon,1)		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
-      SE.PRM.IMON.6  =  indicator_means(m1scq11_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
+      SE.PRM.IMON.2  =  100*indicator_means(parents_involved		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
+      SE.PRM.IMON.3  =  100*indicator_means(system_in_place		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             
+      SE.PRM.IMON.4  =  100*indicator_means(m1scq7_imon		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report there is someone monitoring that basic infrastructure is available             
+      SE.PRM.IMON.5  =  100*indicator_means(parents_involved_infr		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
+      SE.PRM.IMON.6  =  100*indicator_means(system_in_place_infr		, "school", "IMON",  "All"),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic infrastructure     
       SE.PRM.IMON.7  =-999, #(De Jure) Is the responsibility of monitoring basic inputs clearly articulated in the policies?                          
       SE.PRM.IMON.8  =-999, #(De Jure) Number of basic inputs clearly articulated as needing to be monitored                                          
       SE.PRM.IMON.9  =-999, #(De Jure) Is the responsibility of monitoring basic infrastructure clearly articulated in the policies?                  
@@ -803,8 +816,8 @@ api_template <- api_template %>%
     mutate(
       SE.PRM.SATT  = indicator_means(sch_management_attraction		, "school", "SATT",  "All"),  #Policy Lever (School Management) - Attraction                                                                             
       SE.PRM.SATT.1  =expert_df$professionalized, #(De Jure) Do the national policies governing the education system portray the position of principal or head teacher as pr~
-      SE.PRM.SATT.2 = indicator_means(principal_salary		, "school", "SATT",  "All"),  #(De Facto) Average principal salary as percent of GDP per capita                                                          
-      SE.PRM.SATT.3  = indicator_means(principal_satisfaction		, "school", "SATT",  "All"),#(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community    
+      SE.PRM.SATT.2 = 100*indicator_means(principal_salary		, "school", "SATT",  "All"),  #(De Facto) Average principal salary as percent of GDP per capita                                                          
+      SE.PRM.SATT.3  = indicator_means(100*(principal_satisfaction>3)		, "school", "SATT",  "All"),#(De Facto) Percent of principals reporting being satisfied or very satisfied with their social status in the community    
       SE.PRM.SATT.DF = indicator_means(sch_management_attraction		, "school", "SATT",  "All"), #(De Facto) Policy Lever (School Management) - Attraction                                                                  
       SE.PRM.SATT.DJ =expert_df$sch_management_attraction#(De Jure) Policy Lever (School Management) - Attraction  
     )
@@ -841,7 +854,7 @@ api_template <- api_template %>%
       SE.PRM.SSUP    =  indicator_means(sch_support		, "school", "SSUP",  "All"), #Policy Lever (School Management) - Support                                                                        
       SE.PRM.SSUP.1  =expert_df$principal_training_required,#(De Jure) Are principals required to have training on how to manage a school?                                     
       SE.PRM.SSUP.10 =  100*indicator_means(m7sgq5_ssup		, "school", "SSUP",  "All"),#(De Facto) Percent of principals that report having used the skills they gained at the last training they attended
-      SE.PRM.SSUP.11 =  indicator_means(if_else(m7sgq7_ssup!=98,m7sgq7_ssup, as.numeric(NA)) 		, "school", "SSUP",  "All"),#(De Facto) Average number of trainings that principals report having been offered to them in the past year        
+      SE.PRM.SSUP.11 =  100*indicator_means(principal_offered 		, "school", "SSUP",  "All"),#(De Facto) Average number of trainings that principals report having been offered to them in the past year        
       SE.PRM.SSUP.2  =expert_df$principal_training_type1,#(De Jure) Are principals required to have management training for new principals?                                 
       SE.PRM.SSUP.3  =expert_df$principal_training_type2,#(De Jure) Are principals required to have in-service training?                                                    
       SE.PRM.SSUP.4  =expert_df$principal_training_type3,#(De Jure) Are principals required to have mentoring/coaching by experienced principals?                           
@@ -862,7 +875,7 @@ api_template <- api_template %>%
       SE.PRM.SEVL.1  =expert_df$principal_monitor_law,#(De Jure) Is there a policy that specifies the need to monitor principal or head teacher performance?  
       SE.PRM.SEVL.2  =expert_df$principal_monitor_criteria,#(De Jure) Is the criteria to evaluate principals clear and includes multiple factors?                  
       SE.PRM.SEVL.3 =  100*indicator_means(m7sgq8_sevl		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated  during the last school year        
-      SE.PRM.SEVL.4 =  100*indicator_means(principal_eval_tot>1		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated on multiple factors                 
+      SE.PRM.SEVL.4 =  100*indicator_means(principal_evaluation_mult_dummy		, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report having been evaluated on multiple factors                 
       SE.PRM.SEVL.5 =  100*indicator_means(principal_negative_consequences	, "school", "SEVL",  "All"), #(De Facto) Percent of principals that report there would be consequences after two negative evaluations
       SE.PRM.SEVL.6  =100*indicator_means(principal_positive_consequences	, "school", "SEVL",  "All"),#(De Facto) Percent of principals that report there would be consequences after two positive evaluations
       SE.PRM.SEVL.DF =  indicator_means(principal_evaluation		, "school", "SEVL",  "All"), #(De Facto) Policy Lever (School Management) - Evaluation                                               
@@ -941,5 +954,5 @@ api_template <- api_template %>%
   
 api_final<-api_template %>%
     dplyr::select(-value) %>%
-    left_join(indicator_values_back)
-  
+    mutate(Series = gsub(" ", "", Series)) %>%
+    left_join(indicator_values_back, by = "Series")  

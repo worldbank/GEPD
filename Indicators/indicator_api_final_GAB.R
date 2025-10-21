@@ -54,10 +54,6 @@ api_template <- api_template_fun()
 #use api_data function to pull in data collected
 ##########################
 
-###########
-# Sierra Leone
-###########
-
 # Example:
 
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
@@ -67,6 +63,8 @@ data_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GA
 }else if (Sys.getenv("USERNAME") == "wb577189"){
   
   data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data"
+} else if (Sys.getenv("USERNAME") == "wb631589") {
+  data_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data"
 }
 
 

@@ -14,6 +14,8 @@ if(Sys.info()["user"] == "wb577189"){
   expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/Policy_Survey/"
   
   
+} else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+  expert_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data/Policy_Survey"
 }
 #read in data
 
@@ -80,12 +82,12 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
   
 #Teacher Evaluation
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
-  mutate(evaluation_law=read_var(a11),
-         evaluation_law_school=read_var(a12),
-         evaluation_criteria=read_var(a13)/5,
-         negative_evaluations=read_var(a15),
-         positive_evaluations=read_var(a17)) %>%
-  mutate(teaching_evaluation=1+evaluation_law/4 + evaluation_law_school/4+evaluation_criteria/2+
+  mutate(evaluation_law=read_var(a10),
+         evaluation_law_school=read_var(a11_2),
+         evaluation_criteria=read_var(a12),
+         negative_evaluations=read_var(a14),
+         positive_evaluations=read_var(a16)) %>%
+  mutate(teaching_evaluation=evaluation_law + evaluation_law_school+evaluation_criteria/5+
            negative_evaluations+positive_evaluations) 
 
 #Teacher Monitoring
@@ -191,7 +193,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_rubric=read_var(c4),
          principal_factors=read_var(c5)) %>%
   mutate(sch_selection_deployment=1+principal_rubric+(3/5)*principal_factors)
-  
+
 # school management support
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_training_required=read_var(c8),
@@ -245,7 +247,11 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(immunization=read_var(d6),
          healthcare_young_children=read_var(d7),
          deworming=read_var(d8),
-         antenatal_skilled_delivery=read_var(d9)-1) %>%
+         antenatal_skilled_delivery=read_var(d9),
+         antenatal_skilled_delivery = case_when(
+           antenatal_skilled_delivery == 2 ~ 1,
+           antenatal_skilled_delivery == 1 ~ 0.5,
+           TRUE ~ antenatal_skilled_delivery)) %>%
   mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
 
 
@@ -253,9 +259,9 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
 expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(pre_primary_free_some=read_var(d10),
          developmental_standards=read_var(d11),
-         ece_qualifications=read_var(d12)-1,
+         ece_qualifications=read_var(d12),
          ece_in_service=read_var(d13)) %>%
-  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/3 + ece_in_service)
+  mutate(ece_programs=1+pre_primary_free_some + developmental_standards + ece_qualifications/5 + ece_in_service)
 
 # financial capacity
 expert_dta_learners_final <- expert_dta_learners_final %>%
