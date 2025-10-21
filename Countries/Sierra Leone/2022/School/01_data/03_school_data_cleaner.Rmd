@@ -75,6 +75,13 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 }
 
+############################
+#read in teacher merged file (to use it for gender)
+############################
+
+teacher_gender <- read_dta("C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/General/LEGO_Teacher_Paper/5_output_data/SLE/SLE_teacher_level_updated.dta") 
+teacher_gender <- teacher_gender %>%
+  select(school_code, teacher_male, m2saq2_original, m5sb_troster_original, m3sb_troster_original)
 
 ```
 
@@ -556,6 +563,10 @@ school_dta_raw <- school_dta
 teacher_roster <- teacher_roster %>%
   left_join(school_data_preamble)
 
+#this one school seems to have multiple (3) teachers with the same name, remove 1 of them who teaches the same grade
+teacher_roster <- teacher_roster %>%
+  filter(!(school_code == 420101207 & TEACHERS__id == 4))
+
 #get the data for numEligible that is later used for the weights
 numeligible <- teacher_roster %>%
   mutate(eligible = pmax(m2saq7__1, m2saq7__2, m2saq7__3, m2saq7__4,
@@ -729,7 +740,10 @@ teacher_absence_metadta<-makeVlist(teacher_absence_dta)
 teacher_absence_dta <- teacher_absence_dta %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
-  
+
+#this one school seems to have multiple (3) teachers with the same name, remove 1 of them who teaches the same grade
+teacher_absence_dta <- teacher_absence_dta %>%
+  filter(!(school_code == 420101207 & TEACHERS__id == 4))
 
 #number missing
 teacher_absence_dta <- teacher_absence_dta %>%
@@ -1145,9 +1159,10 @@ final_indicator_data_CONT <- final_indicator_data_CONT_micro %>%
 
 #Breakdown by Male/Female
 final_indicator_data_CONT_micro_M <- teacher_assessment_dta %>%
-  mutate(TEACHERS__id=g4_teacher_number) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(m2saq3==1) %>%
+    mutate(TEACHERS__id=g4_teacher_number,
+           m5sb_troster_original = m5sb_troster) %>%
+    left_join(teacher_gender, by=c('school_code', 'm5sb_troster_original')) %>%
+    filter(teacher_male==1) %>%
   # group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
   mutate(content_knowledge=case_when(
@@ -1173,9 +1188,10 @@ final_indicator_data_CONT_M <- final_indicator_data_CONT_micro_M %>%
 
 
 final_indicator_data_CONT_micro_F <- teacher_assessment_dta %>%
-  mutate(TEACHERS__id=g4_teacher_number) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(m2saq3==2) %>%
+    mutate(TEACHERS__id=g4_teacher_number,
+           m5sb_troster_original = m5sb_troster) %>%
+    left_join(teacher_gender, by=c('school_code', 'm5sb_troster_original')) %>%
+    filter(teacher_male==0) %>%
   # group_by(school_code) %>%
   add_count(school_code,name='m5_teach_count') %>%
   mutate(content_knowledge=case_when(
@@ -2237,28 +2253,28 @@ final_indicator_data_ILDR_micro <- teacher_questionnaire_ILDR %>%
 
 #Breakdowns by Male/Female
 final_indicator_data_ILDR_M <- final_indicator_data_ILDR %>%
-  mutate(TEACHERS__id=questionnaire_roster__id) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(teacher_male==1) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))  
+    mutate(m3sb_troster_original = teacher_name) %>%
+    left_join(teacher_gender, by=c('school_code', 'm3sb_troster_original')) %>%
+    filter(teacher_male==1) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
 
 final_indicator_data_ILDR_F <- final_indicator_data_ILDR %>%
-  mutate(TEACHERS__id=questionnaire_roster__id) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(teacher_male==0) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))  
+    mutate(m3sb_troster_original = teacher_name) %>%
+    left_join(teacher_gender, by=c('school_code', 'm3sb_troster_original')) %>%
+    filter(teacher_male==0) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
 
 final_indicator_data_ILDR_micro_M <- final_indicator_data_ILDR_micro %>%
-  mutate(TEACHERS__id=questionnaire_roster__id) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(teacher_male==1) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))  
+    mutate(m3sb_troster_original = teacher_name) %>%
+    left_join(teacher_gender, by=c('school_code', 'm3sb_troster_original')) %>%
+    filter(teacher_male==1) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
 
 final_indicator_data_ILDR_micro_F <- final_indicator_data_ILDR_micro %>%
-  mutate(TEACHERS__id=questionnaire_roster__id) %>%
-  left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
-  filter(teacher_male==0) %>%
-  select( -starts_with('interview'), -starts_with('enumerator'))  
+    mutate(m3sb_troster_original = teacher_name) %>%
+    left_join(teacher_gender, by=c('school_code', 'm3sb_troster_original')) %>%
+    filter(teacher_male==0) %>%
+    select( -starts_with('interview'), -starts_with('enumerator'))  
 
 ggpairs(final_indicator_data_ILDR, columns=c("classroom_observed", "classroom_observed_recent", "discussed_observation",
                                              "feedback_observation", "lesson_plan_w_feedback","instructional_leadership"), title="Instructional Leadership ") +
