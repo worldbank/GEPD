@@ -326,6 +326,8 @@ teacher_roster_micro <- df_add_weights('teacher_roster_dta')   %>%
 
 teacher_absence_dta <- teacher_absence_final %>%
   left_join(school_data_preamble) %>%
+    mutate(
+         m2saq2=s_m2aa_02n) %>%
   select(colnames(school_data_preamble), everything()) %>%
   mutate(s_m2aa_02c=teacher_number)  
 
@@ -348,7 +350,7 @@ teacher_assessment_micro <- teacher_assessment_dta     %>%
   left_join(school_data_preamble) %>%
   select(colnames(school_data_preamble), everything()) %>%
   mutate(m5sb_tnum =teacher_number, 
-         m5sb_troster=id12) 
+         m5sb_troster=id12_nom) 
    
 #add weights and anonymize
 teacher_assessment_micro <- df_add_weights('teacher_assessment_micro')     %>%

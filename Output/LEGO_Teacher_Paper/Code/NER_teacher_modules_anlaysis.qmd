@@ -158,7 +158,7 @@ ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_kno
 )
 
 #attach derived indicators
-attach(paste0(confidential_folder,"/school_survey_data.RData"))
+load(paste0(confidential_folder,"/school_survey_data.RData"))
 
 ```
 
@@ -170,18 +170,14 @@ attach(paste0(confidential_folder,"/school_survey_data.RData"))
 #Load original sample of schools
 sample_date<-c("2022-10-24")
 data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', sample_date,  '.csv', sep="")
-) %>%
-  mutate(ipw=case_when(
-    is.na(ipw) ~ median(ipw, na.rm=TRUE),
-    is.infinite(ipw) ~ median(ipw, na.rm=TRUE),
-    TRUE ~ ipw)
   ) %>%
   ungroup() %>%
-  mutate(school_code=CODE_ETABLISSEMENT
+  mutate(school_code=CODE_ETABLISSEMENT,
+         school_weight = 1/strata_prob
          #private=if_else(sch_owner %in% c("Government", "Community"), "Public", "Private")
          ) %>%
   select(school_code, REGION,urban_rural,LIRE,
-         ipw) 
+        school_weight) 
 
 
 

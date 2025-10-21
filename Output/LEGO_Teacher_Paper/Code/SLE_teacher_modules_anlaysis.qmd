@@ -314,8 +314,7 @@ teacher_questionnaire_micro <- teacher_questionnaire_micro %>%
 #teacher_absence_dta<-read_dta(file.path(download_folder, "TEACHERS.dta")) 
 teacher_absence_dta <- teacher_absence_final
 
-# #Add school preamble info
-# teacher_absence_dta <- teacher_absence_dta %>%
+# #Add school preamble info# teacher_absence_dta <- teacher_absence_dta %>%
 #   left_join(school_data_preamble) %>%
 #   select(preamble_info, everything()) 
 
