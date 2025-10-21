@@ -2412,19 +2412,27 @@ final_indicator_data_ILDR <- teacher_questionnaire_ILDR %>%
 
 #Breakdowns by Male/Female
 final_indicator_data_ILDR_M <- final_indicator_data_ILDR %>%
-  filter(m7saq10==1) %>%
+    mutate(TEACHERS__id=questionnaire_roster__id) %>%
+    left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+    filter(teacher_male==1) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
 final_indicator_data_ILDR_F <- final_indicator_data_ILDR %>%
-  filter(m7saq10==2) %>%
+    mutate(TEACHERS__id=questionnaire_roster__id) %>%
+    left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+    filter(teacher_male==0) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
 final_indicator_data_ILDR_micro_M <- final_indicator_data_ILDR_micro %>%
-  filter(m7saq10==1) %>%
+    mutate(TEACHERS__id=questionnaire_roster__id) %>%
+    left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+    filter(teacher_male==1) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
 final_indicator_data_ILDR_micro_F <- final_indicator_data_ILDR_micro %>%
-  filter(m7saq10==2) %>%
+    mutate(TEACHERS__id=questionnaire_roster__id) %>%
+    left_join(teacher_absence_dta, by=c('school_code', 'TEACHERS__id')) %>%
+    filter(teacher_male==0) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
 
 ggpairs(final_indicator_data_ILDR, columns=c("classroom_observed", "classroom_observed_recent", "discussed_observation",
