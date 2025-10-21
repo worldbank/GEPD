@@ -1067,7 +1067,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
          sch_absence_rate=sch_absence_rate_2nd)
   
 teacher_absence_final<- teacher_absence_dta %>%
-  select(preamble_info, preamble_info_absence, contains('absence'), contains('presence')) %>%
+  select(preamble_info, preamble_info_absence, contains('absence'), contains('presence'), s_m2aa_02n) %>%
   group_by(s_ecole_code, teacher_number) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
 
