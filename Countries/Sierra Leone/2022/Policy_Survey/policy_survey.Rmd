@@ -46,6 +46,9 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/"
   expert_dir <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),"Data/Policy_Survey", sep="/"))
 
+} else if (str_to_lower(Sys.getenv("USERNAME")) == "wb631589") {
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT"
+  expert_dir <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_M", sep="_"),"Data/Policy_Survey", sep="/"))
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb577189" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/"
@@ -92,9 +95,11 @@ names <- expert_dta_teachers$Question..
 names[12] <- "A11.1"
 colnames(expert_dta_teachers_shaped) <- names
 
+names(expert_dta_teachers_shaped) <- make.names(names(expert_dta_teachers_shaped), unique = TRUE)
+
 #create indicators
 expert_dta_teachers_final <- expert_dta_teachers_shaped %>%
-  rownames_to_column() %>%
+  rownames_to_column(var="rowname") %>%
   filter(rowname=='Scores') %>%
   select(-rowname)
 
@@ -105,8 +110,9 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(A4),
-         teacher_salary=(1560/1816.2)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=SL
-
+         teacher_salary=(1560*18700/1000/12082.8)) # GDP per capita
+#https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=SL
+# a bit of speculation but assuming the following -- 1560 is reported in USD per document, so we need to convert it to SLE and then divide it by 1000 due to currency change. then we divide by gdp per capita used in the school file 
 #teacher selection and deployment
 #
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
@@ -258,6 +264,9 @@ names[2:8] <- c("C1.1","C1.2","C1.3","C1.4","C1.5", "C1.6", "C1.7")
 names[9:16] <- c("C2.1","C2.2", "C2.3","C2.4", "C2.5", "C2.6", "C2.7", "C2.8")
 colnames(expert_dta_school_management_shaped) <- names
 
+names(expert_dta_school_management_shaped) <- make.names(names(expert_dta_school_management_shaped), unique = TRUE)
+
+
 #create indicators
 expert_dta_school_management_final <- expert_dta_school_management_shaped %>%
   rownames_to_column() %>%
@@ -299,10 +308,10 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 # school management support
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_training_required=read_var(C8),
-         principal_training_type=read_var(C9),
-         principal_training_type1=0, #do this manual based on responses
+         principal_training_type=3, #adjusting so that it is consistent with what we have in the raw data
+         principal_training_type1=1, #do this manual based on responses
          principal_training_type2=1,#do this manual based on responses
-         principal_training_type3=0,#do this manual based on responses
+         principal_training_type3=1,#do this manual based on responses
          principal_training_frequency=read_var(C10),
          principal_training_frequency_2=1 #do this manual based on responses
          
@@ -398,7 +407,7 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
 
 # financial capacity
 expert_dta_learners_final <- expert_dta_learners_final %>%
-  mutate(anti_poverty=read_var(D16)) %>%
+  mutate(anti_poverty=2) %>% #addjusting this to be consistent with what we are seeing in the raw file
   mutate(financial_capacity=1+2*anti_poverty)
 
 # caregiver skills

@@ -11,7 +11,7 @@ if(Sys.info()["user"] == "wb577189"){
   
 } else if (str_to_lower(Sys.info()["user"]) == "wb469649") {
   
-  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/ETH/ETH_2021_GEPD/ETH_2021_GEPD_v01_M/Data/Policy_Survey/"
+  expert_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data/Policy_Survey/"
   
   
 } else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
@@ -60,7 +60,7 @@ attr(expert_dta_teachers_final, "variable.labels") <- expert_dta_teachers$Questi
 #starting salary
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
   mutate(teacher_attraction=read_var(a4),
-         teacher_salary=(8820/501.96)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.CD?locations=ET
+         teacher_salary=(300000*12/2469049)) # GDP per capita https://data.worldbank.org/indicator/NY.GDP.PCAP.KN?locations=GA
 
 #teacher selection and deployment
 #
@@ -247,11 +247,15 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(immunization=read_var(d6),
          healthcare_young_children=read_var(d7),
          deworming=read_var(d8),
+<<<<<<< HEAD
          antenatal_skilled_delivery=read_var(d9),
          antenatal_skilled_delivery = case_when(
            antenatal_skilled_delivery == 2 ~ 1,
            antenatal_skilled_delivery == 1 ~ 0.5,
            TRUE ~ antenatal_skilled_delivery)) %>%
+=======
+         antenatal_skilled_delivery=read_var(d9)) %>%
+>>>>>>> paper_updates
   mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
 
 
