@@ -139,7 +139,7 @@ replace m3sb_troster = "lorgio rodríguez villajuan" if school_code == 393322 & 
 replace m3sb_troster = "rubér vega urtado" if school_code == 393322 & m3sb_troster == "ruber"
 replace m3sb_troster = "jenny rozaba robles chavez" if school_code == 415992 & m3sb_troster == "jenny"
 replace m3sb_troster = "cecilia isabel huaney tinoco" if school_code == 415992 & m3sb_troster == "cecilia"
-replace m3sb_troster = "wilder romero" if school_code == 416990 & m3sb_troster == "416990"
+replace m3sb_troster = "wilder romero romero" if school_code == 416990 & m3sb_troster == "wilder"
 replace m3sb_troster = "juan tinoco quiroz" if school_code == 416990 & m3sb_troster == "juan"
 replace m3sb_troster = "andres gonzales perez" if school_code == 512160 & m3sb_troster == "ANDRES GONZALES PEREZ"
 replace m3sb_troster = "reyner yatsupich sÁnchez" if school_code == 768036 & m3sb_troster == "reyner"
@@ -301,13 +301,18 @@ merge 1:1 idusing txtusing school_code using `merged_teacher_quest', gen(absence
 
 merge 1:1 idusing txtusing school_code using `merged_teacher_asmnt', gen(absence_teacher_asmnt)
 
-*do some replacements to be able to merge in these file 
-replace teachers_id = 3 if teacher_name == "MAGALY"
-replace teachers_id = 4 if teacher_name == ""
-
 merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher_pedag)
-merge 1:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
 
-drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge*
+*in cases where we have missing teacher ids, replace with the manual one
+replace teachers_id = m3sb_tnumber if teachers_id == . & m3sb_tnumber != .
+replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum != .
+
+duplicates tag teachers_id school_code, gen(dupl)
+
+merge m:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
+
+count if dupl == 1 & absence_teacher_pedag_2==5
+
+drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* dupl
 
 save "$dir/5_output_data/PER/PER_teacher_level_updated.dta", replace 

@@ -270,13 +270,23 @@ save `remaining'
 
 use `teacher_absence', clear
 
-merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher_pedag)
-merge 1:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
-
 merge 1:1 idusing txtusing school_code using `merged_teacher_quest', gen(absence_teacher_quest)
 
 merge 1:1 idusing txtusing school_code using `merged_teacher_asmnt', gen(absence_teacher_asmnt)
 
-drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge*
+merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher_pedag)
+
+*in cases where we have missing teacher ids, replace with the manual one
+replace teachers_id = m3sb_tnumber if teachers_id == . & m3sb_tnumber != .
+replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum != .
+
+*create a variable for duplicates
+duplicates tag teachers_id school_code, gen(dupl)
+
+merge m:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
+
+count if dupl == 1 & absence_teacher_pedag_2==5
+
+drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* dupl
 
 save "$dir/5_output_data/JOR/JOR_teacher_level_updated.dta", replace 

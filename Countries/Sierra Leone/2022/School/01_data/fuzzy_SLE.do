@@ -20,6 +20,8 @@ foreach v in teacher_absence teacher_assessment teacher_pedagogy teacher_questio
 	
 	use "$dir/3_input_data/SLE/SLE_`v'", clear 
 	
+	format school_code %20.0f
+	
 	if "`v'" == "teacher_pedagogy" {
 		*SLE-specific given that videos were also filmed in the second grade there
 		replace m4saq1 = m4saq1_g2 if m4saq1_g2 != "" & m4saq1 == ""
@@ -175,7 +177,9 @@ foreach v in `schools' {
 	}
 }
 
+
 *now match the all individual teacher files. for each of the files, keep the one with the maximum score 
+
 foreach v in `schools' {
 	foreach i in teacher_asmnt teacher_pedag teacher_quest {
 
@@ -192,7 +196,8 @@ foreach v in `schools' {
 				bysort idmaster txtmaster: egen double max = max(similscore)
 				keep if max == similscore
 			
-				gen school_code = `v'
+				gen double school_code = `v'
+				format school_code %20.0f
 			}
 			
 			tempfile match_`i'_`v'
@@ -202,6 +207,7 @@ foreach v in `schools' {
 	}
 }
 
+
 *now append them all
 local k = 1
 
@@ -210,9 +216,10 @@ foreach i in teacher_asmnt teacher_pedag teacher_quest {
 	local k = 1
 	
 		foreach v in `schools' {
-		
+			di "school code `v'"
 			if `k' == 1 {
 				use `match_`i'_`v'', clear
+				cap format school_code %20.0f
 			}
 			if `k' != 1 {
 				append using `match_`i'_`v''
@@ -224,6 +231,7 @@ foreach i in teacher_asmnt teacher_pedag teacher_quest {
 	di "`i'"
 	count
 	
+	
 	*drop some observations that are clearly not matches
 	drop if school_code == 120301220 & txtmaster == "jalloh bambara ishamel" &	txtusing == "joseph s bambara"
 	drop if school_code == 240706340 & txtusing == "isah a conteh" & inlist(txtmaster, "juliana a. conteh", "aisha a. conteh") // not sure which one is supposed to be a match
@@ -234,6 +242,12 @@ foreach i in teacher_asmnt teacher_pedag teacher_quest {
 	drop if school_code == 210501223 & txtmaster == "abass bangura" & txtusing == "osman bangura"
 	drop if school_code == 211001206 & txtmaster == "abdulai t kamara" & txtusing == "abdulai m kamara"
 	drop if school_code == 321001214 & txtmaster == "francis m koroma" & txtusing == "francis domingo"
+	drop if txtusing == "isah a conteh" & txtmaster == "juliana a. conteh"
+	drop if txtusing == "manmoud k mansaray" & txtmaster == "mahmoud l mansaray"
+	
+	if "`i'" == "teacher_quest" {
+		drop if txtusing == "osman bangura" // no idea what's going on here
+	}
 	
 	isid school_code txtmaster idmaster // only one name from each teacher dataset matched
 	isid school_code txtusing idusing // only one name from roster matched
@@ -304,30 +318,20 @@ merge 1:1 idusing txtusing school_code using `merged_teacher_asmnt', gen(absence
 
 merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher_pedag)
 
-*for the newly merged teachers, they will not have ids, so just assign them the ids in some kind of order that would make them unique
-bysort school_code: gen id_new = _n if teachers_id == .
+*in cases where we have missing teacher ids, replace with the manual one
+replace teachers_id = m3sb_tnumber if teachers_id == . & m3sb_tnumber != .
+replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum != .
 
-*to make sure it does not mess up the rest of ids, confirm that the count if below 15 (alternatively can check that these same observations are also using only in the merges above)
-qui count if id_new != .
-assert `r(N)' <= 15
+duplicates tag teachers_id school_code, gen(dupl)
 
-replace teachers_id = id_new if id_new != . & teachers_id == .
+merge m:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
 
-*some cases where id and schools are not unique, manually address them here (confirmed that they are not affected by the next merge)
-replace teachers_id = 5 if school_code == 210501223 & teacher_name == "GIBRILLA KAMARA"
-replace teachers_id = 6 if school_code == 331201217 & teacher_name == ""
-replace teachers_id = 11 if school_code == 410103207 & teacher_name == "Abdulai mansaray"
-replace teachers_id = 12 if school_code == 99 & teacher_name == "Issa Ballah Samura"
-replace teachers_id = 13 if school_code == 99 & teacher_name == ""
-replace teachers_id = 9 if school_code == 250603210 & teacher_name == ""
-replace teachers_id = 11 if school_code == 240706340 & teacher_name == ""
-replace teachers_id = 6 if school_code == 210501223 & teacher_name == "Abass Bangura"
+count if dupl == 1 & absence_teacher_pedag_2==5
 
-merge 1:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
 append using `unmerged' // still quite a lot are unmerged because they do not seem to have identifying info
 
 replace school_code = . if school_code == 99
 
-drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* id_new
+drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* dupl
 
 save "$dir/5_output_data/SLE/SLE_teacher_level_updated.dta", replace 

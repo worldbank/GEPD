@@ -271,13 +271,24 @@ merge 1:1 idusing txtusing school_code using `merged_teacher_asmnt', gen(absence
 
 merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher_pedag)
 
+/*
 *there are three teachers that do not have ids because they are not merged, we can replace these ids manually
 replace teachers_id = 11 if txtusing == "etienne habiyambere" & school_code == 570205
 replace teachers_id = 12 if txtusing == "lydie mukashema" & school_code == 570205
 replace teachers_id = 13 if txtusing == "aime pacifique mutuyumukiza" & school_code == 570205
+*/
 
-merge 1:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
 
-drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge*
+*in cases where we have missing teacher ids, replace with the manual one
+replace teachers_id = m3sb_tnumber if teachers_id == . & m3sb_tnumber != .
+replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum != .
+
+duplicates tag teachers_id school_code, gen(dupl)
+
+merge m:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
+
+count if dupl == 1 & absence_teacher_pedag_2==5
+
+drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* dupl
 
 save "$dir/5_output_data/RWA/RWA_teacher_level_updated.dta", replace 

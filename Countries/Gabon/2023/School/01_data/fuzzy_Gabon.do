@@ -317,7 +317,7 @@ merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher
 
 *in cases where we have missing teacher ids, replace with the manual one
 replace teachers_id = m3sb_tnumber if teachers_id == . & m3sb_tnumber != .
-replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum
+replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum != .
 
 *create a variable for duplicates
 duplicates tag teachers_id school_code, gen(dupl)
@@ -335,6 +335,7 @@ foreach v of varlist m5* typetest *content_knowledge {
 drop if school_code == "LA PEPINIERE DES CHAMPIONS _ 0102502028X506" & m3sb_troster == ""
 drop if school_code == "ECOLE FRANCO ARABE AS SALAM _ 0101303084X509" & m3sb_troster == ""
 
-drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge*
+count if dupl == 1 & absence_teacher_pedag_2==5
+drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* dupl
 
 save "$dir/5_output_data/GAB/GAB_teacher_level_updated.dta", replace 

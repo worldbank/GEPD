@@ -285,15 +285,16 @@ merge 1:1 idusing txtusing school_code using `merged_teacher_asmnt', gen(absence
 
 merge 1:1 idusing txtusing school_code using `fully_merged', gen(absence_teacher_pedag)
 
-*there are three teachers that do not have ids because they are not merged, we can replace these ids manually
-replace teachers_id = 9 if school_code == 33842 & teacher_name == "YAHAYA RAKI"
-replace teachers_id = 10 if school_code == 33842 & teacher_name == "" // though these two seem to be the same person, cannot really merge them because no names from the roster match this name :(
-replace teachers_id = 8 if school_code == 552033 & txtusing == "mme aboubacar hadiza"
-replace teachers_id = 9 if school_code == 552033 & txtusing == "madame harouna salmou salé"
-replace teachers_id = 10 if school_code == 552033 & txtusing == "mme harouna salmou"
+*in cases where we have missing teacher ids, replace with the manual one
+replace teachers_id = m3sb_tnumber if teachers_id == . & m3sb_tnumber != .
+replace teachers_id = m5sb_tnum if teachers_id == . & m5sb_tnum != .
 
-merge 1:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
+duplicates tag teachers_id school_code, gen(dupl)
 
-drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge*
+merge m:1 teachers_id school_code using `remaining', gen(absence_teacher_pedag_2) replace update
+
+count if dupl == 1 & absence_teacher_pedag_2==5
+
+drop similscore* txtmaster* txtusing idmaster* idusing* absence* merge* dupl
 
 save "$dir/5_output_data/NER/NER_teacher_level_updated.dta", replace 
