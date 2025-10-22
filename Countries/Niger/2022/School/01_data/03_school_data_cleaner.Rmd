@@ -4048,7 +4048,7 @@ if (extra_info=='yes') {
 
 #Load original sample of schools
 currentDate<-c("2022-10-24")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', currentDate,  '.csv', sep="")
                              ) %>%
   mutate(school_code=CODE_ETABLISSEMENT)
@@ -4056,7 +4056,7 @@ data_set_updated <- read_csv(paste(sampling_folder, '/school_weights_revised_', 
 
 
 #open the raster
-raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
+raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
 
 gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
 

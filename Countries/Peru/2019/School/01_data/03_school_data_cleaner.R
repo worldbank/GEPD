@@ -3300,14 +3300,14 @@ save(list=teacher_data_list, file = file.path(confidential_folder, "teacher_surv
 
 #Load original sample of schools
 currentDate<-c("2019-07-22")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)
 
 
 #open the raster
-raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Maps/GDP_PERU/", sep="/")) 
+raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/Maps/GDP_PERU/", sep="/")) 
 
 gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
 

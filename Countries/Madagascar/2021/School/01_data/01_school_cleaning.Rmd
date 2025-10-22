@@ -3572,7 +3572,7 @@ if (extra_info=='yes') {
 
 
 #open the raster
-raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
+raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
 
 gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
 
