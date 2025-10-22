@@ -559,7 +559,7 @@ api_template <- api_template %>%
               #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
               SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All", i) + 67*indicator_means(pens_etc, "school", "INPT",  "All", i),
               SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Rural", i),
-              SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Urban", i),
+              SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Urban", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Urban", i),
               #(De Facto) Percent of classrooms with a functional blackboard and chalk	
               SE.PRM.INPT.2   =100*indicator_means(blackboard_functional, "school", "INPT",  "All", i),
               SE.PRM.INPT.2.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural", i),

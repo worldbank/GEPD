@@ -547,11 +547,11 @@ api_template <- api_template %>%
               #(De Facto) Percent of classrooms with a functional blackboard and chalk	
               SE.PRM.INPT.2   =100*indicator_means(blackboard_functional, "school", "INPT",  "All", i),
               SE.PRM.INPT.2.R =100*indicator_means(blackboard_functional, "school", "INPT",  "Rural", i),
-              SE.PRM.INPT.3.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban", i),
+              SE.PRM.INPT.2.U =100*indicator_means(blackboard_functional, "school", "INPT",  "Urban", i),
               #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
               SE.PRM.INPT.3   =33*indicator_means(textbooks, "school", "INPT",  "All", i) + 67*indicator_means(pens_etc, "school", "INPT",  "All", i),
               SE.PRM.INPT.3.R =33*indicator_means(textbooks, "school", "INPT",  "Rural", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Rural", i),
-              SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Rural", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Urban", i),
+              SE.PRM.INPT.3.U =33*indicator_means(textbooks, "school", "INPT",  "Urban", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Urban", i),
         
               #(De Facto) Percent of classrooms with basic classroom furniture	
               SE.PRM.INPT.4   =100*indicator_means(share_desk, "school", "INPT",  "All", i),
@@ -561,8 +561,7 @@ api_template <- api_template %>%
               SE.PRM.INPT.5   =100*indicator_means(access_ict, "school", "INPT",  "All", i),
               SE.PRM.INPT.5.R =100*indicator_means(access_ict, "school", "INPT",  "Rural", i),
               SE.PRM.INPT.5.U =100*indicator_means(access_ict, "school", "INPT",  "Urban", i),
-             )
-    )
+             ))
   }
   
   for (i in c("N")) {
@@ -578,11 +577,11 @@ api_template <- api_template %>%
                #(De Facto) Percent of classrooms with a functional blackboard and chalk	
                SE.PRM.INPT.2   =indicator_means(blackboard_functional, "school", "INPT",  "All", i),
                SE.PRM.INPT.2.R =indicator_means(blackboard_functional, "school", "INPT",  "Rural", i),
-               SE.PRM.INPT.3.U =indicator_means(blackboard_functional, "school", "INPT",  "Urban", i),
+               SE.PRM.INPT.2.U =indicator_means(blackboard_functional, "school", "INPT",  "Urban", i),
                #(De facto) Percent of classrooms equipped with pens/pencils, textbooks, and exercise books	
                SE.PRM.INPT.3   = (indicator_means(textbooks, "school", "INPT",  "All", i) + indicator_means(pens_etc, "school", "INPT",  "All", i))/2,
                SE.PRM.INPT.3.R =(indicator_means(textbooks, "school", "INPT",  "Rural", i) + indicator_means(pens_etc, "school", "INPT",  "Rural", i))/2,
-               SE.PRM.INPT.3.U =(indicator_means(textbooks, "school", "INPT",  "Rural", i) + 67*indicator_means(pens_etc, "school", "INPT",  "Urban", i))/2,
+               SE.PRM.INPT.3.U =(indicator_means(textbooks, "school", "INPT",  "Urban", i) + indicator_means(pens_etc, "school", "INPT",  "Urban", i))/2,
                
                #(De Facto) Percent of classrooms with basic classroom furniture	
                SE.PRM.INPT.4   =indicator_means(share_desk, "school", "INPT",  "All", i),
