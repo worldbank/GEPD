@@ -1,0 +1,106 @@
+---
+title: "Data for GEPD Climate Report"
+format: html
+---
+
+The goal of this file is to compile geocoordinates and survey start time data for the GEPD Climate Report. The data is compiled from the GEPD school module.  At the start of each visit to a school, the enumerator is asked to log the geo-coordinates on their tablet using GPS and register the start time of the survey.  This information will be used to merge to climate data on the day of the survey at the school (temperature, precipitation, humidity).
+
+Data will be compiled for 12 countries (economies): Peru, Jordan 2019, Rwanda, Ethiopia, Madagascar, Sierra Leone, Niger, Pakistan ICT province, Pakistan KP province, Jordan 2023, Chad, Gabon.
+
+The data will be compiled into a single file with the following variables:
+    school_code: official school code
+    school_name_preload: school name
+    school_province_preload: province name
+    school_district_preload: district name
+    m1s0q2_name: manually entered school name (if school_name_preload missing)
+    m1s0q2_code: manually entered school code (if school_code missing)
+    hashed_school_code: anonymized code useful for later with anonymized school files
+    country: country name
+    lat: latitude of school
+    lon: longitude of school
+    survey_time: start time of survey
+
+
+```{r}
+# load libraries
+library(tidyverse)
+library(lubridate)
+library(here)
+library(haven)
+
+# set working directory (may need to adjust)
+data_dir <- 'C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/General/GEPD_School_Data_All_Countries/'
+
+```
+
+
+```{r}
+#write a function to pull the data from each country
+climate_data_gather <- function(country) {
+    print(country)
+    #read the data
+    data <- read_dta(here(data_dir, country, paste0(country, '_school_modules.dta')))
+
+    #select the variables of interest
+    data <- data %>% 
+        select(school_code, school_name_preload, school_province_preload, school_district_preload, m1s0q2_name, m1s0q2_code, hashed_school_code, lat, lon, survey_time) %>%
+        mutate(country=country) %>%
+    #fix issues with dates.  There are cases where survey_time is ##N/A##, and these need to be made NULL values
+    mutate(survey_time=ifelse(survey_time=='##N/A##', NA, survey_time)) %>%
+    #format dates to date time.  dates are formated as year, month, day, hour, minute, second.  f#format dates to date time.  dates are formated as year, month, day, hour, minute, second.  formated such as e.g. 2022-06-04T19:42:44
+    mutate(survey_time=as_datetime(survey_time, format='%Y-%m-%dT%H:%M:%S')) %>%
+    mutate(school_code=as.character(school_code),
+           lat=as.character(lat),
+           lon=as.character(lon))
+}
+
+#get a list of the countries
+countries <- list.files(data_dir)
+#remove MDG from list as it is a little different
+countries <- countries[countries!='MDG']
+#same for Mozambique
+countries <- countries[countries!='MOZ']
+#same for Sierra Leone
+countries <- countries[countries!='SLE']
+
+
+#run the function for each country and bind to one file
+climate_data <- map_df(countries, climate_data_gather)
+
+#add MDG and SLE
+SLE_climate_data <- read_dta(here(data_dir, 'SLE', 'SLE_school_modules.dta')) %>%
+    select(school_code, school_name_preload, m1s0q2_name, m1s0q2_code, hashed_school_code, lat, lon, survey_time, iddistrict, province) %>%
+    mutate(country='SLE',
+            school_province_preload=province,
+            school_district_preload=iddistrict) %>%
+    select(-iddistrict, -province) %>%
+    #fix issues with dates.  There are cases where survey_time is ##N/A##, and these need to be made NULL values
+    mutate(survey_time=ifelse(survey_time=='##N/A##', NA, survey_time)) %>%
+    #format dates to date time.  dates are formated as year, month, day, hour, minute, second.  formated such as e.g. 2022-06-04T19:42:44
+    mutate(survey_time=as_datetime(survey_time, format='%Y-%m-%dT%H:%M:%S')) %>%
+    mutate(school_code=as.character(school_code),
+           lat=as.character(lat),
+           lon=as.character(lon))
+
+#MDG
+MDG_climate_data <- read_dta(here(data_dir, 'MDG', 'MDG_school_modules.dta')) %>%
+    select(school_code, s_fokontany_name, hashed_school_code,  s_date_heure_debut, s_longitude, s_latitude,district, province) %>%
+    mutate(country='MDG',
+            school_name_preload=s_fokontany_name,
+            school_province_preload=province,
+            school_district_preload=district,
+            survey_time=s_date_heure_debut,
+            lon=s_longitude,
+            lat=s_latitude) %>%
+    select(-district, -province, -s_date_heure_debut, -s_longitude, -s_latitude,-s_fokontany_name) %>%
+    mutate(school_code=as.character(school_code),
+           lat=as.character(lat),
+           lon=as.character(lon))
+    #convert dates to date time.  dates are formated as day, month, year, hour, minute, with no spacing or breakds e.g. 210620210903
+    MDG_climate_data$survey_time <- as_datetime(MDG_climate_data$survey_time, format='%d%m%Y%H%M') 
+    
+
+#add last two countries to climate_data
+climate_data <- bind_rows(climate_data, SLE_climate_data, MDG_climate_data)
+
+```

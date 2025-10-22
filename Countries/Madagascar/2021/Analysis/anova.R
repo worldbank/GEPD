@@ -19,13 +19,13 @@ backup_onedrive="no"
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
 project_folder<-"C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT"
-data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Anonymized", sep="/"))
+data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/Anonymized", sep="/"))
 
 
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
   
   project_folder<-"C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
-  data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized", sep="/"))
+  data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized", sep="/"))
 
   
 }
@@ -354,7 +354,7 @@ covariates_teacher <- c(covariates, "community_teacher")
 long_community <- school_dta_short_anon %>%
   left_join(school_dta_anon %>% select(hashed_school_code,s_fokontany_code, s_m1a_04)) %>%
   
-  left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/raw/School/06-M1SECC.dta") %>% select(s_type_ecole,s_fokontany_code)) %>%
+  left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/raw/School/06-M1SECC.dta") %>% select(s_type_ecole,s_fokontany_code)) %>%
   
   
   filter(s_type_ecole == 3) %>% 
@@ -430,8 +430,8 @@ library(rstatix)
     
     long_language <- school_dta_short_anon %>%
       left_join(school_dta_anon %>% select(hashed_school_code, s_fokontany_code)) %>%
-      left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/raw/School/21-M5.dta") %>% select(s_fokontany_code, d_lng_instr)) %>%
-      left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v01_RAW/Data/raw/School/06-M1SECC.dta") %>% select(s_type_ecole,s_fokontany_code)) %>%
+      left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/raw/School/21-M5.dta") %>% select(s_fokontany_code, d_lng_instr)) %>%
+      left_join(read_dta("C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/MDG/MDG_2021_GEPD/MDG_2021_GEPD_v02_RAW/Data/raw/School/06-M1SECC.dta") %>% select(s_type_ecole,s_fokontany_code)) %>%
 
 
       filter(s_type_ecole == 3) %>%

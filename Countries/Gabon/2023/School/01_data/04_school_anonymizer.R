@@ -48,6 +48,7 @@ for (i in indicator_names ) {
   
 ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_data_ATTD_F", 
                                 "final_indicator_data_CONT_M", "final_indicator_data_CONT_F", 
+                                "final_indicator_data_PEDG_M", "final_indicator_data_PEDG_F", 
                                 "final_indicator_data_EFFT_M", "final_indicator_data_EFFT_F", 
                                 "final_indicator_data_LCAP_M", "final_indicator_data_LCAP_F", 
                                 "final_indicator_data_LERN_M", "final_indicator_data_LERN_F",
@@ -84,24 +85,14 @@ school_codes <- read_csv(file.path(confidential_folder, "school_idfile_hashed.cs
 
 #Load original sample of schools
 #Load original sample of schools
-currentDate<-c("2023-05-12")
+currentDate<-c("2023-08-09")
 
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
-data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_', currentDate,  '.csv', sep="")
-) %>%
-  mutate(temp_school_code=Code_Etablissement,
-         school_name_preload=`Nom Officiel de l'Etablissement`,
-         urban_rural=if_else(rural==FALSE, "Urban", "Rural"),
-         public=if_else(private==1, "Private", "Public")) %>%
-  mutate(school_name_preload = gsub("[[:punct:]]", " ", school_name_preload),
-         school_name_preload = str_squish(school_name_preload),
-         school_name_preload = iconv(school_name_preload,to="ASCII//TRANSLIT")) %>% 
-  rename(old_school_code = temp_school_code) %>% 
-  mutate(school_code = paste(school_name_preload, "_", old_school_code)) %>% 
-  select(-school_name_preload) %>% 
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_revised_', currentDate,  '.csv', sep="")
+)  %>% 
   left_join(school_codes, by = c("school_code")) %>%
-  select(school_code, Province, Département, private, public, rural ,urban_rural,
-         ipw) 
+  select(school_code, Province, private, public, rural ,urban_rural,
+         ipw, strata_prob) 
 
 
 
@@ -114,8 +105,13 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
   
   dataset %>%
     left_join(data_set_updated)  %>%
-    mutate(province=Province,
-           district=Département) 
+    mutate(province=Province) %>%
+    mutate(ipw=if_else(is.na(ipw), median(ipw, na.rm=T), ipw),
+           strata_prob=if_else(is.na(strata_prob), median(strata_prob, na.rm=T), strata_prob),
+           Province=if_else(is.na(Province), school_province_preload, Province),
+           private=if_else(is.na(private), median(private, na.rm=TRUE) ,private), #imputation
+           rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural))  #imputation
+    
 }
 
 
@@ -123,7 +119,7 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
 # Code to anonymize
 ####################
 #create hashed school code
-school_dta_short$hashed_school_code <-school_dta_short$school_code
+school_dta_short$hashed_school_code <-as.character(lapply(school_dta_short$school_code, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 school_dta_short$hashed_school_province <-as.character(lapply(school_dta_short$school_province_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 school_dta_short$hashed_school_district <-as.character(lapply(school_dta_short$school_district_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 

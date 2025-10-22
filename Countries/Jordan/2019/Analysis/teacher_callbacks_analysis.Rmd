@@ -30,7 +30,7 @@ In what follows, we will explore whether teachers that were absent systematicall
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/"
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/Projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v02_RAW/Data/"
 
 
 #load follow up survey data
@@ -107,7 +107,7 @@ country<-"JOR"
 year<-"2019"
 #Load original sample of schools
 currentDate<-c("2019-10-11")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)

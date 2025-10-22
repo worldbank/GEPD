@@ -25,8 +25,8 @@ data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", s
 } else if (str_to_lower(Sys.getenv("USERNAME")) == "wb577189"){
   
   project_folder<-"C:/Users/wb577189/OneDrive - WBG/CNT/"
-  data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential", sep="/"))
+  data_folder<-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential", sep="/"))
   
   
 }

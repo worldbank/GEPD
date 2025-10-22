@@ -5,9 +5,9 @@ library(stats)
 library(ggcorrplot)
 
 
-load('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_RAW/Data/confidential/School/school_indicators_data.RData')
+load('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v02_RAW/Data/confidential/School/school_indicators_data.RData')
 
-geoinfo<-read_dta('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_RAW/Data/Maps/edu_per_w_geovars_2020_0224.dta')
+geoinfo<-read_dta('//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v02_RAW/Data/Maps/edu_per_w_geovars_2020_0224.dta')
 
 geoinfo<- geoinfo %>%
   mutate(school_code=as.numeric(cod_mod))

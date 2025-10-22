@@ -49,12 +49,14 @@ data_list<-ind_dta_list
 public_officials_dta_short <- public_officials_dta_short %>%
   mutate(id_code=row_number())
 
-public_officials_dta_short$hashed_position <-as.character(lapply(public_officials_dta_short$position, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
+public_officials_dta_short$hashed_position <-as.character(lapply(public_officials_dta_short$position_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 public_officials_dta_short$hashed_office <-as.character(lapply(public_officials_dta_short$office_preload, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
+public_officials_dta_short$hashed_location <-as.character(lapply(public_officials_dta_short$location, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
+public_officials_dta_short$hashed_name <-as.character(lapply(public_officials_dta_short$inter_officials, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = F)}))
 
 #save a hashed version of the dataset, to produce a link file
 key<-public_officials_dta_short %>%
-  select(id_code, position, office_preload, hashed_position,  hashed_office) 
+  select(id_code, position_preload, office_preload, location, inter_officials, hashed_position,  hashed_office, hashed_location, hashed_name) 
 
 write_excel_csv(key, file.path(confidential_folder, "public_official_linkfile_hashed.csv"))
 
@@ -73,7 +75,7 @@ for (i in data_list ) {
     if ("position" %in% colnames(temp)) {
       temp <- temp %>%
         left_join(key) %>%
-        select(id_code, hashed_position, hashed_office,  everything())
+        select(id_code, hashed_position, hashed_office, hashed_location,  everything())
     }
     
     

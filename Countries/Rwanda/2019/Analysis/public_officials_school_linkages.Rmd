@@ -87,7 +87,7 @@ bbc_style <- function() {
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/confidential/"
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_RAW/Data/confidential/"
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
@@ -96,9 +96,9 @@ load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", 
 load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
 
 #load set of districts that match to schools
-office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/sampling/office_list.csv")
+office_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_RAW/Data/sampling/office_list.csv")
 
-auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v01_RAW/Data/raw/School/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
+auxillary_frame_info<-read_csv(file.path(paste("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/RWA/RWA_2020_GEPD/RWA_2020_GEPD_v02_RAW/Data/raw/School/pupil_counts_district/primary_pupil_enrollment.csv",sep=""))) %>%
   mutate(district=str_to_upper(district)) %>%
   select(district,region)
 

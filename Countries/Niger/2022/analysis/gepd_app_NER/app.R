@@ -1685,7 +1685,7 @@ output$indicators_table <- DT::renderDataTable({
       select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)  
   }
   
-  strat=c('REGION', 'LIRE', 'urban_rural')
+  strat=c('region', 'LIRE', 'urban_rural')
   
   # School Survey
   metadata<-metadta

@@ -85,7 +85,7 @@ data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_im
 #probability proportional to 4th grade size.
 #Load original sample of schools
 currentDate<-c("2020-02-14")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 weights_df  <- read_csv(paste(sample_folder,"/Ethiopia_weights.csv", sep="")) %>%
   select(-sample) %>% #variable name causes conflict

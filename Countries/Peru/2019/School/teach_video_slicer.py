@@ -25,7 +25,7 @@ import os.path
 #specify file path
 save_folder=Path("C:/Users/wb469649/WBG/Sergio Venegas Marin - Videos_Peru/")
 
-network_folder=Path("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v01_RAW/Data/videos")
+network_folder=Path("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/PER/PER_2019_GEPD/PER_2019_GEPD_v02_RAW/Data/videos")
 #data_folder=Path("D:/Módulo 4 Observación Aula")
 data_folder=Path("C:/Users/wb469649/WBG/Sergio Venegas Marin - Videos_Peru/")
 

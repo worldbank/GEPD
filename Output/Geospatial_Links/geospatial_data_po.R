@@ -82,7 +82,7 @@ bur_indicators <- c(
 #read in anonymized school data
 country <- "PER"
 year <- "2019"
-PER_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.dta", sep="/")) %>%
+PER_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.dta", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -114,7 +114,7 @@ PER_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
   
 
 #read in data from office administrators
-PER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+PER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(school_district_preload, school_province_preload, govt_tier, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -146,7 +146,7 @@ PER_bur_df <- PER_bur_df %>%
 #read in anonymized school data
 country <- "JOR"
 year <- "2019"
-JOR_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", paste0(country,""),paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.dta", sep="/")) %>%
+JOR_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", paste0(country,""),paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.dta", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -172,7 +172,7 @@ JOR_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", paste0(country,
   mutate(office_name=office_preload) 
 
 #read in data from office administrators
-JOR_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+JOR_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(office_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -203,7 +203,7 @@ JOR_bur_df <- JOR_bur_df %>%
 #read in anonymized school data
 country <- "RWA"
 year <- "2020"
-RWA_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.dta", sep="/")) %>%
+RWA_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.dta", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -229,7 +229,7 @@ RWA_bur_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(c
   mutate(office_name=paste0(office_preload,"-",govt_tier)) 
 
 #read in data from office administrators
-RWA_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_RWA.dta", sep="/"))  %>%
+RWA_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_RWA.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(office_preload, govt_tier, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -262,7 +262,7 @@ RWA_bur_df <- RWA_bur_df %>%
 #read in anonymized school data
 country <- "ETH"
 year <- "2020_2021"
-ETH_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
+ETH_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c, govt_tier, Region, Zone, Woreda, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -288,7 +288,7 @@ ETH_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   mutate(office_name=paste(Region, Zone, Woreda, sep=" - ")) 
 
 #read in data from office administrators
-ETH_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_final_combined.dta", sep="/"))  %>%
+ETH_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials_final_combined.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(office_preload,Region, Zone, Woreda, govt_tier, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -321,7 +321,7 @@ ETH_bur_df <- ETH_bur_df %>%
 #read in anonymized school data
 country <- "MDG"
 year <- "2021"
-MDG_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
+MDG_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -348,7 +348,7 @@ MDG_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
 
 
 #read in data from office administrators
-MDG_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+MDG_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(location, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -380,7 +380,7 @@ MDG_bur_df <- MDG_bur_df %>%
 #read in anonymized school data
 country <- "SLE"
 year <- "2022"
-SLE_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
+SLE_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -406,7 +406,7 @@ SLE_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
   mutate(office_name=paste(office_preload, location, sep="-")) 
 
 #read in data from office administrators
-SLE_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+SLE_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(location, office_preload, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -439,7 +439,7 @@ SLE_bur_df <- SLE_bur_df
 #read in anonymized school data
 country <- "NER"
 year <- "2022"
-NER_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
+NER_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//confidential/Public_Officials/public_officials_survey_data.csv", sep="/")) %>%
   mutate(iso3c=country) %>%
   select(iso3c,govt_tier, bur_indicators, everything()) %>%
   select(-one_of('survey_time')) %>% 
@@ -466,7 +466,7 @@ NER_bur_df <- read_csv(file=paste(confidential_dir,"CNT", country,paste(country,
 
 
 #read in data from office administrators
-NER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
+NER_po_admin_df <- haven::read_dta(file=paste(confidential_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v02_RAW", sep="_"),"Data//raw/Public_Officials/public_officials.dta", sep="/"))  %>%
   filter(director_hr==1) %>%
   mutate(govt_tier=factor(m1s0q2_name, levels=c(1,2,3), labels=c("Ministry of Education (or equivalent)","Regional office (or equivalent)", "District office (or equivalent)" ))) %>%
   select(office_preload, location, m1s0q9__Latitude, m1s0q9__Longitude, starts_with("ORG")) %>%
@@ -528,7 +528,7 @@ politics <- c('quality_bureaucracy', 'national_learning_goals', 'impartial_decis
 #read in anonymized school data
 country <- "PER"
 year <- "2019"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 PER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 PER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info
@@ -578,7 +578,7 @@ PER_school_office_link_df <- PER_school_anon_df %>%
 #read in anonymized school data
 country <- "JOR"
 year <- "2019"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 JOR_school_anon_df <- haven::read_dta(file=paste(anonymized_dir,"CNT", 'JOR-19',paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.dta", sep="/"))
 JOR_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info
@@ -626,7 +626,7 @@ JOR_school_office_link_df <- JOR_school_anon_df %>%
 #read in anonymized school data
 country <- "RWA"
 year <- "2020"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 RWA_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 RWA_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info
@@ -671,7 +671,7 @@ RWA_school_office_link_df <- RWA_school_anon_df %>%
 #read in anonymized school data
 country <- "ETH"
 year <- "2020_2021"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 ETH_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 ETH_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info
@@ -721,7 +721,7 @@ ETH_school_office_link_df <- ETH_school_anon_df %>%
 #read in anonymized school data
 country <- "MDG"
 year <- "2021"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 MDG_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 MDG_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv")) %>%
   select(hashed_school_code, national_learning_goals, targeting,monitoring, incentives, community_engagement, mandates_accountability, coherence, transparency, accountability, quality_bureaucracy, knowledge_skills, work_environment, merit, motivation_attitudes, motivation_relative_start, impartial_decision_making, politicized_policy_implementation, employee_unions_as_facilitators, school_lat, school_lon, office_lat, office_lon)
@@ -755,7 +755,7 @@ MDG_school_office_link_df <- MDG_school_anon_df %>%
 #read in anonymized school data
 country <- "SLE"
 year <- "2022"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 SLE_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 SLE_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info
@@ -809,7 +809,7 @@ SLE_school_office_link_df <- SLE_school_anon_df %>%
 #read in anonymized school data
 country <- "NER"
 year <- "2022"
-confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/", sep="/"))
+confidential_folder <- file.path(paste(confidential_dir,"CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/", sep="/"))
 NER_school_anon_df <- read_csv(file=paste(anonymized_dir,"CNT", country,paste(country,year,"GEPD", sep="_"), paste(country,year,"GEPD_v01_M", sep="_"),"Data/School/data/school_dta_short_anon.csv", sep="/"))
 NER_school_office_linkages <- read_csv(file=paste0(confidential_folder, "/School/linked_po_school_data_",country,".csv"))
 #load gdp info

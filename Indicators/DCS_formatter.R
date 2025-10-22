@@ -7,7 +7,7 @@ library(here)
 dir <- here()
 
 #list of countries to update
-updt_list <- c('MDG','ETH_pooled','PER','JOR')
+updt_list <- c('RWA','GAB')
 
 
 

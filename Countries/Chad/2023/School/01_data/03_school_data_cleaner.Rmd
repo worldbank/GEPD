@@ -34,7 +34,7 @@ country <- "TCD"
 year <- '2023'
 api_user <- "GEPD_api_TCD"
 need_api=1
-teach=FALSE
+teach=TRUE
 #########################
 # File paths #
 #########################
@@ -46,17 +46,17 @@ teach=FALSE
 if (Sys.getenv("USERNAME") == "WB469649" | Sys.getenv("USERNAME") == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/School", sep="/"))
 
 }else if (Sys.getenv("USERNAME") == "wb577189"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
   
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/raw/School/", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/confidential/School", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/anonymized/School", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/School/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/School", sep="/"))
 
 
 } else {
@@ -407,7 +407,13 @@ SEVL_rules <- validator(
 
 ```{r data}
 
+#read in sampling frame
+#Load original sample of schools
+currentDate<-c("2023-04-13")
 
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
+
+data_set_updated <- read_csv(paste(sample_folder, '/GEPD_TCD_sample_', currentDate,  '.csv', sep=""))
 
 ############################
 #read in teacher roster file
@@ -422,28 +428,27 @@ teacher_roster<-read_dta(file.path(download_folder, "TEACHERS.dta")) %>%
 ###########################
 #read in school level file
 ###########################
-school_dta<-read_dta(file.path(download_folder, "EPDash.dta"))
-vtable(school_dta)
-#rename a few key variables up front
+school_dta<-read_dta(file.path(download_folder, "EPDash_final.dta")) %>%
+  select(-starts_with("ENUM"))
+
 school_dta<- school_dta %>%
   mutate(enumerator_name_other= m1s0q1_name_other  ,
-         enumerator_number=m1s0q1_name ,
+         #enumerator_number=m1s0q1_name ,
          survey_time=m1s0q8,
          lat=m1s0q9__Latitude,
          lon=m1s0q9__Longitude,
-         school_code=if_else(!is.na(school_emis_preload),as.numeric(school_emis_preload), as.numeric(m1s0q2_code)),
+         school_code=as.numeric(m1s0q2_emis),
          m7_teach_count_pknw=m7_teach_count, #this variable was mistakenly not tagged as pknw
          total_enrolled=m1saq7) %>%
   ## Get names and code for all the blank interviews
   mutate(
     
-    school_code= if_else(school_info_correct==1, as.numeric(school_code), as.numeric(m1s0q2_emis)),
-    school_name_preload = if_else(school_info_correct==1, as.character(school_name_preload), as.character(m1s0q2_name))
+    #school_code= if_else(school_info_correct==1, as.numeric(school_code), as.numeric(m1s0q2_emis)),
+    school_name_preload = m1s0q2_name
     
   ) %>%
   select(-starts_with("enumerators_preload")) %>% #bring in school codes that were created in separate stata program
   filter(!is.na(school_code))
-
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
 
@@ -690,14 +695,14 @@ preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'te
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(sch_absence_rate=100*case_when(
-    m2sbq6_efft==6 | teacher_available==2 ~ 1,
+    m2sbq6_efft==6 ~ 1,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absence_rate=100*case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
+    m2sbq6_efft==6 | m2sbq6_efft==5  ~ 1,
     m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
@@ -752,9 +757,9 @@ plot(out)
 
 ## Teacher Pedagogy
 
-```{r eval=FALSE, include=teach}
+```{r include=teach}
 
- #############################################
+  #############################################
   ##### Teacher Pedagogical Skill ###########
   #############################################
 
@@ -773,7 +778,8 @@ plot(out)
                  s_a1_1 = "1.1 The teacher treats all students respectfully",
                  s_a1_2 = "1.2 The teacher uses positive language with students",
                  s_a1_3 = "1.3 The teacher responds to students' need",
-                 s_a1_4 = "1.4 The teacher does not exhibit gender bias and challenges gender stereotypes in the classroom",
+                 s_a1_4a = "1.4 The teacher does not exhibit gender bias and challenges gender stereotypes in the classroom",
+                 s_a1_4b = "1.4 The teacher does not exhibit disability bias and challenges disability stereotypes in the classroom",
                  s_a2 = "POSITIVE BEHAVIORAL EXPECTATIONS: Segment 1",
                  s_a2_1 = "2.1 The teacher sets clear behavioral expectations for classroom activities",
                  s_a2_2 = "2.2 The teacher acknowledges positive student behavior",
@@ -834,7 +840,7 @@ plot(out)
   teach_dta <- teach_dta %>% 
     group_by(school_code, school_clip) %>% 
     summarise_all(coalesce_by_column) %>% 
-    #mutate(across(everything(), as.numeric)) %>% 
+    mutate(across(everything(), as.numeric)) %>% 
     ungroup()
     
  
@@ -859,8 +865,8 @@ plot(out)
     #        clip=if_else(clip_temp==TRUE, 1,2)
     #          ) %>%
     # select(-clip_temp, -video_length, -school_clip, -person, -enum_comments) %>%
-    select(school_code, clip, everything()) 
-   # mutate(across(everything(), as.numeric))
+    select(school_code, clip, everything()) %>% 
+    mutate(across(everything(), as.numeric))
   
   #recode scores to be numeric
 
@@ -894,7 +900,8 @@ plot(out)
   low_medium_high_na <- c("s_a1_1",
                           "s_a1_2",
                           "s_a1_3",
-                          "s_a1_4",
+                          "s_a1_4a",
+                          "s_a1_4b",
                           "s_b4_1",
                           "s_b4_2",
                           "s_b4_3"
@@ -1239,7 +1246,7 @@ num_boys <- school_dta %>%
 final_indicator_data_ATTD_M<- school_data_INPT %>%
   left_join(num_boys) %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
-  mutate(student_attendance=m4scq4n_girls/m4scq13_girls) %>%
+  mutate(student_attendance=m4scq4n_girls/as.numeric(m4scq13_girls)) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
   group_by(school_code) %>%
@@ -1250,7 +1257,7 @@ final_indicator_data_ATTD_M<- school_data_INPT %>%
 final_indicator_data_ATTD_F<- school_data_INPT %>%
   left_join(num_boys) %>%
   select(preamble_info, m4scq4_inpt, m4scq4_inpt, m4scq4n_girls, m4scq12_inpt, m4scq13_girls )  %>%
-  mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-m4scq13_girls)) %>%
+  mutate(student_attendance=(m4scq4_inpt-m4scq4n_girls)/(m4scq12_inpt-as.numeric(m4scq13_girls))) %>%
   mutate(student_attendance=if_else(student_attendance>1, 1,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=if_else(student_attendance<0, 0,as.numeric(student_attendance)))  %>% #fix an issue where sometimes enumerators will get these two questions mixed up.
   mutate(student_attendance=100*student_attendance) %>%
@@ -1305,86 +1312,153 @@ assess_4th_grade_dta<- assess_4th_grade_dta %>%
          student_male=bin_var(m8s1q3,1),
   )
 
+
 #####################
 #create one copy of each dataframe that never gets touched and is carried forward to public folder
 #####################
 assess_4th_grade_dta_raw <- assess_4th_grade_dta
 
-
-# create a function to score questions m8saq2 and m8saq3, in which students identify letters/words that enumerator calls out.
-# This question is tricky, because enumerators would not always follow instructions to say out loud the same letters/words
-# In order to account for this, will assume if 80% of the class has a the exact same response, then this is the letter/word called out
-# Score this so that if there is a deviation from what 80% of the class says, then it is wrong.
-call_out_scorer <- function(var, pctl) {
-  1-abs(var - quantile(var, pctl, na.rm=T))
+# Create a function to process the "circle items" questions
+process_circle_items <- function(data, prefix) {
+  # Calculate number of items circled by each student
+  data <- data %>%
+    rowwise() %>%
+    mutate(
+      number_items = sum(c_across(starts_with(paste0(prefix, "__"))), na.rm = TRUE)
+    )
+  
+  # For each school, identify which items were most commonly circled
+  school_patterns <- data %>%
+    group_by(school_code) %>%
+    #if ends in __99, score it as zero. This is a code for no response
+    mutate(across(starts_with(paste0(prefix, "__99")), ~0)) %>%
+    dplyr::summarize(across(starts_with(paste0(prefix, "__")), ~mean(. == 1, na.rm = TRUE))) %>%
+    pivot_longer(
+      cols = starts_with(paste0(prefix, "__")),
+      names_to = "item",
+      values_to = "share"
+    ) %>%
+    # Extract item number from the variable name
+    mutate(item_num = as.integer(str_extract(item, "(?<=__)\\d+"))) %>%
+    filter(!is.na(item_num)) %>%  # Remove any non-numeric items like "__99"
+    arrange(school_code, desc(share))
+  
+  # Define correct items according to the manual
+  if(prefix == "m8saq2_id") {
+    correct_items <- c(3, 4, 6)  # h, F, v letters
+  } else if(prefix == "m8saq3_id") {
+    correct_items <- c(2, 6, 7)  # respect, greet and fruit words
+  } else if(prefix == "m8sbq1_number_sense") {
+    correct_items <- c(1, 3, 4)  # 4, 23, 55 numbers
+  }
+  
+  # For each school, determine the top 3 most frequently circled items
+  top_items_by_school <- school_patterns %>%
+    group_by(school_code) %>%
+    mutate(rank = row_number()) %>%
+    filter(rank <= 3) %>%
+    arrange(school_code, rank)
+  
+  # Identify schools with strong consensus (80%+ agreement on 3 items)
+  school_consensus <- top_items_by_school %>%
+    filter(share >= 0.8) %>%
+    group_by(school_code) %>%
+    dplyr::summarize(
+      consensus_count = n(),
+      correct_match = sum(item_num %in% correct_items),
+      perfect_match = consensus_count == 3 && correct_match == 3,
+      strong_match = consensus_count >= 1 && correct_match >= 1
+    )
+  
+  # Get the list of consensus items for each school
+  consensus_items <- top_items_by_school %>%
+    filter(share >= 0.8 | rank <= 3) %>%
+    group_by(school_code) %>%
+    dplyr::summarize(
+      consensus_items = list(item_num),
+      has_consensus = any(share >= 0.8)
+    )
+  
+  # Calculate scores using a simpler approach without nested sapply
+  result <- data %>%
+    left_join(consensus_items, by = "school_code") %>%
+    rowwise() %>%
+    mutate(
+      # Initialize counters
+      correct_identified = 0,
+      incorrect_identified = 0
+    )
+    
+  # Use a for loop instead of nested sapply
+  for (i in 1:nrow(result)) {
+    items <- result$consensus_items[[i]]
+    correct_count <- 0
+    
+    if (length(items) > 0) {
+      # Check each item
+      for (item in items) {
+        var_name <- paste0(prefix, "__", item)
+        if (var_name %in% colnames(data) && !is.na(result[[var_name]][i]) && result[[var_name]][i] == 1) {
+          correct_count <- correct_count + 1
+        }
+      }
+    }
+    
+    result$correct_identified[i] <- correct_count
+    result$incorrect_identified[i] <- result$number_items[i] - correct_count
+  }
+  
+  # Calculate final scores
+  result <- result %>%
+    mutate(
+      final_score = pmin(1, (correct_identified/ length(consensus_items))),
+      final_score = pmax(0, final_score)  # Ensure score is not negative
+    )
+  
+  return(result$final_score)
 }
-# #old scoring code:
-# mutate(m8saq2_id=rowMeans(select(.,m8saq2_id__3,m8saq2_id__4, m8saq2_id__6), na.rm=TRUE),
-#        m8saq3_id=rowMeans(select(.,m8saq3_id__2,m8saq2_id__6, m8saq2_id__7), na.rm=TRUE),
-#        m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/5,0),
-#        m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-#        m8sbq1_number_sense=rowMeans(select(.,m8sbq1_number_sense__3,m8sbq1_number_sense__4, m8sbq1_number_sense__1), na.rm=TRUE)) 
 
+# Apply the function to process each of the circle items questions
+m8saq2_id_scores <- process_circle_items(assess_4th_grade_dta, "m8saq2_id")
+m8saq3_id_scores <- process_circle_items(assess_4th_grade_dta, "m8saq3_id")
+m8sbq1_number_sense_scores <- process_circle_items(assess_4th_grade_dta, "m8sbq1_number_sense")
 
-#create a dataset with observations with issues based on enumerator calling out items
-assess_4th_grade_dta_issues <- assess_4th_grade_dta %>%
+# Add scores back to the dataset
+assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate(
-         m8saq2_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])), 
-         m8saq3_id_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])),
-         m8sbq1_number_sense_tot=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])))   %>%
-  filter(m8saq2_id_tot>3 | m8saq3_id_tot>3 | m8sbq1_number_sense_tot>3) 
+    m8saq2_id = m8saq2_id_scores,
+    m8saq3_id = m8saq3_id_scores,
+    m8sbq1_number_sense = m8sbq1_number_sense_scores
+  ) %>%
+  # Remove individual item columns to avoid confusion
+  select(-starts_with("m8saq2_id__"), -starts_with("m8saq3_id__"), -starts_with("m8sbq1_number_sense__"))
 
-# assess_4th_grade_dta_issues %>%
-#   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues.csv"))
-
-# assess_4th_grade_dta_issues %>%
-#   group_by(school_code) %>%
-#   summarise_all(~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) %>%
-#   write_excel_csv(path= file.path(save_folder_onedrive, "assess_4th_grade_dta_issues_school_level.csv"))
-
-
-
-#recode assessment variables to be 1 if student got it correct and zero otherwise
-assess_4th_grade_dta<- assess_4th_grade_dta %>%
+# Recode assessment variables to be 1 if student got it correct and zero otherwise
+assess_4th_grade_dta <- assess_4th_grade_dta %>%
   mutate_at(vars(starts_with("m8saq5"), 
                  starts_with("m8saq6"),
                  starts_with("m8sbq2"),
                  starts_with("m8sbq3"),
                  starts_with("m8sbq4"),
                  starts_with("m8sbq5"),
-                 starts_with("m8sbq6"),
-  ), ~bin_var(.,1)  ) %>% #now handle the special cases
-  mutate(m8saq4_id=if_else(m8saq4_id==5,4, as.numeric(m8saq4_id))) %>% #fix case where some enumerators recorded the pre-filled answer.
-  mutate(m8saq7a_gir=bin_var(m8saq7a_gir, 3),
-         m8saq7b_gir=bin_var(m8saq7b_gir, 3),
-         m8saq7c_gir=bin_var(m8saq7c_gir, 2),
-         m8saq7d_gir=bin_var(m8saq7d_gir, 3),
-         m8saq7e_gir=bin_var(m8saq7e_gir, 4),
-         m8saq7f_gir=bin_var(m8saq7f_gir, 1),
-         m8saq7g_gir=bin_var(m8saq7g_gir, 2),
-         m8saq7h_gir=bin_var(m8saq7h_gir, 2),
-         m8saq7i_gir=bin_var(m8saq7i_gir, 4),
-         m8saq7j_gir=bin_var(m8saq7j_gir, 1),
-         m8saq7k_gir=bin_var(m8saq7k_gir, 3)) %>% #grade lonely giraffe question
-  group_by(school_code) %>%
-  mutate_at(vars(starts_with("m8saq2_id"),starts_with("m8saq3_id"), starts_with("m8sbq1_number_sense")),
-            ~call_out_scorer(.,0.8)) %>%
-  ungroup() %>%
-  mutate(m8saq2_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq2_id")])-7)/3, #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8saq3_id")])-7)/3) %>%
-  mutate(m8saq2_id=if_else(m8saq2_id<0,0,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=if_else(m8saq3_id<0,0,m8saq3_id)) %>%
-  mutate(m8saq2_id=if_else(m8saq2_id>1,1,m8saq2_id), #subtract some letters not assessed and make out of 3 points
-         m8saq3_id=if_else(m8saq3_id>1,1,m8saq3_id)) %>%
-  mutate(m8saq4_id=if_else(m8saq4_id!=99, m8saq4_id/4,0),
-         m8saq7_word_choice=bin_var(m8saq7_word_choice,2),
-         m8sbq1_number_sense=(rowSums(.[grep(x=colnames(assess_4th_grade_dta), pattern="m8sbq1_number_sense")])-7)/3)         %>%
-    mutate( 
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense<0,0,m8sbq1_number_sense)) %>%
-    mutate(
-      m8sbq1_number_sense=if_else(m8sbq1_number_sense>1,1,m8sbq1_number_sense)) %>%
-  select(-starts_with("m8saq2_id__"),-starts_with("m8saq3_id__"),-starts_with("m8sbq1_number_sense__"))
-
+                 starts_with("m8sbq6")), ~bin_var(.,1)) %>%
+  # Fix special cases
+  mutate(m8saq4_id = if_else(m8saq4_id == 5, 4, as.numeric(m8saq4_id))) %>% # Fix case where some enumerators recorded the pre-filled answer
+  mutate(m8saq7a_gir = bin_var(m8saq7a_gir, 3),
+         m8saq7b_gir = bin_var(m8saq7b_gir, 3),
+         m8saq7c_gir = bin_var(m8saq7c_gir, 2),
+         m8saq7d_gir = bin_var(m8saq7d_gir, 3),
+         m8saq7e_gir = bin_var(m8saq7e_gir, 4),
+         m8saq7f_gir = bin_var(m8saq7f_gir, 1),
+         m8saq7g_gir = bin_var(m8saq7g_gir, 2),
+         m8saq7h_gir = bin_var(m8saq7h_gir, 2),
+         m8saq7i_gir = bin_var(m8saq7i_gir, 4),
+         m8saq7j_gir = bin_var(m8saq7j_gir, 1),
+         m8saq7k_gir = bin_var(m8saq7k_gir, 3)) %>%  # Grade lonely giraffe question
+  mutate(
+    m8saq4_id = if_else(m8saq4_id != 99, m8saq4_id / 4, 0),
+    m8saq7_word_choice = bin_var(m8saq7_word_choice, 2)
+  )
 
 ####Literacy####
 #calculate # of literacy items
@@ -1425,6 +1499,7 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
          math_student_proficient=100*as.numeric(math_student_knowledge>=82), #14/17 points
          math_student_proficient_70=100*as.numeric(math_student_knowledge>=70),
          math_student_proficient_75=100*as.numeric(math_student_knowledge>=75))
+
 
 
 #save  4th grade data at student level anonymized
@@ -1886,7 +1961,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(
-    vignette_1_resp=if_else((m7sbq1_opmn==0 & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
+    vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq1_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
     vignette_1_finance=case_when(
       m7sbq2_opmn==1 ~ 0.5,
       (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,
@@ -1903,7 +1978,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   #give total score for this vignette
   mutate(vignette_1=vignette_1_resp+vignette_1_finance+vignette_1_address) %>% 
   mutate(vignette_2_resp=if_else(m7scq1_opmn==98, 0, 0.5), # no one responsible that is known
-         vignette_2_finance=if_else(m7scq1_opmn==1,0,0.5),      #parents are forced to buy textbooks          
+         vignette_2_finance=if_else((m7scq1_opmn==1| m7scq1_opmn==98),0,0.5),      #parents are forced to buy textbooks          
          #give partial credit based on how quickly it will be solved <1 month, 1-3, 3-6, 6-12, >1 yr
          vignette_2_address=case_when(
            m7scq2_opmn==1 ~ 1,
@@ -1912,7 +1987,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
            m7scq2_opmn==4 ~ .25,
            (m7scq2_opmn==5 |m7scq2_opmn==98) ~ 0)) %>%
   mutate(vignette_2=vignette_2_resp+vignette_2_finance+vignette_2_address) %>%          #sum all components for overall score
-  mutate(operational_management=1+rowMeans(select(.,vignette_1, vignette_2), na.rm=TRUE) )
+  mutate(operational_management=1+vignette_1+vignette_2 )
 
 
 final_indicator_data_OPMN <- final_indicator_data_OPMN %>%
@@ -2038,6 +2113,9 @@ plot(out)
 
 
 
+
+
+
 #first create a database containing actual values for each question for the principal
 pknw_actual_cont <- final_indicator_data_CONT %>%
   select(school_code, m5_teach_count, m5_teach_count_math, m5s2q1c_number, m5s2q1e_number, m5s1q1f_grammer ) 
@@ -2056,16 +2134,16 @@ pknw_actual_combined <- pknw_actual_school_inpts %>%
   left_join(pknw_actual_cont) %>%
   left_join(pknw_actual_exper) %>%
   mutate(teacher_count_experience_less3=if_else(is.na(teacher_count_experience_less3), as.numeric(0), as.numeric(teacher_count_experience_less3)),
-         m5s2q1c_number=m5s2q1c_number*m5_teach_count,
-         m5s2q1e_number=m5s2q1e_number*m5_teach_count,
-         m5s1q1f_grammer=m5s1q1f_grammer*m5_teach_count)
+         m5s2q1c_number=m5s2q1c_number,
+         m5s2q1e_number=m5s2q1e_number,
+         m5s1q1f_grammer=m5s1q1f_grammer)
 
 
 #create function to compare principal responses to actual
 # if principal is within 1 student/teacher, then score as 1, 0 otherwise
-principal_scorer <- function(var_guess, var_actual, var_total, margin1, margin2) {
+principal_scorer <- function(var_guess, var_actual,  margin1, margin2) {
   if_else(
-    ((1-abs(var_guess-var_actual)/var_total>= as.numeric(margin1)) | (var_guess-var_actual <= as.numeric(margin2))),
+    var_guess >= (var_actual * margin1) & var_guess <= (var_actual * margin2),
     1,
     0)
 }
@@ -2080,11 +2158,16 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  %>%
   left_join(pknw_actual_combined) %>%
   mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
-  mutate(add_triple_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T), m5s2q1c_number, m7_teach_count_pknw,0.8,1),
-         multiply_double_digit_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq6_pknw')), na.rm=T), m5s2q1e_number, m7_teach_count_pknw,0.8,1),
-         complete_sentence_pknw=principal_scorer(rowSums(select(.,starts_with('m7sfq7_pknw')), na.rm=T), m5s1q1f_grammer, m7_teach_count_pknw,0.8,1),
-         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, m7_teach_count_pknw,0.8,1),
-         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt, m4scq4_inpt,0.8,3),
+  mutate(
+  add_triple_digit_pknw_shr=rowSums(select(.,starts_with('m7sfq5_pknw')), na.rm=T)/m7_teach_count_pknw,
+           multiply_double_digit_pknw_shr=rowSums(select(.,starts_with('m7sfq6_pknw')), na.rm=T)/m7_teach_count_pknw,
+           complete_sentence_pknw_shr=rowSums(select(.,starts_with('m7sfq7_pknw')), na.rm=T)/m7_teach_count_pknw,    
+    add_triple_digit_pknw=principal_scorer(add_triple_digit_pknw_shr, m5s2q1c_number,0.8,1.2),
+         multiply_double_digit_pknw=principal_scorer(multiply_double_digit_pknw_shr, m5s2q1e_number ,0.8,1.2),
+         complete_sentence_pknw=principal_scorer(complete_sentence_pknw_shr, m5s1q1f_grammer, 0.8,1.2),
+
+         experience_pknw=principal_scorer(m7sfq9_pknw_filter, teacher_count_experience_less3, 0.8,1.2),
+         textbooks_pknw=principal_scorer(m7sfq10_pknw, m4scq5_inpt,0.8,3),
          blackboard_pknw=if_else(m7sfq11_pknw==blackboard_functional,1,0)) %>%
   mutate(principal_knowledge_avg=rowMeans(select(.,add_triple_digit_pknw, multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw), na.rm=TRUE)) %>%
   mutate(principal_knowledge_score=case_when(
@@ -2098,6 +2181,8 @@ final_indicator_data_PKNW <- school_data_PKNW %>%
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
   select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), m7sfq9_pknw_filter, m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, 
          multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10)
+
+
 
 
 #Breakdowns by Male/Female
@@ -3264,14 +3349,14 @@ if (extra_info=='yes') {
 #Load original sample of schools
 currentDate<-c("2023-04-13")
 
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 data_set_updated <- read_csv(paste(sample_folder, '/GEPD_TCD_sample_', currentDate,  '.csv', sep="")
                              ) 
 
 
 
 #open the raster
-raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
+raster_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/Maps/GDP", sep="/")) 
 
 gdp_raster <- raster::raster(paste(raster_folder, "/GDP.tif", sep="/"))
 
@@ -3304,8 +3389,8 @@ school_gdp <- as.data.frame(school_gdp) %>%
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
 # impdata<-mice::mice(school_dta_short, m=1,
-#            method='rf',
-#            maxit = 50, seed = 500)
+#            method='mean',
+#            maxit = 1, seed = 500)
 
 school_dta_short_imp <- school_dta_short
 

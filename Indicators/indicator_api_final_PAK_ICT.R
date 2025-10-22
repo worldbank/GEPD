@@ -60,17 +60,19 @@ country <-'PAK'
 country_name <- "Pakistan"
 province <- "ICT"
 year <- '2022'
+iso3 <- 'PAK'
 
 strata <- c('Tehsil', 'Gender')
 
 #set directory to bring in data
 if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M", sep="_"),paste0("Data/",province))
+  data_dir <- file.path("C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_M", sep="_"),paste0("Data/",province))
+  gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
   project_folder  <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/"
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
   backup_onedrive="no"
   save_folder_onedrive <- file.path(paste("C:/Users/wb469649/WBG/Ezequiel Molina - Dashboard (Team Folder)/Country_Work/",country_name,year,"Data/clean/", sep="/"))
   anonymized_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/"
@@ -79,10 +81,10 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
   
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
   project_folder  <- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT"
-  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_M"),paste0("Data/",province))
-  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
-  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
-  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
+  data_dir <- file.path("C:/Users/wb577189/OneDrive - WBG/GEPD/CNT",country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_M"),paste0("Data/",province))
+  download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/raw/", sep="/"))
+  confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/confidential/", sep="/"))
+  save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/",province,"/anonymized/", sep="/"))
   backup_onedrive="no"
   save_folder_onedrive <- file.path(paste("C:/Users/wb577189/OneDrive - WBG/My files/Dashboard (Team Folder)/Country_Work",country_name,year,"Data/clean/", sep="/"))
 } else {
@@ -117,6 +119,36 @@ wbopendat<-WDI(country='PK', indicator=ind_list, start=2000, end=2021, extra=T) 
   group_by(iso3c) %>%
   arrange(year) %>%
   filter(row_number()==n())
+
+#add new learning poverty number
+g4_prof <- read_excel(path=paste0(gen_dir,'/lpv_edstats_1205.xls'), sheet='WDI_indicators') %>%
+  filter(countrycode==iso3) %>%
+  group_by(indicator) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(countrycode, indicator, year, value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = indicator,
+    values_from=value
+  )
+
+#read in UIS data on 4.1.1a
+uis_df <- read_csv(file='https://geo.uis.unesco.org/data/sdg-benchmarks.csv') %>%
+  filter(country_id==iso3) %>%
+  group_by(ind_nber) %>%
+  arrange(as.numeric(year)) %>%
+  filter(row_number()==n()) %>%
+  select(country_id, ind_nber, year, latest_value) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from = ind_nber,
+    values_from=latest_value,
+    values_fill=as.numeric(NA),
+    names_prefix = 'SDG'
+  ) %>%
+  mutate(across(starts_with('SDG'), as.numeric))
+
 #read in databases for indicators
 
 load(paste(data_dir, "School/school_indicators_data_anon.RData", sep="/"))

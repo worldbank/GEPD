@@ -667,7 +667,7 @@ server <- function(input, output, session) {
     
     #Display metadata for indicator
     indicator_choices <- indicator_choices %>%
-      dplyr::select(-X1, -X6) %>%
+      dplyr::select(-...1, -...6) %>%
       dplyr::filter(Series!="---") 
     
     names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
@@ -1823,7 +1823,7 @@ output$indicators_choices <- DT::renderDataTable({
 
   #Display metadata for indicator
   indicator_choices_table <- indicator_choices_table %>%
-    dplyr::select(-X1, -X6) %>%
+    dplyr::select(-...1, -...6) %>%
     dplyr::filter(Series!="---") %>%
     dplyr::select(-Series) %>%
     rename(name='Indicator Name' ) %>%

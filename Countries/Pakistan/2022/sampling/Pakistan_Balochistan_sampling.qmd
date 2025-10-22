@@ -3,7 +3,7 @@ title: "Pakistan (Balochistan) Sampling"
 author: "Brian Stacy"
 date: "7/5/2023"
 format:
-  html: 
+  docx: 
       embed-resources: true
 execute: 
   echo: false
@@ -18,6 +18,7 @@ library(readxl)
 library(flextable) 
 library(leaflet)
 library(Hmisc)
+library(srvyr)
 #Country name
 country <-'PAK'
 country_name <- "Pakistan"
@@ -80,7 +81,7 @@ Expert Survey: The Expert Survey will collect information to feed into the polic
 
 Survey of Public Officials: The Survey of Public Officials will collect information about the capacity and orientation of the bureaucracy, as well as political factors affecting education outcomes. This survey will be a streamlined and education-focused version of the civil-servant surveys that the Bank’s Bureaucracy Lab has implemented recently in several countries, and the dashboard team is collaborating closely with DEC and Governance GP staff to develop this instrument.  As currently envisioned, the survey will be administered to a random sample of about 200 staff serving in the central education ministry and district education offices.  It will include questions about technical and leadership skills, work environment, stakeholder engagement, clientelism, and attitudes and behaviors.
 
-## KP Sampling
+## Balochistan Sampling
 
 200 schools will be drawn.  The strata are the urban/rural status of the school and the gender of the school (male,female, mixed).  Schools from each of the 34 districts are selected.
 
@@ -129,13 +130,13 @@ Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade st
 However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(class_prep<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(class_5<3))` because of the grade 5 restriction. 
 
 
-Basic summary stats of frame
+Basic summary stats of restricted frame
 
 ```{r}
 #| label: tbl-sumstats
-#| tbl-cap: Summary Statistics for Balochistan Raw Sampling Frame
+#| tbl-cap: Summary Statistics for Balochistan restricted Sampling Frame
 #level
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(SchoolLevel) %>% 
   summarise(n=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -143,7 +144,7 @@ df_updated_gepd %>%
   autofit()
 
 #Tehsil
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(District) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -151,7 +152,7 @@ df_updated_gepd %>%
   autofit()
 
 #Gender
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(Gender) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -159,7 +160,7 @@ df_updated_gepd %>%
   autofit()
 
 #Urban/rural
-df_updated_gepd %>% 
+df_updated %>% 
   group_by(Location) %>% 
   summarise(Schools=n(),Students=sum(total_enrollment, na.rm=TRUE)) %>% 
   flextable() %>% 
@@ -171,6 +172,86 @@ df_updated_gepd %>%
 
 ```
 
+
+### Original Sampling Frame
+
+Below are statistics of the original sampling frame.
+
+
+```{r}
+#| label: tbl_sumstats
+#| tbl-cap: Summary Statistics the Raw Sampling Frame
+
+#create list of indicators for 
+std_border = officer::fp_border(color="black", width = 1)
+
+#create a function to create standardized tables
+tab_fun <- function(data) {
+  
+  data <- get(data)
+  #region
+  region_tab <- data %>%
+    group_by(District) %>%
+    summarise(N=n(),
+              total_enrollment=sum(total_enrollment, na.rm=TRUE),
+              class_4=sum(class_4, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*total_enrollment/sum(total_enrollment),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="total_enrollment",
+      `Total 4th Grade Student Count`="class_4"
+    )
+  
+  #urban_rural
+  urban_tab <- data %>%
+    group_by(Location) %>%
+    summarise(N=n(),
+              student_count=sum(total_enrollment, na.rm=TRUE),
+              class_4=sum(class_4, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="student_count",
+      `Total 4th Grade Student Count`="class_4")
+  
+
+  
+  
+  #combine all the tables into one
+  total_tab <- bind_rows(
+    #region_tab %>% rename(`Sub-group`=District) %>% mutate(group="District"),
+    urban_tab %>% rename(`Sub-group`=Location) %>% mutate(group="Urban/Rural")
+    )
+  
+  total_tab %>%
+    as_grouped_data(, group='group') %>%
+    as_flextable(hide_grouplabel=TRUE) %>%
+    theme_booktabs() %>%
+    align(i = ~ !is.na(group), align = "center") %>%
+    #bold and increase font size for group
+    bold(i = ~ !is.na(group)) %>%
+    fontsize(i = ~ !is.na(group), size = 12) %>%
+    autofit() 
+}
+
+tab_fun('df_raw')
+```
+
+
+Next are statistics for the frame excluding schools that don't meet GEPD requirements.
+
+```{r}
+#| label: tbl_gepd_updated_set
+#| tbl-cap: Summary Statistics in the Updated Sampling Frame
+#| echo: true
+
+
+tab_fun('df_updated')
+```
 # Sampling
 
 ## 200 schools
@@ -187,7 +268,7 @@ df_updated_gepd %>%
 # 
 # write_excel_csv(strata_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
 
-strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",Sys.Date(),".csv"))
+strata_df_200 <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_strata_200_",'2023-07-05',".csv"))
 
 
 
@@ -231,7 +312,76 @@ write_excel_csv(weights_df_200, file=paste0(sampling_folder, "/GEPD_Balochistan_
 
 ```
 
+In what is next, we produce a table of summary statistics using the sampling weights to see if we can match the original sampling frame. Overall, the statistics produced using the sample weights are similar to the original sampling frame.
 
+```{r}
+#| label: tbl_sample
+#| tbl-cap: Weighted Summary Statistics of Sampled Schools to Match to Original Sampling Frame
+
+#regions
+region_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('District', 'Location'),
+                   weight=school_weight)  %>%
+  group_by(District) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment),
+            g4_student_count=survey_total(class_4, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(District=District)
+
+#urban/rural
+urban_tab_sample <- sample_df_200 %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('District', 'Location'),
+                   weight=school_weight)  %>%
+  group_by(Location) %>%
+  summarise(N=n(),
+            student_count=survey_total(total_enrollment),
+            g4_student_count=survey_total(class_4, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(`Urban/Rural`=Location)
+
+
+#combine all the tables into one
+total_tab <- bind_rows(
+  #region_tab_sample %>% rename(`Sub-group`="District") %>% mutate(group="District"),
+  urban_tab_sample %>% rename(`Sub-group`="Urban/Rural") %>% mutate(group="Urban/Rural")
+  )
+
+total_tab %>%
+  as_grouped_data(, group='group') %>%
+  as_flextable(hide_grouplabel=TRUE) %>%
+  theme_booktabs() %>%
+  align(i = ~ !is.na(group), align = "center") %>%
+  #bold and increase font size for group
+  bold(i = ~ !is.na(group)) %>%
+  fontsize(i = ~ !is.na(group), size = 12) %>%
+  autofit() 
+
+```
 
 Basic summary stats of overall frame
 
@@ -271,6 +421,30 @@ sample_df_200 %>%
   autofit()
 
 
+
+
+```
+
+Table. Number of Schools Selected in the Sample by District
+
+```{r}
+#| label: tbl_sample_district
+#| tbl-cap: Number of Schools by District in the Sample
+
+#number of schools by district in a flextabe
+sample_df_200 %>%
+  group_by(District) %>%
+  summarise(n=n(),
+            #number of students
+            total_Students=sum(total_enrollment, na.rm=TRUE)
+            ) %>%
+  rename(
+    `Number of Schools`="n",
+    `Number of Students`="total_Students"
+  ) %>%
+  flextable() %>%
+  add_header_lines('Number of Schools by District') %>%
+  autofit()
 
 
 ```
@@ -322,9 +496,9 @@ sample_replace$replaced_District=sample_replace2$District
 
 
 
-sample_replace %>%
-  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
-  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+# sample_replace %>%
+#   select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+#   DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
 
 sample_replace <- sample_replace %>%
   select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
@@ -335,6 +509,219 @@ write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_replac
 
 ```
 
+## August 28, 2023 Replacements
+
+23 schools fell into Tehsils that were judged to pose a risk to the enumerators, either because of war/conflict, other security issues, or very remote terrain.
+
+```{r}
+#| label: aug28replacements
+
+#read in the list of schools to be replaced
+bemis <- c( '09682'
+            ,'06924'
+            ,'06742'
+            ,'08356'
+            ,'08203'
+            ,'08246'
+            ,'08429'
+            ,'12845'
+            ,'07316'
+            ,'12236'
+            ,'14724'
+            ,'17545'
+            ,'07784'
+            ,'07803'
+            ,'11815'
+            ,'06118'
+            ,'03086'
+            ,'03092'
+            ,'11031'
+            ,'09406'
+            ,'03540'
+            ,'17131'
+            ,'14252'
+)
+
+tehsils <- c(
+  'MASHKAI'
+  ,'NOKUNDI'
+  ,'DERA BUGTI'
+  ,'PHELLAWAGH'
+  ,'SUI'
+  ,'GANDAKHA'
+  ,'GANDAWAH'
+  ,'BHAG'
+  ,'DHADAR'
+  ,'DASHT'
+  ,'DASHT SPEZAND'
+  ,'TUMP'
+  ,'NAL'
+  ,'ZEHRI'
+
+)
+
+
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_sample_200_","2023-07-05",".csv")) %>%
+  mutate(sample="Sampled School") %>%
+  select(-YearofNonFunctinal) %>%
+  filter(BemisCode %in% bemis)
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated_gepd %>%
+  left_join(sample_chosen) %>%
+  filter(!(Tehsil %in% tehsils))
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  #replace DERA BUGTI with KOHLU
+  mutate(District=case_when(
+    District=="DERA BUGTI" ~ "KOHLU",
+    TRUE ~ District
+  )) %>%
+  group_by( District) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(District) %>%
+  sample_n(2*mean(sampled_districts), weight=class_4) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(District,Location, BemisCode) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    mutate(District_sort=case_when(
+    District=="DERA BUGTI" ~ "KOHLU",
+    TRUE ~ District
+  )) %>%
+    arrange(District_sort,Location, BemisCode)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$`School Name`
+sample_replace$replaced_EmisCode=sample_replace2$BemisCode
+sample_replace$replaced_District=sample_replace2$District
+
+
+
+sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_security_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
+
+## September 18, 2023 Replacements
+
+Another round of replacements were needed, because of security issues.
+
+```{r}
+#| label: sep18replacements
+
+#read in the list of schools to be replaced
+bemis <- c( '08203',
+            '08429',
+            '08246',
+            '08356',
+            '02645',
+            '11103',
+            '02822',
+            '02597'
+
+  
+)
+
+tehsils <- c(
+  'MASHKAI'
+  ,'NOKUNDI'
+  ,'DERA BUGTI'
+  ,'PHELLAWAGH'
+  ,'SUI'
+  ,'GANDAKHA'
+  ,'GANDAWAH'
+  ,'BHAG'
+  ,'DHADAR'
+  ,'DASHT'
+  ,'DASHT SPEZAND'
+  ,'TUMP'
+  ,'NAL'
+  ,'ZEHRI'
+
+)
+
+
+#define sampled schools in sample dataset
+sample_chosen <- read_csv(paste0(sampling_folder, "/GEPD_Balochistan_sample_200_","2023-08-28",".csv")) %>%
+  mutate(sample="Sampled School") %>%
+  select(-YearofNonFunctinal) %>%
+  filter(BemisCode %in% bemis)
+
+#add sample schools back to original database
+data_set_updated_chosen <- df_updated_gepd %>%
+  left_join(sample_chosen) %>%
+  filter(!(Tehsil %in% tehsils))
+
+#get list of tehsil
+sampled_districts <- sample_chosen %>%
+  #replace DERA BUGTI with KOHLU
+  mutate(District=case_when(
+    District=="DERA BUGTI" ~ "JHAL MAGSI",
+    District=="KOHLU" ~ "SIBI",
+    TRUE ~ District
+  )) %>%
+  group_by( District) %>% 
+  summarise(sampled_districts=n()
+            )
+
+# select one replacement per district
+sample_replace <- data_set_updated_chosen %>%
+  left_join(sampled_districts) %>%
+  filter(!is.na(sampled_districts)) %>%
+  filter(is.na(sample)) %>%
+  group_by(District) %>%
+  sample_n(2*mean(sampled_districts), weight=class_4) %>% #select two replacement schools
+  mutate(sample='Replacement School') %>%
+  arrange(District,Location, BemisCode) 
+
+sample_replace2 <- sample_chosen %>%
+    bind_rows(sample_chosen) %>% #add a duplicate observation for matching to two replacement schools
+    mutate(District_sort=case_when(
+    District=="DERA BUGTI" ~ "KOHLU",
+    TRUE ~ District
+  )) %>%
+    arrange(District_sort,Location, BemisCode)  
+
+
+#add in school info for school that will be replaced
+sample_replace$replaced_School_Name=sample_replace2$`School Name`
+sample_replace$replaced_EmisCode=sample_replace2$BemisCode
+sample_replace$replaced_District=sample_replace2$District
+
+
+
+sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District) %>%
+  DT::datatable( caption = 'List of Replacement Schools Chosen for Public School Sample') 
+
+sample_replace <- sample_replace %>%
+  select(`School Name`, BemisCode, District, replaced_School_Name, replaced_EmisCode, replaced_District, everything())
+  
+write_excel_csv(sample_replace, paste(sampling_folder, '/GEPD_Balochistan_security_replacement_schools_', Sys.Date(),  '.csv', sep=""))
+
+
+
+```
 
 
 # Sanity Checks

@@ -254,7 +254,7 @@ teacher_absence_dta <- teacher_absence_dta %>%
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absent=case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 | m2sbq6_efft==2  ~ 1,
+    m2sbq6_efft==6 | m2sbq6_efft==5  ~ 1| m2sbq6_efft==2  ~ 1,
     m2sbq6_efft==1 | m2sbq6_efft==3 |  m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 

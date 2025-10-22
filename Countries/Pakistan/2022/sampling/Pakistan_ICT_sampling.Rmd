@@ -2,7 +2,7 @@
 title: "Pakistan (ICT) Sampling"
 author: "Brian Stacy"
 date: "7/8/2022"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +14,9 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(here)
 library(readxl)
+library(haven)
 library(flextable) 
+library(srvyr)
 
 #Country name
 country <-'PAK'
@@ -88,33 +90,7 @@ df_raw<-read_excel(paste(sampling_folder, file_frame, sep="/"),
 
 ```
 
-Basic summary stats of overall frame
 
-```{r}
-#level
-df_raw %>% 
-  group_by(Institutions_Level) %>% 
-  summarise(n=n(),Students=sum(Grand_total)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Level') %>% 
-  autofit()
-
-#Tehsil
-df_raw %>% 
-  group_by(Tehsil) %>% 
-  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Tehsil') %>% 
-  autofit()
-
-#Gender
-df_raw %>% 
-  group_by(Gender) %>% 
-  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
-  flextable() %>% 
-  add_header_lines('Number of Schools by Gender') %>% 
-  autofit()
-```
 
 ```{r}
 
@@ -134,6 +110,112 @@ df_updated <- df_raw %>%
 Typically for the GEPD only schools with at least 3 1st grade and 3 4th grade students will be selected.  Applying these restrictions results in `r nrow(df_updated_gepd)` schools eligible.
 
 However, there is interest in interviewing pre-primary students and students in 5th grade for the AIM-ECD assessment and the AMPL-b assessment.  As a result, additionaly schools are excluded that do not have at least 3 kachi and 3 5th grade students.  This results in `r nrow(df_updated)` being eligible.  There were `r nrow(df_updated_gepd %>% filter(Kachi<3))` schools that were eliminated because of the preprimary restriction and `r nrow(df_updated_gepd %>% filter(Class_5<3))` because of the grade 5 restriction.
+
+Basic summary stats of restricted frame
+
+```{r}
+#level
+df_updated %>% 
+  group_by(Institutions_Level) %>% 
+  summarise(n=n(),Students=sum(Grand_total)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Level') %>% 
+  autofit()
+
+#Tehsil
+df_updated %>% 
+  group_by(Tehsil) %>% 
+  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Tehsil') %>% 
+  autofit()
+
+#Gender
+df_updated %>% 
+  group_by(Gender) %>% 
+  summarise(Schools=n(),Students=sum(Grand_total)) %>% 
+  flextable() %>% 
+  add_header_lines('Number of Schools by Gender') %>% 
+  autofit()
+```
+
+Below are statistics of the original sampling frame.
+
+
+```{r}
+#| label: tbl_sumstats
+#| tbl-cap: Summary Statistics the Raw Sampling Frame
+
+#create list of indicators for 
+std_border = officer::fp_border(color="black", width = 1)
+
+#create a function to create standardized tables
+tab_fun <- function(dat) {
+  
+  data <- get(dat)
+  #region
+  region_tab <- data %>%
+    group_by(Tehsil) %>%
+    summarise(N=n(),
+              total_enrollment=sum(Grand_total, na.rm=TRUE),
+              class_4=sum(Class_4_boys+Class_4_girls, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*total_enrollment/sum(total_enrollment),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="total_enrollment",
+      `Total 4th Grade Student Count`="class_4"
+    )
+  
+  #urban_rural
+  Gender <- data %>%
+    group_by(Gender) %>%
+    summarise(N=n(),
+              student_count=sum(Grand_total, na.rm=TRUE),
+              class_4=sum(Class_4_boys+Class_4_girls, na.rm=TRUE)) %>%
+    ungroup() %>%
+    mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+           `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+           `Percentage of 4th Grade Students`=paste0(round(100*class_4/sum(class_4),1),"%")) %>%
+    rename(
+      `Total Student Count`="student_count",
+      `Total 4th Grade Student Count`="class_4")
+  
+
+  
+  
+  #combine all the tables into one
+  total_tab <- bind_rows(
+    region_tab %>% rename(`Sub-group`=Tehsil) %>% mutate(group="Tehsil")
+    #Gender %>% rename(`Sub-group`=Gender) %>% mutate(group="Gender")
+    )
+  
+  total_tab %>%
+    as_grouped_data(, group='group') %>%
+    as_flextable(hide_grouplabel=TRUE) %>%
+    theme_booktabs() %>%
+    align(i = ~ !is.na(group), align = "center") %>%
+    #bold and increase font size for group
+    bold(i = ~ !is.na(group)) %>%
+    fontsize(i = ~ !is.na(group), size = 12) %>%
+    autofit() 
+}
+
+tab_fun("df_raw")
+```
+
+
+Next are statistics for the frame excluding schools that don't meet GEPD requirements.
+
+```{r}
+#| label: tbl_gepd_updated_set
+#| tbl-cap: Summary Statistics in the Updated Sampling Frame
+#| echo: true
+
+
+tab_fun('df_updated')
+```
 
 # Sampling
 
@@ -190,10 +272,11 @@ sample_df <- df_updated_gepd %>%
   mutate(strata_count=n(),
          strata_size=sum(Grand_total),
          strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = sample_size, weight =Grand_total) %>%
+  sample_n(size = min(sample_size), weight =Grand_total) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
-         ipw=strata_school_prob*(1/strata_prob))
+         ipw=strata_school_prob*(1/strata_prob),
+         strata=paste(Tehsil,Gender, sep=" - "))
 
 
 write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.Date(),".csv"))
@@ -201,7 +284,98 @@ write_excel_csv(sample_df, file=paste0(sampling_folder, "/GEPD_ICT_sample_",Sys.
 ```
 
 
+In what is next, we produce a table of summary statistics using the sampling weights to see if we can match the original sampling frame. Overall, the statistics produced using the sample weights are similar to the original sampling frame.
+
+```{r}
+#| label: tbl_sample
+#| tbl-cap: Weighted Summary Statistics of Sampled Schools to Match to Original Sampling Frame
+
+#regions
+region_tab_sample <- sample_df %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('strata'),
+                   weight=school_weight)  %>%
+  group_by(Tehsil) %>%
+  summarise(N=n(),
+            student_count=survey_total(Grand_total, na.rm=TRUE),
+            g4_student_count=survey_total(Class_4_boys+Class_4_girls, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) %>%
+  rename(Tehsil=Tehsil)
+
+#urban/rural
+Gender_sample <- sample_df %>%
+  mutate(school_weight=1/strata_prob) %>%
+  as_survey_design(strata=c('strata'),
+                   weight=school_weight)  %>%
+  group_by(Gender) %>%
+  summarise(N=n(),
+            student_count=survey_total(Grand_total, na.rm=TRUE),
+            g4_student_count=survey_total(Class_4_boys+Class_4_girls, na.rm=TRUE)) %>%
+  ungroup() %>%
+  mutate(`Percentage Schools` = paste0(round(100*N/sum(N),1),"%"),
+         `Percentage of Primary Students`=paste0(round(100*student_count/sum(student_count),1),"%"),
+         `Percentage of 4th Grade Students`=paste0(round(100*g4_student_count/sum(g4_student_count),1),"%")) %>%
+  rename(
+    `Total Student Count`="student_count",
+    `Total 4th Grade Student Count`="g4_student_count"
+  ) %>%
+  mutate(
+    across(where(is.numeric), ~round(.,1))
+  ) %>%
+  select(-ends_with("_se")) 
+
+
+#combine all the tables into one
+total_tab <- bind_rows(
+  region_tab_sample %>% rename(`Sub-group`="Tehsil") %>% mutate(group="Tehsil")
+  #Gender_sample %>% rename(`Sub-group`=Gender) %>% mutate(group="Gender")
+  )
+
+total_tab %>%
+  as_grouped_data(, group='group') %>%
+  as_flextable(hide_grouplabel=TRUE) %>%
+  theme_booktabs() %>%
+  align(i = ~ !is.na(group), align = "center") %>%
+  #bold and increase font size for group
+  bold(i = ~ !is.na(group)) %>%
+  fontsize(i = ~ !is.na(group), size = 12) %>%
+  autofit() 
+
+```
+
+Table. Number of Schools Selected in the Sample by District
+
+```{r}
+#| label: tbl_sample_district
+
+#number of schools by district in a flextabe
+
 ## Select Schools for Pilot
+sample_df %>% 
+  group_by(Tehsil) %>% 
+  summarise(n=n(),
+            total_students=sum(Class_4_boys+Class_4_girls, na.rm=TRUE)) %>%
+  ungroup() %>%
+  rename(
+    `Total Number of Schools`="n",
+    `Total Student Count`="total_students"
+  ) %>%
+  flextable() %>% 
+  add_header_lines('Number of Schools Selected by District') %>% 
+  autofit()
+
+```
 
 20 schools will be randomly selected using the same procedure for the pilot.  The schools selected for the pilot will not overlap with selected sample of 100.
 
@@ -254,7 +428,7 @@ pilot_df <- df_updated_gepd %>%
   mutate(strata_count=n(),
          strata_size=sum(Grand_total),
          strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = sample_size, weight =Grand_total) %>%
+  sample_n(size = min(sample_size), weight =Grand_total) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
          ipw=strata_school_prob*(1/strata_prob))
@@ -321,7 +495,7 @@ pilot2_df <- df_updated_gepd %>%
   mutate(strata_count=n(),
          strata_size=sum(Grand_total),
          strata_school_prob=strata_size/totalstudents) %>%
-  sample_n(size = sample_size, weight =Grand_total) %>%
+  sample_n(size = min(sample_size), weight =Grand_total) %>%
   ungroup() %>%
   mutate(strata_prob=(sample_size)*(Grand_total/strata_size),
          ipw=strata_school_prob*(1/strata_prob))

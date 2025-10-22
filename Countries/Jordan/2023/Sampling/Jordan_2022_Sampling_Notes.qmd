@@ -1,5 +1,5 @@
 ---
-title: "Jordan Sampling Notes - 2022"
+title: "Jordan Sampling Notes - 2023"
 format:
   html:
     embed-resources: true
@@ -21,7 +21,7 @@ library(flextable)
 #Country name
 country <-'JOR'
 country_name <- "Jordan"
-year <- '2022'
+year <- '2023'
 set.seed(2435345)
 
 #########################
@@ -58,7 +58,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 # Introduction
 
-This document will contain the sampling details for Jordan 2022.
+This document will contain the sampling details for Jordan 2023.
 
 The aim of the Global Education Policy Dashboard school survey is to produce nationally representative estimates, which will be able to detect changes in the indicators over time at a minimum power of 80% and with a 0.05 significance level. We also wish to detect differences by urban/rural location.
 
@@ -128,27 +128,27 @@ frame_2019_df <- df_short %>%
   filter(supervisory_authority=="The Ministry of Education" | supervisory_authority=="Private")
 ```
 
-## 2022 Frame
+## 2023 Frame
 
-Frame for sampling comes from the 2022 extract of the EMIS. File last updated November 2, 2022.
+Frame for sampling comes from the 2023 extract of the EMIS. File last updated November 2, 2023.
 
 ```{r}
-frame_2022_raw_df <- read_excel(path=paste0(sampling_folder,"/Updated_EMIS_2022.xlsx")) %>%
+frame_2023_raw_df <- read_excel(path=paste0(sampling_folder,"/Updated_EMIS_2022.xlsx")) %>%
   mutate(organization_code=school_code) %>%
   rename(
          lat=latitude,
-         lon=longitude)
+         lon=longitude) %>%
+  filter(!is.na(organization_code))
 
 
 #read in directorates from Jordan
 
-frame_2022_df <- frame_2022_raw_df %>% 
+frame_2023_df <- frame_2023_raw_df %>% 
   rename(
          total_students_grade_1=`Total students of class 1`,
          total_students_grade_4=`Total students of class 4`,
          total_teachers=`Total teachers`) %>%
   mutate(across(c('total_students_grade_1', 'total_students_grade_4', 'total_teachers'), as.numeric)) %>%
-  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
   mutate(supervisory_authority=case_when(  
     `supervisory authority`=="وزارة التربية و التعليم"  ~ "Ministry of Education",
     `supervisory authority`=="وكالة الغوث الدولية"      ~ "International Relief Agency",
@@ -175,7 +175,80 @@ frame_2022_df <- frame_2022_raw_df %>%
     lat=as.numeric(lat),
     lon=as.numeric(lon)
   ) %>%
-  left_join(read_csv(paste0(sampling_folder,"/governorates.csv"))) %>% #read in translations of governorates
+  left_join(read_csv(paste0(sampling_folder,"/governorates.csv")))  #read in translations of governorates
+
+```
+
+```{r}
+#| label: stats
+#| echo: true
+#| tbl-cap: frame stats
+#select final frame
+frame_2023_df %>%
+  select(total_students_grade_4, `Grade 4 male students`, `4th grade female students`) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise(g4_male_ratio=mean(`Grade 4 male students`/total_students_grade_4, na.rm=TRUE),
+            g4_female_ratio=mean(`4th grade female students`/total_students_grade_4, na.rm=TRUE),
+            n=n(),
+            Total_Students_G4=sum(total_students_grade_4, na.rm=TRUE)) %>%
+  flextable()
+
+frame_2023_df %>%
+  filter(total_students_grade_4>=1) %>%
+  select(total_students_grade_4, `Grade 4 male students`, `4th grade female students`) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise(g4_male_ratio=mean(`Grade 4 male students`/total_students_grade_4, na.rm=TRUE),
+            g4_female_ratio=mean(`4th grade female students`/total_students_grade_4, na.rm=TRUE),
+            n=n(),
+            Total_Students_G4=sum(total_students_grade_4, na.rm=TRUE)) %>%
+  flextable()
+
+frame_2023_df %>%
+  filter(total_students_grade_4>=1  & total_teachers>=3) %>%
+  select(total_students_grade_4, `Grade 4 male students`, `4th grade female students`) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise(g4_male_ratio=mean(`Grade 4 male students`/total_students_grade_4, na.rm=TRUE),
+            g4_female_ratio=mean(`4th grade female students`/total_students_grade_4, na.rm=TRUE),
+            n=n(),
+            Total_Students_G4=sum(total_students_grade_4, na.rm=TRUE)) %>%
+  flextable()
+
+
+frame_2023_df %>%
+  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
+  select(total_students_grade_4, `Grade 4 male students`, `4th grade female students`) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise(g4_male_ratio=mean(`Grade 4 male students`/total_students_grade_4, na.rm=TRUE),
+            g4_female_ratio=mean(`4th grade female students`/total_students_grade_4, na.rm=TRUE),
+            n=n(),
+            Total_Students_G4=sum(total_students_grade_4, na.rm=TRUE)) %>%
+  flextable()
+
+
+check <- frame_2023_df %>%
+  filter(total_students_grade_4>=1) %>%
+  filter(!(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) )
+
+
+
+frame_2023_df %>%
+  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
+  filter(supervisory_authority=="Ministry of Education" | supervisory_authority=="Private" 
+         | supervisory_authority=="International Relief Agency") %>%
+  select(total_students_grade_4, `Grade 4 male students`, `4th grade female students`) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise(g4_male_ratio=mean(`Grade 4 male students`/total_students_grade_4, na.rm=TRUE),
+            g4_female_ratio=mean(`4th grade female students`/total_students_grade_4, na.rm=TRUE),
+            n=n(),
+            Total_Students_G4=sum(total_students_grade_4, na.rm=TRUE)) %>%
+  flextable()
+
+
+```
+
+```{r}
+frame_2023_df <-  frame_2023_df %>%
+  filter(total_students_grade_4>=3 & total_students_grade_1>=3 & total_teachers>=3) %>%
   filter(supervisory_authority=="Ministry of Education" | supervisory_authority=="Private" 
          | supervisory_authority=="International Relief Agency") %>%
   select(organization_code, supervisory_authority, school_status, governorate_eng, everything())
@@ -189,18 +262,18 @@ frame_matches <- sample_2019_df %>%
     governorate_2019=governorate,
     supervisory_authority_2019=supervisory_authority
   ) %>%
-  left_join(frame_2022_df) %>%
+  left_join(frame_2023_df) %>%
   mutate(matched=if_else(is.na(school_status), "Not matched", "Matched"))
 
 no_match <-  frame_matches %>% filter(is.na(school_status))
 ```
 
-Summary Statistics of 2022 Frame
+Summary Statistics of 2023 Frame
 
 ```{r}
-frame_2022_df %>% 
+frame_2023_df %>% 
   select(territory, school_status, governorate_eng, supervisory_authority) %>% 
-  sumtable(title = "Summary Statistics of 2022 Sampling Frame")
+  sumtable(title = "Summary Statistics of 2023 Sampling Frame")
 ```
 
 
@@ -249,7 +322,7 @@ Game plan:
 #original sample of schools
 list_2019 <- sample_comparison$organization_code
 
-weights_df <- frame_2022_df %>%
+weights_df <- frame_2023_df %>%
   ungroup() %>%
   mutate(
     totalstudents=sum(total_students_grade_4),
@@ -331,7 +404,7 @@ leaflet(data=sample_df) %>%
 
 
 
-Summary Statistics of 2022 Sample
+Summary Statistics of 2023 Sample
 
 ```{r}
 sample_df %>%
@@ -347,7 +420,7 @@ sample_df %>%
 ```{r}
 sample_df %>% 
   select(territory, school_status, governorate_eng, supervisory_authority, sample_status) %>% 
-  sumtable(title = "Summary Statistics of 2022 Sample")
+  sumtable(title = "Summary Statistics of 2023 Sample")
 ```
 
 
@@ -454,7 +527,7 @@ pilot_strata_df <- weights_df %>%
          ))
 
 #select the 20 schools
-pilot_df <- frame_2022_df %>%
+pilot_df <- frame_2023_df %>%
   filter(!(organization_code %in% selected_list)) %>%
   left_join(pilot_strata_df) %>%
   mutate(
@@ -509,7 +582,7 @@ Select an additional 60 schools from the schools already visited.
 selected_list <- sample_df$organization_code
 
 # get numbers to select from each district
-pilot_strata_df <- frame_2022_df %>%
+pilot_strata_df <- frame_2023_df %>%
   ungroup() %>%
   mutate(
     sample_status=case_when(
@@ -556,7 +629,7 @@ pilot_strata_df <- frame_2022_df %>%
 )
 
 #select the 20 schools
-amplb_pilot_df <- frame_2022_df %>%
+amplb_pilot_df <- frame_2023_df %>%
   filter((organization_code %in% selected_list)) %>%
     mutate(
     sample_status=case_when(
@@ -619,3 +692,36 @@ leaflet(data=amplb_pilot_df) %>%
   addLegend(position="bottomright", pal=pal, values=~amplb_pilot_df$supervisory_authority, title="Schools for AMPL-b Pilot")
 ```
 
+
+# Sanity Checks
+
+Below I will use the survey weights to estimate aspects of the school that are available in the sampling frame. This includes whether the school is nomadic.  These data were collected as part of the school EMIS in Chad  The population mean from the full sampling frame is compared to the estimated mean from the school sample using the sampling weights.  Estimated means very far from the population mean can indicate there is something wrong with the weights or that the school sample is biased.
+
+The estimates based on the school weights are similar and within the confidence interval of those produced using the sampling frame.
+
+```{r}
+library(srvyr)
+#sanity check of the sampling weights and results
+# use weights to estimate population average of internet prevalence
+
+frame_2023_df %>%
+  ungroup() %>%
+  summarise(staff=mean(`total staff`, na.rm=TRUE),
+            `The number of classrooms`=mean(as.numeric(`The number of classrooms`), na.rm=TRUE)
+            ) %>%
+  flextable() %>%
+  add_header_lines("Population estimate")
+
+
+
+
+sample_df %>%
+  ungroup() %>%
+  as_survey_design(strata=c('strata'),
+                   weight=ipw) %>%
+  summarise(staff=survey_mean(`total staff`, na.rm=TRUE),
+            `The number of classrooms`=survey_mean(as.numeric(`The number of classrooms`), na.rm=TRUE)
+              ) %>%
+  flextable() %>%
+  add_header_lines("Estimate based on Schools Visited and Sampling Weights")
+```

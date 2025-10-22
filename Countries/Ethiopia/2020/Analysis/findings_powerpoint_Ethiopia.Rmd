@@ -123,7 +123,7 @@ Roadmap:
 
 #set directory to bring in data
 
-work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v01_RAW/Data/anonymized/"
+work_dir<- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD-Confidential/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_RAW/Data/anonymized/"
 
 #load public official data
 #load(paste(work_dir, "Public_Officials/public_officials_indicators_data_anon.RData", sep=""))

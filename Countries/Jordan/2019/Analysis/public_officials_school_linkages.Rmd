@@ -87,7 +87,7 @@ bbc_style <- function() {
 
 #set directory to bring in data
 
-work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/confidential/"
+work_dir<- "//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v02_RAW/Data/confidential/"
 
 #load public official data
 load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", sep=""))
@@ -96,7 +96,7 @@ load(paste(work_dir, "Public_Officials/public_officials_indicators_data.RData", 
 load(paste(work_dir, "School/school_indicators_data.RData", sep=""))
 
 #load set of districts that match to schools
-directorate_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v01_RAW/Data/sampling/district_sample_2019-11-05.csv")
+directorate_list <- read_csv("//wbgfscifs01/GEDEDU/datalib-edu/projects/GEPD-Confidential/CNT/JOR/JOR_2019_GEPD/JOR_2019_GEPD_v02_RAW/Data/sampling/district_sample_2019-11-05.csv")
 
 #read in merged public officials and school survey data.  Merged by Thomas Nicholas Mosher 
 # merged_df <- read_dta("C:/Users/wb469649/WBG/Daniel Rogger - DataWork/baseround/DataSets/Deidentified/wholemerge_dept.dta" )

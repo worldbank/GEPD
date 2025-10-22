@@ -319,14 +319,14 @@ preamble_info_absence <- c('interview__key', 'TEACHERS__id', 'teacher_name', 'te
 #create indicator for whether each teacher was absent from school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(school_absence_rate=100*case_when(
-    m2sbq6_efft==6 | teacher_available==2 ~ 1,
+    m2sbq6_efft==6 ~ 1,
     m2sbq6_efft!=6   ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)))
 
 #create indicator for whether each teacher was absent from classroom or school
 teacher_absence_dta <- teacher_absence_dta %>%
   mutate(absence_rate=100*case_when(
-    m2sbq6_efft==6 | m2sbq6_efft==5 |  teacher_available==2 ~ 1,
+    m2sbq6_efft==6 | m2sbq6_efft==5  ~ 1,
     m2sbq6_efft==1 | m2sbq6_efft==3 | m2sbq6_efft==2 | m2sbq6_efft==4  ~ 0,
     is.na(m2sbq6_efft) ~ as.numeric(NA)) )
 
@@ -1231,7 +1231,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   group_by(school_code) %>%
   summarise_all(~first(na.omit(.))) %>%
   mutate(
-    vignette_1_resp=if_else((m7sbq1_opmn==0 & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
+    vignette_1_resp=if_else(((m7sbq1_opmn==0 | m7sbq1_opmn==98) & (m7sbq4_opmn==4 | m7sbq4_opmn==98)), 0, 0.5),
     vignette_1_finance=case_when(
       m7sbq2_opmn==1 ~ 0.5,
       (m7sbq2_opmn==2 | m7sbq2_opmn==97) ~ 0.25,
@@ -1248,7 +1248,7 @@ final_indicator_data_OPMN <- school_data_OPMN %>%
   #give total score for this vignette
   mutate(vignette_1=vignette_1_resp+vignette_1_finance+vignette_1_address) %>% 
   mutate(vignette_2_resp=if_else(m7scq1_opmn==98, 0, 0.5), # no one responsible that is known
-         vignette_2_finance=if_else(m7scq1_opmn==1,0,0.5),      #parents are forced to buy textbooks          
+         vignette_2_finance=if_else((m7scq1_opmn==1| m7scq1_opmn==98),0,0.5),      #parents are forced to buy textbooks          
          #give partial credit based on how quickly it will be solved <1 month, 1-3, 3-6, 6-12, >1 yr
          vignette_2_address=case_when(
            m7scq2_opmn==1 ~ 1,
@@ -2230,8 +2230,8 @@ school_gdp <- as.data.frame(school_gdp) %>%
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
 impdata<-mice::mice(school_dta_short, m=1,
-           method='rf',
-           maxit = 50, seed = 500)
+           method='mean',
+           maxit = 1, seed = 500)
 
 school_dta_short_imp <- mice::complete(impdata, 1)
 

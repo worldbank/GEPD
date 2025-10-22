@@ -276,8 +276,8 @@ if (impute=='yes') {
 #use random forest approach to multiple imputation.  Some published research suggest this is a better approach than other methods.
 #https://academic.oup.com/aje/article/179/6/764/107562
 impdata<-mice::mice(select(public_officials_dta_clean,starts_with('NLG'), starts_with('ACM'), starts_with('QB'), starts_with('IDM')), , m=1,
-                    method='rf',
-                    maxit = 50, seed = 500)
+                    method='mean',
+                    maxit = 1, seed = 500)
 
 public_officials_dta_imp <- mice::complete(impdata, 1) 
   

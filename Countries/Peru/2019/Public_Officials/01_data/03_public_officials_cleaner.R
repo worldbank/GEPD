@@ -108,7 +108,7 @@ school_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD
 load(file=paste(school_folder, "school_indicators_data.RData", sep="/"))
 
 currentDate<-c("2019-07-22")
-sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v01_RAW", sep="_"),"Data/sampling/", sep="/"))
+sample_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/sampling/", sep="/"))
 sample_frame_name <- paste(sample_folder,"/school_sample_",currentDate,".RData", sep="")
 
 load(sample_frame_name)

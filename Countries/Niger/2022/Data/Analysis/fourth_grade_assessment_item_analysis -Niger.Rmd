@@ -75,7 +75,7 @@ library(ggpubr)
 #===============
 
 #set directory:
-work_dir<-"C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/NGR/NGR_2022_GEPD/NGR_2022_GEPD_v01_RAW/Data/anonymized/School"
+work_dir<-"C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/CNT/NGR/NGR_2022_GEPD/NGR_2022_GEPD_v02_RAW/Data/anonymized/School"
 
 gender=0
 

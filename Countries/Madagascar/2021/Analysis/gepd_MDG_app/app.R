@@ -15,14 +15,17 @@ library(shinycssloaders)
 library(shinyBS)
 library(shinyjs)
 library(plotly)
+library(ggtext)
 library(glue)
 library(DT)
 library(rvg)
 #library(officer)
 library(kableExtra)
 library(ggcorrplot)
-library(stargazer)
-library(sandwich)
+#library(stargazer)
+library(modelsummary)
+library(estimatr)
+library(flextable)
 library(Cairo)
 library(scales)
 library(ggpmisc)
@@ -31,12 +34,9 @@ library(Hmisc)
 library(quantreg)
 library(psych)
 library(tidyverse)
-library(srvyr)
 library(markdown)
 library(estimatr)
-library(flextable)
-library(ggtext)
-library(modelsummary)
+library(srvyr)
 
 #library(wbgcharts)
 
@@ -247,7 +247,6 @@ server <- function(input, output, session) {
   #Create list of key indicators
   
   
-  
   ind_list<-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 'student_proficient','student_proficient_nogiraffe',  'literacy_student_proficient_nogiraffe', 'literacy_student_proficient', 'math_student_proficient', 'student_proficient_70',  'student_proficient_75',
               'student_attendance',
               'presence_rate',  'absence_rate', 'sch_absence_rate', 
@@ -421,34 +420,34 @@ server <- function(input, output, session) {
   updateSelectizeInput(session, 'reg_choices', choices = indicator_labels, server = TRUE)
   updateSelectizeInput(session, 'multi_reg_choices', choices = indicator_labels, selected='4th Grade Student Knowledge', server = TRUE)
   updateSelectizeInput(session, 'control_choices', choices = append(indicator_labels, c('Log GDP per Sq km', 'Rural')), 
-                       selected=c( #"Student Attendance Rate",
-                         "Teacher Classroom Absence Rate", 
-                         "Teacher Content Knowledge", 
-                         "1st Grade Assessment Score", 
-                         "Inputs", 
-                         "Infrastructure", 
-                         "Operational Management", 
-                         "Instructional Leadership", 
-                         'Principal Knowledge of School',
-                         'Principal Management Skills', 
-                         "Teacher Intrinsic Motivation", 
-                         'Teacher Attraction (De Facto)',
-                         'Teacher Selection & Deployment (De Facto)',
-                         'Teacher Support (De Facto)', 
-                         'Teacher Evaluation (De Facto)', 
-                         'Teacher Monitoring & Accountability (De Facto)', 
-                         "Inputs and Infrastructure Standards", 
-                         "Inputs and Infrastructure Monitoring", 
-                         "School Management Clarity of Functions", 
-                         "School Management Attraction", 
-                         "School Management Selection & Deployment",
-                         "School Management Support", 
-                         "School Management Evaluation", 
-                         "Log GDP per Sq km", 
-                         "Rural"), server = TRUE)
+                       selected=c( "Student Attendance Rate",
+                                   "Teacher Classroom Presence Rate", 
+                                   "Teacher Content Knowledge", 
+                                   'Teacher Pedagogical Score',
+                                   "1st Grade Assessment Score", 
+                                   "Inputs", 
+                                   "Infrastructure", 
+                                   "Operational Management", 
+                                   "Instructional Leadership", 
+                                   'Principal Knowledge of School',
+                                   'Principal Management Skills', 
+                                   "Teacher Intrinsic Motivation", 
+                                   'Teacher Attraction (De Facto)',
+                                   'Teacher Selection & Deployment (De Facto)',
+                                   'Teacher Support (De Facto)', 
+                                   'Teacher Evaluation (De Facto)', 
+                                   'Teacher Monitoring & Accountability (De Facto)', 
+                                   "Inputs and Infrastructure Standards", 
+                                   "Inputs and Infrastructure Monitoring", 
+                                   "School Management Clarity of Functions", 
+                                   "School Management Attraction", 
+                                   "School Management Selection & Deployment",
+                                   "School Management Support", 
+                                   "School Management Evaluation", 
+                                   "Log GDP per Sq km", 
+                                   "Rural"), server = TRUE)
   
   updateSelectizeInput(session, 'sub_reg_choices', choices = main_indicator_labels, server = TRUE)
-  
   
   #updateSelectizeInput(session, 'multi_reg_choices', choices = main_indicator_labels, server = TRUE)
   
@@ -507,7 +506,7 @@ server <- function(input, output, session) {
   dat <- reactive({
     if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
       
-      if (input$stud_level=="Non") {
+      if (input$stud_level=="No") {
         
         if (input$gender=="All") {
           
@@ -525,7 +524,7 @@ server <- function(input, output, session) {
         
         #need to modify this depending on country
         
-        if (input$explorer_weights=="Non") {
+        if (input$explorer_weights=="No") {
           #add function to produce weighted summary stats
           df <- df %>%
             mutate(ipw=1)
@@ -543,7 +542,7 @@ server <- function(input, output, session) {
             filter(urban_rural=="Urban")  
         }
         
-      } else if (input$stud_level=="Oui") {
+      } else if (input$stud_level=="Yes") {
         if (input$gender=="All") {
           
           df<-assess_4th_grade_anon_anon
@@ -562,7 +561,7 @@ server <- function(input, output, session) {
         #need to modify this depending on country
         
         
-        if (input$explorer_weights=="Non") {
+        if (input$explorer_weights=="No") {
           #add function to produce weighted summary stats
           df <- df %>%
             mutate(ipw=1)
@@ -645,7 +644,7 @@ server <- function(input, output, session) {
   ##########################
   
   #Get metadata from github
-  indicator_choices<-read_csv('indicators_choices_fr.csv')
+  indicator_choices<-read_csv('indicators_choices.csv')
   
   #Display metadata for indicator
   indicator_choices <- indicator_choices %>%
@@ -653,7 +652,7 @@ server <- function(input, output, session) {
   
   names(indicator_choices)<-make.names(names(indicator_choices), unique=TRUE)
   
-   
+  
   get_meta <- reactive({
     
     get_meta_df<-indicator_choices %>%
@@ -742,7 +741,7 @@ server <- function(input, output, session) {
         
       ) +
       expand_limits(x = 0, y = 0) +
-      ggtitle("Fonctions de densité de probabilité des indicateurs du tableau de bord") +
+      ggtitle("Probability Density Functions of Dashboard Indicators") +
       labs(colour = "Indicator")
     
     p
@@ -793,7 +792,7 @@ server <- function(input, output, session) {
         text = element_text(size = 16),
       ) +
       expand_limits(x = 0, y = 0) +
-      ggtitle("Boxplot des indicateurs du tableau de bord")+
+      ggtitle("Boxplot of Dashboard Indicators")+
       xlab("Indicator") +
       coord_flip()
     
@@ -831,7 +830,7 @@ server <- function(input, output, session) {
     
     if (!(str_sub(get_tag()[1],1,1) %in% c('B'))) {
       sum_items<-colnames(dat()[,grep(x=colnames(dat()), pattern="m1s?q?|m2s?q?|m3s?q?|m4s?q?|m5s?q?|m6s?q?|m7s?q?|m8s?q?")])
-      #metadata<-metadta
+      metadata<-metadta
       
       #need to modify this depending on country
       temp_df<-dat()
@@ -842,7 +841,7 @@ server <- function(input, output, session) {
       
       sch_ipw<-weights$ipw 
       
-      if (input$explorer_weights=="Oui") {
+      if (input$explorer_weights=="Yes") {
         #add function to produce weighted summary stats
         my_skim<-    skim_with( numeric = sfl( mean = ~ wtd.mean(.,  w=sch_ipw, na.rm=TRUE),
                                                sd = ~ sqrt(wtd.var(.,  weights=sch_ipw, na.rm=TRUE)),
@@ -887,9 +886,9 @@ server <- function(input, output, session) {
     sumstats_df <- sumstats_df %>%
       mutate(name=variable,
              indicators=variable) %>%
-      #left_join(metadata) %>%
+      left_join(metadata) %>%
       left_join(labels_df) %>%
-      mutate(varlabel=indicator_labels) %>%
+      mutate(varlabel=if_else(is.na(varlabel),as.character(indicator_labels),as.character(varlabel))) %>%
       select(variable, varlabel, mean, sd, p0, p25, p50, p75, p100, complete, hist)
     
     DT::datatable(sumstats_df, caption="Summary Statistics of Key Indicator Variables and Components of Indicator",
@@ -926,8 +925,8 @@ server <- function(input, output, session) {
                        outline.color = "white",
                        ggtheme = theme_bw(),
                        colors = c("#F8696B", "#FFEB84", "#63BE7B"),
-                       legend.title = "Corrélation",
-                       title = "Corrélation entre les éléments du questionnaire") + 
+                       legend.title = "Correlation",
+                       title = "Correlation Between Questionnaire Items") + 
       bbc_style() +
       theme(
         text = element_text(size = 16),
@@ -996,7 +995,7 @@ server <- function(input, output, session) {
       
       
       
-      if (input$explorer_weights=="Non") {
+      if (input$explorer_weights=="No") {
         #add function to produce weighted summary stats
         df_reg <- df_reg %>%
           mutate(ipw=1)
@@ -1103,8 +1102,8 @@ server <- function(input, output, session) {
         
       ) +
       expand_limits(x = 0, y = 0) +
-      ggtitle(str_wrap(paste0("Régression linéaire des indicateurs du tableau de bord sur les sous-indicateurs pour ", input$reg_choices),50)) +
-      labs(colour = "Indicateur") +
+      ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on Subindicators for ", input$reg_choices),50)) +
+      labs(colour = "Indicator") +
       ylab(input$reg_choices) +
       geom_richtext(
         aes(x=1,y=5,label = eq_plot_txt(na.omit(df_reg_plot_dta), y, values), hjust=0.2)
@@ -1180,13 +1179,13 @@ server <- function(input, output, session) {
   #select either dataset that is imputed or raw, unimputed, dataset
   dat_for_regs <- reactive({
     
-    if (input$imputed=="Oui") {
+    if (input$imputed=="Yes") {
       
       school_dta_short_imp_anon
       
-    } else if (input$imputed=="Non") {
+    } else if (input$imputed=="No") {
       
-      if (input$stud_level_reg=="Oui") {
+      if (input$stud_level_reg=="Yes") {
         
         school_dta_short_merge <- school_dta_short_anon %>%
           select(-c('student_knowledge', 'math_student_knowledge', 'literacy_student_knowledge', 
@@ -1229,7 +1228,7 @@ server <- function(input, output, session) {
       select(hashed_school_code, as.character(get_tag_outcome()[1]), ipw, province, urban_rural ) %>%
       rename(y=2) 
     
-    if (input$explorer_weights=="Non") {
+    if (input$explorer_weights=="No") {
       #add function to produce weighted summary stats
       df_mult_reg <- df_mult_reg %>%
         mutate(ipw=1)
@@ -1248,7 +1247,7 @@ server <- function(input, output, session) {
       select(hashed_school_code, GDP) %>%
       mutate(GDP=if_else(GDP>0,log(GDP),log(0.0001)))
     
-    if (input$province_dummies=="Non") {
+    if (input$province_dummies=="No") {
       df_multi_reg <- dat_for_regs() %>%
         left_join(gdp) %>%
         select(one_of(get_tag_mult_cov()), hashed_school_code) %>%
@@ -1259,7 +1258,7 @@ server <- function(input, output, session) {
       my_formula <- as.formula(paste('y ~ ', paste(get_tag_mult_cov(), collapse=" + "), sep=""))
       multi_reg<-lm_robust(my_formula, df_multi_reg, weights = dat_mult_reg()$ipw, se_type='HC2')   
       
-    } else if (input$province_dummies=="Oui") {
+    } else if (input$province_dummies=="Yes") {
       df_multi_reg <- dat_for_regs() %>%
         left_join(gdp) %>%
         select(one_of(get_tag_mult_cov()), hashed_school_code) %>%
@@ -1305,12 +1304,12 @@ server <- function(input, output, session) {
                    "impartial_decision_making" = "Impartial Decision Making",
                    "mandates_accountability"= "Mandates & Accountability"),
                  gof_map = gm,
-                 title = "Régression OLS multivariée utilisant les données GEPD au niveau des écoles",
-                 notes= c("Observations pondérées à l'aide des poids d'échantillonnage.",
-                          "Erreurs standard robustes à l'hétéroscédasticité entre parenthèses", 
-                          "Le logarithme du PIB par km² est le logarithme du PIB en 2010 dans un rayon d'un kilomètre carré autour de l'école.", 
-                          "Les mesures du PIB ont été produites par des chercheurs du DECRG de la Banque mondiale.",  
-                          "Données disponibles ici : https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010")
+                 title = "Multivariate OLS Regression using School Level GEPD Data",
+                 notes= c('Observations weighted using sampling weights.',
+                          'Heteroskedasticity robust standard errors in parenthesis.', 
+                          'Log GDP per Sq km is the log of GDP in 2010 within a one square kilometer radius of the school.', 
+                          'GDP measures were produced by researchers at the World Bank DECRG.',  
+                          'Data available here:  https://datacatalog.worldbank.org/dataset/gross-domestic-product-2010')
     ) %>%
       theme_vanilla() %>%
       autofit() %>%
@@ -1378,7 +1377,7 @@ server <- function(input, output, session) {
       select(hashed_school_code, as.character(get_tag_sub_reg()[1]), ipw ) %>%
       rename(y=2) 
     
-    if (input$explorer_weights=="Non") {
+    if (input$explorer_weights=="No") {
       #add function to produce weighted summary stats
       df_sub_reg <- df_sub_reg %>%
         mutate(ipw=1)
@@ -1406,7 +1405,7 @@ server <- function(input, output, session) {
     
     stargazer( scoring_reg, type = "html",
                se        = list(robust_se),
-               title = "Régressions des variables de l'indicateur sur un ensemble de sous-indicateurs",
+               title = "Regressions of Indicator variables on Set of Sub-Indicators",
                column.labels = input$sub_reg_choices
     )
     
@@ -1519,8 +1518,8 @@ server <- function(input, output, session) {
                                           color="#222222")
       ) +
       xlab(input$indicators) +
-      ylab('Score du premier facteur') +
-      ggtitle(str_wrap(paste0("Régression linéaire des indicateurs du tableau de bord sur le premier facteur pour  ", input$indicators)),45) +
+      ylab('First Factor Score') +
+      ggtitle(str_wrap(paste0("Linear Regression of Dashboard Indicators on First Factor for ", input$indicators)),45) +
       stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                    label.x.npc = "right", label.y.npc = 0.2,
                    formula = 'y~x', parse = TRUE, size = 5) 
@@ -1538,7 +1537,7 @@ server <- function(input, output, session) {
   # Downloadable png of selected dataset ----
   output$downloadfa <- downloadHandler(
     filename = function() {
-      paste('Tracé du score des facteurs - ',input$indicators," - ",input$subgroup, ".png", sep = "")
+      paste('Factor Score Plot - ',input$indicators," - ",input$subgroup, ".png", sep = "")
     },
     content = function(file) {
       ggsave(file, plot = fa_plot(), device = "png", width=16, height=12)
@@ -1566,9 +1565,37 @@ server <- function(input, output, session) {
   #create subset with just main indicators
   
   
-  main_indicator_labels2<-c(
-      
-    "Compétence à l'évaluation GEPD","Fréquentation des étudiants\n","Effort des enseignants","Connaissance du contenu","Compétences pédagogiques","Fournitures de base","Infrastructure de base","Capacité d'apprentissage","Fréquentation des étudiants","Gestion opérationnelle","Leadership pédagogique","Pratiques de gestion","Levier politique (enseignement) - Attrait de la profession\n","Levier politique (Enseignement) - Recrutement & carrière\n","Levier politique (Enseignement) - Soutien\n","Levier politique (Enseignement) - Évaluation\n","Levier politique (Enseignement) - Surveillance et reddition de comptes\n","Levier politique (enseignement) - Motivation intrinsèque","Levier politique (intrants et infrastructure) - Standards\n","Levier de politique (intrants et infrastructure) - Surveillance\n","Levier de la politique (Gestion des écoles) - Clarté des fonctions","Levier politique (Gestion des écoles) - Attrait de la profession\n","Levier politique (gestion scolaire) - Recrutement & carrière\n","Levier de politique (gestion scolaire) - Soutien","Levier de politique (gestion scolaire) - Évaluation","Politique et capacité bureaucratique - Qualité de l´administration publique\n","Capacité politique et bureaucratique - Prise de décision impartiale\n","Politique et capacité bureaucratique - Mandats & Reddition de comptes\n","Politique et capacité bureaucratique - Objectifs nationaux d'apprentissage"
+  main_indicator_labels2<-c('Proficiency on GEPD Assessment', 
+                            'Student Attendance',
+                            'Teacher Presence', 
+                            "Teacher Content Knowledge", 
+                            "Teacher Pedagogical Skills",
+                            'Student Readiness', 
+                            'Basic Inputs', 
+                            'Basic Infrastructure', 
+                            'Operational Management', 
+                            'Instructional Leadership', 
+                            'Principal Knowledge of School',
+                            'Principal Management Skills', 
+                            'Policy Lever (Teaching) - Attraction',
+                            'Policy Lever (Teaching) - Selection & Deployment',
+                            'Policy Lever (Teaching) - Support', 
+                            'Policy Lever (Teaching) - Evaluation', 
+                            'Policy Lever (Teaching) - Monitoring & Accountability', 
+                            'Policy Lever (Teaching) - Intrinsic Motivation', 
+                            'Policy Lever (Inputs & Infrastructure) - Standards',
+                            'Policy Lever (Inputs & Infrastructure) - Monitoring',
+                            "Policy Lever (School Management) - Clarity of Functions", 
+                            'Policy Lever (School Management) - Attraction' ,                   
+                            'Policy Lever (School Management) - Selection & Deployment'  ,      
+                            'Policy Lever (School Management) - Support' ,                      
+                            'Policy Lever (School Management) - Evaluation'    ,
+                            'Politics & Bureaucratic Capacity - National Learning Goals' ,
+                            'Politics & Bureaucratic Capacity - Mandates & Accountability'   ,  
+                            'Politics & Bureaucratic Capacity - Characteristics of Bureaucracy'    ,    
+                            'Politics & Bureaucratic Capacity - Impartial Decision-Making'    
+                            
+                            
   ) 
   
   
@@ -1594,7 +1621,7 @@ server <- function(input, output, session) {
                      values_to='value') 
       
       
-      if (input$table_weights=="Oui") {
+      if (input$table_weights=="Yes") {
         #add function to produce weighted summary stats
         temp %>%
           as_survey_design(strata=strata,
@@ -1648,10 +1675,10 @@ server <- function(input, output, session) {
         select(varlabel, mean, ci, mean_urban, ci_urban, mean_rural, ci_rural)  
     }
     
-    strat=c('district', 'urban_rural')
+    strat=c('province', 'urban_rural')
     
     # School Survey
-    #metadata<-metadta
+    metadata<-metadta
     
     
     sumstats_school <- school_dta_short_anon %>%
@@ -1709,15 +1736,15 @@ server <- function(input, output, session) {
       class = 'display',
       thead(
         tr(
-          th( rowspan = 2, 'Indicateur'),
-          th( rowspan = 2, 'Plage de valeurs'),
-          th(colspan = 2, 'En général'),
-          th(colspan = 2, 'Urbain'),
+          th( rowspan = 2, 'Indicator'),
+          th( rowspan = 2, 'Value Range'),
+          th(colspan = 2, 'Overall'),
+          th(colspan = 2, 'Urban'),
           th(colspan = 2, 'Rural'),
-          th(rowspan = 2, str_wrap('Rapport entre les zones rurales et urbaines',10))
+          th(rowspan = 2, str_wrap('Ratio of Rural to Urban',10))
         ),
         tr(
-          lapply(rep(c('Moyenne Statistique', 'Intervalle de confiance à 95'), 3), th)
+          lapply(rep(c('Mean', '95% Confident Interval'), 3), th)
         )
       )
     ))
@@ -1729,7 +1756,7 @@ server <- function(input, output, session) {
     clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
       {paste0("rgb(255,", ., ",", ., ")")}
     
-    DT::datatable(sumstats_df, caption="Statistiques sommaires des indicateurs du tableau de bord - Madagascar 2021",
+    DT::datatable(sumstats_df, caption="Summary Statistics of Dashboard Indicators - Niger 2022",
                   container = sketch, rownames=FALSE,
                   class='cell-border stripe',
                   escape = FALSE,
@@ -1753,19 +1780,18 @@ server <- function(input, output, session) {
   
   output$indicators_choices <- DT::renderDataTable({
     
-    indicator_choices_table<-read_delim('indicators_choices_fr.md', delim="|")
+    indicator_choices_table<-read_csv('indicators_choices.csv')
     
     
     
     #Display metadata for indicator
     indicator_choices_table <- indicator_choices_table %>%
       dplyr::filter(Series!="---") %>%
-      dplyr::select(-Series ) %>%
-      select(-`...1`) %>%
-      rename(name=Indicator.Name ) %>%
-      #dplyr::filter(name %in% main_indicator_labels2) %>%
+      dplyr::select(-Series) %>%
+      rename(name='Indicator.Name' ) %>%
+      dplyr::filter(name %in% main_indicator_labels2) %>%
       arrange(factor(name, levels=main_indicator_labels2)) %>%
-      rename(" Nom de l'indicateur "=name ) 
+      rename('Indicator Name'=name ) 
     
     
     
@@ -1773,7 +1799,7 @@ server <- function(input, output, session) {
     if (length(s)) {
       indicator_choices_table <- indicator_choices_table[s,]
     }
-    DT::datatable(indicator_choices_table, caption="Notation des indicateurs",
+    DT::datatable(indicator_choices_table, caption="Indicator Scoring",
                   rownames=FALSE,
                   class='cell-border stripe',
                   escape = FALSE,
