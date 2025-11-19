@@ -87,8 +87,8 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
          evaluation_criteria=read_var(a12),
          negative_evaluations=read_var(a14),
          positive_evaluations=read_var(a16)) %>%
-  mutate(teaching_evaluation=evaluation_law + evaluation_law_school+evaluation_criteria/5+
-           negative_evaluations+positive_evaluations) 
+  mutate(teaching_evaluation=1+4/5*(evaluation_law + evaluation_law_school+evaluation_criteria/5+
+           negative_evaluations+positive_evaluations)) 
 
 #Teacher Monitoring
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
@@ -247,15 +247,11 @@ expert_dta_learners_final <- expert_dta_learners_final %>%
   mutate(immunization=read_var(d6),
          healthcare_young_children=read_var(d7),
          deworming=read_var(d8),
-<<<<<<< HEAD
          antenatal_skilled_delivery=read_var(d9),
          antenatal_skilled_delivery = case_when(
            antenatal_skilled_delivery == 2 ~ 1,
            antenatal_skilled_delivery == 1 ~ 0.5,
            TRUE ~ antenatal_skilled_delivery)) %>%
-=======
-         antenatal_skilled_delivery=read_var(d9)) %>%
->>>>>>> paper_updates
   mutate(health_programs=1+4/3*(immunization + healthcare_young_children + 0.5*antenatal_skilled_delivery))
 
 

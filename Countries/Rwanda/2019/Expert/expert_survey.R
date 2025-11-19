@@ -63,8 +63,8 @@ expert_dta_teachers_final <- expert_dta_teachers_final %>%
          evaluation_criteria=5, #adjusting it manually to match the scoring logic from the updated workflow
          negative_evaluations=read_var(A14),
          positive_evaluations=read_var(A16)) %>%
-  mutate(teaching_evaluation=evaluation_law + evaluation_law_school+evaluation_criteria/5+
-           negative_evaluations+positive_evaluations) 
+  mutate(teaching_evaluation=1+4/5*(evaluation_law + evaluation_law_school+evaluation_criteria/5+
+           negative_evaluations+positive_evaluations)) 
 
 #Teacher Monitoring
 expert_dta_teachers_final <- expert_dta_teachers_final %>%
