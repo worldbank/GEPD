@@ -69,9 +69,8 @@ ind_dta_list<-c(ind_dta_list, c("final_indicator_data_ATTD_M", "final_indicator_
                                 "final_indicator_data_ILDR_micro"))
 
 
-data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
-             'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights',
-             'school_dta_raw', 'ecd_dta_raw', 'assess_4th_grade_dta_raw', 'teacher_assessment_dta_raw', 'teacher_questionnaire_raw'
+data_list<-c(ind_dta_list,'school_dta', 'school_dta_short', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
+             'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights'
              )
 
 #define function to create weights for summary statistics
@@ -92,7 +91,7 @@ data_set_updated <- read_csv(paste(sample_folder, '/GEPD_GAB_weights_revised_', 
 )  %>% 
   left_join(school_codes, by = c("school_code")) %>%
   select(school_code, Province, private, public, rural ,urban_rural,
-         ipw, strata_prob) 
+         ipw, strata_prob, strata_count) 
 
 
 
@@ -231,5 +230,5 @@ for (i in data_list ) {
   }
 }
 
-save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
-save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data///School/school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list,'indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+save(list=c(anon_dta_list,'indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data///School/school_indicators_data_anon.RData"))

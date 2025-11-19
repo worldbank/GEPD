@@ -11,24 +11,16 @@ library(writexl)
 options(survey.lonely.psu = "adjust")
 
 indicator_means <- function(variable, dataset, tag,  unit) {
-  
-  
   if (dataset=='school') {
-    
-    
     if (unit=="All") {
+      stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) 
       
-      stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep=""))
-      
-
     } else if (unit=="Female") {
+      stat_df<-get(paste("final_indicator_data_",tag, "_F", "_anon", sep="")) 
       
-      stat_df<-get(paste("final_indicator_data_",tag, "_F", "_anon", sep=""))
-
     } else if (unit=="Male") {
+      stat_df<-get(paste("final_indicator_data_",tag, "_M", "_anon", sep="")) 
       
-      stat_df<-get(paste("final_indicator_data_",tag, "_M", "_anon", sep=""))
-
     } else if (unit=="Rural") {
       
       stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
@@ -40,66 +32,273 @@ indicator_means <- function(variable, dataset, tag,  unit) {
         filter(urban_rural=="Urban")
       
     } else if (unit=="Custom") {
-      
       stat_df<-get(paste(tag)) 
-      
     }
-    r <- eval(substitute(variable), stat_df, parent.frame())
     
-    weights <- stat_df$ipw
+    variable_quo <- enquo(variable)
     
-    wtd.mean(r, weights=weights, na.rm=T)
+    #now bring in the weights similar to what we were using in the new workflow
+    #4th grade assessment
+    if (tag == "LERN_micro") {
+      stat_df <- stat_df %>%
+        mutate(school_weight = ipw, #adjusted in the anonimization file to remove student count
+               g4_comb_weight=school_weight*g4_stud_weight_component,
+               VALUE = !!variable_quo) %>%
+        filter(!is.na(school_weight)) %>%
+        filter(!is.na(g4_stud_weight_component)) %>%
+        filter(!is.infinite(school_weight)) %>%
+        filter(!is.na(strata_count)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        select(VALUE, strata, school_weight, g4_stud_weight_component, hashed_school_code, fourth_grade_assessment__id) %>%
+        pivot_longer(
+          cols = "VALUE",
+          names_to = "indicators",
+          values_to = "value"
+        )   %>%
+        as_survey_design(
+          id = c(hashed_school_code, fourth_grade_assessment__id),
+          strata = strata,
+          weight = c(school_weight, g4_stud_weight_component)
+        ) %>%
+        ungroup() %>%
+        summarise(
+          mean = survey_mean(value, na.rm = T, vartype = c("se", "ci", "var")),
+          #N = sum(!(is.na(value) | is.na(school_weight) | is.na(g4_stud_weight_component)))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }  
+    #absence
+    if (tag == "EFFT_micro") {
+      stat_df <- stat_df %>%
+        mutate(
+          school_weight =  ipw,
+          VALUE = !!variable_quo
+        ) %>%
+        filter(!is.na(school_weight),
+               !is.na(abs_weight_component),
+               !is.infinite(abs_weight_component),
+               !is.na(strata_count),
+               !is.infinite(school_weight),
+               !is.na(VALUE)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        as_survey_design(
+          id = c(hashed_school_code, TEACHERS__id),
+          strata = strata,
+          weight = c(school_weight, abs_weight_component)
+        ) %>%
+        summarise(
+          mean = survey_mean(VALUE, na.rm = TRUE, vartype = c("se", "ci", "var"))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }
+    #teacher questionnaire 
+    if (tag %in% c("ILDR_micro", "TATT_micro", "TSDP_micro", "TSUP_micro", "TEVL_micro", "TMNA_micro", "TINM_micro")) {
+      stat_df <- stat_df %>%
+        mutate(school_weight =  ipw,
+               VALUE = !!variable_quo) %>%
+        filter(!is.na(school_weight),
+               !is.na(strata_count)) %>%
+        filter(!is.na(teacher_weight_component)) %>%
+        filter(!is.infinite(school_weight)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        select(VALUE, strata, school_weight, teacher_weight_component, hashed_school_code, questionnaire_roster__id) %>%
+        pivot_longer(
+          cols = "VALUE",
+          names_to = "indicators",
+          values_to = "value"
+        )   %>%
+        as_survey_design(
+          id = c(hashed_school_code, questionnaire_roster__id),
+          strata = strata,
+          weight = c(school_weight, teacher_weight_component)
+        ) %>%
+        ungroup() %>%
+        summarise(
+          mean = survey_mean(value, na.rm = T, vartype = c("se", "ci", "var")),
+          #N = sum(!(is.na(value) | is.na(school_weight) | is.na(teacher_weight_component)))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }
+    #teacher content knowledge
+    if (tag %in% c("CONT_micro")) {
+      stat_df <- stat_df %>%
+        mutate(school_weight = ipw,
+               VALUE = !!variable_quo) %>%
+        filter(!is.na(school_weight), 
+               !is.na(strata_count)) %>%
+        filter(!is.na(teacher_weight_component)) %>%
+        filter(!is.infinite(school_weight)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        select(VALUE, strata, school_weight, teacher_weight_component, hashed_school_code, teacher_assessment_answers__id) %>%
+        pivot_longer(
+          cols = "VALUE",
+          names_to = "indicators",
+          values_to = "value"
+        )   %>%
+        as_survey_design(
+          id = c(hashed_school_code, teacher_assessment_answers__id),
+          strata = strata,
+          weight = c(school_weight, teacher_weight_component)
+        ) %>%
+        ungroup() %>%
+        summarise(
+          mean = survey_mean(value, na.rm = T, vartype = c("se", "ci", "var")),
+          #N = sum(!(is.na(value) | is.na(school_weight) | is.na(teacher_weight_component)))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }
+    #pedagogy
+    if (tag == "PEDG") {
+      
+      stat_df <- stat_df %>%
+        mutate(
+          school_weight = ipw,
+          teachers_id = 1,
+          VALUE = !!variable_quo
+        ) %>%
+        filter(!is.na(school_weight),
+               !is.na(strata_count),
+               !is.na(teacher_obs_weight_component),
+               !is.infinite(school_weight)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        select(VALUE, strata, school_weight, teacher_obs_weight_component, hashed_school_code, teachers_id) %>%
+        pivot_longer(cols = "VALUE", names_to = "indicators", values_to = "value") %>%
+        as_survey_design(
+          id = c(hashed_school_code, teachers_id),
+          strata = strata,
+          weight = c(school_weight, teacher_obs_weight_component)
+        ) %>%
+        ungroup() %>%
+        summarise(
+          mean = survey_mean(value, na.rm = TRUE, vartype = c("se", "ci", "var"))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }
+    #first grade assessment 
+    if (tag == "LCAP_micro") {
+      stat_df <- stat_df %>%
+        mutate(school_weight = ipw,
+               VALUE = !!variable_quo) %>%
+        filter(!is.na(school_weight), 
+               !is.na(strata_count)) %>%
+        filter(!is.na(g1_stud_weight_component)) %>%
+        filter(!is.infinite(school_weight)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        select(VALUE, strata, school_weight, g1_stud_weight_component, hashed_school_code, ecd_student_number) %>%
+        pivot_longer(
+          cols = "VALUE",
+          names_to = "indicators",
+          values_to = "value"
+        )   %>%
+        as_survey_design(
+          id = c(hashed_school_code, ecd_student_number),
+          strata = strata,
+          weight = c(school_weight, g1_stud_weight_component)
+        ) %>%
+        ungroup() %>%
+        summarise(
+          mean = survey_mean(value, na.rm = T, vartype = c("se", "ci", "var")),
+          #N = sum(!(is.na(value) | is.na(school_weight) | is.na(teacher_obs_weight_component)))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }
+    #all school categories
+    if (tag %in% c("INPT", "INFR", "ATTD", "OPMN", "PKNW", "PMAN", "ISTD", "IMON", "SCFN", "SATT", "SSLD", "SSUP", "SEVL", "school_dta_anon")) {
+      stat_df <- stat_df %>%
+        mutate(school_weight = ipw,
+               VALUE = !!variable_quo) %>%
+        filter(!is.na(school_weight), 
+               !is.na(strata_count)) %>%
+        filter(!is.infinite(school_weight)) %>%
+        mutate(strata = factor(strata_count)) %>%
+        select(VALUE, strata, school_weight, hashed_school_code) %>%
+        pivot_longer(
+          cols = "VALUE",
+          names_to = "indicators",
+          values_to = "value"
+        )   %>%
+        as_survey_design(
+          strata = strata,
+          weight = c(school_weight)
+        ) %>%
+        ungroup() %>%
+        summarise(
+          mean = survey_mean(value, na.rm = T, vartype = c("se", "ci", "var")),
+          #N = sum(!(is.na(value) | is.na(school_weight) | is.na(teacher_obs_weight_component)))
+        ) %>%
+        pull(mean)
+      
+      return(stat_df)
+    }
+    # else {
+    #   r <- eval(substitute(variable), stat_df, parent.frame())
+    # 
+    # weights <- stat_df$ipw
+    # 
+    # wtd.mean(r, weights=weights, na.rm=T)
+    # }
     
-  } else if (dataset== 'public_officials') {
-    
+    #public officials
+  } else if (dataset == "public_officials") {
     if (unit=="All") {
-      
       stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep=""))
-      
-
     } else if (unit=="central") {
-      
       stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
         filter(govt_tier=="Ministry of Education (or equivalent)")
-      
     } else if (unit=="regional") {
-      
       stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
         filter(rural=='Regional office (or equivalent)')
-      
     }
     else if (unit=="district") {
-      
       stat_df<-get(paste("final_indicator_data_",tag, "_anon", sep="")) %>%
         filter(rural=='District office (or equivalent)')
-      
     }
-    r <- eval(substitute(variable), stat_df, parent.frame())
+    # r <- eval(substitute(variable), stat_df, parent.frame())
+    # 
+    # # produce weights of 1 for all observations
+    # stat_df<-stat_df %>%
+    #   mutate(ipw=1)
+    # 
+    # weights <- stat_df$ipw
+    # 
+    # wtd.mean(r, weights=weights, na.rm=T)
     
-    #produce weights of 1 for all observations
-    stat_df<-stat_df %>%
-      mutate(ipw=1)
+    variable_quo <- enquo(variable)
     
-    weights <- stat_df$ipw
+    stat_df <- stat_df %>%
+      mutate(ipw = 1,
+             VALUE = !!variable_quo) %>%
+      select(VALUE, ipw) %>%
+      pivot_longer(
+        cols = "VALUE",
+        names_to = "indicators",
+        values_to = "value"
+      )   %>%
+      as_survey_design(
+        weight = ipw
+      ) %>%
+      ungroup() %>%
+      summarise(
+        mean = survey_mean(value, na.rm = T, vartype = c("se", "ci", "var")),
+        #N = sum(!(is.na(value) | is.na(school_weight) | is.na(g4_stud_weight_component)))
+      ) %>%
+      pull(mean)
     
-    wtd.mean(r, weights=weights, na.rm=T)
-    
-  } 
-  
+    return(stat_df)
+  }  
 }
-
-#test <- final_indicator_data_CONT
-
-
-
-#Create a function which will generate new binary variable using case_when, but 
-#if value is misisng it will generate binary variable to be missing
-#This is done a lot so will create function for it.
-#e.g. school_absent=case_when(
-#         m2sbq6_efft==6  ~ 1,
-#         m2sbq6_efft!=6   ~ 0,
-#         is.na(m2sbq6_efft) ~ as.numeric(NA))
-
 
 bin_var <- function(var, val) {
   case_when(
@@ -159,22 +358,22 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.LERN     = indicator_means(student_proficient, "school", "LERN",  "All"),
-      SE.PRM.LERN.1   = indicator_means(student_proficient, "school", "LERN",  "All"),
-      SE.PRM.LERN.1.F = indicator_means(student_proficient, "school", "LERN",  "Male"),
-      SE.PRM.LERN.1.M = indicator_means(student_proficient, "school", "LERN",  "Male"),
-      SE.PRM.LERN.1.R = indicator_means(student_proficient, "school", "LERN",  "Rural"),
-      SE.PRM.LERN.1.U = indicator_means(student_proficient, "school", "LERN",  "Urban"),
-      SE.PRM.LERN.2   = indicator_means(literacy_student_proficient, "school", "LERN",  "All"),  
-      SE.PRM.LERN.2.F = indicator_means(literacy_student_proficient, "school", "LERN",  "Female"),
-      SE.PRM.LERN.2.M = indicator_means(literacy_student_proficient, "school", "LERN",  "Male"),
-      SE.PRM.LERN.2.R = indicator_means(literacy_student_proficient, "school", "LERN",  "Rural"),
-      SE.PRM.LERN.2.U = indicator_means(literacy_student_proficient, "school", "LERN",  "Urban"),
-      SE.PRM.LERN.3   = indicator_means(math_student_proficient, "school", "LERN",  "All"),
-      SE.PRM.LERN.3.F = indicator_means(math_student_proficient, "school", "LERN",  "Female"),
-      SE.PRM.LERN.3.M = indicator_means(math_student_proficient, "school", "LERN",  "Male"),
-      SE.PRM.LERN.3.R = indicator_means(math_student_proficient, "school", "LERN",  "Rural"),
-      SE.PRM.LERN.3.U = indicator_means(math_student_proficient, "school", "LERN",  "Urban")
+      SE.PRM.LERN     = indicator_means(student_proficient, "school", "LERN_micro",  "All"),
+      SE.PRM.LERN.1   = indicator_means(student_proficient, "school", "LERN_micro",  "All"),
+      SE.PRM.LERN.1.F = indicator_means(student_proficient, "school", "LERN_micro",  "Male"),
+      SE.PRM.LERN.1.M = indicator_means(student_proficient, "school", "LERN_micro",  "Male"),
+      SE.PRM.LERN.1.R = indicator_means(student_proficient, "school", "LERN_micro",  "Rural"),
+      SE.PRM.LERN.1.U = indicator_means(student_proficient, "school", "LERN_micro",  "Urban"),
+      SE.PRM.LERN.2   = indicator_means(literacy_student_proficient, "school", "LERN_micro",  "All"),  
+      SE.PRM.LERN.2.F = indicator_means(literacy_student_proficient, "school", "LERN_micro",  "Female"),
+      SE.PRM.LERN.2.M = indicator_means(literacy_student_proficient, "school", "LERN_micro",  "Male"),
+      SE.PRM.LERN.2.R = indicator_means(literacy_student_proficient, "school", "LERN_micro",  "Rural"),
+      SE.PRM.LERN.2.U = indicator_means(literacy_student_proficient, "school", "LERN_micro",  "Urban"),
+      SE.PRM.LERN.3   = indicator_means(math_student_proficient, "school", "LERN_micro",  "All"),
+      SE.PRM.LERN.3.F = indicator_means(math_student_proficient, "school", "LERN_micro",  "Female"),
+      SE.PRM.LERN.3.M = indicator_means(math_student_proficient, "school", "LERN_micro",  "Male"),
+      SE.PRM.LERN.3.R = indicator_means(math_student_proficient, "school", "LERN_micro",  "Rural"),
+      SE.PRM.LERN.3.U = indicator_means(math_student_proficient, "school", "LERN_micro",  "Urban")
     )
   
   
@@ -184,17 +383,17 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.EFFT     = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "All"),
-      SE.PRM.EFFT.1   = 100-indicator_means(absence_rate, "school", "EFFT",  "All"),
-      SE.PRM.EFFT.1.F = 100-indicator_means(absence_rate, "school", "EFFT",  "Female"),
-      SE.PRM.EFFT.1.M = 100-indicator_means(absence_rate, "school", "EFFT",  "Male"),
-      SE.PRM.EFFT.1.R = 100-indicator_means(absence_rate, "school", "EFFT",  "Rural"),
-      SE.PRM.EFFT.1.U = 100-indicator_means(absence_rate, "school", "EFFT",  "Urban"),
-      SE.PRM.EFFT.2   = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "All"),  
-      SE.PRM.EFFT.2.F = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "Female"),
-      SE.PRM.EFFT.2.M = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "Male"),
-      SE.PRM.EFFT.2.R = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "Rural"),
-      SE.PRM.EFFT.2.U = 100-indicator_means(sch_absence_rate, "school", "EFFT",  "Urban")
+      SE.PRM.EFFT = 100-indicator_means(sch_absence_rate, "school", "EFFT_micro",  "All"),
+      SE.PRM.EFFT.1 = 100-indicator_means(absence_rate, "school", "EFFT_micro",  "All"),
+      SE.PRM.EFFT.1.F = 100-indicator_means(absence_rate, "school", "EFFT_micro",  "Female"),
+      SE.PRM.EFFT.1.M = 100-indicator_means(absence_rate, "school", "EFFT_micro",  "Male"),
+      SE.PRM.EFFT.1.R = 100-indicator_means(absence_rate, "school", "EFFT_micro",  "Rural"),
+      SE.PRM.EFFT.1.U = 100-indicator_means(absence_rate, "school", "EFFT_micro",  "Urban"),
+      SE.PRM.EFFT.2 = 100-indicator_means(sch_absence_rate, "school", "EFFT_micro",  "All"),  
+      SE.PRM.EFFT.2.F = 100-indicator_means(sch_absence_rate, "school", "EFFT_micro",  "Female"),
+      SE.PRM.EFFT.2.M = 100-indicator_means(sch_absence_rate, "school", "EFFT_micro",  "Male"),
+      SE.PRM.EFFT.2.R = 100-indicator_means(sch_absence_rate, "school", "EFFT_micro",  "Rural"),
+      SE.PRM.EFFT.2.U = 100-indicator_means(sch_absence_rate, "school", "EFFT_micro",  "Urban")
 
     )
   
@@ -205,22 +404,22 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.CONT     = indicator_means(content_proficiency, "school", "CONT",  "All"),
-      SE.PRM.CONT.1   = indicator_means(content_proficiency, "school", "CONT",  "All"),
-      SE.PRM.CONT.1.F = indicator_means(content_proficiency, "school", "CONT",  "Female"),
-      SE.PRM.CONT.1.M = indicator_means(content_proficiency, "school", "CONT",  "Male"),
-      SE.PRM.CONT.1.R = indicator_means(content_proficiency, "school", "CONT",  "Rural"),
-      SE.PRM.CONT.1.U = indicator_means(content_proficiency, "school", "CONT",  "Urban"),
-      SE.PRM.CONT.2   = indicator_means(literacy_content_proficiency, "school", "CONT",  "All"),  
-      SE.PRM.CONT.2.F = indicator_means(literacy_content_proficiency, "school", "CONT",  "Female"),
-      SE.PRM.CONT.2.M = indicator_means(literacy_content_proficiency, "school", "CONT",  "Male"),
-      SE.PRM.CONT.2.R = indicator_means(literacy_content_proficiency, "school", "CONT",  "Rural"),
-      SE.PRM.CONT.2.U = indicator_means(literacy_content_proficiency, "school", "CONT",  "Urban"),
-      SE.PRM.CONT.3   = indicator_means(math_content_proficiency, "school", "CONT",  "All"),
-      SE.PRM.CONT.3.F = indicator_means(math_content_proficiency, "school", "CONT",  "Female"),
-      SE.PRM.CONT.3.M = indicator_means(math_content_proficiency, "school", "CONT",  "Male"),
-      SE.PRM.CONT.3.R = indicator_means(math_content_proficiency, "school", "CONT",  "Rural"),
-      SE.PRM.CONT.3.U = indicator_means(math_content_proficiency, "school", "CONT",  "Urban")
+      SE.PRM.CONT     = indicator_means(content_proficiency, "school", "CONT_micro",  "All"),
+      SE.PRM.CONT.1   = indicator_means(content_proficiency, "school", "CONT_micro",  "All"),
+      SE.PRM.CONT.1.F = indicator_means(content_proficiency, "school", "CONT_micro",  "Female"),
+      SE.PRM.CONT.1.M = indicator_means(content_proficiency, "school", "CONT_micro",  "Male"),
+      SE.PRM.CONT.1.R = indicator_means(content_proficiency, "school", "CONT_micro",  "Rural"),
+      SE.PRM.CONT.1.U = indicator_means(content_proficiency, "school", "CONT_micro",  "Urban"),
+      SE.PRM.CONT.2   = indicator_means(literacy_content_proficiency, "school", "CONT_micro",  "All"),  
+      SE.PRM.CONT.2.F = indicator_means(literacy_content_proficiency, "school", "CONT_micro",  "Female"),
+      SE.PRM.CONT.2.M = indicator_means(literacy_content_proficiency, "school", "CONT_micro",  "Male"),
+      SE.PRM.CONT.2.R = indicator_means(literacy_content_proficiency, "school", "CONT_micro",  "Rural"),
+      SE.PRM.CONT.2.U = indicator_means(literacy_content_proficiency, "school", "CONT_micro",  "Urban"),
+      SE.PRM.CONT.3   = indicator_means(math_content_proficiency, "school", "CONT_micro",  "All"),
+      SE.PRM.CONT.3.F = indicator_means(math_content_proficiency, "school", "CONT_micro",  "Female"),
+      SE.PRM.CONT.3.M = indicator_means(math_content_proficiency, "school", "CONT_micro",  "Male"),
+      SE.PRM.CONT.3.R = indicator_means(math_content_proficiency, "school", "CONT_micro",  "Rural"),
+      SE.PRM.CONT.3.U = indicator_means(math_content_proficiency, "school", "CONT_micro",  "Urban")
     )
   
   # #######################################
@@ -324,32 +523,32 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.LCAP     = indicator_means(ecd_student_proficiency	, "school", "LCAP",  "All"),
-      SE.PRM.LCAP.1   = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "All"),
-      SE.PRM.LCAP.1.F = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Female"),
-      SE.PRM.LCAP.1.M = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Male"),
-      SE.PRM.LCAP.1.R = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Rural"),
-      SE.PRM.LCAP.1.U = indicator_means(ecd_student_knowledge	, "school", "LCAP",  "Urban"),
-      SE.PRM.LCAP.2   = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "All"),  
-      SE.PRM.LCAP.2.F = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Female"),
-      SE.PRM.LCAP.2.M = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Male"),
-      SE.PRM.LCAP.2.R = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Rural"),
-      SE.PRM.LCAP.2.U = indicator_means(ecd_math_student_knowledge, "school", "LCAP",  "Urban"),
-      SE.PRM.LCAP.3   = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "All"),
-      SE.PRM.LCAP.3.F = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Female"),
-      SE.PRM.LCAP.3.M = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Male"),
-      SE.PRM.LCAP.3.R = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Rural"),
-      SE.PRM.LCAP.3.U = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP",  "Urban"),
-      SE.PRM.LCAP.4   = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "All"),
-      SE.PRM.LCAP.4.F = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Female"),
-      SE.PRM.LCAP.4.M = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Male"),
-      SE.PRM.LCAP.4.R = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Rural"),
-      SE.PRM.LCAP.4.U = indicator_means(ecd_exec_student_knowledge, "school", "LCAP",  "Urban"),
-      SE.PRM.LCAP.5   = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "All"),
-      SE.PRM.LCAP.5.F = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Female"),
-      SE.PRM.LCAP.5.M = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Male"),
-      SE.PRM.LCAP.5.R = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Rural"),
-      SE.PRM.LCAP.5.U = indicator_means(ecd_soc_student_knowledge, "school", "LCAP",  "Urban")
+      SE.PRM.LCAP     = indicator_means(ecd_student_proficiency	, "school", "LCAP_micro",  "All"),
+      SE.PRM.LCAP.1   = indicator_means(ecd_student_knowledge	, "school", "LCAP_micro",  "All"),
+      SE.PRM.LCAP.1.F = indicator_means(ecd_student_knowledge	, "school", "LCAP_micro",  "Female"),
+      SE.PRM.LCAP.1.M = indicator_means(ecd_student_knowledge	, "school", "LCAP_micro",  "Male"),
+      SE.PRM.LCAP.1.R = indicator_means(ecd_student_knowledge	, "school", "LCAP_micro",  "Rural"),
+      SE.PRM.LCAP.1.U = indicator_means(ecd_student_knowledge	, "school", "LCAP_micro",  "Urban"),
+      SE.PRM.LCAP.2   = indicator_means(ecd_math_student_knowledge, "school", "LCAP_micro",  "All"),  
+      SE.PRM.LCAP.2.F = indicator_means(ecd_math_student_knowledge, "school", "LCAP_micro",  "Female"),
+      SE.PRM.LCAP.2.M = indicator_means(ecd_math_student_knowledge, "school", "LCAP_micro",  "Male"),
+      SE.PRM.LCAP.2.R = indicator_means(ecd_math_student_knowledge, "school", "LCAP_micro",  "Rural"),
+      SE.PRM.LCAP.2.U = indicator_means(ecd_math_student_knowledge, "school", "LCAP_micro",  "Urban"),
+      SE.PRM.LCAP.3   = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP_micro",  "All"),
+      SE.PRM.LCAP.3.F = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP_micro",  "Female"),
+      SE.PRM.LCAP.3.M = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP_micro",  "Male"),
+      SE.PRM.LCAP.3.R = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP_micro",  "Rural"),
+      SE.PRM.LCAP.3.U = indicator_means(ecd_literacy_student_knowledge, "school", "LCAP_micro",  "Urban"),
+      SE.PRM.LCAP.4   = indicator_means(ecd_exec_student_knowledge, "school", "LCAP_micro",  "All"),
+      SE.PRM.LCAP.4.F = indicator_means(ecd_exec_student_knowledge, "school", "LCAP_micro",  "Female"),
+      SE.PRM.LCAP.4.M = indicator_means(ecd_exec_student_knowledge, "school", "LCAP_micro",  "Male"),
+      SE.PRM.LCAP.4.R = indicator_means(ecd_exec_student_knowledge, "school", "LCAP_micro",  "Rural"),
+      SE.PRM.LCAP.4.U = indicator_means(ecd_exec_student_knowledge, "school", "LCAP_micro",  "Urban"),
+      SE.PRM.LCAP.5   = indicator_means(ecd_soc_student_knowledge, "school", "LCAP_micro",  "All"),
+      SE.PRM.LCAP.5.F = indicator_means(ecd_soc_student_knowledge, "school", "LCAP_micro",  "Female"),
+      SE.PRM.LCAP.5.M = indicator_means(ecd_soc_student_knowledge, "school", "LCAP_micro",  "Male"),
+      SE.PRM.LCAP.5.R = indicator_means(ecd_soc_student_knowledge, "school", "LCAP_micro",  "Rural"),
+      SE.PRM.LCAP.5.U = indicator_means(ecd_soc_student_knowledge, "school", "LCAP_micro",  "Urban")
     )
   
   #######################################
@@ -402,55 +601,55 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.ILDR     = indicator_means(instructional_leadership		, "school", "ILDR",  "All"),
+      SE.PRM.ILDR     = indicator_means(instructional_leadership		, "school", "ILDR_micro",  "All"),
       #(De Facto) Average score for the presence and quality of instructional leadership	
-      SE.PRM.ILDR.1   = indicator_means(instructional_leadership		, "school", "ILDR",  "All"),
-      SE.PRM.ILDR.1.F = indicator_means(instructional_leadership		, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.1.M = indicator_means(instructional_leadership		, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.1.R = indicator_means(instructional_leadership		, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.1.U = indicator_means(instructional_leadership		, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.1   = indicator_means(instructional_leadership		, "school", "ILDR_micro",  "All"),
+      SE.PRM.ILDR.1.F = indicator_means(instructional_leadership		, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.1.M = indicator_means(instructional_leadership		, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.1.R = indicator_means(instructional_leadership		, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.1.U = indicator_means(instructional_leadership		, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting having had their class observed	
-      SE.PRM.ILDR.2   = 100*indicator_means(classroom_observed, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.2.F = 100*indicator_means(classroom_observed, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.2.M = 100*indicator_means(classroom_observed, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.2.R = 100*indicator_means(classroom_observed, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.2.U = 100*indicator_means(classroom_observed, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.2   = 100*indicator_means(classroom_observed, "school", "ILDR_micro",  "All"),  
+      SE.PRM.ILDR.2.F = 100*indicator_means(classroom_observed, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.2.M = 100*indicator_means(classroom_observed, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.2.R = 100*indicator_means(classroom_observed, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.2.U = 100*indicator_means(classroom_observed, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting that the classroom observation happened recently
-      SE.PRM.ILDR.3   = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "All"),
-      SE.PRM.ILDR.3.F = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.3.M = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.3.R = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.3.U = 100*indicator_means(classroom_observed_recent, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.3   = 100*indicator_means(classroom_observed_recent, "school", "ILDR_micro",  "All"),
+      SE.PRM.ILDR.3.F = 100*indicator_means(classroom_observed_recent, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.3.M = 100*indicator_means(classroom_observed_recent, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.3.R = 100*indicator_means(classroom_observed_recent, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.3.U = 100*indicator_means(classroom_observed_recent, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting having discussed the results of the classroom observation	
-      SE.PRM.ILDR.4   = 100*indicator_means(discussed_observation, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.4.F = 100*indicator_means(discussed_observation, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.4.M = 100*indicator_means(discussed_observation, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.4.R = 100*indicator_means(discussed_observation, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.4.U = 100*indicator_means(discussed_observation, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.4   = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "All"),  
+      SE.PRM.ILDR.4.F = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.4.M = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.4.R = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.4.U = 100*indicator_means(discussed_observation, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting that the discussion was over 30 minutes	
-      SE.PRM.ILDR.5   = 100*indicator_means(discussion_30_min, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.5.F = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.5.M = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.5.R = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.5.U = 100*indicator_means(discussion_30_min, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.5   = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "All"),  
+      SE.PRM.ILDR.5.F = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.5.M = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.5.R = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.5.U = 100*indicator_means(discussion_30_min, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting that they were provided with feedback in that discussion	
-      SE.PRM.ILDR.6   = 100*indicator_means(feedback_observation, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.6.F = 100*indicator_means(feedback_observation, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.6.M = 100*indicator_means(feedback_observation, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.6.R = 100*indicator_means(feedback_observation, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.6.U = 100*indicator_means(feedback_observation, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.6   = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "All"),  
+      SE.PRM.ILDR.6.F = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.6.M = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.6.R = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.6.U = 100*indicator_means(feedback_observation, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting having lesson plans	
-      SE.PRM.ILDR.7   = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.7.F = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.7.M = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.7.R = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.7.U = 100-100*indicator_means(lesson_plan, "school", "ILDR",  "Urban"),
+      SE.PRM.ILDR.7   = 100-100*indicator_means(lesson_plan, "school", "ILDR_micro",  "All"),  
+      SE.PRM.ILDR.7.F = 100-100*indicator_means(lesson_plan, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.7.M = 100-100*indicator_means(lesson_plan, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.7.R = 100-100*indicator_means(lesson_plan, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.7.U = 100-100*indicator_means(lesson_plan, "school", "ILDR_micro",  "Urban"),
       #(De Facto) Percent of teachers reporting that they had discussed their lesson plans with someone else (pricinpal, pedagogical coordinator, another teacher)	
-      SE.PRM.ILDR.8   = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "All"),  
-      SE.PRM.ILDR.8.F = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Female"),
-      SE.PRM.ILDR.8.M = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Male"),
-      SE.PRM.ILDR.8.R = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Rural"),
-      SE.PRM.ILDR.8.U = 100*indicator_means(m3sdq24_ildr, "school", "ILDR",  "Urban")
+      SE.PRM.ILDR.8   = 100*indicator_means(m3sdq24_ildr, "school", "ILDR_micro",  "All"),  
+      SE.PRM.ILDR.8.F = 100*indicator_means(m3sdq24_ildr, "school", "ILDR_micro",  "Female"),
+      SE.PRM.ILDR.8.M = 100*indicator_means(m3sdq24_ildr, "school", "ILDR_micro",  "Male"),
+      SE.PRM.ILDR.8.R = 100*indicator_means(m3sdq24_ildr, "school", "ILDR_micro",  "Rural"),
+      SE.PRM.ILDR.8.U = 100*indicator_means(m3sdq24_ildr, "school", "ILDR_micro",  "Urban")
       
     )
   #######################################
@@ -515,25 +714,25 @@ api_template <- api_template %>%
   #api_final[grep('TATT', api_final$Series),1:2]
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.TATT = indicator_means(teacher_attraction		, "school", "TATT",  "All"),        
+      SE.PRM.TATT = indicator_means(teacher_attraction		, "school", "TATT_micro",  "All"),        
       #(De Jure) Average starting public-school teacher salary as percent of GDP per capita	
       SE.PRM.TATT.1 = 100*expert_df$teacher_salary,
       #(De Facto) Percent of teachers reporting being satisfied or very satisfied with their social status in the community	
-      SE.PRM.TATT.2 = 100*indicator_means(teacher_satisfied_status		, "school", "TATT",  "All"),   
+      SE.PRM.TATT.2 = 100*indicator_means(teacher_satisfied_status		, "school", "TATT_micro",  "All"),   
       #(De Facto) Percent of teachers reporting being satisfied or very satisfied with their job as teacher	
-      SE.PRM.TATT.3 = 100*indicator_means(teacher_satisfied_job		, "school", "TATT",  "All"),  
+      SE.PRM.TATT.3 = 100*indicator_means(teacher_satisfied_job		, "school", "TATT_micro",  "All"),  
       #(De Facto) Percent of teachers reporting having received financial bonuses in addition to their salaries	
-      SE.PRM.TATT.4 = 100*indicator_means(teacher_bonus		, "school", "TATT",  "All"),    
+      SE.PRM.TATT.4 = 100*indicator_means(teacher_bonus		, "school", "TATT_micro",  "All"),    
       #(De Facto) Percent of teachers reporting that there are incentives (financial or otherwise) for teachers to teach certain subjects/grades and/or in certain areas	
-      SE.PRM.TATT.5 = 100*indicator_means(if_else((teacher_bonus_hard_staff==1 ),1,0	)	, "school", "TATT",  "All"),
+      SE.PRM.TATT.5 = 100*indicator_means(if_else((teacher_bonus_hard_staff==1 ),1,0	)	, "school", "TATT_micro",  "All"),
       #(De Facto) Percent of teachers that performance matters for promotions	
-      SE.PRM.TATT.6  = 100*indicator_means(better_teachers_promoted		, "school", "TATT",  "All"),  
+      SE.PRM.TATT.6  = 100*indicator_means(better_teachers_promoted		, "school", "TATT_micro",  "All"),  
       #(De Jure) Is there a well-established career path for teachers?	
       SE.PRM.TATT.7  = -999     ,
       #(De Facto) Percent of teachers that report salary delays in the past 12 months	
-      SE.PRM.TATT.8  = 100*indicator_means(m3seq6_tatt		, "school", "TATT",  "All"),  
+      SE.PRM.TATT.8  = 100*indicator_means(m3seq6_tatt		, "school", "TATT_micro",  "All"),  
       #(De Facto) Policy Lever (Teaching) - Attraction	
-      SE.PRM.TATT.DF =indicator_means(teacher_attraction		, "school", "TATT",  "All") ,
+      SE.PRM.TATT.DF =indicator_means(teacher_attraction		, "school", "TATT_micro",  "All") ,
       #(De Jure) Policy Lever (Teaching) - Attraction	
       SE.PRM.TATT.DJ = expert_df$teacher_attraction 
 
@@ -543,7 +742,7 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-    SE.PRM.TSDP  =  indicator_means(teacher_selection_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP  =  indicator_means(teacher_selection_deployment		, "school", "TSDP_micro",  "All"),
     #Policy Lever (Teaching) - Selection & Deployment                                 
     SE.PRM.TSDP.1  = expert_df$criteria_admittance,
     #(De Jure) Requirements to enter into initial education programs                  
@@ -551,15 +750,15 @@ api_template <- api_template %>%
     #(De Facto) Average quality of applicants accepted into initial education programs
     SE.PRM.TSDP.3  = expert_df$criteria_become,
     #(De Jure) Requirements to become a primary school teacher                        
-    SE.PRM.TSDP.4  = 1+2*indicator_means(teacher_selection		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.4  = 1+2*indicator_means(teacher_selection		, "school", "TSDP_micro",  "All"),
     #(De Facto) Requirements to become a primary school teacher                       
     SE.PRM.TSDP.5 =expert_df$criteria_transfer,
     #(De Jure) Requirements to fulfill a transfer request                             
-    SE.PRM.TSDP.6  = 1+2*indicator_means(teacher_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.6  = 1+2*indicator_means(teacher_deployment		, "school", "TSDP_micro",  "All"),
     #(De Facto) Requirements to fulfill a transfer request                            
     SE.PRM.TSDP.7  = -999,
     #(De Jure) Selectivity of teacher hiring process                                  
-    SE.PRM.TSDP.DF =indicator_means(teacher_selection_deployment		, "school", "TSDP",  "All"),
+    SE.PRM.TSDP.DF =indicator_means(teacher_selection_deployment		, "school", "TSDP_micro",  "All"),
     #(De Facto) Policy Lever (Teaching) - Selection & Deployment                      
     SE.PRM.TSDP.DJ =expert_df$teacher_selection_deployment
     #(De Jure) Policy Lever (Teaching) - Selection & Deployment   
@@ -570,27 +769,27 @@ api_template <- api_template %>%
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
   
-  SE.PRM.TSUP =indicator_means(teacher_support		, "school", "TSUP",  "All"),   
+  SE.PRM.TSUP =indicator_means(teacher_support		, "school", "TSUP_micro",  "All"),   
   #Policy Lever (Teaching) - Support                                                                                        
   SE.PRM.TSUP.1  =expert_df$practicum ,
   #(De Jure) Practicum required as part of pre-service training                                                             
-  SE.PRM.TSUP.2 = 100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.2 = 100*indicator_means(m3sdq6_tsup-1			, "school", "TSUP_micro",  "All"),
   #(De Facto) Percent reporting they completed a practicum as part of pre-service training                                  
-  SE.PRM.TSUP.3  = 100*indicator_means(m3sdq3_tsup		, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.3  = 100*indicator_means(m3sdq3_tsup		, "school", "TSUP_micro",  "All"),
   #(De Facto) Percent of teachers reporting that they participated in an induction and/or mentorship program                
   SE.PRM.TSUP.4  =expert_df$prof_development,
   #(De Jure) Participation in professional development has professional implications for teachers                           
-  SE.PRM.TSUP.5  = 100*indicator_means(m3sdq9_tsup			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.5  = 100*indicator_means(m3sdq9_tsup			, "school", "TSUP_micro",  "All"),
   #(De Facto) Percent of teachers reporting having attended in-service trainings in the past 12 months                      
-  SE.PRM.TSUP.6  =indicator_means(m3sdq10_tsup			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.6  =indicator_means(m3sdq10_tsup			, "school", "TSUP_micro",  "All"),
   #(De Facto) Average length of the trainings attended                                                                      
-  SE.PRM.TSUP.7  =indicator_means(m3sdq11_tsup			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.7  =indicator_means(m3sdq11_tsup			, "school", "TSUP_micro",  "All"),
   #(De Facto) Average span of time (in weeks) of those trainings                                                            
-  SE.PRM.TSUP.8  =100*indicator_means((m3sdq13_tsup-1)/4			, "school", "TSUP",  "All"),
+  SE.PRM.TSUP.8  =100*indicator_means((m3sdq13_tsup-1)/4			, "school", "TSUP_micro",  "All"),
   #(De Facto) Average percent of time spent inside the classrooms during the trainings                                      
-  SE.PRM.TSUP.9 = 100*indicator_means(opportunities_teachers_share			, "school", "TSUP",  "All"), 
+  SE.PRM.TSUP.9 = 100*indicator_means(opportunities_teachers_share			, "school", "TSUP_micro",  "All"), 
   #(De Facto) Percent of teachers that report having opportunities to come together with other teachers to discuss ways of ~
-  SE.PRM.TSUP.DF =indicator_means(teacher_support		, "school", "TSUP",  "All"),  
+  SE.PRM.TSUP.DF =indicator_means(teacher_support		, "school", "TSUP_micro",  "All"),  
   #(De Facto) Policy Lever (Teaching) - Support                                                                             
   SE.PRM.TSUP.DJ =expert_df$teacher_support
   #(De Jure) Policy Lever (Teaching) - Support  
@@ -600,17 +799,17 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.TEVL  = indicator_means(teaching_evaluation		, "school", "TEVL",  "All"),     #Policy Lever (Teaching) - Evaluation                                                                                     
+      SE.PRM.TEVL  = indicator_means(teaching_evaluation		, "school", "TEVL_micro",  "All"),     #Policy Lever (Teaching) - Evaluation                                                                                     
       SE.PRM.TEVL.1 =expert_df$evaluation_law, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to a public authority (national)
       SE.PRM.TEVL.2 =expert_df$evaluation_law_school, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools                    
-      SE.PRM.TEVL.3 = 100*indicator_means(formally_evaluated		, "school", "TEVL",  "All"),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
+      SE.PRM.TEVL.3 = 100*indicator_means(formally_evaluated		, "school", "TEVL_micro",  "All"),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
       SE.PRM.TEVL.4 =expert_df$evaluation_criteria, #(De Jure) The criteria to evaluate teachers is clear                                                                     
-      SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator, "school", "TEVL",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
-      SE.PRM.TEVL.6 = 100*indicator_means(negative_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
-      SE.PRM.TEVL.7 = 100*indicator_means(positive_consequences		, "school", "TEVL",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
+      SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator, "school", "TEVL_micro",  "All"),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
+      SE.PRM.TEVL.6 = 100*indicator_means(negative_consequences		, "school", "TEVL_micro",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
+      SE.PRM.TEVL.7 = 100*indicator_means(positive_consequences		, "school", "TEVL_micro",  "All"),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
       SE.PRM.TEVL.8 =expert_df$negative_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more negative evaluations                         
       SE.PRM.TEVL.9 =expert_df$positive_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more positive evaluations                         
-      SE.PRM.TEVL.DF = indicator_means(teaching_evaluation		, "school", "TEVL",  "All"),  #(De Facto) Policy Lever (Teaching) - Evaluation                                                                          
+      SE.PRM.TEVL.DF = indicator_means(teaching_evaluation		, "school", "TEVL_micro",  "All"),  #(De Facto) Policy Lever (Teaching) - Evaluation                                                                          
       SE.PRM.TEVL.DJ =expert_df$teaching_evaluation#(De Jure) Policy Lever (Teaching) - Evaluation 
     )
   #######################################
@@ -618,13 +817,13 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.TMNA = indicator_means(teacher_monitoring		, "school", "TMNA",  "All"),    #Policy Lever (Teaching) - Monitoring & Accountability                                                       
+      SE.PRM.TMNA = indicator_means(teacher_monitoring		, "school", "TMNA_micro",  "All"),    #Policy Lever (Teaching) - Monitoring & Accountability                                                       
       SE.PRM.TMNA.1  = expert_df$absence_collected, #(De Jure) Information on teacher presence/absenteeism is being collected on a regular basis                 
       SE.PRM.TMNA.2  = expert_df$attendance_rewarded, #(De Jure) Teachers receive monetary compensation for being present                                          
-      SE.PRM.TMNA.3 = 100*indicator_means(attendance_rewarded		, "school", "TMNA",  "All"),   #(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present             
-      SE.PRM.TMNA.4 = 100*indicator_means(miss_class_admin		, "school", "TMNA",  "All"),   #(De Facto) Percent of teachers that report having been absent because of administrative processes           
-      SE.PRM.TMNA.5 = 100*indicator_means(attendence_sanctions		, "school", "TMNA",  "All"),  #(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time
-      SE.PRM.TMNA.DF = indicator_means(teacher_monitoring		, "school", "TMNA",  "All"),  #(De Facto) Policy Lever (Teaching) - Monitoring & Accountability                                            
+      SE.PRM.TMNA.3 = 100*indicator_means(attendance_rewarded		, "school", "TMNA_micro",  "All"),   #(De Facto) Teacher report receiving monetary compensation (aside from salary) for being present             
+      SE.PRM.TMNA.4 = 100*indicator_means(miss_class_admin		, "school", "TMNA_micro",  "All"),   #(De Facto) Percent of teachers that report having been absent because of administrative processes           
+      SE.PRM.TMNA.5 = 100*indicator_means(attendence_sanctions		, "school", "TMNA_micro",  "All"),  #(De Facto) Percent of teachers that report that there would be consequences for being absent 40% of the time
+      SE.PRM.TMNA.DF = indicator_means(teacher_monitoring		, "school", "TMNA_micro",  "All"),  #(De Facto) Policy Lever (Teaching) - Monitoring & Accountability                                            
       SE.PRM.TMNA.DJ =expert_df$teacher_monitoring #(De Jure) Policy Lever (Teaching) - Monitoring & Accountability
     )
   #######################################
@@ -632,21 +831,21 @@ api_template <- api_template %>%
   #######################################
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
-      SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-      SE.PRM.TINM.10 =indicator_means(SE_PRM_TINM_10		, "school", "TINM",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
-      SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
-      SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
+      SE.PRM.TINM = indicator_means(intrinsic_motivation		, "school", "TINM_micro",  "All"),    #Policy Lever (Teaching) - Intrinsic Motivation                                                                           
+      SE.PRM.TINM.1 = indicator_means(SE_PRM_TINM_1		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+      SE.PRM.TINM.10 =indicator_means(SE_PRM_TINM_10		, "school", "TINM_micro",  "All"), #(De Facto) Percent of teachers that agree or strongly agrees with \"Students can change even their basic intelligence l~
+      SE.PRM.TINM.11 = 100*indicator_means(motivation_teaching		, "school", "TINM_micro",  "All"), #(De Facto) Percent of teachers who state that intrinsic motivation was the main reason to become teachers                
+      SE.PRM.TINM.12 = indicator_means(m3sdq2_tmna		, "school", "TMNA_micro",  "All"), #(De Facto) New teachers are required to undergo a probationary period                                                    
       SE.PRM.TINM.13 = expert_df$probationary_period, #(De Jure) New teachers are required to undergo a probationary period                                                     
-      SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
-      SE.PRM.TINM.3 = indicator_means(SE_PRM_TINM_3		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
-      SE.PRM.TINM.4 = indicator_means(SE_PRM_TINM_4		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
-      SE.PRM.TINM.5 = indicator_means(SE_PRM_TINM_5		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
-      SE.PRM.TINM.6 = indicator_means(SE_PRM_TINM_6		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
-      SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
-      SE.PRM.TINM.8 = indicator_means(SE_PRM_TINM_8		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
-      SE.PRM.TINM.9 = indicator_means(SE_PRM_TINM_9		, "school", "TINM",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
-      SE.PRM.TINM.DF = indicator_means(intrinsic_motivation		, "school", "TINM",  "All"), #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
+      SE.PRM.TINM.2 = indicator_means(SE_PRM_TINM_2		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if stud~
+      SE.PRM.TINM.3 = indicator_means(SE_PRM_TINM_3		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with It is acceptable for a teacher to be absent if the ~
+      SE.PRM.TINM.4 = indicator_means(SE_PRM_TINM_4		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they attend scho~
+      SE.PRM.TINM.5 = indicator_means(SE_PRM_TINM_5		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they come to sch~
+      SE.PRM.TINM.6 = indicator_means(SE_PRM_TINM_6		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students deserve more attention if they are motivat~
+      SE.PRM.TINM.7 = indicator_means(SE_PRM_TINM_7		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students have a certain amount of intelligence and ~
+      SE.PRM.TINM.8 = indicator_means(SE_PRM_TINM_8		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with To be honest, students can't really change how inte~
+      SE.PRM.TINM.9 = indicator_means(SE_PRM_TINM_9		, "school", "TINM_micro",  "All"),  #(De Facto) Percent of teachers that agree or strongly agrees with Students can always substantially change how intell~
+      SE.PRM.TINM.DF = indicator_means(intrinsic_motivation		, "school", "TINM_micro",  "All"), #(De Facto) Policy Lever (Teaching) - Intrinsic Motivation                                                                
       SE.PRM.TINM.DJ = expert_df$intrinsic_motivation #(De Jure) Policy Lever (Teaching) - Intrinsic Motivation   
     )
   #######################################
@@ -704,10 +903,10 @@ api_template <- api_template %>%
       SE.PRM.LNTN.5  =expert_df$breastfeeding, #(De Jure) Does a national policy exist to encourage breastfeeding?
       SE.PRM.LNTN.6  =100*as.numeric(defacto_dta_learners_final$`Percentage of children born in the five (three) years preceding the survey who were ever breastfed`), #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed
       SE.PRM.LNTN.7  =expert_df$school_feeding, #(De Jure) Is there a publicly funded school feeding program?
-      SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
+      #SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
     ) %>%
     mutate(
-      SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6 +SE.PRM.LNTN.8)/400+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
+      #SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6 +SE.PRM.LNTN.8)/400+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
       SE.PRM.LNTN.DJ =expert_df$nutrition_programs#(De Jure) Policy Lever (Learners) - Nutrition Programs
     ) %>%
     mutate(

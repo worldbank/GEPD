@@ -66,7 +66,7 @@ gen_dir <- "C:/Users/wb469649/WBG/HEDGE Files - HEDGE Documents/GEPD/General/"
   data_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v01_M/Data"
 } else if (Sys.getenv("USERNAME") == "wb631589") {
   data_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/GAB/GAB_2023_GEPD/GAB_2023_GEPD_v02_M/Data"
-
+  gen_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/General/"
 }
 
 
