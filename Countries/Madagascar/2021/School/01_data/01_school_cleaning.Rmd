@@ -2091,6 +2091,9 @@ principal_scorer <- function(var_guess, var_actual) {
 }
 
 
+#get the max value of students to correct textbooks
+max <- max(final_indicator_data_INPT$s_m4ab_01, na.rm = T)
+max_textbooks <- 1.5*max
 
 final_indicator_data_PKNW <- management_dta %>%
   mutate(n_mssing_PKNW=n_miss_row(.))  %>%
@@ -2103,6 +2106,7 @@ final_indicator_data_PKNW <- management_dta %>%
          complete_sentence_pknw_shr = m7sfq7_pknw/5,
          #adjust the number of books guessed by a principal with attendance
          m7sfq10_pknw = m7sfq10_pknw*attendance,
+        m7sfq10_pknw = if_else(m7sfq10_pknw > max_textbooks, NA, m7sfq10_pknw),
          m7sfq11_pknw = ifelse(m7sfq11_pknw == 2, 0, m7sfq11_pknw)) %>%
   mutate(
              add_triple_digit_pknw=principal_scorer(add_triple_digit_pknw_shr, share_sum_correct),
@@ -2119,7 +2123,7 @@ final_indicator_data_PKNW <- management_dta %>%
              (principal_knowledge_avg > 0.6) ~ 2,
              (principal_knowledge_avg <= 0.6) ~ 1  )
            ) %>%
-  select(s_ecole_code,principal_knowledge_score, principal_knowledge_avg, add_triple_digit_pknw, multiply_double_digit_pknw,complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq10_pknw, s_m4ab_04, s_m4ab_01  )
+  select(s_ecole_code,principal_knowledge_score, principal_knowledge_avg, add_triple_digit_pknw, multiply_double_digit_pknw,complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7sfq6_pknw, m7sfq7_pknw, m7sfq10_pknw, s_m4ab_04, s_m4ab_01,  starts_with('share_'), mean_experience_less3, ends_with('_shr'), m7sfq11_pknw, blackboard_functional)
 
 final_indicator_data_PKNW <- final_indicator_data_PKNW %>%
   mutate(school_code = s_ecole_code)
@@ -2422,6 +2426,8 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
                                        if_else(d_m2be_05g==1,d_m2be_05au,"NA"),
                                        "NA"),
            salary_delays=s_m2bb1_01,
+           m3sbq1_tatt_2 = d_m2bb2_01b, 
+           m3sbq1_tatt_2 = if_else(m3sbq1_tatt_2 == 2, 0, m3sbq1_tatt_2),
            salary_delays_indicator = if_else(salary_delays == 0, 0, 1)) %>%
     mutate(salary_delays=if_else(salary_delays>12,12,salary_delays)) %>%
     mutate(teacher_attraction=1+0.8*teacher_satisfied_job+.8*teacher_satisfied_status+.8*better_teachers_promoted+.8*teacher_bonus+.8*(1-salary_delays/12))
@@ -2435,13 +2441,13 @@ hist(final_indicator_data_ILDR$lesson_plan_w_feedback)
   final_indicator_data_TATT <- teacher_questionnaire_dta %>%
     mutate(n_mssing_TATT=n_miss_row(.)) %>%
     group_by(s_ecole_code) %>%
-    select(s_ecole_code, teacher_attraction,teacher_satisfied_job,teacher_satisfied_status,better_teachers_promoted,teacher_bonus, teacher_bonus_hard_staff, school_code, salary_delays, salary_delays_indicator) %>%
+    select(s_ecole_code, teacher_attraction,teacher_satisfied_job,teacher_satisfied_status,better_teachers_promoted,teacher_bonus, teacher_bonus_hard_staff, school_code, salary_delays, salary_delays_indicator, m3sbq1_tatt_2) %>%
     summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
   final_indicator_data_TATT_micro <- teacher_questionnaire_dta %>%
     mutate(n_mssing_TATT=n_miss_row(.)) %>%
     #group_by(s_ecole_code) %>%
-    select(s_ecole_code, teacher_attraction,teacher_satisfied_job,teacher_satisfied_status,better_teachers_promoted,teacher_bonus, teacher_bonus_hard_staff,salary_delays, school_code, salary_delays_indicator) 
+    select(s_ecole_code, teacher_attraction,teacher_satisfied_job,teacher_satisfied_status,better_teachers_promoted,teacher_bonus, teacher_bonus_hard_staff,salary_delays, school_code, salary_delays_indicator, m3sbq1_tatt_2) 
     #summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
   
   
@@ -3719,6 +3725,9 @@ df_weights_function <- function(dataset) {
 # Code to anonymize
 ####################
 #create hashed school code
+school_dta_short <- school_dta_short %>%
+  mutate(s_ecole_code = if_else(is.na(s_ecole_code), school_code, s_ecole_code))
+
 school_dta_short$hashed_school_code <-as.character(lapply(school_dta_short$school_code, function(x) {digest(x, algo="xxhash64", seed=531254, serialize = T)}))
 
 #save a hashed version of the dataset, to produce a link file

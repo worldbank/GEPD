@@ -618,6 +618,8 @@ graded_data <- "no"
   #####################
   teacher_assessment_dta_raw <- teacher_assessment_dta
   
+  teacher_assessment_dta <- teacher_assessment_dta %>%
+    select(-m5s1q2d_cloze, m5s1q2e_cloze)
   
   #Drop columns that end in "mistake".  THis is not necessary for computing indicator
   teacher_assessment_dta <- teacher_assessment_dta %>% 
@@ -1261,11 +1263,11 @@ teach_dta <- teach_dta %>%
       m8saq3_id = score_word_final,
       m8sbq1_number_sense = score_number_final
     ) %>%
-    select(school_code, fourth_grade_assessment__id, m8saq2_id, m8saq3_id, m8sbq1_number_sense)
+    select(school_code, fourth_grade_assessment__id, m8saq2_id, m8saq3_id, m8sbq1_number_sense, 
+           m8s1q1, m8s1q2, m8s1q3, m8_assess_order)
   
   assess_4th_grade_dta <- left_join(assess_4th_grade_dta_raw, assess_4th_grade_dta) %>%
     select(-starts_with("m8saq2_id__"), -starts_with("m8saq3_id__"), -starts_with("m8sbq1_number_sense__"))
-  
   
   #recode assessment variables to be 1 if student got it correct and zero otherwise
   assess_4th_grade_dta<- assess_4th_grade_dta %>%
@@ -2005,6 +2007,9 @@ teach_dta <- teach_dta %>%
     )
   }
   
+  #get the max value of students to correct textbooks
+  max <- max(final_indicator_data_INPT$m4scq4_inpt, na.rm = T)
+  max_textbooks <- 1.5*max
   
   final_indicator_data_PKNW <- school_data_PKNW %>%
     group_by(school_code) %>%
@@ -2018,7 +2023,9 @@ teach_dta <- teach_dta %>%
       #tag the schools where principals said 0 teachers have less than 3 years of experinece
       experience_filter = m7sfq9_pknw_filter,
       #adjust principal guess in terms of textbooks based on attendance
-      m7sfq10_pknw = m7sfq10_pknw*attendance) %>%
+      m7sfq10_pknw = m7sfq10_pknw*attendance,
+      m7sfq10_pknw = if_else(m7sfq10_pknw > max_textbooks, NA, m7sfq10_pknw),
+      m7sfq10_pknw = if_else(m7sfq10_pknw < 0, NA, m7sfq10_pknw)) %>%
     select(-m7sfq9_pknw_filter) %>%
     mutate_at(vars(starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), starts_with('m7sfq9_pknw')), ~if_else(is.na(.),as.numeric(NA),1)) %>%
     mutate(
@@ -2043,9 +2050,9 @@ teach_dta <- teach_dta %>%
       (principal_knowledge_avg <= 0.6) ~ 1  )
     ) %>%
     select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), share_mult_correct, share_sum_correct, share_sentence_correct, mean_experience_less3,  m7sfq10_pknw,m4scq5_inpt,  m7sfq11_pknw, blackboard_functional, principal_knowledge_score, add_triple_digit_pknw, starts_with('m7sfq9_pknw'), experience_filter,
-           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10) %>%
+           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw,m7saq10, starts_with('share_'), mean_experience_less3, ends_with('_shr'), blackboard_functional) %>%
     select(school_code, starts_with('m7sfq5_pknw'), starts_with('m7sfq6_pknw'), starts_with('m7sfq7_pknw'), starts_with('m7sfq9_pknw'), m7sfq10_pknw, m7sfq11_pknw, principal_knowledge_score, add_triple_digit_pknw, experience_filter,
-           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10)
+           multiply_double_digit_pknw, complete_sentence_pknw, experience_pknw, textbooks_pknw, blackboard_pknw, m7_teach_count_pknw, m7saq10, starts_with('share_'), mean_experience_less3, ends_with('_shr'),blackboard_functional)
   
   
   #Breakdowns by Male/Female
