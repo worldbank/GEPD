@@ -139,10 +139,10 @@ indicator_values_transpose <- indicator_values_transpose %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.GEPD.PRIM	= wbopendat$SE.LPV.PRIM,
+      SE.GEPD.PRIM.1	= wbopendat$SE.LPV.PRIM,
+      SE.GEPD.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.GEPD.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
       SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
@@ -956,5 +956,10 @@ indicator_values_transpose <- indicator_values_transpose %>%
 api_final<-api_template %>%
     dplyr::select(-value) %>%
     mutate(Series = gsub(" ", "", Series)) %>%
-    left_join(indicator_values_back, by = "Series")
+  full_join(indicator_values_back, by = "Series") %>%
+  mutate(`Indicator Name` = if_else(Series == "SE.PRM.BFIN.6", "(Financing) - Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?", `Indicator Name`),
+         `Indicator Name` = if_else(Series == "SE.PRM.PROE", "Proficiency by Grade 2/3", `Indicator Name`),
+         `Indicator Name` = if_else(Series == "SE.PRM.PROE.1", "(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS", `Indicator Name`),
+         Source = if_else(Series %in% c("SE.PRM.BFIN.6", "SE.PRM.PROE", "SE.PRM.PROE.1"), "Global Education Policy Dashboard", Source),
+         `Source Organization` = if_else(Series %in% c("SE.PRM.BFIN.6", "SE.PRM.PROE", "SE.PRM.PROE.1"), "World Bank", `Source Organization`))
   

@@ -364,10 +364,10 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.LPV.PRIM	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.1	= wbopendat$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
-      SE.LPV.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.GEPD.PRIM	= wbopendat$SE.LPV.PRIM,
+      SE.GEPD.PRIM.1	= wbopendat$SE.LPV.PRIM,
+      SE.GEPD.PRIM.BMP	= 100-wbopendat$SE.LPV.PRIM.BMP,
+      SE.GEPD.PRIM.BMP.1	= 100-wbopendat$SE.LPV.PRIM.BMP,
       SE.PRM.PROE =-999,
       SE.PRM.PROE.1 =-999,
       SE.PRM.TENR	 =wbopendat$SE.PRM.TENR,
@@ -1226,7 +1226,7 @@ api_template <- api_template %>%
               SE.PRM.TEVL.2 =expert_df$evaluation_law_school, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools                    
               SE.PRM.TEVL.3 = 100*indicator_means(formally_evaluated		, "school", "TEVL_micro",  "All", i),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
               SE.PRM.TEVL.4 =expert_df$evaluation_criteria, #(De Jure) The criteria to evaluate teachers is clear                                                                     
-              SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator		, "school", "TEVL",  "All", i),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
+              SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator		, "school", "TEVL_micro",  "All", i),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
               SE.PRM.TEVL.6 = 100*indicator_means(negative_consequences		, "school", "TEVL_micro",  "All", i),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
               SE.PRM.TEVL.7 = 100*indicator_means(positive_consequences		, "school", "TEVL_micro",  "All", i),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
               SE.PRM.TEVL.8 =expert_df$negative_evaluations, #(De Jure) There are clear consequences for teachers who receive two or more negative evaluations                         
@@ -1246,7 +1246,7 @@ api_template <- api_template %>%
                SE.PRM.TEVL.2 =NA, #(De Jure) Legislation assigns responsibility of evaluating the performance of teachers to the schools                    
                SE.PRM.TEVL.3 = indicator_means(formally_evaluated		, "school", "TEVL_micro",  "All", i),   #(De Facto) Percent of teachers that report being evaluated in the past 12 months                                         
                SE.PRM.TEVL.4 =NA, #(De Jure) The criteria to evaluate teachers is clear                                                                     
-               SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator		, "school", "TEVL",  "All", i),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
+               SE.PRM.TEVL.5 = indicator_means(number_criteria_indicator		, "school", "TEVL_micro",  "All", i),  #(De Facto) Number of criteria used to evaluate teachers                                                                  
                SE.PRM.TEVL.6 = indicator_means(negative_consequences		, "school", "TEVL_micro",  "All", i),  #(De Facto) Percent of teachers that report there would be consequences after two negative evaluations                    
                SE.PRM.TEVL.7 = indicator_means(positive_consequences		, "school", "TEVL_micro",  "All", i),  #(De Facto) Percent of teachers that report there would be consequences after two positive evaluations                    
                SE.PRM.TEVL.8 =NA, #(De Jure) There are clear consequences for teachers who receive two or more negative evaluations                         
@@ -1709,7 +1709,7 @@ api_template <- api_template %>%
                SE.PRM.SSLD.8  =  indicator_means(m7sgq1_ssld__7		, "school", "SSLD",  "All", i),#(De Facto) Percent of principals that report that the factors considered when selecting a principal include ethnic group 
                SE.PRM.SSLD.9  =  indicator_means(m7sgq1_ssld__8		, "school", "SSLD",  "All", i), #(De Facto) Percent of principals that report that the factors considered when selecting a principal include knowledge of~
                SE.PRM.SSLD.DF =  indicator_means(sch_selection_deployment		, "school", "SSLD",  "All", i), #(De Facto) Policy Lever (School Management) - Selection & Deployment                                                     
-               SE.PRM.SSLD.DJ =expert_df$sch_selection_deployment #(De Jure) Policy Lever (School Management) - Selection & Deployment  
+               SE.PRM.SSLD.DJ =expert_df$school_selection_deployment #(De Jure) Policy Lever (School Management) - Selection & Deployment  
              )
     )
   }
@@ -1881,7 +1881,7 @@ api_template <- api_template %>%
   
   #reshape dataframe back
   new_cols <- c(
-    "SE.PRM.BFIN.6", "SE.PRM.SSLD.DJ"
+    "SE.PRM.BFIN.6", "SE.PRM.SSLD.DJ", "SE.PRM.PROE", "SE.PRM.PROE.1", "SE.PRM.BFIN.6"
   )
   
   for (col in new_cols) {
@@ -1916,5 +1916,12 @@ api_template <- api_template %>%
   api_final<-api_template %>%
     dplyr::select(-value, -N, -mean_se, -mean_low, -mean_upp, -mean_var) %>%
     mutate(Series = gsub(" ", "", Series)) %>%
-    left_join(indicator_values_back, by = "Series")
+    full_join(indicator_values_back, by = "Series") %>%
+    mutate(`Indicator Name` = if_else(Series == "SE.PRM.BFIN.6", "(Financing) - Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?", `Indicator Name`),
+           `Indicator Name` = if_else(Series == "SE.PRM.PROE", "Proficiency by Grade 2/3", `Indicator Name`),
+           `Indicator Name` = if_else(Series == "SE.PRM.PROE.1", "(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS", `Indicator Name`),
+           Source = if_else(Series %in% c("SE.PRM.BFIN.6", "SE.PRM.PROE", "SE.PRM.PROE.1"), "Global Education Policy Dashboard", Source),
+           `Source Organization` = if_else(Series %in% c("SE.PRM.BFIN.6", "SE.PRM.PROE", "SE.PRM.PROE.1"), "World Bank", `Source Organization`))
+  
+  
   
