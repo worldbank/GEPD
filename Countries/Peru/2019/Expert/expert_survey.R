@@ -165,7 +165,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
          principal_training_type=read_var(A9),
          principal_training_type1=read_var(A9.1),
          principal_training_type2=read_var(A9.2),
-         principal_training_type3=read_var(A9.3),
+         principal_training_type3=1, #looks like there is a typo in the file
          principal_training_frequency_1=read_var(A10.1),
          principal_training_frequency_2=read_var(A10.2),
          principal_training_frequency_3=read_var(A10.3)
