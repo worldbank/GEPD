@@ -80,7 +80,7 @@ ind_list <- c( "SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA", "SE.LPV.PRIM.O
 #             return_wide = T,
 #             removeNA=FALSE)
 
-wbopendat<-WDI(country="RW", indicator=ind_list, start=2000, end=2020, extra=T) %>%
+wbopendat<-WDI(country="RWA", indicator=ind_list, start=2000, end=2020, extra=T) %>%
   filter(!is.na(SE.PRM.TENR) &!is.na(country)) %>%
   group_by(iso3c) %>%
   arrange(year) %>%
@@ -168,7 +168,6 @@ api_metadata_fn <- function(cntry, yr) {
     mutate(year=yr,
            cty_or_agg="cty",
            countrycode=cntry,
-           value=round(value,1),
            Series=str_replace_all(Series, "SE.LPV","SE.GEPD"))
 }
 
