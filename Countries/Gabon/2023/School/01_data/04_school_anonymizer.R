@@ -109,7 +109,8 @@ df_weights_function <- function(dataset,scode, snumber, prov) {
            strata_prob=if_else(is.na(strata_prob), median(strata_prob, na.rm=T), strata_prob),
            Province=if_else(is.na(Province), school_province_preload, Province),
            private=if_else(is.na(private), median(private, na.rm=TRUE) ,private), #imputation
-           rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural))  #imputation
+           rural=if_else(is.na(rural), median(rural, na.rm=TRUE),rural),
+           school_weight = 1/strata_prob) #imputation 
     
 }
 
@@ -136,6 +137,9 @@ write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"
 
 for (i in data_list ) {
   if (exists(i)) {
+    
+    print(i)
+    
     #form temp data frame with each schools data
     temp<-get(i) 
     
@@ -211,11 +215,6 @@ for (i in data_list ) {
     anon_dta_list<-c(anon_dta_list, paste(i,"_anon", sep=""))
     
     assign(quo_name(paste(i,"_anon", sep="")), temp, envir=.GlobalEnv)
-    
-    print(i)
-    
-    #final_school_data<-temp
-    print(i)
     
     temp %>%
       janitor::clean_names() %>%

@@ -540,13 +540,12 @@ school_dta<- school_dta %>%
   # )) %>% 
   # 
   left_join(data_set_updated, by=c("school_code")) %>%
-  select(-school_name_preload.x) %>%
+  select(-school_name_preload.x, -ipw) %>%
   rename(school_name_preload = school_name_preload.y) %>%
   #drop closed schools
-  filter(m1s0q1==1)
+  filter(m1s0q1==1) %>%
+  mutate(feeding_program = m1saq9_lnut)
 
-
-  
 
   
 
@@ -1215,6 +1214,7 @@ school_dta <- school_dta %>%
 # female
   
 final_indicator_data_PEDG_F<- school_dta %>%
+  select(preamble_info, m4saq1, m4saq1_number )  %>%
   mutate(m4saq1_original = m4saq1) %>%
      left_join(teacher_gender, by=c('school_code', 'm4saq1_original')) %>%
     group_by(school_code) %>%
@@ -1235,6 +1235,7 @@ final_indicator_data_PEDG_F<- school_dta %>%
 # male
   
 final_indicator_data_PEDG_M<- school_dta %>%
+    select(preamble_info, m4saq1, m4saq1_number )  %>%
     mutate(m4saq1_original = m4saq1) %>%
     left_join(teacher_gender, by=c('school_code', 'm4saq1_original')) %>%
     group_by(school_code) %>%
@@ -4178,7 +4179,7 @@ data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short',
                "indicators",  
                #'school_gdp', 
                'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights', 
-               'final_indicator_data_PEDG', 'school_gdp')
+               'final_indicator_data_PEDG')
 
 save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 

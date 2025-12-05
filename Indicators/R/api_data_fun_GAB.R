@@ -41,7 +41,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     #4th grade assessment
     if (tag == "LERN_micro") {
       stat_df <- stat_df %>%
-        mutate(school_weight = ipw, #adjusted in the anonimization file to remove student count
+        mutate(school_weight = 1/strata_prob, #adjusted in the anonimization file to remove student count
                g4_comb_weight=school_weight*g4_stud_weight_component,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight)) %>%
@@ -73,7 +73,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     if (tag == "EFFT_micro") {
       stat_df <- stat_df %>%
         mutate(
-          school_weight =  ipw,
+          school_weight =  1/strata_prob,
           VALUE = !!variable_quo
         ) %>%
         filter(!is.na(school_weight),
@@ -98,7 +98,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     #teacher questionnaire 
     if (tag %in% c("ILDR_micro", "TATT_micro", "TSDP_micro", "TSUP_micro", "TEVL_micro", "TMNA_micro", "TINM_micro")) {
       stat_df <- stat_df %>%
-        mutate(school_weight =  ipw,
+        mutate(school_weight =  1/strata_prob,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight),
                !is.na(strata_count)) %>%
@@ -128,7 +128,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     #teacher content knowledge
     if (tag %in% c("CONT_micro")) {
       stat_df <- stat_df %>%
-        mutate(school_weight = ipw,
+        mutate(school_weight = 1/strata_prob,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight), 
                !is.na(strata_count)) %>%
@@ -160,7 +160,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
       
       stat_df <- stat_df %>%
         mutate(
-          school_weight = ipw,
+          school_weight = 1/strata_prob,
           teachers_id = 1,
           VALUE = !!variable_quo
         ) %>%
@@ -187,7 +187,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     #first grade assessment 
     if (tag == "LCAP_micro") {
       stat_df <- stat_df %>%
-        mutate(school_weight = ipw,
+        mutate(school_weight = 1/strata_prob,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight), 
                !is.na(strata_count)) %>%
@@ -217,7 +217,7 @@ indicator_means <- function(variable, dataset, tag,  unit) {
     #all school categories
     if (tag %in% c("INPT", "INFR", "ATTD", "OPMN", "PKNW", "PMAN", "ISTD", "IMON", "SCFN", "SATT", "SSLD", "SSUP", "SEVL", "school_dta_anon")) {
       stat_df <- stat_df %>%
-        mutate(school_weight = ipw,
+        mutate(school_weight = 1/strata_prob,
                VALUE = !!variable_quo) %>%
         filter(!is.na(school_weight), 
                !is.na(strata_count)) %>%
@@ -339,10 +339,10 @@ api_template <- api_template %>%
   
   indicator_values_transpose <- indicator_values_transpose %>%
     mutate(
-      SE.LPV.PRIM	= g4_prof$SE.LPV.PRIM,
-      SE.LPV.PRIM.1	= g4_prof$SE.LPV.PRIM,
-      SE.LPV.PRIM.BMP	= 100-g4_prof$SE.LPV.PRIM.LD,
-      SE.LPV.PRIM.BMP.1	= 100-g4_prof$SE.LPV.PRIM.LD,
+      SE.GEPD.PRIM	= g4_prof$SE.LPV.PRIM,
+      SE.GEPD.PRIM.1	= g4_prof$SE.LPV.PRIM,
+      SE.GEPD.PRIM.BMP	= 100-g4_prof$SE.LPV.PRIM.LD,
+      SE.GEPD.PRIM.BMP.1	= 100-g4_prof$SE.LPV.PRIM.LD,
       #SE.PRM.PROE =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
       #SE.PRM.PROE.1 =if_else(is.na(uis_df$SDG4.1.1.a.r),uis_df$SDG4.1.1.a.m,uis_df$SDG4.1.1.a.r),
       SE.PRM.TENR	 =100-g4_prof$SE.LPV.PRIM.SD,
@@ -903,7 +903,7 @@ api_template <- api_template %>%
       SE.PRM.LNTN.5  =expert_df$breastfeeding, #(De Jure) Does a national policy exist to encourage breastfeeding?
       SE.PRM.LNTN.6  =100*as.numeric(defacto_dta_learners_final$`Percentage of children born in the five (three) years preceding the survey who were ever breastfed`), #(De Facto) Percent of children born in the five (three) years preceding the survey who were ever breastfed
       SE.PRM.LNTN.7  =expert_df$school_feeding, #(De Jure) Is there a publicly funded school feeding program?
-      #SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
+      SE.PRM.LNTN.8  =100*indicator_means(m1saq9_lnut, "school", "school_dta_anon",  "Custom") #(De Facto) Percent of schools reporting having publicly funded school feeding program
     ) %>%
     mutate(
       #SE.PRM.LNTN.DF =4*(SE.PRM.LNTN.2+SE.PRM.LNTN.4+SE.PRM.LNTN.6 +SE.PRM.LNTN.8)/400+1,#(De Facto) Policy Lever (Learners) - Nutrition Programs
@@ -1157,4 +1157,10 @@ api_template <- api_template %>%
 api_final<-api_template %>%
     dplyr::select(-value) %>%
     mutate(Series = gsub(" ", "", Series)) %>%
-    left_join(indicator_values_back, by = "Series")  
+    full_join(indicator_values_back, by = "Series") %>%
+    mutate(`Indicator Name` = if_else(Series == "SE.PRM.BFIN.6", "(Financing) - Does the country spend 4-5%  of GDP or 15-20% of public expenditures on education spending?", `Indicator Name`),
+           `Indicator Name` = if_else(Series == "SE.PRM.PROE", "Proficiency by Grade 2/3", `Indicator Name`),
+           `Indicator Name` = if_else(Series == "SE.PRM.PROE.1", "(De Facto) Percent of children proficient in literacy and numeracy by grade 2/3, as reported by UIS", `Indicator Name`),
+           Source = if_else(Series %in% c("SE.PRM.BFIN.6", "SE.PRM.PROE", "SE.PRM.PROE.1"), "Global Education Policy Dashboard", Source),
+           `Source Organization` = if_else(Series %in% c("SE.PRM.BFIN.6", "SE.PRM.PROE", "SE.PRM.PROE.1"), "World Bank", `Source Organization`))
+  
