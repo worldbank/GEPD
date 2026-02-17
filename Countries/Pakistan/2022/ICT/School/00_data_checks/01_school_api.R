@@ -81,13 +81,7 @@ close(filecon)
 # install.packages("devtools")
 # devtools::install_github("arthur-shaw/susoapi")
 # 
-# set_credentials(
-#   server = "http://etri.gepd.solutions/",
-#   workspace = "gepdpak",
-#   user = "ETRI_DR_ADMIN",
-#   password = "k%/t/H;KaS9n"
-# )
-# 
+
 # 
 # # STEP1: START AN EXPORT JOB
 # # specifying same same options as in user interface
