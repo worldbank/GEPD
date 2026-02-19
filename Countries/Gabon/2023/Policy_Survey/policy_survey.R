@@ -211,7 +211,7 @@ expert_dta_school_management_final <- expert_dta_school_management_final %>%
 expert_dta_school_management_final <- expert_dta_school_management_final %>%
   mutate(principal_monitor_law=read_var(c6),
          principal_monitor_criteria=read_var(c7)) %>%
-  mutate(principal_evaluation=1+principal_monitor_law+principal_monitor_criteria)
+  mutate(principal_evaluation=1+principal_monitor_law+(3/5)*principal_monitor_criteria)
 
 ################################
 # Learners 

@@ -58,6 +58,18 @@ options("modelsummary_theme_flextable" = custom_theme)
   }
 
 
+  if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+      
+    dir <- here()
+    shared_loc <- 'C:/Users/wb631589/OneDrive - WBG/Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report"'
+  } else if (str_to_lower(Sys.info()["user"]) == "wb577189") {
+
+    dir <- "C:/Users/wb577189/OneDrive - WBG/Documents/GitHub/GEPD"
+    shared_loc <- 'C:/Users/wb577189/WBG/Ezequiel Molina - Dashboard (Team Folder)/Main_Documents/GEPD_FCDO_report/'
+  }
+
+
+
 indicators_dir <- paste(dir, 'Indicators', sep="/")
 out_dir <- paste(dir, 'Output', sep="/")
 
@@ -73,7 +85,14 @@ out_dir <- paste(dir, 'Output', sep="/")
     confidential_dir<- "C:/Users/wb577189/OneDrive - WBG/GEPD-Confidential/"
     anonymized_dir <- "C:/Users/wb577189/OneDrive - WBG/GEPD/"
 
+  } else if (str_to_lower(Sys.info()["user"]) == "wb631589") {
+    #directories
+    confidential_dir<- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/"
+    anonymized_dir <- "C:/Users/wb631589/OneDrive - WBG/GEPD/"
+
   }
+
+
 
 
 

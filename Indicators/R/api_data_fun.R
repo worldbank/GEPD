@@ -1400,7 +1400,7 @@ api_template <- api_template %>%
            get(paste0("indicator_values_transpose_", i)) %>%    
              mutate(
             SE.PRM.IMON  =  indicator_means(sch_monitoring		, "school", "IMON",  "All", i),    #Policy Lever (Inputs & Infrastructure) - Monitoring                                                                      
-            SE.PRM.IMON.1  =  indicator_means(m1scq1_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
+            SE.PRM.IMON.1  =  100*indicator_means(m1scq1_imon		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report there is someone monitoring that basic inputs are available to students        
             SE.PRM.IMON.10 =-999, #(De Jure) Number of basic infrastructure features clearly articulated as needing to be monitored                         
             SE.PRM.IMON.2  =  100*indicator_means(parents_involved		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that parents or community members are involved in the monitoring of availabili~
             SE.PRM.IMON.3  =  100*indicator_means(system_in_place		, "school", "IMON",  "All", i),  #(De Facto) Percent of schools that report that there is an inventory to monitor availability of basic inputs             

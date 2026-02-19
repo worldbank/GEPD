@@ -427,7 +427,8 @@ ecd_dta_anon <- ecd_dta_anon %>%
   left_join(key)
 
 ecd_dta_anon <- ecd_dta_anon %>%
-  left_join(g1_weights, by = "school_code")
+  left_join(g1_weights, by = "school_code") %>%
+  select(-starts_with("hashed"))
 
 #join the assessment, pedagogy, and questionnaire info to the roster
 
@@ -482,6 +483,13 @@ matches <- teacher_combined_df %>%
 
 ```{r}
 
+g4_weights <- school_weights %>%
+  select(school_code, g4_stud_weight_component)
+
+g1_weights <- school_weights %>%
+  select(school_code, g1_stud_weight_component)
+
+
 teacher_combined_df %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_combined_modules.dta")) %>%
@@ -520,10 +528,22 @@ teacher_questionnaire_micro %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.dta"))  %>%
   write_excel_csv(path=paste0(save_input_folder,"/",country,"/", country,"_teacher_questionnaire.csv"))
 
+
+assess_4th_grade_anon <- df_add_weights('assess_4th_grade_anon') 
+
+assess_4th_grade_anon <- assess_4th_grade_anon%>%
+  left_join(g4_weights)
+
 assess_4th_grade_anon %>%
   select(-ends_with('nogiraffe')) %>%
   janitor::clean_names() %>%
   write_dta(path=paste0(save_input_folder,"/",country,"/", country,"_fourth_grade_assessment.dta"))
+
+
+ecd_dta_anon <- df_add_weights('ecd_dta_anon') 
+
+ecd_dta_anon <- ecd_dta_anon%>%
+  left_join(g1_weights)
 
 ecd_dta_anon %>%
   janitor::clean_names() %>%

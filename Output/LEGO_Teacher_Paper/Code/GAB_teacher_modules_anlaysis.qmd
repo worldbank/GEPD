@@ -87,11 +87,9 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649" ){
 
 #function to attach weights
 
+key <- read_csv("C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT//GAB//GAB_2023_GEPD//GAB_2023_GEPD_v02_RAW/Data/confidential/School/EPDash_linkfile_hashed.csv")
+
 #function to attach weights
-
-key <- key %>%
-  mutate(school_code = paste(school_name_preload, temp_school_code, sep = " _ "))
-
 df_weights_function <- function(dataset,scode, snumber, prov) {
   scode<-enquo(scode)  
   snumber<-enquo(snumber)
@@ -300,7 +298,15 @@ teacher_questionnaire <- teacher_questionnaire
 
 #add weights and anonymize
 teacher_questionnaire_micro <- df_add_weights('teacher_questionnaire')      %>%
-  select(-starts_with('interview__'), -c('lat','lon'))              
+  select(-starts_with('interview__'), -c('lat','lon'))  
+
+#merge in teacher weights
+teacher_assessment_weights <- school_weights %>%
+  select(school_code, teacher_weight_component)
+
+teacher_questionnaire_micro <- teacher_questionnaire_micro %>%
+  left_join(key) %>%
+  left_join(teacher_assessment_weights, by = "school_code")
 
 ```
 
@@ -358,6 +364,15 @@ teacher_assessment_dta_comb <- teacher_assessment_dta
 #add weights and anonymize
 teacher_assessment_micro <- df_add_weights('teacher_assessment_dta_comb')         %>%
   select(-starts_with('interview__'), -c('lat','lon'))          
+
+#merge in teacher weights
+teacher_assessment_weights <- school_weights %>%
+  select(school_code, teacher_weight_component)
+
+
+teacher_assessment_micro <- teacher_assessment_micro %>%
+  left_join(key) %>%
+  left_join(teacher_assessment_weights, by = "school_code")
 
 
 ```
@@ -417,7 +432,7 @@ print(paste0(pct,"% of teachers assessed for pedagogy are successfully matched")
 
 
 
- now teacher content
+# now teacher content
 teacher_combined_df <- teacher_combined_df %>%
   left_join(teacher_assessment_micro %>% mutate(TEACHERS__id=m5sb_tnum), na_matches='never') %>%
   group_by(school_code,TEACHERS__id) %>%

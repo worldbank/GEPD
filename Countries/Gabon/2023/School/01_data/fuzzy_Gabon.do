@@ -80,6 +80,7 @@ replace m5sb_troster = "ezeme ella nelly chimÈne" if m5sb_troster == "ezeme" & 
 replace m5sb_troster = "ngui obiang diane" if m5sb_troster == "diare estelle ngui" & school_code == "MISSION BARAKA _ 0101304013X501" 
 replace m5sb_troster = "mfono ebang harnestine epouse ngema" if m5sb_troster == "nfono" & school_code == "SAINTE FAMILLE DE FOUGAMOU _ 0402201007X514" 
 replace m5sb_troster = "mafoumbi yves" if m5sb_troster == "mafoumbi yves" & school_code == "ECOLE FRANCO ARABE AS SALAM _ 0101303084X509" 
+replace school_code = "99" if missing(school_code)
 isid school_code m5sb_troster // not unique at the assessment number but leaving this as is for now
 
 gen idmaster = _n 
