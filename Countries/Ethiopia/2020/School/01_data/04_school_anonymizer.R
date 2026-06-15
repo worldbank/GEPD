@@ -11,7 +11,17 @@ library(digest)
 # Load the data
 ##################
 
-load(file = file.path(confidential_folder, "school_survey_data.RData"))
+#if we want to have the same sample in 2020/2021 as the one in 2025, set this one to 1
+same_sample <- 1
+
+schools_2025 <- read_dta("C:/Users/wb631589/OneDrive - WBG/HEDGE Files - GEPD-Confidential/General/Country_Data/GEPD_Production-Ethiopia_2025/03_GEPD_processed_data/School/Confidential/Cleaned/school_Stata.dta") %>%
+  select(school_code)
+
+if (same_sample == 1) {
+  load(file = file.path(confidential_folder, "same_sample_school_survey_data.RData"))
+} else {
+  load(file = file.path(confidential_folder, "school_survey_data.RData"))
+}
 
 #add some disability questions
 school_dis <- school_dta %>%
@@ -114,6 +124,7 @@ data_set_updated <- sample %>%
     strata_count = paste0(Woreda, Region, Zone, Location)
   )
 
+
 #get the grade 4 student count to know what schools to keep in case we have multiple programs
 school_info <- school_info %>%
   filter(Grade == "Grade 4") %>%
@@ -205,13 +216,21 @@ school_dta_short$hashed_school_district <-as.character(lapply(school_dta_short$s
 key<-school_dta_short %>%
   select(school_code, school_province_preload, school_district_preload, hashed_school_code, hashed_school_province, hashed_school_district) 
 
-write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
+if (same_sample == 1) {
+  write_excel_csv(key, file.path(confidential_folder, "same_sample_EPDash_linkfile_hashed.csv"))
+} else {
+  write_excel_csv(key, file.path(confidential_folder, "EPDash_linkfile_hashed.csv"))
+}
 
 #######################################
 #loop through databases and remove PII
 #######################################
 
-
+if (same_sample == 1) {
+  sample <- "_same_sample"
+} else {
+  sample <- ""
+}
 
 for (i in data_list ) {
   if (exists(i)) {
@@ -298,15 +317,25 @@ for (i in data_list ) {
       #final_school_data<-temp
       print(i)
       
-      temp %>%
-        janitor::clean_names() %>%
-        write_csv( file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
+      if (same_sample == 1) {
+        temp %>%
+          janitor::clean_names() %>%
+          write_csv( file.path(paste(save_folder,"/data", sep=""), paste(i, sample, "_anon.csv", sep="")))
+      } else {
+          temp %>%
+            janitor::clean_names() %>%
+            write_csv( file.path(paste(save_folder,"/data", sep=""), paste(i,"_anon.csv", sep="")))
+      }
 
       
 
   }
 }
 
-save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
-save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/School/school_indicators_data_anon.RData"))
-
+if (same_sample == 1) {
+  save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "same_sample_school_indicators_data_anon.RData"))
+  save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/HEDGE Files - GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/School/same_sample_school_indicators_data_anon.RData"))
+} else {
+  save(list=c(anon_dta_list,'metadta','indicators'), file = file.path(save_folder, "school_indicators_data_anon.RData"))
+  save(list=c(anon_dta_list,'metadta','indicators'), file = file.path("C:/Users/wb631589/OneDrive - WBG/HEDGE Files - GEPD/CNT/ETH/ETH_2020_GEPD/ETH_2020_GEPD_v02_M/Data/School/school_indicators_data_anon.RData"))
+}

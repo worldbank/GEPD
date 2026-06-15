@@ -13,7 +13,8 @@ library(stringr)
 library(Hmisc)
 #NOTE:  The R script to pull the data from the API should be run before this file
 
-
+#if we want to have the same sample in 2020/2021 as the one in 2025, set this one to 1
+same_sample <- 1
 
 #Create function to save metadata for each question in each module
 makeVlist <- function(dta) { 
@@ -23,16 +24,27 @@ makeVlist <- function(dta) {
          varlabel = varlabels, vallabel = vallabels) 
 }
 
-
+############################
+#read in the file for 2025 (to later use it for the merge)
+############################
+schools_2025 <- read_dta("C:/Users/wb631589/OneDrive - WBG/HEDGE Files - GEPD-Confidential/General/Country_Data/GEPD_Production-Ethiopia_2025/03_GEPD_processed_data/School/Confidential/Cleaned/school_Stata.dta") %>%
+  select(school_code)
 
 ############################
 #read in teacher merged file (to use it for gender)
 ############################
 
-teacher_gender <- read_dta("C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/General/LEGO_Teacher_Paper/5_output_data/ETH/ETH_teacher_level_updated.dta") 
+teacher_gender <- read_dta("C:/Users/wb631589/OneDrive - WBG/HEDGE Files - GEPD-Confidential/General/LEGO_Teacher_Paper/5_output_data/ETH/ETH_teacher_level_updated.dta") 
 teacher_gender <- teacher_gender %>%
   select(school_code, teacher_male, m2saq2_original, m5sb_troster_original, m3sb_troster_original)
 
+if (same_sample == 1) {
+  teacher_gender <- semi_join(
+    teacher_gender,
+    schools_2025,
+    by = "school_code"
+  )
+}
 
 ############################
 #read in teacher roster file
@@ -90,6 +102,14 @@ for (i in 1:8) {
     ungroup()
 }
 
+if (same_sample == 1) {
+  school_dta <- semi_join(
+    school_dta,
+    schools_2025,
+    by = "school_code"
+  )
+}
+
 
 #create school metadata frame
 school_metadta<-makeVlist(school_dta)
@@ -129,11 +149,27 @@ school_data_preamble_temp <- school_dta %>%
   select( preamble_info) %>%
   select(-interview__key) %>%
   summarise_all( ~(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.))) 
+
+if (same_sample == 1) {
+  school_data_preamble_temp <- semi_join(
+    school_data_preamble_temp,
+    schools_2025,
+    by = "school_code"
+  )
+}
   
 school_data_preamble <- school_dta %>%
   group_by(interview__key) %>%
   select(interview__key, school_code) %>%
   left_join(school_data_preamble_temp)
+
+if (same_sample == 1) {
+  school_data_preamble <- semi_join(
+    school_data_preamble,
+    schools_2025,
+    by = "school_code"
+  )
+}
 
 #use dplyr select(contains()) to search for variables with select tags and create separate databases by indicator
 #This will make the information for each indicator contained in an independent database
@@ -162,6 +198,13 @@ teacher_roster <- teacher_roster %>%
   filter(interview__key != "80-52-17-42") %>% #duplicated school code, keeping the other observation because there are more teachers on the roster there
   filter(interview__key != "35-38-09-87") # drop because the location does not match with what we have in the sampling frame, so keeping the one where gps matches 
 
+if (same_sample == 1) {
+  teacher_roster <- semi_join(
+    teacher_roster,
+    schools_2025,
+    by = "school_code"
+  )
+}
 
 #get the data for numEligible that is later used for the weights
 numeligible <- teacher_roster %>%
@@ -207,12 +250,26 @@ teacher_questionnaire <- teacher_questionnaire %>%
   filter(interview__key != "80-52-17-42") %>% #duplicated school code, keeping the other observation because there are more teachers on the roster there
   filter(interview__key != "35-38-09-87") # drop because the location does not match with what we have in the sampling frame, so keeping the one where gps matches 
 
+if (same_sample == 1) {
+  teacher_questionnaire <- semi_join(
+    teacher_questionnaire,
+    schools_2025,
+    by = "school_code"
+  )
   
-teacher_questionnaire_school <- teacher_questionnaire %>%
-  group_by(interview__id) %>%
-  summarise_all(~first(na.omit(.))) %>%
-  write_excel_csv(path=file.path(confidential_folder, "teacher_questionnaire_school_info.csv"))
+  teacher_questionnaire_school <- teacher_questionnaire %>%
+    group_by(interview__id) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    write_excel_csv(path=file.path(confidential_folder, "same_sample_teacher_questionnaire_school_info.csv"))
   
+} else {
+  teacher_questionnaire_school <- teacher_questionnaire %>%
+    group_by(interview__id) %>%
+    summarise_all(~first(na.omit(.))) %>%
+    write_excel_csv(path=file.path(confidential_folder, "teacher_questionnaire_school_info.csv"))
+}
+
+
 #filter out teachers who did not consent to interview
 
 teacher_questionnaire <- teacher_questionnaire %>%
@@ -360,6 +417,15 @@ teacher_absence_dta <- teacher_absence_dta %>%
 teacher_absence_dta <- teacher_absence_dta %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
+
+if (same_sample == 1) {
+  teacher_absence_dta <- semi_join(
+    teacher_absence_dta,
+    schools_2025,
+    by = "school_code"
+  )
+}
+
   
 #number missing
 teacher_absence_dta <- teacher_absence_dta %>%
@@ -544,11 +610,7 @@ final_indicator_data_ATTD<- school_data_INPT %>%
   mutate(n_mssing_SSLD=n_miss_row(.)) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
 
-
-
-
 #Breakdowns by Male/Female
-
 num_boys <- school_dta %>%
   select(interview__key, m4scq4n_girls, m4scq13_girls, school_code ) %>%
   mutate(m4scq13_girls = ifelse(m4scq13_girls == 98, NA, m4scq13_girls),
@@ -585,10 +647,17 @@ final_indicator_data_ATTD_F<- school_data_INPT %>%
 ##### Teacher Knowledge ###########
 #############################################
 
-
 teacher_assessment_dta <- read_dta(file.path(download_folder, "teacher_assessment_answers.dta")) %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
+
+if (same_sample == 1) {
+  teacher_assessment_dta <- semi_join(
+    teacher_assessment_dta,
+    schools_2025,
+    by = "school_code"
+  )
+}
 
 #number missing
 teacher_assessment_dta <- teacher_assessment_dta %>%
@@ -791,6 +860,14 @@ if (teach_avail==1) {
   
   teacher_pedagogy <- read.csv(paste0(confidential_folder,"/teach_raw_data_eth.csv"))
 
+  if (same_sample == 1) {
+    teacher_pedagogy <- semi_join(
+      teacher_pedagogy,
+      schools_2025,
+      by = "school_code"
+    )
+  }
+  
     score_var <- teacher_pedagogy%>% select(starts_with("s_"))%>% names()
   
   ## Wrangling
@@ -872,9 +949,11 @@ if (teach_avail==1) {
             -starts_with('m4saq1'))
   
   #Breakdowns by Male/Female
-  
-  
-  write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+  if (same_sample == 1) {
+    write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "same_sample_teach_score_counts.csv", sep="/"))
+  } else {
+    write_excel_csv(final_indicator_data_PEDG, path = paste(confidential_folder, "teach_score_counts.csv", sep="/"))
+  }
   
 }
   
@@ -894,6 +973,14 @@ assess_4th_grade_dta <- assess_4th_grade_dta %>%
 assess_4th_grade_dta <- assess_4th_grade_dta %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
+
+if (same_sample == 1) {
+  assess_4th_grade_dta <- semi_join(
+    assess_4th_grade_dta,
+    schools_2025,
+    by = "school_code"
+  )
+}
 
 assess_4th_grade_dta_weights <- assess_4th_grade_dta %>%
   group_by(school_code) %>%
@@ -1259,6 +1346,15 @@ ecd_dta <- ecd_dta %>%
   left_join(school_data_preamble) %>%
   select(preamble_info, everything()) 
 
+if (same_sample == 1) {
+  ecd_dta <- semi_join(
+    ecd_dta,
+    schools_2025,
+    by = "school_code"
+  )
+}
+
+
 
 ecd_weights <- ecd_dta %>%
   group_by(school_code) %>%
@@ -1519,9 +1615,6 @@ final_indicator_data_INPT <- school_data_INPT %>%
   select(preamble_info, inputs, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))
 
-
-
-
 #############################################
 ##### School Infrastructure ###########
 #############################################
@@ -1612,11 +1705,6 @@ final_indicator_data_INFR <- final_indicator_data_INFR %>%
   mutate(infrastructure=(drinking_water+ functioning_toilet+ internet + class_electricity+ disability_accessibility)) %>%
   select(preamble_info, infrastructure, everything()) %>%
   select( -starts_with('interview'), -starts_with('enumerator'))  
-
-
-
-
-
 
 
 #############################################
@@ -2776,6 +2864,12 @@ if (exists('final_school_data')) {
   rm('final_school_data')
 }
 
+if (same_sample == 1) {
+  sample <- "_same_sample"
+} else {
+  sample <- ""
+}
+
 ind_dta_list<-c()
 
 school_data_preamble_short<-school_data_preamble %>%
@@ -2800,9 +2894,9 @@ for (i in indicator_names ) {
     if (!exists('final_school_data')) {
       final_school_data<-temp
       print(i)
-      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i, sample, "_final_indicator_data.csv", sep="")))
       if (backup_onedrive=="yes") {
-        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i, sample, "_final_indicator_data.csv", sep="")))
       }
       
     } else {
@@ -2810,9 +2904,9 @@ for (i in indicator_names ) {
         left_join(temp, by='school_code') %>%
         select(-ends_with(".x"), -ends_with(".y"))
       
-      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i, sample, "_final_indicator_data.csv", sep="")))
       if (backup_onedrive=="yes") {
-        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+        write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,sample, "_final_indicator_data.csv", sep="")))
       }
     }
   }
@@ -3056,13 +3150,24 @@ final_school_data <- final_school_data %>%
   left_join(g1_stud_weights, by = "school_code")
 
 
+if (same_sample == 1) {
+  write.csv(final_school_data, file = file.path(confidential_folder, "same_sample_final_complete_school_data.csv"))
+  #write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+  write.csv(school_weights, file = file.path(confidential_folder, "same_sample_school_weights.csv"))
+  #write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+} else {
+  write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
+  #write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
+  write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
+  #write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
+}
 
-write.csv(final_school_data, file = file.path(confidential_folder, "final_complete_school_data.csv"))
-#write_dta(final_school_data, path = file.path(confidential_folder, "final_complete_school_data.dta"), version = 14)
-write.csv(school_weights, file = file.path(confidential_folder, "school_weights.csv"))
-#write_dta(school_weights, path = file.path(confidential_folder, "school_weights.dta"), version = 14)
 if (backup_onedrive=="yes") {
-  write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
+  if (same_sample == 1) {
+    write.csv(final_school_data, file = file.path(save_folder_onedrive, "same_sample_final_complete_school_data.csv"))
+  } else {
+    write.csv(final_school_data, file = file.path(save_folder_onedrive, "final_complete_school_data.csv"))
+  }
   #write_dta(final_school_data, path = file.path(save_folder_onedrive, "final_complete_school_data.dta"), version = 14)
 }
 #If indicator in this list doesn't exists, create empty column with Missing values
@@ -3090,9 +3195,9 @@ for (i in indicator_names ) {
       left_join(school_weights, by='school_code') %>%
       select(-ends_with(".x"), -ends_with(".y"))
     
-    write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+    write.csv(temp, file = file.path(paste(confidential_folder,"/Indicators", sep=""), paste(i, same_sample, "_final_indicator_data.csv", sep="")))
     if (backup_onedrive=="yes") {
-      write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i,"_final_indicator_data.csv", sep="")))
+      write.csv(temp, file = file.path(paste(save_folder_onedrive,"/Indicators", sep=""), paste(i, same_sample, "_final_indicator_data.csv", sep="")))
       #}
     }
   }
@@ -3103,12 +3208,19 @@ for (i in indicator_names ) {
 
 school_dta_short <- final_school_data %>%
   select(all_of(keep_info), one_of(ind_list), one_of(weights_list))
-
-write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
+if (same_sample == 1) {
+  write.csv(school_dta_short, file = file.path(confidential_folder, "same_sample_final_indicator_school_data.csv"))
+} else {
+  write.csv(school_dta_short, file = file.path(confidential_folder, "final_indicator_school_data.csv"))
+}
 #write_dta(school_dta_short, path = file.path(confidential_folder, "final_indicator_school_data.dta"), version = 14)
 
 if (backup_onedrive=="yes") {
-  write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
+  if (same_sample == 1) {
+    write.csv(school_dta_short, file = file.path(save_folder_onedrive, "same_sample_final_indicator_school_data.csv"))
+  } else {
+    write.csv(school_dta_short, file = file.path(save_folder_onedrive, "final_indicator_school_data.csv"))
+  }
   #write_dta(school_dta_short, path = file.path(save_folder_onedrive, "final_indicator_school_data.dta"), version = 14)
 }
 
@@ -3206,11 +3318,21 @@ ind_dta_list <-c(ind_dta_list, c("final_indicator_data_CONT_micro_M", "final_ind
 
 data_list <- c(ind_dta_list, 'school_dta', 'school_dta_short', 'school_dta_short_imp', 'school_data_preamble', 'final_school_data', 'teacher_questionnaire','teacher_absence_final', 'ecd_dta', 'teacher_assessment_dta', 'teacher_roster', 
                "indicators", 'school_metadta', 'school_gdp', 'assess_4th_grade_anon', 'ecd_dta_anon', 'school_weights')
-save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
 
-save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'school_metadta',  'school_gdp' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
+if (same_sample == 1) {
+  save(list=data_list, file = file.path(confidential_folder, "same_sample_school_survey_data.RData"))
+  save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'school_metadta',  'school_gdp' ), file = file.path(confidential_folder, "same_sample_school_indicators_data.RData"))
+} else {
+  save(list=data_list, file = file.path(confidential_folder, "school_survey_data.RData"))
+  save(list=c(ind_dta_list,"school_dta_short", 'school_dta_short_imp', "indicators", 'school_metadta',  'school_gdp' ), file = file.path(confidential_folder, "school_indicators_data.RData"))
+
+}
 
 
 if (backup_onedrive=="yes") {
-  save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
+  if (same_sample == 1) {
+    save(list=data_list, file = file.path(save_folder_onedrive, "same_sample_school_survey_data.RData"))
+  } else {
+    save(list=data_list, file = file.path(save_folder_onedrive, "school_survey_data.RData"))
+  }
 }

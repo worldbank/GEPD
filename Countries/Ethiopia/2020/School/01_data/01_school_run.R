@@ -59,7 +59,7 @@ if (str_to_lower(Sys.getenv("USERNAME")) == "wb469649"){
 
 } else if  (str_to_lower(Sys.getenv("USERNAME")) == "wb631589" ){
   #project_folder  <- "//wbgfscifs01/GEDEDU/datalib-edu/projects/gepd"
-  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/GEPD-Confidential/CNT/"
+  project_folder  <- "C:/Users/wb631589/OneDrive - WBG/HEDGE Files - GEPD-Confidential/CNT/"
   download_folder <-file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/raw/School", sep="/"))
   confidential_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/confidential/School", sep="/"))
   save_folder <- file.path(paste(project_folder,country,paste(country,year,"GEPD", sep="_"),paste(country,year,"GEPD_v02_RAW", sep="_"),"Data/anonymized/School", sep="/"))
